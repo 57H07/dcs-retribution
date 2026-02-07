@@ -72,6 +72,7 @@ HQ_AUTOMATION_SECTION = "HQ Automation"
 FLIGHT_PLANNER_AUTOMATION = "Flight Planner Automation"
 REPAIRS_SECTION = "Repairs"
 BUILDING_REPAIR_TUNING_SECTION = "Building Repairs"
+GROUND_OBJECT_REPAIR_TUNING_SECTION = "Ground Object Repairs"
 
 CAMPAIGN_DOCTRINE_PAGE = "Campaign Doctrine"
 DOCTRINE_DISTANCES_SECTION = "Doctrine distances"
@@ -977,6 +978,77 @@ class Settings:
         ),
     )
 
+    # Campaign Management+
+    sam_repair_budget_fraction: float = bounded_float_option(
+        "SAM repair budget fraction",
+        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
+        section=GROUND_OBJECT_REPAIR_TUNING_SECTION,
+        min=0.0,
+        max=1.0,
+        divisor=100,
+        default=0.4,
+        detail=("Fraction of ground unit budget reserved for SAM repairs."),
+    )
+    sam_repair_priority_threshold: float = bounded_float_option(
+        "SAM repair priority threshold",
+        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
+        section=GROUND_OBJECT_REPAIR_TUNING_SECTION,
+        min=0.0,
+        max=5.0,
+        divisor=10,
+        default=1.5,
+        detail=("Minimum priority score required to queue SAM repairs."),
+    )
+    sam_repair_weight_threat: float = bounded_float_option(
+        "SAM repair weight: threat range",
+        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
+        section=GROUND_OBJECT_REPAIR_TUNING_SECTION,
+        min=0.0,
+        max=5.0,
+        divisor=10,
+        default=0.5,
+        detail="Weight applied to SAM threat range coverage.",
+    )
+    sam_repair_weight_frontline: float = bounded_float_option(
+        "SAM repair weight: frontline",
+        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
+        section=GROUND_OBJECT_REPAIR_TUNING_SECTION,
+        min=0.0,
+        max=5.0,
+        divisor=10,
+        default=1.5,
+        detail="Weight applied to proximity to the front line.",
+    )
+    sam_repair_weight_cp_coverage: float = bounded_float_option(
+        "SAM repair weight: CP coverage",
+        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
+        section=GROUND_OBJECT_REPAIR_TUNING_SECTION,
+        min=0.0,
+        max=5.0,
+        divisor=10,
+        default=0.6,
+        detail="Weight applied to covered control points.",
+    )
+    sam_repair_weight_tgo_coverage: float = bounded_float_option(
+        "SAM repair weight: TGO coverage",
+        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
+        section=GROUND_OBJECT_REPAIR_TUNING_SECTION,
+        min=0.0,
+        max=5.0,
+        divisor=10,
+        default=0.4,
+        detail="Weight applied to covered ground objects.",
+    )
+    sam_repair_weight_tgo_income: float = bounded_float_option(
+        "SAM repair weight: TGO income",
+        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
+        section=GROUND_OBJECT_REPAIR_TUNING_SECTION,
+        min=0.0,
+        max=5.0,
+        divisor=10,
+        default=0.4,
+        detail="Weight applied to covered ground object income.",
+    )
     # Mission Generator
     # Gameplay
     fast_forward_stop_condition: FastForwardStopCondition = choices_option(
