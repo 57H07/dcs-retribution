@@ -894,9 +894,7 @@ class Settings:
         max=20,
         divisor=10,
         default=4.0,
-        detail=(
-            "Multiplier applied to building income to compute repair cost."
-        ),
+        detail=("Multiplier applied to building income to compute repair cost."),
     )
     building_repair_ammo_bonus: float = bounded_float_option(
         "Building repair ammo bonus",
@@ -906,9 +904,7 @@ class Settings:
         max=50,
         divisor=5,
         default=10.0,
-        detail=(
-            "Added cost for ammo depots to reflect frontline value."
-        ),
+        detail=("Added cost for ammo depots to reflect frontline value."),
     )
     building_repair_factory_bonus: float = bounded_float_option(
         "Building repair factory bonus",
@@ -918,9 +914,7 @@ class Settings:
         max=50,
         divisor=10,
         default=12.0,
-        detail=(
-            "Added cost for factories to reflect production value."
-        ),
+        detail=("Added cost for factories to reflect production value."),
     )
     building_repair_weight_remote: float = bounded_float_option(
         "Building repair weight: remote",
@@ -931,8 +925,8 @@ class Settings:
         divisor=10,
         default=1.2,
         detail=(
-                "Weight for remoteness from enemy control points in repair priority. " +
-                "Buildings farther from enemy control points will be prioritized for repair."
+            "Weight for remoteness from enemy control points in repair priority. "
+            + "Buildings farther from enemy control points will be prioritized for repair."
         ),
     )
     building_repair_weight_income: float = bounded_float_option(
@@ -944,8 +938,8 @@ class Settings:
         divisor=10,
         default=1.0,
         detail=(
-                "Weight for building income in repair priority. " +
-                "Buildings that generate more income will be prioritized for repair."
+            "Weight for building income in repair priority. "
+            + "Buildings that generate more income will be prioritized for repair."
         ),
     )
     building_repair_weight_ammo_frontline: float = bounded_float_option(
@@ -957,8 +951,8 @@ class Settings:
         divisor=10,
         default=1.1,
         detail=(
-                "Weight for frontline proximity when prioritizing ammo depots. " +
-                "Ammo depots closer to the frontline will be prioritized for repair."
+            "Weight for frontline proximity when prioritizing ammo depots. "
+            + "Ammo depots closer to the frontline will be prioritized for repair."
         ),
     )
 
