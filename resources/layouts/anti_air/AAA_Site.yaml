@@ -10,7 +10,7 @@ groups:
       unit_count:
         - 1
       unit_classes:
-        - SearchRadar
+        - AAARadar
     - name: AAA Site
       unit_count:
         - 2
