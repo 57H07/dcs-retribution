@@ -418,3 +418,53 @@ def test_ai_ground_unit_repair_respects_delay(
     assert not search_radar.alive
     process_repairs(cast(Any, game), sam, GameUpdateEvents())
     assert search_radar.alive
+
+
+def test_player_ground_unit_repair_is_instant_by_default(game: FakeGame) -> None:
+    cp = make_control_point(game, Player.BLUE)
+    sam = make_sam_site(cp)
+    cast(Any, cp.coalition).budget = 100.0
+    *_, search_radar = sam.units
+
+    assert buy_repair(cast(Any, game), search_radar, 14, GameUpdateEvents())
+
+    assert alive(sam) == [search_radar]
+    assert search_radar.repair_turns_remaining is None
+    assert cast(Any, cp.coalition).budget == 86.0
+
+
+def test_player_ground_unit_repair_with_delay(game: FakeGame) -> None:
+    game.settings.ground_unit_repair_turns = 2
+    cp = make_control_point(game, Player.BLUE)
+    sam = make_sam_site(cp)
+    cast(Any, cp.coalition).budget = 100.0
+    *_, search_radar = sam.units
+
+    assert buy_repair(cast(Any, game), search_radar, 14, GameUpdateEvents())
+    assert alive(sam) == []
+    process_repairs(cast(Any, game), sam, GameUpdateEvents())
+    assert alive(sam) == []
+    process_repairs(cast(Any, game), sam, GameUpdateEvents())
+    assert alive(sam) == [search_radar]
+
+
+def test_repairing_several_units_of_a_group_clears_every_carcass(
+    game: FakeGame,
+) -> None:
+    cp = make_control_point(game, Player.BLUE)
+    sam = make_sam_site(cp)
+    cast(Any, cp.coalition).budget = 100.0
+    units = list(sam.units)
+    # Adjacent carcasses: removing from the list while iterating it skipped
+    # every other one.
+    game.destroyed_units.extend(
+        {"x": u.position.x + dx, "z": u.position.y, "type": "x"}
+        for u in units
+        for dx in (0, 1)
+    )
+
+    for unit in units:
+        assert buy_repair(cast(Any, game), unit, 6, GameUpdateEvents())
+
+    assert alive(sam) == units
+    assert game.destroyed_units == []
