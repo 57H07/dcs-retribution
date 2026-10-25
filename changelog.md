@@ -39,6 +39,7 @@
 * **[Engine]** The mission script now records the remaining life of units and statics that were damaged but not destroyed (`damaged_units` in `state.json`), groundwork for the new "Persistent damage" campaign setting (off by default, no gameplay effect yet). (#23)
 * **[Modding]** Update UH-60L mod to v2.1.5 including MH-60L DAP
 * **[Squadrons]** The `mission_types` of squadron definitions are now honored: the autoplanner (including airlift Transport flights) only auto-assigns a squadron to tasks it lists, and campaign secondaries are limited to them. Squadrons without `mission_types` keep all their airframe's tasks. (`upstream#849`)
+* **[Plugins]** New CTLD option "Create default pickup/drop zones at bases without CTLD zones" (off by default): airfields and FOBs/FARPs whose campaign declares no `<name> CTLD` zone get generated pickup and drop zones beside the runway or the FARP; a warning explains when none can be placed.
 
 ## Fixes
 * **[Mission Generator]** AI SEAD flights no longer release their TALD decoys at the IP, out of glide range: decoys are now released at a new "DECOY RELEASE" waypoint at a configurable distance from the target (new campaign setting "Decoy release distance (NM)", default 15 NM), and only by flights that actually carry decoys. Anti-radiation missiles are still fired from INGRESS.
@@ -53,6 +54,7 @@
 * **[Mission Generator]** EWR sites now get the DCS "EWR" enroute task and come up on RED alarm, so their radars actually scan and report contacts (previously they could sit inert, especially with the "red alert state" performance option off). Works with or without the Skynet IADS plugin.
 * **[Plugins]** Fix the escort leash never running (DCS has no `Group.getByID`; look the group up by name via mist), so escorts are actually held to their engagement range.
 * **[Mission Planning]** Carrier/LHA targets now offer SEAD in the flight-task list and no longer list SEAD Escort twice (their escorts are SAM platforms, so they can be suppressed directly like any other naval group).
+* **[Transfers]** A transport flight shot down in auto-resolved combat now loses its cargo instead of delivering it anyway, and helicopters are no longer picked for airlifts whose drop-off is beyond their range.
 * **[App]** Retribution no longer stays alive in the background after its window is closed: the API server's graceful shutdown is now bounded (uvicorn otherwise waited forever on the long-lived event-stream websocket and the join hung).
 * **[App]** Relaunching the executable while it is already running no longer spawns orphaned, windowless duplicate processes; a second instance detects the first via an OS file lock and exits immediately.
 * **[Mission]** Reliably auto-detect end of mission, even when DCS wrote the final state.json before the wait dialog started watching
