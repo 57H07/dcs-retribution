@@ -3,12 +3,15 @@ tasks:
   - AAA
 groups:
   - AAA:
-    - name: Cold War Flak Site Radar 
+    - name: Cold War Flak Site Radar
       optional: true # Only available to Late Cold War
+      # Same gating as the generic AAA Site: only a preset that explicitly bundles
+      # a gun-laying radar gets one; SAM search radars are never auto-filled here.
+      fill: false
       unit_count:
         - 1
       unit_classes:
-        - SearchRadar
+        - AAARadar
     - name: Cold War Flak Site Flak
       unit_count:
         - 4

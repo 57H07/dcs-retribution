@@ -4,6 +4,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
 
+import pytest
 import yaml
 
 from game.armedforces.forcegroup import ForceGroup
@@ -23,6 +24,12 @@ S60_GUN_VARIANT = "S-60 57mm"
 SAM_SEARCH_RADAR_VARIANT = "SAM Patriot STR"
 
 AAA_SITE_LAYOUT = Path("resources/layouts/anti_air/AAA_Site.yaml")
+COLD_WAR_FLAK_SITE_LAYOUT = Path("resources/layouts/anti_air/Cold_War_Flak_Site.yaml")
+# The presets that bundle the KS-19 with its SON-9 Fire Can gun-laying radar.
+KS19_PRESETS = [
+    Path("resources/groups/KS-19.yaml"),
+    Path("resources/groups/KS-19_HDS.yaml"),
+]
 
 
 def _faction_with(*units: GroundUnitType) -> Faction:
@@ -133,18 +140,37 @@ def test_non_ks19_bundle_gets_no_fire_can() -> None:
     assert force_group.dcs_unit_types_for_group(_radar_slot()) == []
 
 
-def test_aaa_site_layout_radar_slot_is_gated() -> None:
+@pytest.mark.parametrize(
+    "layout_path,slot_name",
+    [
+        (AAA_SITE_LAYOUT, "AAA Site Radar"),
+        (COLD_WAR_FLAK_SITE_LAYOUT, "Cold War Flak Site Radar"),
+    ],
+    ids=["AAA_Site", "Cold_War_Flak_Site"],
+)
+def test_aaa_site_layout_radar_slot_is_gated(layout_path: Path, slot_name: str) -> None:
     # Guard the layout file itself: the radar slot must be an optional, non-filling
-    # AAA-radar-only slot so generic sites are never handed a gun-laying radar.
-    data: dict[str, Any] = yaml.safe_load(AAA_SITE_LAYOUT.read_text(encoding="utf-8"))
+    # AAA-radar-only slot so AAA sites are never handed a SAM radar.
+    data: dict[str, Any] = yaml.safe_load(layout_path.read_text(encoding="utf-8"))
     radar_slots = [
         unit_group
         for group in data["groups"]
         for unit_group in next(iter(group.values()))
-        if unit_group["name"] == "AAA Site Radar"
+        if unit_group["name"].strip() == slot_name
     ]
-    assert radar_slots, "AAA Site layout no longer has a radar slot"
+    assert radar_slots, f"{layout_path.name} no longer has a radar slot"
     for slot in radar_slots:
         assert slot["unit_classes"] == [UnitClass.AAA_RADAR.value]
         assert slot["optional"] is True
         assert slot["fill"] is False
+
+
+@pytest.mark.parametrize("preset_path", KS19_PRESETS, ids=lambda p: p.stem)
+def test_ks19_presets_bundle_a_fire_can(preset_path: Path) -> None:
+    # With fill: false on the radar slot, the only way a Fire Can reaches the map is
+    # by being bundled in a preset. Guard that the KS-19 presets still bundle one,
+    # otherwise the KS-19 would silently lose its gun-laying radar.
+    data: dict[str, Any] = yaml.safe_load(preset_path.read_text(encoding="utf-8"))
+    unit_classes = [GroundUnitType.named(name).unit_class for name in data["units"]]
+    assert UnitClass.AAA_RADAR in unit_classes
+    assert UnitClass.AAA in unit_classes
