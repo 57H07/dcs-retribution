@@ -5,3 +5,9 @@
   height: 100%;
   min-height: 100vh;
 }
+
+/* Labels keep the same readable size at every zoom level (GFX-04.5). */
+.leaflet-tooltip {
+  font-size: 13px;
+  line-height: 1.35;
+}

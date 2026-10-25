@@ -10,7 +10,7 @@ import {
 } from "../../api/mapSlice";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import MobileTgo from "./MobileTgo";
-import { TgoTooltip, iconForTgo } from "./shared";
+import { TgoTooltip, useTgoIcon } from "./shared";
 import { Marker } from "react-leaflet";
 
 interface TgoProps {
@@ -21,6 +21,7 @@ function StaticTgo(props: TgoProps) {
   const [openNewPackageDialog] = useOpenNewTgoPackageDialogMutation();
   const [openInfoDialog] = useOpenTgoInfoDialogMutation();
   const dispatch = useAppDispatch();
+  const icon = useTgoIcon(props.tgo);
   // Raised above other icons while this emitter (or its ring) is hovered.
   const raised = useAppSelector(
     (state) =>
@@ -30,7 +31,7 @@ function StaticTgo(props: TgoProps) {
   return (
     <Marker
       position={props.tgo.position}
-      icon={iconForTgo(props.tgo)}
+      icon={icon}
       zIndexOffset={raised ? 10000 : 0}
       eventHandlers={{
         click: () => {

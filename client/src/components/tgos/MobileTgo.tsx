@@ -14,9 +14,9 @@ import {
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import SplitLines from "../splitlines/SplitLines";
 import { MovementPath, MovementPathHandle } from "../controlpoints/MovementPath";
-import { TgoTooltip, iconForTgo } from "./shared";
+import { TgoTooltip, useTgoIcon } from "./shared";
 import { LatLng, Marker as LMarker, LatLngLiteral } from "leaflet";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import ReactDOMServer from "react-dom/server";
 import { Marker, Tooltip } from "react-leaflet";
 
@@ -80,15 +80,12 @@ function PrimaryMarker(props: PrimaryMarkerProps) {
   const markerRef = useRef<LMarker | null>(null);
   const pathRef = useRef<MovementPathHandle | null>(null);
 
-  // Stable icon reference. iconForTgo() builds a fresh leaflet Icon every call;
-  // if a re-render happens mid-drag (the busy TGO event stream churns this
-  // component while unrelated ships/SAMs update), react-leaflet would call
-  // marker.setIcon() with the new ref and abort the in-progress drag. Memoize
-  // on the sidc so the ref only changes when the symbol actually changes.
-  // Intentionally keyed on sidc only: the icon must stay referentially stable
-  // across drags so a re-render can't swap it mid-drag (see comment above).
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const icon = useMemo(() => iconForTgo(props.tgo), [props.tgo.sidc]);
+  // Stable icon reference: if a re-render happens mid-drag (the busy TGO event
+  // stream churns this component while unrelated ships/SAMs update), a new Icon
+  // would make react-leaflet call marker.setIcon() and abort the in-progress
+  // drag. useTgoIcon() returns a cached Icon that only changes with the symbol
+  // or the zoom level.
+  const icon = useTgoIcon(props.tgo);
 
   const [hasDestination, setHasDestination] = useState<boolean>(
     props.tgo.destination != null
@@ -243,8 +240,7 @@ interface SecondaryMarkerProps {
  */
 function SecondaryMarker(props: SecondaryMarkerProps) {
   const dispatch = useAppDispatch();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const icon = useMemo(() => iconForTgo(props.tgo), [props.tgo.sidc]);
+  const icon = useTgoIcon(props.tgo);
   const [openInfoDialog] = useOpenTgoInfoDialogMutation();
   const [openNewPackageDialog] = useOpenNewTgoPackageDialogMutation();
   const raised = useAppSelector(

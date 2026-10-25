@@ -15,20 +15,61 @@ export const SYMBOL_STYLES = {
 
 export type SymbolStyleKey = keyof typeof SYMBOL_STYLES;
 
-function buildSymbol(sidc: string, style: SymbolStyleKey) {
-  return new ms.Symbol(sidc, SYMBOL_STYLES[style] as SymbolOptions);
+// Symbols scale with the map zoom (GFX-04.5): smaller at theatre view so a
+// dense front stays legible, larger at airfield view. SYMBOL_STYLES sizes are
+// the sizes at the default zoom.
+export const DEFAULT_MAP_ZOOM = 8;
+const SYMBOL_SCALE_PER_ZOOM_LEVEL = 0.15;
+export const MIN_SYMBOL_SCALE = 0.6;
+export const MAX_SYMBOL_SCALE = 1.6;
+
+export function symbolScaleForZoom(zoom: number): number {
+  const scale = 1 + (zoom - DEFAULT_MAP_ZOOM) * SYMBOL_SCALE_PER_ZOOM_LEVEL;
+  return Math.min(MAX_SYMBOL_SCALE, Math.max(MIN_SYMBOL_SCALE, scale));
+}
+
+export function symbolSizeForZoom(style: SymbolStyleKey, zoom: number): number {
+  return Math.round(SYMBOL_STYLES[style].size * symbolScaleForZoom(zoom));
+}
+
+function buildSymbol(sidc: string, style: SymbolStyleKey, size?: number) {
+  const options = { ...SYMBOL_STYLES[style] } as SymbolOptions;
+  if (size !== undefined) {
+    options.size = size;
+  }
+  return new ms.Symbol(sidc, options);
 }
 
 export function symbolDataUrl(sidc: string, style: SymbolStyleKey): string {
   return buildSymbol(sidc, style).toDataURL();
 }
 
-export function symbolIcon(sidc: string, style: SymbolStyleKey): Icon {
-  const symbol = buildSymbol(sidc, style);
-  return new Icon({
+// Icons are cached: a marker re-rendered at the same zoom keeps the same Icon
+// reference, so react-leaflet does not swap it (which would abort a drag).
+const iconCache = new Map<string, Icon>();
+
+export function symbolIcon(
+  sidc: string,
+  style: SymbolStyleKey,
+  zoom: number = DEFAULT_MAP_ZOOM,
+): Icon {
+  const size = symbolSizeForZoom(style, zoom);
+  const key = `${style}|${size}|${sidc}`;
+  const cached = iconCache.get(key);
+  if (cached) {
+    return cached;
+  }
+  const symbol = buildSymbol(sidc, style, size);
+  const anchor = symbol.getAnchor();
+  const width = symbol.getSize().width;
+  const icon = new Icon({
     iconUrl: symbol.toDataURL(),
-    iconAnchor: new Point(symbol.getAnchor().x, symbol.getAnchor().y),
+    iconAnchor: new Point(anchor.x, anchor.y),
+    // Tooltips open beside the symbol instead of covering it.
+    tooltipAnchor: new Point(Math.max(anchor.x, width - anchor.x), 0),
   });
+  iconCache.set(key, icon);
+  return icon;
 }
 
 // Values below mirror the enums of game/sidc.py (only those used by the game).
