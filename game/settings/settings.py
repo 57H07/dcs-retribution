@@ -687,14 +687,14 @@ class Settings:
         "Enable CSAR for the player coalition",
         CAMPAIGN_MANAGEMENT_PAGE,
         PILOTS_AND_SQUADRONS_SECTION,
-        default=True,
+        default=False,
         detail="Enable CSAR rescue flights for OWNFOR (BLUE) Coalition.",
     )
     csar_enabled_red: bool = boolean_option(
         "Enable CSAR for the enemy coalition",
         CAMPAIGN_MANAGEMENT_PAGE,
         PILOTS_AND_SQUADRONS_SECTION,
-        default=True,
+        default=False,
         detail="Enable CSAR rescue flights for OPFOR (RED) Coalition.",
     )
     csar_ejection_chance: int = bounded_int_option(
