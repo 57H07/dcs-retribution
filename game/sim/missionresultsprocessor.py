@@ -82,6 +82,9 @@ class MissionResultsProcessor:
     def _commit_pilot_experience(ato: AirTaskingOrder) -> None:
         for package in ato.packages:
             for flight in package.flights:
+                if flight.returned_to_squadron:
+                    # Not spawned (e.g. runway out of service): nobody flew it.
+                    continue
                 for idx, pilot in enumerate(flight.roster.iter_pilots()):
                     if pilot is None:
                         logging.error(

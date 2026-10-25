@@ -73,6 +73,10 @@ class Flight(
         self.flight_type = flight_type
         if claim_inv:
             self.squadron.claim_inventory(count)
+        #: True once the crew and aircraft went back to the squadron while the
+        #: flight still exists (e.g. skipped by mission generation). Guards
+        #: against returning them a second time (BUG-05).
+        self.returned_to_squadron = False
         if roster is None:
             self.roster = FlightMembers(self, initial_size=count)
         else:
@@ -170,6 +174,7 @@ class Flight(
         state["state"] = Uninitialized(self, state["squadron"].settings)
         if "use_same_loadout_for_all_members" not in state:
             state["use_same_loadout_for_all_members"] = True
+        state.setdefault("returned_to_squadron", False)
         self.__dict__.update(state)
         if isinstance(self.roster, FlightRoster):
             self.roster = FlightMembers.from_roster(self, self.roster)
@@ -267,8 +272,17 @@ class Flight(
         self._flight_plan_builder = FlightPlanBuilderTypes.for_flight(self)(self)
 
     def return_pilots_and_aircraft(self) -> None:
+        """Gives the flight's pilots and aircraft back to its squadron.
+
+        Idempotent: mission generation returns the crew of a flight it cannot
+        spawn but leaves the flight in its package, so the same flight is
+        returned again when it is later deleted or generation is retried.
+        """
+        if self.returned_to_squadron:
+            return
         self.roster.clear()
         self.squadron.claim_inventory(-self.count)
+        self.returned_to_squadron = True
 
     def initialize_fuel(self) -> None:
         unit_type = self.unit_type.dcs_unit_type

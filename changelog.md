@@ -23,6 +23,7 @@
 * **[Options]** New option to spawn TACAN beacons at captured airfields
 * **[UX]** Show an "End of Mission Detected, processing Mission Data" busy dialog while turn results are processed, so the wait is not mistaken for a missed detection
 * **[Map]** Hovering a SAM threat or detection ring highlights its emitter — and hovering an emitter highlights its ring — making it easy to tell which site a ring belongs to. Can be disabled from the map's layer control.
+* **[Map]** New "Legend" button on the campaign map opens a collapsible legend of the symbols, colours and lines of the active layers; its open/closed state is remembered.
 * **[Mission Generator]** New campaign setting "Default laser code for Player flights" controls whether newly-created player flights are assigned a unique allocated TGP/weapon laser code (the new default, matching existing behavior) or stay on 1688. When a code is allocated it is applied to both the TGP/kneeboard code and the weapon code by default, so LGBs home on the player's own code without extra clicks; both remain independently overridable in the payload tab.
 * **[Engine]** Support for DCS 2.9.28.26283 including F-100D, F-14A (Export), and F-14BU.
 * **[Options]** Add new option to fast forward until player is at the IP.
@@ -35,11 +36,13 @@
 * **[Campaigns]** Motorpool placement is Garage_A-anchored and empty reserve pools are excluded from attack planning; updated placement measurements are documented.
 * **[UX]** Add the ability to filter campaigns by version, map, and performance
 * **[Engine]** Bump campaign version to 10.9 for motorpool support
+* **[Engine]** The mission script now records the remaining life of units and statics that were damaged but not destroyed (`damaged_units` in `state.json`), groundwork for the new "Persistent damage" campaign setting (off by default, no gameplay effect yet). (#23)
 * **[Modding]** Update UH-60L mod to v2.1.5 including MH-60L DAP
 * **[Squadrons]** The `mission_types` of squadron definitions are now honored: the autoplanner (including airlift Transport flights) only auto-assigns a squadron to tasks it lists, and campaign secondaries are limited to them. Squadrons without `mission_types` keep all their airframe's tasks. (`upstream#849`)
 
 ## Fixes
 * **[Mission Generator]** Aircraft no longer spawn on top of each other at airfields. Helipads and ground spawns now block the DCS parking slots they overlap (and are skipped when an aircraft already sits on an overlapping slot), and a flight that finds too few helipads or ground spawns no longer leaves behind a stray group stacked on a single pad: it falls back to parking, another spawn type or an air start. (#9)
+* **[Mission Generator]** AI SEAD flights no longer release their TALD decoys at the IP, out of glide range: decoys are now released at a new "DECOY RELEASE" waypoint at a configurable distance from the target (new campaign setting "Decoy release distance (NM)", default 15 NM), and only by flights that actually carry decoys. Anti-radiation missiles are still fired from INGRESS.
 * **[Mission Generation]** Fix a ZeroDivisionError when a Strike flight is planned against an objective whose units are all already destroyed: the strike waypoint has no targets, and the units/targets ratio divided by zero, killing mission generation. The task is now skipped, matching what add_bombing_tasks already does. (#948)
 * **[Mission Planning]** Motorpools are now rendered from the reserve at the start of the turn, before planning, instead of only at mission generation. The autoplanner could plan a Strike against a motorpool holding reserve armor whose groups were still empty (first turn, or after a turn with an empty reserve), giving a Strike with no target. Such an attack is no longer planned.
 * **[Mission Generation]** Fix mission generation dying on "Duplicate convoy unit": convoy and cargo-ship names no longer reset each turn onto a convoy still in transit.
@@ -62,6 +65,7 @@
 * **[UI]** Avoid a crash dialog ("'QWidgetItem' object has no attribute 'width'") when a list using the two-column row delegate relayouts with a malformed style option under PySide6 6.4.x.
 * **[Mission Generation]** Fix the generated mission being rejected by DCS with "locked speed ... surrounded by waypoints ... with locked time" (e.g. carrier escorts).
 * **[AirWing]** Squadron transfer-destination parking now accounts for already-ordered incoming transfers, matching the Airfield Command hangar count
+* **[AirWing]** Fix duplicated pilots and inconsistent transfer capacity after repeated squadron transfers: a squadron's own planned transfer no longer eats into the room shown for its destination, re-targeting a transfer drops every stale ferry flight, a flight skipped at mission generation no longer returns its pilots and aircraft twice, and new recruits never share a name with a squadron mate. (BUG-05)
 * **[Mission Generation]** Anti-Ship flights now attack the carrier group the flight plan routes to instead of the control point's first ground object, so strikes against carrier groups no longer leave the AI without a target (it would fly to the ingress point and turn back without engaging).
 * **[Performance]** Improved robustness w.r.t. state.json handling to avoid corruption and thus save loss.
 * **[Flight Plans]** Stabilized waypoint solver debug GeoJSON coordinate precision to avoid platform-specific floating point drift in debug output.

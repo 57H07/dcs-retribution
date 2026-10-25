@@ -569,6 +569,16 @@ class Settings:
             "performance."
         ),
     )
+    persistent_damage: bool = boolean_option(
+        "Persistent damage",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=GENERAL_SECTION,
+        default=False,
+        detail=(
+            "Units damaged but not destroyed during a mission carry their damage "
+            "into the following turns instead of coming back intact."
+        ),
+    )
     apply_target_overrides_to_loadouts: bool = boolean_option(
         "Apply target-based weapon settings to player loadouts",
         page=CAMPAIGN_MANAGEMENT_PAGE,
@@ -985,6 +995,20 @@ class Settings:
             "weapon laser code. Default (1688) leaves the code unset so bombs "
             "and the cockpit TGP fall back to 1688. Affects newly-created "
             "flights only; existing flights are unchanged."
+        ),
+    )
+    sead_decoy_release_distance: int = bounded_int_option(
+        "Decoy release distance (NM)",
+        page=MISSION_GENERATOR_PAGE,
+        section=GAMEPLAY_SECTION,
+        default=15,
+        min=1,
+        max=60,
+        detail=(
+            "Distance from the target at which AI SEAD flights carrying decoys "
+            "(e.g. ADM-141 TALD) release them. Decoys released too far out glide "
+            "into the ground before reaching the SAM's engagement zone. Applies "
+            "to newly planned flight plans."
         ),
     )
     nevatim_parking_fix: bool = boolean_option(
