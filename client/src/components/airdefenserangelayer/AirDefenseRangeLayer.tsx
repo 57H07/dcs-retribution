@@ -7,6 +7,7 @@ import {
   setHoveredEmitter,
 } from "../../api/mapSlice";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { LAYER_COLORS } from "../../maplayers/colors";
 import { Fragment } from "react";
 import { Circle, CircleMarker, LayerGroup } from "react-leaflet";
 
@@ -18,13 +19,13 @@ interface TgoRangeCirclesProps {
 
 export function colorFor(blue: boolean, detection: boolean) {
   if (blue) {
-    return detection ? "#bb89ff" : "#0084ff";
+    return detection ? LAYER_COLORS.detectionBlue : LAYER_COLORS.threatBlue;
   }
-  return detection ? "#eee17b" : "#c85050";
+  return detection ? LAYER_COLORS.detectionRed : LAYER_COLORS.threatRed;
 }
 
 // Bright colour used to mark the hovered ring and its emitter.
-const HIGHLIGHT_COLOR = "#ffff00";
+const HIGHLIGHT_COLOR = LAYER_COLORS.emitterHighlight;
 
 const TgoRangeCircles = (props: TgoRangeCirclesProps) => {
   const radii = props.detection
