@@ -11,6 +11,7 @@ from game.profiling import logged_duration
 from game.squadrons.pilot import KillCategory, LogbookEntry, Pilot
 from game.squadrons.maintenance import aircraft_maintenance_turns
 from game.theater import ControlPoint
+from game.theater.repairs import restart_repairs
 from .gameupdateevents import GameUpdateEvents
 from ..ato.airtaaskingorder import AirTaskingOrder
 
@@ -18,6 +19,8 @@ if TYPE_CHECKING:
     from ..ato.flight import Flight
     from ..game import Game
     from ..squadrons import Squadron
+
+    from ..theater import TheaterGroundObject
 
 
 MINOR_DEFEAT_INFLUENCE = 0.1
@@ -276,10 +279,18 @@ class MissionResultsProcessor:
 
     @staticmethod
     def commit_ground_losses(debriefing: Debriefing, events: GameUpdateEvents) -> None:
+        struck: dict[int, TheaterGroundObject] = {}
         for ground_object_loss in debriefing.ground_object_losses:
             ground_object_loss.theater_unit.kill(events)
+            tgo = ground_object_loss.theater_unit.ground_object
+            struck[id(tgo)] = tgo
         for scenery_object_loss in debriefing.scenery_object_losses:
             scenery_object_loss.ground_unit.kill(events)
+            tgo = scenery_object_loss.ground_unit.ground_object
+            struck[id(tgo)] = tgo
+        # A strike on a site under repair sets the works back to the start.
+        for tgo in struck.values():
+            restart_repairs(tgo, debriefing.game.settings)
 
     @staticmethod
     def commit_damaged_runways(debriefing: Debriefing) -> None:
