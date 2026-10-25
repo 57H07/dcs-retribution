@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 import logging
+from collections import Counter
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from game.debriefing import Debriefing
 from game.ground_forces.combat_stance import CombatStance
 from game.profiling import logged_duration
+from game.squadrons.pilot import KillCategory, LogbookEntry, Pilot
 from game.theater import ControlPoint
 from .gameupdateevents import GameUpdateEvents
 from ..ato.airtaaskingorder import AirTaskingOrder
 
 if TYPE_CHECKING:
+    from ..ato.flight import Flight
     from ..game import Game
 
 
@@ -27,10 +31,10 @@ class MissionResultsProcessor:
         with logged_duration("Committing mission results"):
             with logged_duration("commit_air_losses"):
                 self.commit_air_losses(debriefing)
-            with logged_duration("commit_pilot_experience"):
-                self.commit_pilot_experience()
             with logged_duration("commit_pilot_kills"):
                 self.commit_pilot_kills(debriefing)
+            with logged_duration("commit_pilot_logbooks"):
+                self.commit_pilot_logbooks(debriefing)
             with logged_duration("commit_front_line_losses"):
                 self.commit_front_line_losses(debriefing)
             with logged_duration("commit_motorpool_losses"):
@@ -78,22 +82,83 @@ class MissionResultsProcessor:
             squadron.owned_aircraft -= 1
             squadron.destroyed_aircraft += 1
 
-    @staticmethod
-    def _commit_pilot_experience(ato: AirTaskingOrder) -> None:
+    def commit_pilot_logbooks(self, debriefing: Debriefing) -> None:
+        """Logs one sortie for every pilot of every flight of both ATOs.
+
+        This also counts the sorties (``missions_flown``) that AI levelling uses.
+        Player pilots also get a history entry. Kills must already have been
+        credited by ``commit_pilot_kills``.
+        """
+        kills: Counter[tuple[int, KillCategory]] = Counter(
+            (id(kill.pilot), kill.category) for kill in debriefing.pilot_kills
+        )
+        lost = {
+            id(loss.pilot)
+            for loss in debriefing.air_losses.losses
+            if loss.pilot is not None
+        }
+        for ato in (self.game.blue.ato, self.game.red.ato):
+            self._commit_logbooks(ato, kills, lost)
+
+    def _commit_logbooks(
+        self,
+        ato: AirTaskingOrder,
+        kills: Counter[tuple[int, KillCategory]],
+        lost: set[int],
+    ) -> None:
         for package in ato.packages:
             for flight in package.flights:
+                flight_time = self._planned_flight_time(flight)
                 for idx, pilot in enumerate(flight.roster.iter_pilots()):
                     if pilot is None:
                         logging.error(
-                            f"Cannot award experience to pilot #{idx} of {flight} "
+                            f"Cannot log the sortie of pilot #{idx} of {flight} "
                             "because no pilot is assigned"
                         )
                         continue
-                    pilot.record.missions_flown += 1
+                    entry = self._logbook_entry(
+                        flight, pilot, flight_time, kills, id(pilot) in lost
+                    )
+                    pilot.record.log_sortie(entry, keep_history=pilot.player)
 
-    def commit_pilot_experience(self) -> None:
-        self._commit_pilot_experience(self.game.blue.ato)
-        self._commit_pilot_experience(self.game.red.ato)
+    def _logbook_entry(
+        self,
+        flight: Flight,
+        pilot: Pilot,
+        flight_time: timedelta,
+        kills: Counter[tuple[int, KillCategory]],
+        died: bool,
+    ) -> LogbookEntry:
+        air = kills[id(pilot), KillCategory.Air]
+        ground = kills[id(pilot), KillCategory.Ground]
+        naval = kills[id(pilot), KillCategory.Naval]
+        task = flight.flight_type
+        return LogbookEntry(
+            turn=self.game.turn,
+            date=self.game.conditions.start_time,
+            squadron=flight.squadron.name,
+            aircraft=str(flight.unit_type),
+            task=task,
+            combat=task.is_air_to_air
+            or task.is_air_to_ground
+            or air + ground + naval > 0,
+            flight_time=flight_time,
+            air_kills=air,
+            ground_kills=ground,
+            naval_kills=naval,
+            died=died,
+        )
+
+    @staticmethod
+    def _planned_flight_time(flight: Flight) -> timedelta:
+        """Planned takeoff-to-landing time; zero if the plan cannot tell."""
+        try:
+            plan = flight.flight_plan
+            duration = plan.landing_time - plan.takeoff_time()
+        except Exception:
+            logging.exception(f"Cannot compute the planned flight time of {flight}")
+            return timedelta()
+        return max(duration, timedelta())
 
     @staticmethod
     def commit_pilot_kills(debriefing: Debriefing) -> None:
