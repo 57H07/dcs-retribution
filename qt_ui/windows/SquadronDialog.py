@@ -25,12 +25,14 @@ from game.purchaseadapter import AircraftPurchaseAdapter, TransactionError
 from game.server import EventStream
 from game.sim import GameUpdateEvents
 from game.squadrons import Pilot, Squadron
+from game.squadrons.career import Career
 from game.squadrons.transferparking import transfer_parking
 from game.theater import ConflictTheater, ControlPoint, ParkingType
 from qt_ui.delegates import TwoColumnRowDelegate
 from qt_ui.errorreporter import report_errors
 from qt_ui.models import AtoModel, SquadronModel
 from qt_ui.simcontroller import SimController
+from qt_ui.windows.CareerDialog import CareerDialog
 from qt_ui.windows.GameUpdateSignal import GameUpdateSignal
 from qt_ui.widgets.combos.QSquadronLiverySelector import SquadronLiverySelector
 from qt_ui.widgets.combos.primarytaskselector import PrimaryTaskSelector
@@ -286,6 +288,7 @@ class SquadronDialog(QDialog):
         right_column.addWidget(QLabel("Killed in action"))
         self.dead_pilot_list = PilotList(self.dead_squadron_model)
         right_column.addWidget(self.dead_pilot_list, stretch=1)
+        self.dead_pilot_list.doubleClicked.connect(self.show_dead_pilot_career)
 
         button_panel = QHBoxLayout()
 
@@ -306,6 +309,14 @@ class SquadronDialog(QDialog):
         self.reset_new_player_state()
         button_panel.addWidget(
             self.new_player_button, alignment=Qt.AlignmentFlag.AlignRight
+        )
+
+        self.career_button = QPushButton("Career")
+        self.career_button.setProperty("style", "start-button")
+        self.career_button.clicked.connect(self.show_selected_career)
+        self.reset_career_state(self.pilot_list.currentIndex())
+        button_panel.addWidget(
+            self.career_button, alignment=Qt.AlignmentFlag.AlignRight
         )
 
         self.rename_button = QPushButton("Rename pilot")
@@ -477,12 +488,39 @@ class SquadronDialog(QDialog):
             self.squadron_model.create_player_pilot(name)
             self.reset_new_player_state()
 
+    def reset_career_state(self, index: QModelIndex) -> None:
+        pilot = self.squadron_model.pilot_at_index(index) if index.isValid() else None
+        if pilot is not None and pilot.player:
+            self.career_button.setEnabled(True)
+            self.career_button.setToolTip(
+                "Logbook, rank, decorations and mission history of this pilot."
+            )
+        else:
+            self.career_button.setDisabled(True)
+            self.career_button.setToolTip(
+                "Select a player pilot to see their career. Double-click a "
+                "fallen player pilot to see theirs."
+            )
+
+    def show_career(self, pilot: Pilot) -> None:
+        if pilot.player:
+            CareerDialog(Career(pilot, self.squadron), self).exec()
+
+    def show_selected_career(self) -> None:
+        index = self.pilot_list.currentIndex()
+        if index.isValid():
+            self.show_career(self.squadron_model.pilot_at_index(index))
+
+    def show_dead_pilot_career(self, index: QModelIndex) -> None:
+        self.show_career(self.dead_squadron_model.pilot_at_index(index))
+
     def toggle_ai(self) -> None:
         index = self.pilot_list.currentIndex()
         if not index.isValid():
             logging.error("Cannot toggle player/AI: no pilot is selected")
             return
         self.squadron_model.toggle_ai_state(index)
+        self.reset_career_state(self.pilot_list.currentIndex())
 
     def reset_ai_toggle_state(self, index: QModelIndex) -> None:
         if self.check_disabled_button_states(self.toggle_ai_button, index):
@@ -522,6 +560,7 @@ class SquadronDialog(QDialog):
         index = selected.indexes()[0]
         self.reset_ai_toggle_state(index)
         self.reset_leave_toggle_state(index)
+        self.reset_career_state(index)
 
     def on_task_index_changed(self, index: int) -> None:
         task = self.primary_task_selector.itemData(index)
