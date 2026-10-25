@@ -44,6 +44,13 @@
             "defaultValue": false
         },
         {
+            "nameInUI": "Max player paradrop altitude (ft AGL)",
+            "mnemonic": "paradropMaxAglFt",
+            "minimumValue": 500,
+            "maximumValue": 20000,
+            "defaultValue": 3000
+        },
+        {
             "nameInUI": "CTLD Debug",
             "mnemonic": "debug",
             "defaultValue": false

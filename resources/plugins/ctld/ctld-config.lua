@@ -194,7 +194,8 @@ if dcsRetribution then
             -- CTLD troop pool, which previously could not leave a fixed-wing
             -- aircraft in flight at all.)
 
-            local PARADROP_MAX_AGL_FT = 3000 -- player jump ceiling (AGL)
+            -- player jump ceiling (AGL), set from the CTLD plugin options
+            local PARADROP_MAX_AGL_FT = tonumber(dcsRetribution.plugins.ctld.paradropMaxAglFt) or 3000
             local PARADROP_MAX_AGL_M = PARADROP_MAX_AGL_FT / 3.2808399
             local PARADROP_SINK_MPS = 6.5 -- static-line chute sink rate
             local PARADROP_MAX_DESCENT_S = 90
