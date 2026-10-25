@@ -60,3 +60,13 @@ export const SUPPLY_ROUTE_WEIGHT = { land: 6, sea: 4 };
 export const SUPPLY_ROUTE_ACTIVE_WEIGHT = 2;
 export const FRONT_LINE_WEIGHT = 16;
 export const IADS_INACTIVE_STYLE = { opacity: 0.5, dashArray: "20" };
+
+// Offline basemap drawn from the theatre landmap (GFX-04.1). Kept apart from
+// LAYER_COLORS: it is a basemap, not a game layer, and has no legend entry.
+export const OFFLINE_BASEMAP_COLORS = {
+  sea: "#9db4c8",
+  land: "#e4dfd1",
+  // Landmap exclusion zones (impassable terrain inside the land mass).
+  landExcluded: "#cdc5ae",
+  coastline: "#6f8496",
+};

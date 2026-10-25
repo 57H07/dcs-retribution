@@ -2,6 +2,7 @@ import { selectMapCenter } from "../../api/mapSlice";
 import { useAppSelector } from "../../app/hooks";
 import AircraftLayer from "../aircraftlayer";
 import AirDefenseRangeLayer from "../airdefenserangelayer";
+import Basemaps from "../basemaps";
 import EmitterHighlightToggle from "../airdefenserangelayer/EmitterHighlightToggle";
 import CombatLayer from "../combatlayer";
 import ControlPointsLayer from "../controlpointslayer";
@@ -21,29 +22,27 @@ import { WaypointDebugZonesControls } from "../waypointdebugzones/WaypointDebugZ
 import "./LiberationMap.css";
 import { Map } from "leaflet";
 import { useEffect, useRef } from "react";
-import { BasemapLayer } from "react-esri-leaflet";
 import { LayersControl, MapContainer, ScaleControl } from "react-leaflet";
 
 export default function LiberationMap() {
   const map = useRef<Map>(null);
   const mapCenter = useAppSelector(selectMapCenter);
   useEffect(() => {
-    map.current?.setView(mapCenter, map.current?.getZoom() ?? 8, { animate: true, duration: 1 });
+    map.current?.setView(mapCenter, map.current?.getZoom() ?? 8, {
+      animate: true,
+      duration: 1,
+    });
   });
   return (
-    <MapContainer zoom={map.current?.getZoom() ?? 8} zoomControl={false} ref={map}>
+    <MapContainer
+      zoom={map.current?.getZoom() ?? 8}
+      zoomControl={false}
+      ref={map}
+    >
       <ScaleControl />
       <LeafletRuler />
       <LayersControl collapsed={false}>
-        <LayersControl.BaseLayer name="Imagery Clarity" checked>
-          <BasemapLayer name="ImageryClarity" />
-        </LayersControl.BaseLayer>
-        <LayersControl.BaseLayer name="Imagery Firefly">
-          <BasemapLayer name="ImageryFirefly" />
-        </LayersControl.BaseLayer>
-        <LayersControl.BaseLayer name="Topographic">
-          <BasemapLayer name="Topographic" />
-        </LayersControl.BaseLayer>
+        <Basemaps />
         <LayersControl.Overlay {...overlayProps("controlPoints")}>
           <ControlPointsLayer />
         </LayersControl.Overlay>
