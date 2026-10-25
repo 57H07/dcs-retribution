@@ -5,7 +5,7 @@ import {
   useSetControlPointDestinationMutation,
 } from "../../api/liberationApi";
 import { makeLocationMarkerEventHandlers } from "./EventHandlers";
-import { iconForControlPoint } from "./Icons";
+import { useControlPointIcon } from "./Icons";
 import LocationTooltipText from "./LocationTooltipText";
 import { MovementPath, MovementPathHandle } from "./MovementPath";
 import { StaticControlPoint } from "./StaticControlPoint";
@@ -107,6 +107,7 @@ function PrimaryMarker(props: PrimaryMarkerProps) {
     );
   });
 
+  const icon = useControlPointIcon(props.controlPoint);
   const locationClickHandlers = makeLocationMarkerEventHandlers(
     props.controlPoint
   );
@@ -115,7 +116,7 @@ function PrimaryMarker(props: PrimaryMarkerProps) {
     <>
       <Marker
         position={position}
-        icon={iconForControlPoint(props.controlPoint)}
+        icon={icon}
         draggable={!isLoading}
         autoPan
         // We might draw other markers on top of the CP. The tooltips from the

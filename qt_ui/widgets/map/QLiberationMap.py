@@ -10,6 +10,7 @@ from PySide6.QtWebEngineWidgets import QWebEngineView
 from game.server.settings import ServerSettings
 from qt_ui.liberation_install import server_port
 from qt_ui.models import GameModel
+from qt_ui.widgets.map.webprofile import map_web_profile
 
 
 class LoggingWebPage(QWebEnginePage):
@@ -34,7 +35,8 @@ class QLiberationMap(QWebEngineView):
         self.game_model = game_model
         self.setMinimumSize(800, 600)
 
-        self.page = LoggingWebPage(self)
+        # Disk-based profile: basemap tiles go through the persistent HTTP cache.
+        self.page = LoggingWebPage(map_web_profile(), self)
         # Required to allow "cross-origin" access from file:// scoped canvas.html to the
         # localhost HTTP backend.
         self.page.settings().setAttribute(

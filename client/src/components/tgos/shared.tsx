@@ -1,10 +1,11 @@
 import { Tgo as TgoModel } from "../../api/liberationApi";
-import { symbolIcon } from "../../maplayers/symbology";
+import { useSymbolIcon } from "../../maplayers/zoom";
 import SplitLines from "../splitlines/SplitLines";
 import { Tooltip } from "react-leaflet";
 
-export function iconForTgo(tgo: TgoModel) {
-  return symbolIcon(tgo.sidc, "tgo");
+// Symbol of a TGO, sized for the current map zoom.
+export function useTgoIcon(tgo: TgoModel) {
+  return useSymbolIcon(tgo.sidc, "tgo");
 }
 
 export function TgoTooltip(props: { tgo: TgoModel }) {

@@ -1,5 +1,6 @@
 import { ControlPoint } from "../../api/_liberationApi";
-import { symbolIcon } from "../../maplayers/symbology";
+import { useSymbolIcon } from "../../maplayers/zoom";
 
-export const iconForControlPoint = (cp: ControlPoint) =>
-  symbolIcon(cp.sidc, "controlPoint");
+// Symbol of a control point, sized for the current map zoom.
+export const useControlPointIcon = (cp: ControlPoint) =>
+  useSymbolIcon(cp.sidc, "controlPoint");
