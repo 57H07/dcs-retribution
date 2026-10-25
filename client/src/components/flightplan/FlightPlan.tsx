@@ -3,14 +3,15 @@ import {
   useGetCommitBoundaryForFlightQuery,
   useSelectFlightMutation,
 } from "../../api/liberationApi";
+import { LAYER_COLORS } from "../../maplayers/colors";
 import WaypointMarker from "../waypointmarker";
 import { Polyline as LPolyline } from "leaflet";
 import { ReactElement, useEffect, useRef } from "react";
 import { Polyline } from "react-leaflet";
 
-const BLUE_PATH = "#0084ff";
-const RED_PATH = "#c85050";
-const SELECTED_PATH = "#ffff00";
+const BLUE_PATH = LAYER_COLORS.flightPlanBlue;
+const RED_PATH = LAYER_COLORS.flightPlanRed;
+const SELECTED_PATH = LAYER_COLORS.flightPlanSelected;
 
 interface FlightPlanProps {
   flight: Flight;
@@ -152,7 +153,8 @@ function CommitBoundary(props: CommitBoundaryProps) {
     return <></>;
   }
   return (
-    <Polyline positions={data} color="#ffff00" weight={1} interactive={false} />
+    <Polyline positions={data} color={LAYER_COLORS.commitBoundary}
+      weight={1} interactive={false} />
   );
 }
 

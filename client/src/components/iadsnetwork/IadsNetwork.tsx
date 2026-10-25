@@ -1,4 +1,5 @@
 import { IadsConnection as IadsConnectionModel } from "../../api/liberationApi";
+import { IADS_INACTIVE_STYLE, LAYER_COLORS } from "../../maplayers/colors";
 import { Polyline as LPolyline } from "leaflet";
 import { useRef } from "react";
 import { Polyline, Tooltip } from "react-leaflet";
@@ -18,11 +19,17 @@ function IadsConnectionTooltip(props: IadsConnectionProps) {
 
 
 export default function IadsConnection(props: IadsConnectionProps) {
-  const color = props.iads_connection.is_power ? "#FFD580" : "#87CEEB";
+  const color = props.iads_connection.is_power
+    ? LAYER_COLORS.iadsPower
+    : LAYER_COLORS.iadsCommunication;
   const path = useRef<LPolyline | null>();
   const weight = 1
-  var opacity = props.iads_connection.active ? 1.0 : 0.5
-  var dashArray = props.iads_connection.active ? "" : "20"
+  var opacity = props.iads_connection.active
+    ? 1.0
+    : IADS_INACTIVE_STYLE.opacity
+  var dashArray = props.iads_connection.active
+    ? ""
+    : IADS_INACTIVE_STYLE.dashArray
 
   return (
     <Polyline

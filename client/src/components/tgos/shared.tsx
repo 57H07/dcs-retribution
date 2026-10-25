@@ -1,15 +1,10 @@
 import { Tgo as TgoModel } from "../../api/liberationApi";
+import { symbolIcon } from "../../maplayers/symbology";
 import SplitLines from "../splitlines/SplitLines";
-import { Icon, Point } from "leaflet";
-import ms from "milsymbol";
 import { Tooltip } from "react-leaflet";
 
 export function iconForTgo(tgo: TgoModel) {
-  const symbol = new ms.Symbol(tgo.sidc, { size: 24 });
-  return new Icon({
-    iconUrl: symbol.toDataURL(),
-    iconAnchor: new Point(symbol.getAnchor().x, symbol.getAnchor().y),
-  });
+  return symbolIcon(tgo.sidc, "tgo");
 }
 
 export function TgoTooltip(props: { tgo: TgoModel }) {
