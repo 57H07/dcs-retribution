@@ -5,8 +5,6 @@ import random
 from dataclasses import dataclass
 from typing import Iterator, List, Optional, TYPE_CHECKING, Tuple
 
-from dcs import Point
-
 from game.config import RUNWAY_REPAIR_COST, REWARDS
 from game.data.units import UnitClass
 from game.dcs.groundunittype import GroundUnitType
@@ -17,6 +15,7 @@ from game.theater import (
     Player,
     TheaterUnit,
 )
+from game.theater.repairs import begin_repair
 from game.theater.theatergroundobject import (
     BuildingGroundObject,
     TheaterGroundObject,
@@ -124,11 +123,10 @@ class ProcurementAi:
         return budget
 
     def repair_buildings(self, budget: float) -> float:
-        if budget <= 0:
-            return budget
-        repair_turns = self.game.settings.building_repair_turns
-        if repair_turns < 0:
-            return budget
+        """Spends a share of the budget on repairing destroyed buildings.
+
+        High-value buildings far from the enemy are repaired first.
+        """
         repair_budget = budget * (
             self.game.settings.building_repair_budget_percent / 100.0
         )
@@ -142,43 +140,31 @@ class ProcurementAi:
                     continue
                 if not isinstance(ground_object, BuildingGroundObject):
                     continue
-                priority = self.building_repair_priority(ground_object)
                 cost = ground_object.repair_cost()
                 if cost <= 0:
                     continue
+                priority = self.building_repair_priority(ground_object)
                 for unit in ground_object.statics:
-                    if unit.alive:
-                        continue
-                    if unit.repair_turns_remaining is not None:
+                    if unit.alive or unit.repair_turns_remaining is not None:
                         continue
                     repair_candidates.append((priority, cost, unit))
 
         repair_candidates.sort(key=lambda entry: (-entry[0], entry[1]))
 
-        repaired_objects: set[TheaterGroundObject] = set()
-        destroyed_units = self.game.get_destroyed_units()
+        # Imported here to avoid a circular import through game.sim.
+        from game.sim.gameupdateevents import GameUpdateEvents
+
+        spent = 0.0
+        repaired_objects: dict[int, TheaterGroundObject] = {}
+        events = GameUpdateEvents()
         for _, price, unit in repair_candidates:
-            if repair_budget < price:
+            if repair_budget - spent < price:
                 continue
-            if repair_turns == 0:
-                from game.sim.gameupdateevents import GameUpdateEvents
+            begin_repair(self.game, unit, events)
+            spent += price
+            repaired_objects[id(unit.ground_object)] = unit.ground_object
 
-                unit.repair_turns_remaining = None
-                unit.revive(GameUpdateEvents())
-                for entry in list(destroyed_units):
-                    p = Point(
-                        float(entry["x"]),
-                        float(entry["z"]),
-                        self.game.theater.terrain,
-                    )
-                    if p.distance_to_point(unit.position) < 15:
-                        destroyed_units.remove(entry)
-            else:
-                unit.repair_turns_remaining = repair_turns
-            repair_budget -= price
-            repaired_objects.add(unit.ground_object)
-
-        for ground_object in repaired_objects:
+        for ground_object in repaired_objects.values():
             if self.is_player.is_blue:
                 self.game.message(f"We have begun repairs at {ground_object.obj_name}")
             else:
@@ -186,10 +172,7 @@ class ProcurementAi:
                     f"OPFOR has begun repairs at {ground_object.obj_name}"
                 )
 
-        return budget - (
-            budget * (self.game.settings.building_repair_budget_percent / 100.0)
-            - repair_budget
-        )
+        return budget - spent
 
     def building_repair_priority(self, ground_object: BuildingGroundObject) -> float:
         enemy_distance = self.distance_to_nearest_enemy_control_point(ground_object)

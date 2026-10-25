@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QGroupBox, QLabel, QPushButton, QVBoxLayout
 
 from game.config import REWARDS
 from game.theater import TheaterUnit
+from game.theater.repairs import building_repair_turns
 
 
 class QBuildingInfo(QGroupBox):
@@ -61,7 +62,10 @@ class QBuildingInfo(QGroupBox):
             elif self.ground_object.control_point.captured.is_blue:
                 price = self.ground_object.repair_cost()
                 if price > 0:
-                    repair = QPushButton(f"Repair [{price}M]")
+                    settings = self.ground_object.control_point.coalition.game.settings
+                    turns = building_repair_turns(self.ground_object.category, settings)
+                    delay = f", {turns} turns" if turns else ""
+                    repair = QPushButton(f"Repair [{price:g}M{delay}]")
                     repair.setProperty("style", "btn-success")
                     repair.clicked.connect(
                         lambda checked=False, u=self.building, p=price: self.on_repair(

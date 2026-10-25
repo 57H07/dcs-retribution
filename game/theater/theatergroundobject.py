@@ -8,7 +8,6 @@ from typing import Any, Iterator, List, Optional, TYPE_CHECKING
 from dcs.mapping import Point
 from shapely.geometry import Point as ShapelyPoint
 
-from game.config import REWARDS
 from game.data.units import UnitClass
 from game.sidc import (
     Entity,
@@ -22,6 +21,7 @@ from game.sidc import (
     SymbolSet,
 )
 from game.theater.presetlocation import PresetLocation
+from game.theater.repairs import building_repair_cost
 from .missiontarget import MissionTarget
 from .player import Player
 from ..data.groups import GroupTask
@@ -382,16 +382,9 @@ class BuildingGroundObject(TheaterGroundObject):
         return False
 
     def repair_cost(self) -> float:
-        income = REWARDS.get(self.category, 0.0)
-        if income <= 0:
-            return 0.0
+        """Cost of repairing one destroyed building of this ground object."""
         settings = self.control_point.coalition.game.settings
-        cost = income * settings.building_repair_income_multiplier
-        if self.is_ammo_depot:
-            cost += settings.building_repair_ammo_bonus
-        if self.is_factory:
-            cost += settings.building_repair_factory_bonus
-        return cost
+        return building_repair_cost(self.category, settings)
 
 
 class NavalGroundObject(TheaterGroundObject, ABC):

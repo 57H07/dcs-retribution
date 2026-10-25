@@ -64,12 +64,13 @@ MISSION_DIFFICULTY_SECTION = "Mission Difficulty"
 MISSION_RESTRICTIONS_SECTION = "Mission Restrictions"
 
 CAMPAIGN_MANAGEMENT_PAGE = "Campaign Management"
-ADVANCED_CAMPAIGN_MANAGEMENT_PAGE = "Campaign Management+"
+ADVANCED_CAMPAIGN_MANAGEMENT_PAGE = "Advanced Campaign Management"
 
 GENERAL_SECTION = "General"
 PILOTS_AND_SQUADRONS_SECTION = "Pilots and Squadrons"
 HQ_AUTOMATION_SECTION = "HQ Automation"
 FLIGHT_PLANNER_AUTOMATION = "Flight Planner Automation"
+REPAIRS_SECTION = "Repairs"
 BUILDING_REPAIR_TUNING_SECTION = "Building Repairs"
 
 CAMPAIGN_DOCTRINE_PAGE = "Campaign Doctrine"
@@ -699,8 +700,8 @@ class Settings:
         HQ_AUTOMATION_SECTION,
         default=False,
         detail=(
-            "If enabled, AI can spend budget to repair destroyed income buildings "
-            "such as depots and factories."
+            "If enabled, the HQ spends part of the budget repairing destroyed "
+            "income buildings, such as depots and factories."
         ),
     )
     automate_aircraft_reinforcements: bool = boolean_option(
@@ -708,29 +709,6 @@ class Settings:
         CAMPAIGN_MANAGEMENT_PAGE,
         HQ_AUTOMATION_SECTION,
         default=False,
-    )
-    building_repair_turns: int = bounded_int_option(
-        "Building repair turns",
-        CAMPAIGN_MANAGEMENT_PAGE,
-        HQ_AUTOMATION_SECTION,
-        min=0,
-        max=10,
-        default=4,
-        detail=(
-            "Turns required for repaired buildings to return to service. "
-            "Set to 0 for instant repairs."
-        ),
-    )
-    building_repair_budget_percent: int = bounded_int_option(
-        "Building repair budget (%)",
-        CAMPAIGN_MANAGEMENT_PAGE,
-        HQ_AUTOMATION_SECTION,
-        min=0,
-        max=100,
-        default=15,
-        detail=(
-            "Percent of the procurement budget that may be spent repairing buildings."
-        ),
     )
     auto_ato_behavior: AutoAtoBehavior = choices_option(
         "Automatic package planning behavior",
@@ -885,36 +863,57 @@ class Settings:
         " A smaller number will ignore squadrons with a matching primary task that are too far out.",
     )
 
-    # Campaign Management+
-    building_repair_income_multiplier: float = bounded_float_option(
-        "Building repair income multiplier",
-        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
-        section=BUILDING_REPAIR_TUNING_SECTION,
+    # Repairs
+    building_repair_cost_multiplier: float = bounded_float_option(
+        "Building repair cost multiplier",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=REPAIRS_SECTION,
         min=0,
-        max=20,
+        max=10,
         divisor=10,
-        default=4.0,
-        detail=("Multiplier applied to building income to compute repair cost."),
+        default=1.0,
+        detail=(
+            "The cost of repairing a building is its income per turn times this "
+            "multiplier."
+        ),
     )
-    building_repair_ammo_bonus: float = bounded_float_option(
-        "Building repair ammo bonus",
-        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
-        section=BUILDING_REPAIR_TUNING_SECTION,
+    building_repair_delay_multiplier: float = bounded_float_option(
+        "Building repair delay multiplier",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=REPAIRS_SECTION,
         min=0,
-        max=50,
-        divisor=5,
-        default=10.0,
-        detail=("Added cost for ammo depots to reflect frontline value."),
-    )
-    building_repair_factory_bonus: float = bounded_float_option(
-        "Building repair factory bonus",
-        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
-        section=BUILDING_REPAIR_TUNING_SECTION,
-        min=0,
-        max=50,
+        max=5,
         divisor=10,
-        default=12.0,
-        detail=("Added cost for factories to reflect production value."),
+        default=1.0,
+        detail=(
+            "Multiplier applied to the building repair delay: 3 turns for ammo and "
+            "fuel depots, 6 turns for factories and refineries, 4 turns for other "
+            "buildings. Set to 0 for instant repairs."
+        ),
+    )
+
+    # Advanced Campaign Management
+    ai_building_repairs: bool = boolean_option(
+        "Enemy AI repairs buildings",
+        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
+        section=BUILDING_REPAIR_TUNING_SECTION,
+        default=False,
+        detail=(
+            "If enabled, the enemy AI spends part of its budget repairing its "
+            "destroyed income buildings, such as depots and factories."
+        ),
+    )
+    building_repair_budget_percent: int = bounded_int_option(
+        "Building repair budget (%)",
+        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
+        section=BUILDING_REPAIR_TUNING_SECTION,
+        min=0,
+        max=100,
+        default=15,
+        detail=(
+            "Percent of the procurement budget that the enemy AI (or the HQ "
+            "automation) may spend repairing buildings."
+        ),
     )
     building_repair_weight_remote: float = bounded_float_option(
         "Building repair weight: remote",
