@@ -69,6 +69,7 @@ from .frontline import FrontLine
 from .interfaces.CTLD import CTLD
 from .missiontarget import MissionTarget
 from .player import Player
+from .grounddamage import process_inoperative_repairs
 from .repairs import cancel_repairs, process_repairs
 from .theatergroundobject import (
     GenericCarrierGroundObject,
@@ -1127,6 +1128,8 @@ class ControlPoint(MissionTarget, SidcDescribable, ABC):
 
         for ground_object in self.ground_objects:
             process_repairs(game, ground_object, events)
+        # Free repair of ground units made inoperative by persistent damage.
+        process_inoperative_repairs(self.ground_objects, game.turn, events)
 
         # Process movements for ships control points group
         if self.target_position is not None:

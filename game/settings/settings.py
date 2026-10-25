@@ -622,6 +622,28 @@ class Settings:
             "off, repairs are free and take their full time."
         ),
     )
+    persistent_damage_destroys_ground_units: bool = boolean_option(
+        "Persistent damage: heavily damaged ground units are destroyed",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=GENERAL_SECTION,
+        default=True,
+        detail=(
+            "Ground units and ships that lost 80 % or more of their life are "
+            "destroyed. If unchecked, they are inoperative for 3 turns instead. "
+            "Lighter damage makes them inoperative for 1 turn (20-49 %) or 2 turns "
+            "(50-79 %)."
+        ),
+    )
+    persistent_damage_paid_ground_repair: bool = boolean_option(
+        "Persistent damage: allow paid accelerated repair of ground units",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=GENERAL_SECTION,
+        default=False,
+        detail=(
+            "Inoperative ground units can be repaired at once from their ground "
+            "object window, for half the unit price."
+        ),
+    )
     apply_target_overrides_to_loadouts: bool = boolean_option(
         "Apply target-based weapon settings to player loadouts",
         page=CAMPAIGN_MANAGEMENT_PAGE,

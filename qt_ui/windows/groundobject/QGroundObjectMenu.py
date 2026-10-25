@@ -19,6 +19,8 @@ from game.server import EventStream
 from game.sim.gameupdateevents import GameUpdateEvents
 from game.theater import ControlPoint, TheaterGroundObject, Player
 from game.theater.repairs import buy_repair
+from game.theater.grounddamage import accelerated_repair_cost
+from game.theater.theatergroup import TheaterUnit
 from game.theater.theatergroundobject import (
     BuildingGroundObject,
 )
@@ -152,6 +154,27 @@ class QGroundObjectMenu(QDialog):
                         self.intelLayout.addWidget(repair, i, 1)
                     else:
                         self.intelLayout.addWidget(QLabel("Destroyed"), i, 1)
+                elif unit.inoperative:
+                    turns = unit.inoperative_turns_remaining(self.game.turn)
+                    if (
+                        self.cp.captured.is_blue
+                        and self.game.settings.persistent_damage_paid_ground_repair
+                    ):
+                        price = accelerated_repair_cost(unit)
+                        repair = QPushButton(
+                            f"Repair now ({turns} turns left) [{price}M]"
+                        )
+                        repair.setProperty("style", "btn-success")
+                        repair.clicked.connect(
+                            lambda checked=False, u=unit, p=price: (
+                                self.repair_inoperative_unit(u, p)
+                            )
+                        )
+                        self.intelLayout.addWidget(repair, i, 1)
+                    else:
+                        self.intelLayout.addWidget(
+                            QLabel(f"Inoperative ({turns} turns)"), i, 1
+                        )
                 i += 1
 
         stretch = QVBoxLayout()
@@ -297,6 +320,13 @@ class QGroundObjectMenu(QDialog):
     def repair_building(self, unit, price):
         if buy_repair(self.game, unit, price, GameUpdateEvents()):
             GameUpdateSignal.get_instance().updateGame(self.game)
+        self.update_game()
+
+    def repair_inoperative_unit(self, unit: TheaterUnit, price: int) -> None:
+        if self.game.blue.budget >= price:
+            self.game.blue.budget -= price
+            unit.end_inoperative(GameUpdateEvents())
+            logging.info(f"Repaired inoperative unit: {unit.unit_name}")
         self.update_game()
 
     def rotate_tgo(self, heading: Heading) -> None:
