@@ -15,6 +15,8 @@ import LeafletRuler from "../ruler/Ruler";
 import SupplyRoutesLayer from "../supplyrouteslayer";
 import TerrainZonesLayers from "../terrainzones/TerrainZonesLayers";
 import TgosLayer from "../tgoslayer/TgosLayer";
+import { overlayProps } from "../../maplayers/overlays";
+import Legend from "../legend";
 import { CoalitionThreatZones } from "../threatzones";
 import { WaypointDebugZonesControls } from "../waypointdebugzones/WaypointDebugZonesControls";
 import "./LiberationMap.css";
@@ -43,79 +45,79 @@ export default function LiberationMap() {
         <LayersControl.BaseLayer name="Topographic">
           <BasemapLayer name="Topographic" />
         </LayersControl.BaseLayer>
-        <LayersControl.Overlay name="Control points" checked>
+        <LayersControl.Overlay {...overlayProps("controlPoints")}>
           <ControlPointsLayer />
         </LayersControl.Overlay>
-        <LayersControl.Overlay name="Aircraft" checked>
+        <LayersControl.Overlay {...overlayProps("aircraft")}>
           <AircraftLayer />
         </LayersControl.Overlay>
-        <LayersControl.Overlay name="Active combat" checked>
+        <LayersControl.Overlay {...overlayProps("activeCombat")}>
           <CombatLayer />
         </LayersControl.Overlay>
-        <LayersControl.Overlay name="Downed pilots (blue)" checked>
+        <LayersControl.Overlay {...overlayProps("blueDownedPilots")}>
           <DownedPilotsLayer blue={true} />
         </LayersControl.Overlay>
-        <LayersControl.Overlay name="Downed pilots (red)" checked>
+        <LayersControl.Overlay {...overlayProps("redDownedPilots")}>
           <DownedPilotsLayer blue={false} />
         </LayersControl.Overlay>
-        <LayersControl.Overlay name="Air defenses" checked>
+        <LayersControl.Overlay {...overlayProps("airDefenses")}>
           <TgosLayer categories={["aa"]} />
         </LayersControl.Overlay>
-        <LayersControl.Overlay name="LORAD" >
+        <LayersControl.Overlay {...overlayProps("lorad")}>
           <TgosLayer categories={["aa"]} task={"LORAD"} />
         </LayersControl.Overlay>
-        <LayersControl.Overlay name="MERAD" >
+        <LayersControl.Overlay {...overlayProps("merad")}>
           <TgosLayer categories={["aa"]} task={"MERAD"} />
         </LayersControl.Overlay>
-        <LayersControl.Overlay name="SHORAD" >
+        <LayersControl.Overlay {...overlayProps("shorad")}>
           <TgosLayer categories={["aa"]} task={"SHORAD"} />
         </LayersControl.Overlay>
-        <LayersControl.Overlay name="AAA" >
+        <LayersControl.Overlay {...overlayProps("aaa")}>
           <TgosLayer categories={["aa"]} task={"AAA"} />
         </LayersControl.Overlay>
-        <LayersControl.Overlay name="Factories" checked>
+        <LayersControl.Overlay {...overlayProps("factories")}>
           <TgosLayer categories={["factory"]} />
         </LayersControl.Overlay>
-        <LayersControl.Overlay name="Ships" checked>
+        <LayersControl.Overlay {...overlayProps("ships")}>
           <TgosLayer categories={["ship"]} />
         </LayersControl.Overlay>
-        <LayersControl.Overlay name="Other ground objects" checked>
+        <LayersControl.Overlay {...overlayProps("otherGroundObjects")}>
           <TgosLayer categories={["aa", "factory", "ship"]} exclude />
         </LayersControl.Overlay>
-        <LayersControl.Overlay name="Supply routes" checked>
+        <LayersControl.Overlay {...overlayProps("supplyRoutes")}>
           <SupplyRoutesLayer />
         </LayersControl.Overlay>
-        <LayersControl.Overlay name="Front lines" checked>
+        <LayersControl.Overlay {...overlayProps("frontLines")}>
           <FrontLinesLayer />
         </LayersControl.Overlay>
-        <LayersControl.Overlay name="Enemy SAM threat range" checked>
+        <LayersControl.Overlay {...overlayProps("enemySamThreatRange")}>
           <AirDefenseRangeLayer blue={false} />
         </LayersControl.Overlay>
-        <LayersControl.Overlay name="Enemy SAM detection range">
+        <LayersControl.Overlay {...overlayProps("enemySamDetectionRange")}>
           <AirDefenseRangeLayer blue={false} detection />
         </LayersControl.Overlay>
-        <LayersControl.Overlay name="Enemy IADS Network">
+        <LayersControl.Overlay {...overlayProps("enemyIadsNetwork")}>
           <Iadsnetworklayer blue={false} />
         </LayersControl.Overlay>
-        <LayersControl.Overlay name="Allied SAM threat range">
+        <LayersControl.Overlay {...overlayProps("alliedSamThreatRange")}>
           <AirDefenseRangeLayer blue={true} />
         </LayersControl.Overlay>
-        <LayersControl.Overlay name="Allied SAM detection range">
+        <LayersControl.Overlay {...overlayProps("alliedSamDetectionRange")}>
           <AirDefenseRangeLayer blue={true} detection />
         </LayersControl.Overlay>
-        <LayersControl.Overlay name="Highlight radar emitter on hover" checked>
+        <LayersControl.Overlay {...overlayProps("emitterHighlight")}>
           <EmitterHighlightToggle />
         </LayersControl.Overlay>
-        <LayersControl.Overlay name="Allied IADS Network">
+        <LayersControl.Overlay {...overlayProps("alliedIadsNetwork")}>
           <Iadsnetworklayer blue={true} />
         </LayersControl.Overlay>
-        <LayersControl.Overlay name="Selected flight plan">
+        <LayersControl.Overlay {...overlayProps("selectedFlightPlan")}>
           <FlightPlansLayer selectedOnly />
         </LayersControl.Overlay>
-        <LayersControl.Overlay name="All blue flight plans" checked>
+        <LayersControl.Overlay {...overlayProps("blueFlightPlans")}>
           <FlightPlansLayer blue={true} />
         </LayersControl.Overlay>
-        <LayersControl.Overlay name="All red flight plans">
+        <LayersControl.Overlay {...overlayProps("redFlightPlans")}>
           <FlightPlansLayer blue={false} />
         </LayersControl.Overlay>
       </LayersControl>
@@ -132,6 +134,7 @@ export default function LiberationMap() {
         <CullingExclusionZones />
         <WaypointDebugZonesControls />
       </LayersControl>
+      <Legend />
     </MapContainer>
   );
 }

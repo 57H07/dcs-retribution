@@ -41,6 +41,8 @@ class MissionResultsProcessor:
                 self.commit_air_losses(debriefing)
             with logged_duration("commit_pilot_experience"):
                 self.commit_pilot_experience()
+            with logged_duration("commit_pilot_kills"):
+                self.commit_pilot_kills(debriefing)
             with logged_duration("commit_front_line_losses"):
                 self.commit_front_line_losses(debriefing)
             with logged_duration("commit_motorpool_losses"):
@@ -192,6 +194,9 @@ class MissionResultsProcessor:
     def _commit_pilot_experience(ato: AirTaskingOrder) -> None:
         for package in ato.packages:
             for flight in package.flights:
+                if flight.returned_to_squadron:
+                    # Not spawned (e.g. runway out of service): nobody flew it.
+                    continue
                 for idx, pilot in enumerate(flight.roster.iter_pilots()):
                     if pilot is None:
                         logging.error(
@@ -204,6 +209,11 @@ class MissionResultsProcessor:
     def commit_pilot_experience(self) -> None:
         self._commit_pilot_experience(self.game.blue.ato)
         self._commit_pilot_experience(self.game.red.ato)
+
+    @staticmethod
+    def commit_pilot_kills(debriefing: Debriefing) -> None:
+        for kill in debriefing.pilot_kills:
+            kill.pilot.record.credit_kill(kill.category)
 
     @staticmethod
     def commit_front_line_losses(debriefing: Debriefing) -> None:

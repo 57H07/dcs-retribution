@@ -1,4 +1,9 @@
 import { SupplyRoute as SupplyRouteModel } from "../../api/liberationApi";
+import {
+  LAYER_COLORS,
+  SUPPLY_ROUTE_ACTIVE_WEIGHT,
+  SUPPLY_ROUTE_WEIGHT,
+} from "../../maplayers/colors";
 import SplitLines from "../splitlines/SplitLines";
 import { Polyline as LPolyline } from "leaflet";
 import { useEffect, useRef } from "react";
@@ -26,23 +31,26 @@ function ActiveSupplyRouteHighlight(props: SupplyRouteProps) {
   }
 
   return (
-    <Polyline positions={props.route.points} color={"#ffffff"} weight={2} />
+    <Polyline positions={props.route.points} color={LAYER_COLORS.supplyRouteActiveTransport}
+      weight={SUPPLY_ROUTE_ACTIVE_WEIGHT} />
   );
 }
 
 function colorFor(route: SupplyRouteModel) {
   if (route.front_active) {
-    return "#c85050";
+    return LAYER_COLORS.supplyRouteFrontActive;
   }
   if (route.blue) {
-    return "#2d3e50";
+    return LAYER_COLORS.supplyRouteBlue;
   }
-  return "#8c1414";
+  return LAYER_COLORS.supplyRouteRed;
 }
 
 export default function SupplyRoute(props: SupplyRouteProps) {
   const color = colorFor(props.route);
-  const weight = props.route.is_sea ? 4 : 6;
+  const weight = props.route.is_sea
+    ? SUPPLY_ROUTE_WEIGHT.sea
+    : SUPPLY_ROUTE_WEIGHT.land;
 
   const path = useRef<LPolyline | null>();
 

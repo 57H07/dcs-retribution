@@ -16,6 +16,44 @@ if TYPE_CHECKING:
     from game.coalition import Coalition
 
 
+def warn_if_primary_not_auto_assignable(
+    squadron: Squadron, primary: FlightType
+) -> None:
+    """Log if an assigned squadron lacks its campaign primary in its auto set.
+
+    Squadron selection already guarantees ``capable_of(primary)`` and the campaign
+    replace preserves the primary, so this should never fire today. It is a tripwire
+    for future changes (e.g. an intersect/ceiling model) that could silently leave a
+    randomized squadron unable to fly its assigned primary.
+    """
+    # Use can_auto_assign (the canonical gate: set membership AND airframe capability)
+    # rather than raw set membership, so a dirty set (e.g. an incapable primary written
+    # via deserialization or a UI edit) still trips the wire.
+    if not squadron.can_auto_assign(primary):
+        logging.warning(
+            "Squadron %s (%s) assigned primary task %s, but it is not in the "
+            "squadron's auto-assignable mission types. Selection should guarantee "
+            "capability; this indicates an upstream regression.",
+            squadron.name,
+            squadron.aircraft,
+            primary,
+        )
+
+
+def campaign_auto_assignable_mission_types(
+    squadron_def: SquadronDef, config: SquadronConfig
+) -> set[FlightType]:
+    """Auto-assignable mission types of a squadron placed by a campaign.
+
+    The campaign primary is always kept: the campaign put this squadron there for
+    that task. The campaign secondaries (often a broad alias such as ``any``) are
+    limited to the squadron definition's ``mission_types``, so a squadron that does
+    not list e.g. Transport is never auto-assigned Transport as a secondary.
+    """
+    secondaries = set(config.secondary) & squadron_def.auto_assignable_mission_types
+    return secondaries | {config.primary}
+
+
 class DefaultSquadronAssigner:
     def __init__(
         self, config: CampaignAirWingConfig, game: Game, coalition: Coalition
@@ -51,8 +89,11 @@ class DefaultSquadronAssigner:
                     self.game,
                 )
                 squadron.set_auto_assignable_mission_types(
-                    squadron_config.auto_assignable
+                    campaign_auto_assignable_mission_types(
+                        squadron_def, squadron_config
+                    )
                 )
+                warn_if_primary_not_auto_assignable(squadron, squadron_config.primary)
                 # Campaign configs predate CSAR and never list it, so opt capable
                 # squadrons in by default. The player can still turn it off in the
                 # Air Wing configuration dialog.
@@ -128,8 +169,11 @@ class DefaultSquadronAssigner:
         ignore_base_preference: bool = False,
     ) -> bool:
         if ignore_base_preference:
+            # The campaign named this squadron explicitly: its choice wins over the
+            # squadron's own mission_types.
             return control_point.can_operate(squadron.aircraft)
-        return squadron.operates_from(control_point) and squadron.capable_of(task)
+        # Random picks only use squadrons whose mission_types include the task.
+        return squadron.operates_from(control_point) and squadron.can_auto_assign(task)
 
     def find_squadron_for_airframe(
         self, aircraft: AircraftType, task: FlightType, control_point: ControlPoint

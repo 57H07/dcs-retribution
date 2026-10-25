@@ -28,6 +28,7 @@ from .baiingress import BaiIngressBuilder
 from .casingress import CasIngressBuilder
 from .csarpickup import CsarPickupBuilder
 from .deadingress import DeadIngressBuilder
+from .decoyrelease import DecoyReleaseBuilder
 from .default import DefaultWaypointBuilder
 from .holdpoint import HoldPointBuilder
 from .joinpoint import JoinPointBuilder
@@ -170,6 +171,7 @@ class WaypointGenerator:
     def builder_for_waypoint(self, waypoint: FlightWaypoint) -> PydcsWaypointBuilder:
         builders = {
             FlightWaypointType.CARGO_STOP: CargoStopBuilder,
+            FlightWaypointType.DECOY_RELEASE: DecoyReleaseBuilder,
             FlightWaypointType.CSAR_PICKUP: CsarPickupBuilder,
             FlightWaypointType.DROPOFF_ZONE: LandingZoneBuilder,
             FlightWaypointType.INGRESS_AIR_ASSAULT: AirAssaultIngressBuilder,

@@ -83,6 +83,10 @@ class FlightMembers(IFlightRoster):
             [p for p in self.iter_pilots() if p is not None]
         )
         for member in self.members:
+            # The pilots now belong to the squadron's free pool again; keeping
+            # them here would let a second clear() return them twice, or let
+            # them sit in this flight and another one at once (BUG-05).
+            member.pilot = None
             if (code := member.tgp_laser_code) is not None:
                 code.release()
 

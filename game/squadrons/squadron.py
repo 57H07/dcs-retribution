@@ -241,14 +241,19 @@ class Squadron:
         self.available_pilots.remove(pilot)
 
     def return_pilot(self, pilot: Pilot) -> None:
-        self.available_pilots.append(pilot)
+        self.return_pilots([pilot])
 
     def return_pilots(self, pilots: Sequence[Pilot]) -> None:
         # Return in reverse so that returning two pilots and then getting two more
         # results in the same ordering. This happens commonly when resetting rosters in
         # the UI, when we clear the roster because the UI is updating, then end up
         # repopulating the same size flight from the same squadron.
-        self.available_pilots.extend(reversed(pilots))
+        #
+        # A pilot that is already free is never added twice: a duplicate would be
+        # handed to two flights at once (BUG-05).
+        for pilot in reversed(pilots):
+            if not any(p is pilot for p in self.available_pilots):
+                self.available_pilots.append(pilot)
 
     def _recruit_pilots(self, count: int) -> None:
         new_pilots = self.pilot_pool[:count]
@@ -258,13 +263,28 @@ class Squadron:
         # country/locale is fixed for a squadron's lifetime, so hundreds of
         # identical ``faker_for_country`` lookups per campaign collapse to one.
         faker = self.faker
+        taken = {p.name for p in self.current_roster} | {p.name for p in new_pilots}
         for _ in range(count):
-            if random.randint(1, 100) > self.female_pilot_percentage:
-                new_pilots.append(Pilot(faker.name_male()))
-            else:
-                new_pilots.append(Pilot(faker.name_female()))
+            female = random.randint(1, 100) <= self.female_pilot_percentage
+            name = self._unique_pilot_name(faker, female, taken)
+            taken.add(name)
+            new_pilots.append(Pilot(name))
         self.current_roster.extend(new_pilots)
         self.available_pilots.extend(new_pilots)
+
+    #: Draws allowed to find a name not yet used in the squadron. Small locales can
+    #: run out of combinations, so after this many a namesake is accepted.
+    MAX_PILOT_NAME_DRAWS = 20
+
+    @classmethod
+    def _unique_pilot_name(cls, faker: Faker, female: bool, taken: set[str]) -> str:
+        """A random pilot name, avoiding names already in the squadron (BUG-05)."""
+        name = ""
+        for _ in range(cls.MAX_PILOT_NAME_DRAWS):
+            name = faker.name_female() if female else faker.name_male()
+            if name not in taken:
+                break
+        return name
 
     def populate_for_turn_0(self, squadrons_start_full: bool) -> None:
         if any(p.status is not PilotStatus.Active for p in self.pilot_pool):
@@ -402,7 +422,9 @@ class Squadron:
         return self.aircraft.capable_of(task)
 
     def can_auto_assign(self, task: FlightType) -> bool:
-        return task in self.auto_assignable_mission_types
+        # Intersect with airframe capability at read time: a saved/UI-added type the
+        # airframe cannot fly is never auto-assignable, even if present in the set.
+        return task in self.auto_assignable_mission_types and self.capable_of(task)
 
     def can_auto_assign_mission(
         self,
@@ -590,8 +612,10 @@ class Squadron:
         self.plan_ferry_flights(now)
 
     def cancel_ferry_flights(self) -> None:
-        for package in self.coalition.ato.packages:
-            # Copy the list so our iterator remains consistent throughout the removal.
+        # Copy both lists: removing from a list while iterating it skips the next
+        # element, which left stale ferry flights behind after an empty package
+        # (BUG-05).
+        for package in list(self.coalition.ato.packages):
             for flight in list(package.flights):
                 if flight.squadron == self and flight.flight_type is FlightType.FERRY:
                     package.remove_flight(flight)
