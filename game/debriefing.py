@@ -21,11 +21,13 @@ from game.dcs.aircrafttype import AircraftType
 from game.dcs.groundunittype import GroundUnitType
 from game.squadrons.pilot import KillCategory
 from game.theater import Airfield, ControlPoint, Player
+from game.theater.grounddamage import ground_damage_outcome, is_damage_tracked
 
 if TYPE_CHECKING:
     from game import Game
     from game.ato.flight import Flight
     from game.squadrons import Pilot
+    from game.theater.theatergroup import TheaterUnit
     from game.sim.simulationresults import SimulationResults
     from game.transfers import CargoShip
     from game.unitmap import (
@@ -101,6 +103,15 @@ class GroundLosses:
 
     player_airfields: List[Airfield] = field(default_factory=list)
     enemy_airfields: List[Airfield] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class InoperativeGroundUnit:
+    """A ground unit or ship put out of action by persistent damage."""
+
+    theater_unit: TheaterUnit
+    remaining_life: float
+    turns: int
 
 
 @dataclass(frozen=True)
@@ -287,6 +298,9 @@ class Debriefing:
             self.state_data, game.settings.persistent_damage
         )
         self.damaged_aircraft = self.find_damaged_aircraft(self.damaged_units, unit_map)
+        self.inoperative_ground_units = self.apply_ground_damage(
+            self.damaged_units, game.settings.persistent_damage_destroys_ground_units
+        )
 
     @staticmethod
     def find_damaged_aircraft(
@@ -310,6 +324,38 @@ class Debriefing:
         if not persistent_damage:
             return {}
         return dict(state_data.damaged_units)
+
+    def apply_ground_damage(
+        self, damaged_units: Dict[str, float], destroy_heavily_damaged: bool
+    ) -> List[InoperativeGroundUnit]:
+        """Sorts damaged ground units and ships of ground objects by damage tier.
+
+        Units destroyed by their damage are added to the ground object losses, so
+        they are reported and committed like any other loss. Returns the units that
+        become inoperative.
+        """
+        inoperative: List[InoperativeGroundUnit] = []
+        for unit_name, remaining_life in damaged_units.items():
+            mapping = self.unit_map.theater_units(unit_name)
+            if mapping is None or not is_damage_tracked(mapping.theater_unit):
+                continue
+            outcome = ground_damage_outcome(remaining_life, destroy_heavily_damaged)
+            if outcome.destroyed:
+                if mapping.theater_unit.ground_object.is_friendly(
+                    to_player=Player.BLUE
+                ):
+                    self.ground_losses.player_ground_objects.append(mapping)
+                else:
+                    self.ground_losses.enemy_ground_objects.append(mapping)
+            elif outcome.inoperative_turns > 0:
+                inoperative.append(
+                    InoperativeGroundUnit(
+                        mapping.theater_unit,
+                        remaining_life,
+                        outcome.inoperative_turns,
+                    )
+                )
+        return inoperative
 
     def merge_simulation_results(self, results: SimulationResults) -> None:
         from game.unitmap import AirliftUnits

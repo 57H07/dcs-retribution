@@ -47,8 +47,9 @@ class SkynetNode:
         ]:
             # Use UnitName for EWR, CommandCenter, Comms, Power
             for unit in group.units:
-                # Check for alive units in the group
-                if unit.alive:
+                # Check for alive units in the group. Inoperative units (persistent
+                # damage) spawn as statics that skynet cannot use.
+                if unit.operational:
                     return unit.unit_name
             if group.units[0].is_static:
                 # Statics will be placed as dead unit
@@ -122,7 +123,7 @@ class IadsNetwork:
                 # Skip culled ground objects
                 continue
 
-            all_dead = not any([x.alive for x in node.group.units])
+            all_dead = not any([x.operational for x in node.group.units])
             if all_dead:
                 continue
 
@@ -131,7 +132,7 @@ class IadsNetwork:
             # but if it does, we want to know because it's supposed to be impossible afaict
             skynet_node = SkynetNode.from_group(node.group)
             for connection in node.connections.values():
-                if not any([x.alive for x in connection.units]):
+                if not any([x.operational for x in connection.units]):
                     continue
                 if connection.ground_object.is_friendly(
                     skynet_node.player

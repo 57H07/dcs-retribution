@@ -101,7 +101,7 @@ class TheaterGroundObject(MissionTarget, SidcDescribable, ABC):
             if self.has_pending_repairs:
                 return Status.PRESENT_DAMAGED
             return Status.PRESENT_DESTROYED
-        elif self.dead_units:
+        elif self.is_damaged:
             return Status.PRESENT_DAMAGED
         else:
             return Status.PRESENT
@@ -149,6 +149,11 @@ class TheaterGroundObject(MissionTarget, SidcDescribable, ABC):
         :return: all the dead units at this location
         """
         return [unit for unit in self.units if not unit.alive]
+
+    @property
+    def is_damaged(self) -> bool:
+        """True if some units are dead or inoperative (persistent damage)."""
+        return any(not unit.operational for unit in self.units)
 
     @property
     def group_name(self) -> str:
@@ -206,7 +211,7 @@ class TheaterGroundObject(MissionTarget, SidcDescribable, ABC):
     @property
     def has_aa(self) -> bool:
         """Returns True if the ground object contains a working anti air unit"""
-        return any(u.alive and u.is_anti_air for u in self.units)
+        return any(u.operational and u.is_anti_air for u in self.units)
 
     @property
     def has_live_radar_sam(self) -> bool:
@@ -605,7 +610,7 @@ class SamGroundObject(IadsGroundObject):
             if self.has_pending_repairs:
                 return Status.PRESENT_DAMAGED
             return Status.PRESENT_DESTROYED
-        elif self.dead_units:
+        elif self.is_damaged:
             if self.has_pending_repairs:
                 return Status.PRESENT_DAMAGED
             if self.max_threat_range() > meters(0):

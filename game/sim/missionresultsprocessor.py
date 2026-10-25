@@ -54,6 +54,8 @@ class MissionResultsProcessor:
                 self.commit_airlift_losses(debriefing)
             with logged_duration("commit_ground_losses"):
                 self.commit_ground_losses(debriefing, events)
+            with logged_duration("commit_ground_damage"):
+                self.commit_ground_damage(debriefing, events)
             with logged_duration("commit_damaged_runways"):
                 self.commit_damaged_runways(debriefing)
             # Score the front line before capturing bases: casualty_count
@@ -291,6 +293,16 @@ class MissionResultsProcessor:
         # A strike on a site under repair sets the works back to the start.
         for tgo in struck.values():
             restart_repairs(tgo, debriefing.game.settings)
+
+    def commit_ground_damage(
+        self, debriefing: Debriefing, events: GameUpdateEvents
+    ) -> None:
+        for damaged in debriefing.inoperative_ground_units:
+            logging.info(
+                f"{damaged.theater_unit.unit_name} inoperative for "
+                f"{damaged.turns} turn(s)"
+            )
+            damaged.theater_unit.make_inoperative(damaged.turns, self.game.turn, events)
 
     @staticmethod
     def commit_damaged_runways(debriefing: Debriefing) -> None:
