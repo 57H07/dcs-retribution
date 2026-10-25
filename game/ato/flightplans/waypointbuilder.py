@@ -545,6 +545,45 @@ class WaypointBuilder:
             pretty_name="SEAD Sweep",
         )
 
+    def decoy_release(self, target: MissionTarget) -> FlightWaypoint:
+        """Creates the point where AI SEAD flights release their decoys.
+
+        The point sits on the ingress-to-target line, at the configured release
+        distance from the target, so the decoys can glide into the SAM's
+        engagement zone instead of being dropped at the IP.
+        """
+        assert self.flight.package.waypoints
+        position = self.decoy_release_point(
+            target.position,
+            self.flight.package.waypoints.ingress,
+            nautical_miles(self.settings.sead_decoy_release_distance),
+        )
+        altitude = self.get_combat_altitude
+        baro: AltitudeReference = "BARO"
+        return FlightWaypoint(
+            "DECOY RELEASE",
+            FlightWaypointType.DECOY_RELEASE,
+            position,
+            altitude,
+            "RADIO" if altitude.feet <= AGL_TRANSITION_ALT else baro,
+            description=f"Release decoys on {target.name}",
+            pretty_name="Decoy release",
+        )
+
+    @staticmethod
+    def decoy_release_point(
+        target: Point, ingress: Point, release_distance: Distance
+    ) -> Point:
+        """Point at release_distance from target, towards ingress.
+
+        Never placed beyond the ingress point: if the IP is already closer than
+        the release distance, the point is put just inside the IP.
+        """
+        ingress_distance = target.distance_to_point(ingress)
+        distance = min(release_distance.meters, ingress_distance * 0.95)
+        heading = target.heading_between_point(ingress)
+        return target.point_from_heading(heading, distance)
+
     def _sead_search_point(self, target: MissionTarget) -> Point:
         """Creates custom waypoint for AI SEAD flights
             to avoid having them fly all the way to the SAM site.

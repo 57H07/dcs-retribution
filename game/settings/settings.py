@@ -987,6 +987,20 @@ class Settings:
             "flights only; existing flights are unchanged."
         ),
     )
+    sead_decoy_release_distance: int = bounded_int_option(
+        "Decoy release distance (NM)",
+        page=MISSION_GENERATOR_PAGE,
+        section=GAMEPLAY_SECTION,
+        default=15,
+        min=1,
+        max=60,
+        detail=(
+            "Distance from the target at which AI SEAD flights carrying decoys "
+            "(e.g. ADM-141 TALD) release them. Decoys released too far out glide "
+            "into the ground before reaching the SAM's engagement zone. Applies "
+            "to newly planned flight plans."
+        ),
+    )
     nevatim_parking_fix: bool = boolean_option(
         "Force air-starts for aircraft at Nevatim and Ramon Airbase inoperable parking slots",
         page=MISSION_GENERATOR_PAGE,
