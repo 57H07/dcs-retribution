@@ -8,8 +8,9 @@ from typing import TYPE_CHECKING
 from game.debriefing import Debriefing
 from game.ground_forces.combat_stance import CombatStance
 from game.profiling import logged_duration
-from game.squadrons.pilot import KillCategory, LogbookEntry, Pilot
+from game.squadrons.awards import award_careers
 from game.squadrons.maintenance import aircraft_maintenance_turns
+from game.squadrons.pilot import AwardKind, KillCategory, LogbookEntry, Pilot
 from game.theater import ControlPoint
 from game.theater.repairs import restart_repairs
 from .gameupdateevents import GameUpdateEvents
@@ -42,6 +43,8 @@ class MissionResultsProcessor:
                 self.commit_pilot_kills(debriefing)
             with logged_duration("commit_pilot_logbooks"):
                 self.commit_pilot_logbooks(debriefing)
+            with logged_duration("commit_pilot_awards"):
+                self.commit_pilot_awards()
             with logged_duration("commit_front_line_losses"):
                 self.commit_front_line_losses(debriefing)
             with logged_duration("commit_motorpool_losses"):
@@ -138,6 +141,19 @@ class MissionResultsProcessor:
         }
         for ato in (self.game.blue.ato, self.game.red.ato):
             self._commit_logbooks(ato, kills, lost)
+
+    def commit_pilot_awards(self) -> None:
+        """Grants the ranks and decorations player pilots earned (PER-03.3).
+
+        Must run after ``commit_pilot_logbooks``. No gameplay effect.
+        """
+        date = self.game.conditions.start_time
+        for coalition in (self.game.blue, self.game.red):
+            for pilot, award in award_careers(coalition.air_wing, self.game.turn, date):
+                logging.info(f"{pilot} received the {award.kind.value} {award.name}")
+                if coalition is self.game.blue:
+                    what = "promoted to" if award.kind is AwardKind.Rank else "awarded"
+                    self.game.message(f"{pilot} {what} {award.name}", award.description)
 
     def _commit_logbooks(
         self,
