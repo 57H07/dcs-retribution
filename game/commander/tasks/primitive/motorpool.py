@@ -15,9 +15,11 @@ class PlanMotorpoolAttack(PackagePlanningTask[MotorpoolGroundObject]):
     """Plans a strike or BAI package (with escorts) against an enemy motorpool
     depot, destroying parked reserve armor so the owner must repurchase it.
 
-    The motorpool's groups are populated ephemerally at mission generation *after*
-    planning (see MotorpoolPopulator), so flight sizing is derived from the live
-    reserve pool (``reserve_armor_for``) rather than the stale ``alive_unit_count``.
+    The motorpool's groups are populated ephemerally from the reserve at turn
+    initialization (before planning) and again at mission generation (see
+    MotorpoolPopulator). Flight sizing is derived from the live reserve pool
+    (``reserve_armor_for``); the rendered groups must also hold live units, since
+    the flight plans take their targets from them.
     """
 
     #: BAI is the doctrinal primary (parked ground forces, not in contact); STRIKE
@@ -29,6 +31,10 @@ class PlanMotorpoolAttack(PackagePlanningTask[MotorpoolGroundObject]):
         if self.target not in state.motorpool_targets:
             return False
         if self._rendered_unit_count() <= 0:
+            return False
+        if not self.target.strike_targets:
+            # Flight plans take their targets from the rendered groups. Without
+            # live units the Strike waypoint would have no target at all.
             return False
         if not self.target_area_preconditions_met(state):
             return False

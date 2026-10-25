@@ -490,6 +490,16 @@ class Game:
         with logged_duration("Threat zone computation"):
             self.compute_threat_zones(events)
 
+        # Render motorpools from the current reserve *before* planning. Their groups
+        # are otherwise only rebuilt at mission generation, so planning would read
+        # whatever the previous generation left (nothing on the first turn, or after
+        # a turn where the reserve was empty). Strike flight plans take their targets
+        # from those groups, so a Strike planned against a motorpool with reserve
+        # armor but no rendered units had no targets and broke mission generation.
+        from .missiongenerator.motorpoolpopulator import MotorpoolPopulator
+
+        MotorpoolPopulator(self).populate()
+
         # Plan Coalition specific turn
         if for_blue:
             self.blue.initialize_turn(self.turn == 0 and squadrons_start_full)
