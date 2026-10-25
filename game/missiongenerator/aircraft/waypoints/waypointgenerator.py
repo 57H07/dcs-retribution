@@ -26,6 +26,7 @@ from .antishipingress import AntiShipIngressBuilder
 from .armedreconingress import ArmedReconIngressBuilder
 from .baiingress import BaiIngressBuilder
 from .casingress import CasIngressBuilder
+from .csarpickup import CsarPickupBuilder
 from .deadingress import DeadIngressBuilder
 from .decoyrelease import DecoyReleaseBuilder
 from .default import DefaultWaypointBuilder
@@ -171,6 +172,7 @@ class WaypointGenerator:
         builders = {
             FlightWaypointType.CARGO_STOP: CargoStopBuilder,
             FlightWaypointType.DECOY_RELEASE: DecoyReleaseBuilder,
+            FlightWaypointType.CSAR_PICKUP: CsarPickupBuilder,
             FlightWaypointType.DROPOFF_ZONE: LandingZoneBuilder,
             FlightWaypointType.INGRESS_AIR_ASSAULT: AirAssaultIngressBuilder,
             FlightWaypointType.INGRESS_ANTI_SHIP: AntiShipIngressBuilder,

@@ -24,8 +24,11 @@ from game.theater import Airfield, ControlPoint, Player
 from game.theater.grounddamage import ground_damage_outcome, is_damage_tracked
 
 if TYPE_CHECKING:
+    from dcs.mapping import Point
     from game import Game
     from game.ato.flight import Flight
+    from game.squadrons.csarservice import CapturedPilot
+    from game.squadrons.downedpilot import DownedPilot
     from game.squadrons import Pilot
     from game.theater.theatergroup import TheaterUnit
     from game.sim.simulationresults import SimulationResults
@@ -132,6 +135,17 @@ class SideLossCounts:
     scenery: int
     bases_lost: int
     runways_destroyed: int
+    pilots_rescued: int
+
+
+@dataclass(frozen=True)
+class RescuedPilot:
+    """A downed pilot recovered by CSAR during this mission."""
+
+    name: str
+    aircraft: str
+    squadron: str
+    player: Player
 
 
 @dataclass(frozen=True)
@@ -186,6 +200,12 @@ class StateData:
     #: Mangled names of bases that were captured during the mission.
     base_capture_events: List[str]
 
+    #: Maps an aircraft unit name to the (x, z) DCS-world position where its pilot
+    #: came down, for pilots that ejected during the mission.
+    ejections: Dict[str, tuple[float, float]]
+
+    #: UUID strings of downed pilots confirmed rescued in-mission by Ops.CSAR.
+    rescued_pilot_ids: List[str]
     #: Initiator and target of each S_EVENT_KILL, used to credit pilots. Empty for
     #: missions generated before kill attribution existed.
     kill_attributions: List[KillAttribution] = field(default_factory=list)
@@ -226,12 +246,22 @@ class StateData:
             else:
                 killed_ground_units.append(unit)
 
+        ejections: Dict[str, tuple[float, float]] = {}
+        for event in data.get("ejection_events", []):
+            try:
+                unit = str(event["unit"])
+                ejections[unit] = (float(event["x"]), float(event["z"]))
+            except (KeyError, TypeError, ValueError):
+                logging.warning("Ignoring malformed ejection event: %s", event)
+
         return cls(
             mission_ended=data.get("mission_ended", False),
             killed_aircraft=killed_aircraft,
             killed_ground_units=killed_ground_units,
             destroyed_statics=data.get("destroyed_objects_positions", []),
             base_capture_events=data.get("base_capture_events", []),
+            ejections=ejections,
+            rescued_pilot_ids=[str(x) for x in data.get("csar_rescued", [])],
             kill_attributions=[
                 attribution
                 for attribution in map(
@@ -301,6 +331,88 @@ class Debriefing:
         self.inoperative_ground_units = self.apply_ground_damage(
             self.damaged_units, game.settings.persistent_damage_destroys_ground_units
         )
+        self.ejected_pilot_positions = self._ejected_pilot_positions()
+        #: Downed pilots recovered this mission, keyed by their DownedPilot id so
+        #: repeated state.json polls (and the AI-flight fallback added later by
+        #: MissionResultsProcessor) can't double-count the same rescue.
+        self.rescued_pilots: Dict[UUID, RescuedPilot] = {}
+        self._collect_reported_rescues()
+
+    def _collect_reported_rescues(self) -> None:
+        """Records rescues confirmed in-mission and reported via state.json."""
+        reported = self.state_data.rescued_pilot_ids
+        if not reported:
+            return
+        for uuid_str in reported:
+            try:
+                downed = self.game.db.downed_pilots.get(UUID(uuid_str))
+            except ValueError:
+                logging.warning(
+                    "Mission reported a rescued pilot id that isn't a UUID: %r. "
+                    "The rescue will not be credited.",
+                    uuid_str,
+                )
+                continue
+            except KeyError:
+                # Expected once the results have been committed, since committing
+                # a rescue removes the pilot from the database. Anything else
+                # means the mission and the campaign disagree about who was down,
+                # which would silently lose a rescue, so say so.
+                logging.info(
+                    "Mission reported rescued pilot %s, who is not (or no longer) "
+                    "a tracked downed pilot. Not credited.",
+                    uuid_str,
+                )
+                continue
+            self.record_rescue(downed)
+        logging.info(
+            "Mission reported %d rescued pilot(s); %d credited.",
+            len(reported),
+            len(self.rescued_pilots),
+        )
+
+    def record_rescue(self, downed: DownedPilot) -> None:
+        """Records a downed pilot as rescued for reporting purposes.
+
+        Idempotent: the same pilot may be reported by both the in-mission
+        Ops.CSAR result and the AI-flight fallback in the results processor.
+        """
+        self.rescued_pilots[downed.id] = RescuedPilot(
+            name=downed.pilot.name,
+            aircraft=downed.aircraft_name,
+            squadron=str(downed.squadron),
+            player=downed.player,
+        )
+
+    def rescued_pilots_for(self, player: Player) -> list[RescuedPilot]:
+        return [p for p in self.rescued_pilots.values() if p.player == player]
+
+    def captured_pilots_for(self, player: Player) -> list[CapturedPilot]:
+        """Pilots taken prisoner this turn.
+
+        Read from the game rather than stored here, because captures also happen
+        while the turn advances -- after results are committed but before the
+        debriefing is shown -- and this is evaluated when the window is drawn.
+        """
+        return [p for p in self.game.pilots_captured_this_turn if p.player == player]
+
+    def _ejected_pilot_positions(self) -> Dict[int, "Point"]:
+        """Maps ``id(pilot)`` to the world position where they came down.
+
+        Resolved from the ejection unit names in the same way :meth:`dead_aircraft`
+        resolves killed aircraft, so the loss-processing code can look up an
+        ejection by the pilot object it already has in hand.
+        """
+        from dcs.mapping import Point
+
+        positions: Dict[int, Point] = {}
+        terrain = self.game.theater.terrain
+        for unit_name, (x, z) in self.state_data.ejections.items():
+            flying_unit = self.unit_map.flight(unit_name)
+            if flying_unit is None or flying_unit.pilot is None:
+                continue
+            positions[id(flying_unit.pilot)] = Point(x, z, terrain)
+        return positions
 
     @staticmethod
     def find_damaged_aircraft(
@@ -541,6 +653,7 @@ class Debriefing:
                 if capture.captured_by_player == player.opponent
             ),
             runways_destroyed=len(airfields),
+            pilots_rescued=len(self.rescued_pilots_for(player)),
         )
 
     def dead_aircraft(self) -> AirLosses:

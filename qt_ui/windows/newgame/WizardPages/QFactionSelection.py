@@ -587,7 +587,7 @@ class QFactionSaver(QDialog):
             caption="Save Faction", directory=str(user_faction_path), filter="*.json"
         )
         fd.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
-        if fd.exec_():
+        if fd.exec():
             json_filename = fd.selectedFiles()[0]
             with open(json_filename, "w") as file:
                 json.dump(self.faction.to_dict(), file, indent=2)

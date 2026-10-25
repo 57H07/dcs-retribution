@@ -13,6 +13,8 @@ base_capture_events = {}
 destroyed_objects_positions = {} -- will be added via S_EVENT_DEAD event
 damaged_units_life = {} -- unit/static name -> remaining life ratio, tracked via S_EVENT_HIT
 killed_unit_names = {} -- names reported by crash/dead/lost/kill events, excluded from damaged_units
+ejection_events = {} -- {unit=<aircraft unit name>, x=, z=} added via S_EVENT_EJECTION
+csar_rescued = {} -- UUID strings of downed pilots rescued by Ops.CSAR (see OpsCSAR.lua)
 mission_ended = false
 dirty_state = false -- Track if state has changed and needs writing
 
@@ -114,6 +116,8 @@ function write_state()
         ["mission_ended"] = mission_ended,
         ["destroyed_objects_positions"] = destroyed_objects_positions,
         ["damaged_units"] = collect_damaged_units(),
+        ["ejection_events"] = ejection_events,
+        ["csar_rescued"] = csar_rescued,
     }
     local ok, write_error = pcall(function()
         fp:write(json:encode(game_state))
@@ -316,6 +320,40 @@ local function onEvent(event)
             destroyed_objects_positions[#destroyed_objects_positions + 1] = destruction
         end
         dirty_state = true
+    end
+
+    -- Ejection: record the aircraft unit name and its position so Retribution can
+    -- place a downed pilot for CSAR. The landing-after-ejection event refines the
+    -- position to where the pilot's parachute actually touched down.
+    if event.id == world.event.S_EVENT_EJECTION and event.initiator and event.initiator.getName then
+        local ok, name = pcall(function() return event.initiator:getName() end)
+        if ok and name then
+            local ejection = { unit = name }
+            local posOk, position = pcall(function() return event.initiator:getPosition() end)
+            if posOk and position and position.p then
+                ejection.x = position.p.x
+                ejection.z = position.p.z
+            end
+            ejection_events[#ejection_events + 1] = ejection
+            dirty_state = true
+        end
+    end
+
+    if event.id == world.event.S_EVENT_LANDING_AFTER_EJECTION and event.initiator then
+        local posOk, position = pcall(function() return event.initiator:getPoint() end)
+        if posOk and position then
+            -- Refine the most recent ejection that has no landing position yet.
+            for i = #ejection_events, 1, -1 do
+                local ej = ejection_events[i]
+                if not ej.landed then
+                    ej.x = position.x
+                    ej.z = position.z
+                    ej.landed = true
+                    dirty_state = true
+                    break
+                end
+            end
+        end
     end
 
     if event.id == world.event.S_EVENT_MISSION_END then

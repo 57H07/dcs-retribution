@@ -165,7 +165,7 @@ class QFlightList(QListView):
         delete_action.triggered.connect(lambda: self.cancel_or_abort_flight(index))
         menu.addAction(delete_action)
 
-        menu.exec_(event.globalPos())
+        menu.exec(event.globalPos())
 
 
 class QFlightPanel(QGroupBox):
@@ -379,7 +379,7 @@ class QPackageList(QListView):
         delete_action.triggered.connect(lambda: self.delete_package(index))
         menu.addAction(delete_action)
 
-        menu.exec_(event.globalPos())
+        menu.exec(event.globalPos())
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         # Delete/Supr cancels (deletes) the selected package, so several can be

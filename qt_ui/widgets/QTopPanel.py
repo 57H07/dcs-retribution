@@ -247,7 +247,7 @@ class QTopPanel(QFrame):
         )
         cancel = mbox.addButton(QMessageBox.StandardButton.Cancel)
         mbox.setEscapeButton(cancel)
-        mbox.exec_()
+        mbox.exec()
         clicked = mbox.clickedButton()
         if clicked == auto:
             self.fix_tots(negative_starts)
@@ -283,7 +283,7 @@ class QTopPanel(QFrame):
             parent=self,
         )
         mbox.setEscapeButton(mbox.addButton(QMessageBox.StandardButton.Close))
-        mbox.exec_()
+        mbox.exec()
         return True
 
     def launch_mission(self):
@@ -312,7 +312,7 @@ class QTopPanel(QFrame):
         )
 
         waiting = QWaitingForMissionResultWindow(self.game, self.sim_controller, self)
-        waiting.exec_()
+        waiting.exec()
 
     def budget_update(self, game: Game):
         self.budgetBox.setGame(game)
@@ -336,6 +336,6 @@ class QTopPanel(QFrame):
                 parent=self,
             )
             mbox.setEscapeButton(mbox.addButton(QMessageBox.StandardButton.Close))
-            mbox.exec_()
+            mbox.exec()
             return False
         return True
