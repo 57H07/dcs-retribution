@@ -40,6 +40,20 @@ def warn_if_primary_not_auto_assignable(
         )
 
 
+def campaign_auto_assignable_mission_types(
+    squadron_def: SquadronDef, config: SquadronConfig
+) -> set[FlightType]:
+    """Auto-assignable mission types of a squadron placed by a campaign.
+
+    The campaign primary is always kept: the campaign put this squadron there for
+    that task. The campaign secondaries (often a broad alias such as ``any``) are
+    limited to the squadron definition's ``mission_types``, so a squadron that does
+    not list e.g. Transport is never auto-assigned Transport as a secondary.
+    """
+    secondaries = set(config.secondary) & squadron_def.auto_assignable_mission_types
+    return secondaries | {config.primary}
+
+
 class DefaultSquadronAssigner:
     def __init__(
         self, config: CampaignAirWingConfig, game: Game, coalition: Coalition
@@ -75,7 +89,9 @@ class DefaultSquadronAssigner:
                     self.game,
                 )
                 squadron.set_auto_assignable_mission_types(
-                    squadron_config.auto_assignable
+                    campaign_auto_assignable_mission_types(
+                        squadron_def, squadron_config
+                    )
                 )
                 warn_if_primary_not_auto_assignable(squadron, squadron_config.primary)
                 self.air_wing.add_squadron(squadron)
@@ -149,8 +165,11 @@ class DefaultSquadronAssigner:
         ignore_base_preference: bool = False,
     ) -> bool:
         if ignore_base_preference:
+            # The campaign named this squadron explicitly: its choice wins over the
+            # squadron's own mission_types.
             return control_point.can_operate(squadron.aircraft)
-        return squadron.operates_from(control_point) and squadron.capable_of(task)
+        # Random picks only use squadrons whose mission_types include the task.
+        return squadron.operates_from(control_point) and squadron.can_auto_assign(task)
 
     def find_squadron_for_airframe(
         self, aircraft: AircraftType, task: FlightType, control_point: ControlPoint
