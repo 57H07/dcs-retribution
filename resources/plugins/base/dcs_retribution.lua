@@ -8,6 +8,7 @@ crash_events = {} -- killed aircraft will be added via S_EVENT_CRASH event
 dead_events = {} -- killed units will be added via S_EVENT_DEAD event
 unit_lost_events = {} -- killed units will be added via S_EVENT_UNIT_LOST
 kill_events = {} -- killed units will be added via S_EVENT_KILL 
+kill_attributions = {} -- {initiator = ..., target = ...} pairs from S_EVENT_KILL, to credit pilots
 base_capture_events = {}
 destroyed_objects_positions = {} -- will be added via S_EVENT_DEAD event
 mission_ended = false
@@ -45,6 +46,7 @@ function write_state()
         ["base_capture_events"] = base_capture_events,
 		["unit_lost_events"] = unit_lost_events,
 		["kill_events"] = kill_events,
+		["kill_attributions"] = kill_attributions,
         ["mission_ended"] = mission_ended,
         ["destroyed_objects_positions"] = destroyed_objects_positions,
     }
@@ -180,6 +182,12 @@ local function onEvent(event)
 	
 	if event.id == world.event.S_EVENT_KILL and event.target then
         kill_events[#kill_events + 1] = event.target.getName(event.target)
+        if event.initiator and event.initiator.getName then
+            kill_attributions[#kill_attributions + 1] = {
+                ["initiator"] = event.initiator.getName(event.initiator),
+                ["target"] = event.target.getName(event.target),
+            }
+        end
         dirty_state = true
     end
 
