@@ -298,6 +298,15 @@ class Squadron:
             )
         pilot.return_from_leave()
 
+    def create_player_pilot(self, name: str) -> Pilot:
+        """Adds a new player pilot to the roster, ready to be assigned."""
+        if not self.has_unfilled_pilot_slots:
+            raise RuntimeError(f"Cannot add a pilot to {self} because it is full")
+        pilot = Pilot(name, player=True)
+        self.current_roster.append(pilot)
+        self.available_pilots.append(pilot)
+        return pilot
+
     @property
     def faker(self) -> Faker:
         # Name the squadron's pilots in their own nation's convention (the
