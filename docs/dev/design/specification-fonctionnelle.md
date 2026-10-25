@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Statut** | Brouillon v0.1, à valider |
+| **Statut** | Brouillon v0.2, à valider |
 | **Date** | 2026-10-25 |
 | **Base de code** | branche `dev` @ `49e8067f` (v1.6.0), dépôt officiel `dcs-retribution/dcs-retribution` |
 | **Fork de travail** | `57H07/dcs-retribution` |
@@ -95,14 +95,18 @@ Règles communes à toutes les évolutions :
 
 **Sources :** issue [#734](https://github.com/dcs-retribution/dcs-retribution/issues/734) (v1.5.0, Golfe Persique : un CH-47 apparaît sur des AH-64 et des A-10 garés, et des hélicoptères s'écrasent juste après le décollage ; sauvegarde jointe). Le mainteneur Starfire13 soupçonne une surcharge du serveur. PR [#740](https://github.com/dcs-retribution/dcs-retribution/pull/740) (« Parking space information improvements »), fermée.
 
-**Constat :** analyse de l'attribution des places en cours (voir l'annexe B, à compléter). Les causes à examiner sont :
-- double attribution d'une même place entre les vols actifs et les appareils garés inactifs ;
-- différences de gabarit entre hélicoptères et avions ;
-- cas particuliers déjà présents dans `game/missiongenerator/aircraft/flightgroupspawner.py:128, 259, 270, 311, 318` (contournements pour Nevatim et Ramon).
+**Constat :**
+- L'ordre de génération est le suivant (`game/missiongenerator/missiongenerator.py:297-307`) : remise à zéro des places, puis vols des deux camps, puis appareils non affectés garés (`spawn_unused_aircraft`, `game/missiongenerator/aircraft/aircraftgenerator.py:218-262`).
+- Sur un aérodrome, deux mécanismes de placement coexistent :
+  - les places de parking DCS, attribuées par `Airport.free_parking_slots()` de pydcs (`flightgroupspawner.py:134, 141, 263, 273`) ;
+  - les points de « ground spawn » définis dans la campagne, que les hélicoptères et les slots joueurs utilisent en priorité ou en repli (`flightgroupspawner.py:255-296, 495-523`). Ces points sont dépilés de listes propres, `ground_spawns`, `ground_spawns_large` et `ground_spawns_roadbase`.
+- **Cause probable :** les deux mécanismes ne se réservent pas mutuellement. Un hélicoptère placé sur un point de ground spawn ne marque pas la place DCS voisine comme occupée. Un appareil inactif (AH-64, A-10) peut donc être garé ensuite sur une place qui chevauche ce point, et l'inverse est aussi possible. Le scénario de #734 (CH-47 sur des AH-64 et A-10 garés) correspond à ce cas. **Hypothèse à confirmer** avec la sauvegarde de l'issue.
+- Cas particuliers déjà présents : contournements pour Nevatim et Ramon (`flightgroupspawner.py:128-146, 259-282, 311-320`).
+- Le second symptôme (hélicoptères qui s'écrasent après le décollage) n'est pas expliqué par cette analyse. La piste « charge serveur » du mainteneur reste à évaluer.
 
 **Exigences :**
 1. Reproduire le problème avec la sauvegarde de l'issue, en solo puis sur un serveur.
-2. Garantir qu'une place de parking n'est attribuée qu'à un seul appareil par mission. Ajouter un test qui vérifie l'unicité des places sur une base saturée.
+2. Garantir qu'une position de stationnement (place DCS ou point de ground spawn) n'est attribuée qu'à un seul appareil par mission. Quand un point de ground spawn est utilisé, les places DCS situées dans un rayon de dégagement (selon l'envergure ou le rotor) sont marquées occupées, et réciproquement. Ajouter un test qui vérifie l'absence de chevauchement sur une base saturée.
 3. Si la base n'a plus de place compatible, l'appareil démarre sur une autre place libre ou en vol, avec un avertissement dans le journal, plutôt que d'être superposé.
 4. Si la cause « charge serveur » est confirmée, documenter les réglages de culling ou de performance qui l'atténuent, et clore l'issue avec ce diagnostic.
 
@@ -425,11 +429,14 @@ Les écrans sont refondus dans cet ordre, selon leur fréquence d'utilisation :
 
 **Sources :** issue [#361](https://github.com/dcs-retribution/dcs-retribution/issues/361). Raffson y confirme que le fond de carte nécessite internet et envisage un fond de secours embarqué, à condition qu'il ne soit pas trop lourd. Tinchus2009 propose une carte basse résolution.
 
-**Constat :** les fonds de carte (imagerie Clarity, Firefly et topographie, `LiberationMap.tsx:36-44`) sont des tuiles téléchargées en ligne (fournisseurs Esri, via `esri-leaflet`). Sans connexion, le fond est vide. Analyse détaillée en cours, voir l'annexe B.
+**Constat :**
+- Les trois fonds de carte (« Imagery Clarity », « Imagery Firefly », « Topographic ») sont des fonds Esri en ligne, chargés par `BasemapLayer` de `react-esri-leaflet` (`client/src/components/liberationmap/LiberationMap.tsx:36-44`). Sans connexion, le fond est vide.
+- Une donnée locale existe déjà : chaque théâtre embarque un `landmap.p` (polygones terre, mer et exclusion ; `resources/theaters/*/landmap.p`, chargé par `game/theater/conflicttheater.py:43`). Elle est déjà servie au client par `GET /map-zones/terrain` (`game/server/mapzones/routes.py:13-27`) pour un calque de debug.
+- Exception : ce calque est désactivé pour les Malouines (Falklands), car le landmap haute fidélité est trop lourd à convertir et à transmettre (commentaire de `routes.py:15-27`, qui suggère des images précalculées).
 
 **Exigences :**
-1. **Fond de secours hors ligne :** sans réseau, la carte affiche automatiquement un fond embarqué léger, construit à partir des données de théâtre présentes localement (contours terre et mer, relief simplifié). Un bandeau discret indique le mode hors ligne.
-2. Le poids ajouté au livrable reste limité. Objectif indicatif : moins de 50 Mo pour l'ensemble des théâtres, à confirmer.
+1. **Fond de secours hors ligne :** sans réseau, ou si les tuiles échouent, la carte bascule automatiquement sur un fond de base « Hors ligne » qui dessine terre et mer à partir du `landmap` du théâtre (réutilisation de `/map-zones/terrain`, stylé comme un vrai fond de carte et non comme un calque de debug). Ce fond est aussi sélectionnable manuellement dans le sélecteur de calques. Un bandeau discret indique le mode hors ligne.
+2. Pour les théâtres dont le landmap est trop lourd (Malouines), le fond est une image ou des tuiles précalculées à la construction du livrable (piste du commentaire de `routes.py`). Le poids ajouté reste limité. Objectif indicatif : moins de 50 Mo pour l'ensemble des théâtres, à confirmer.
 3. Les tuiles consultées en ligne sont mises en **cache** localement et réutilisées hors ligne.
 4. Les styles de la carte (sélecteur de calques, infobulles, menus contextuels) utilisent les jetons de GFX-01, en clair comme en sombre.
 5. La taille des symboles s'adapte au zoom, et les libellés restent lisibles.
@@ -489,8 +496,3 @@ Les écrans sont refondus dans cet ordre, selon leur fréquence d'utilisation :
 | [#950](https://github.com/dcs-retribution/dcs-retribution/pull/950) | PR | fermée, non fusionnée | BUG-03 |
 | [#951](https://github.com/dcs-retribution/dcs-retribution/pull/951) | PR | fermée, non fusionnée | BUG-02 |
 | [#965](https://github.com/dcs-retribution/dcs-retribution/issues/965) | issue | ouverte | PER-03 |
-
-## Annexe B — Analyses en attente
-
-- **BUG-04 :** analyse de l'attribution des places de parking (`flightgroupspawner.py`, appareils garés inactifs, hélipads et FARP).
-- **GFX-04 :** inventaire des fournisseurs de tuiles et des données de théâtre locales utilisables comme fond hors ligne.
