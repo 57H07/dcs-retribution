@@ -517,7 +517,33 @@ Les écrans sont refondus dans cet ordre, selon leur fréquence d'utilisation :
 
 ## Annexe B — Correspondance exigences ↔ tickets
 
-*Remplie à la création des tickets.*
+Tickets créés le 2026-10-25 sur `57H07/dcs-retribution`. Les sous-tickets sont rattachés à leur parent (sous-issues GitHub) et les dépendances sont des liens « blocked by » natifs.
+
+| Exigence | Ticket | Sous-tickets |
+|---|---|---|
+| Lot 1 (epic) | [#2](https://github.com/57H07/dcs-retribution/issues/2) | |
+| BUG-01 | [#8](https://github.com/57H07/dcs-retribution/issues/8) | |
+| BUG-02 | [#7](https://github.com/57H07/dcs-retribution/issues/7) | |
+| BUG-03 | [#6](https://github.com/57H07/dcs-retribution/issues/6) | [#11](https://github.com/57H07/dcs-retribution/issues/11) (investigation autoplanner) |
+| BUG-04 | [#9](https://github.com/57H07/dcs-retribution/issues/9) | |
+| BUG-05 | [#10](https://github.com/57H07/dcs-retribution/issues/10) | |
+| Lot 2 (epic) | [#3](https://github.com/57H07/dcs-retribution/issues/3) | |
+| CSAR-01 | [#12](https://github.com/57H07/dcs-retribution/issues/12) | [#13](https://github.com/57H07/dcs-retribution/issues/13) (reprise #929 et matrice), [#14](https://github.com/57H07/dcs-retribution/issues/14) (exig. 4), [#15](https://github.com/57H07/dcs-retribution/issues/15) (exig. 11) |
+| TRN-02 | [#16](https://github.com/57H07/dcs-retribution/issues/16) | |
+| PER-02 | [#17](https://github.com/57H07/dcs-retribution/issues/17) | [#18](https://github.com/57H07/dcs-retribution/issues/18) (#680), [#19](https://github.com/57H07/dcs-retribution/issues/19) (#679), [#20](https://github.com/57H07/dcs-retribution/issues/20) (exig. 6 et 8) |
+| TRN-01 exig. 6 | [#21](https://github.com/57H07/dcs-retribution/issues/21) (#849) | |
+| Lot 3 (epic) | [#4](https://github.com/57H07/dcs-retribution/issues/4) | |
+| PER-01 | [#22](https://github.com/57H07/dcs-retribution/issues/22) | [#23](https://github.com/57H07/dcs-retribution/issues/23) (collecte), [#24](https://github.com/57H07/dcs-retribution/issues/24) (aéronefs), [#25](https://github.com/57H07/dcs-retribution/issues/25) (sol), [#26](https://github.com/57H07/dcs-retribution/issues/26) (affichage) |
+| TRN-01 | [#27](https://github.com/57H07/dcs-retribution/issues/27) | [#28](https://github.com/57H07/dcs-retribution/issues/28) (investigation), [#29](https://github.com/57H07/dcs-retribution/issues/29) (mission joueur), [#30](https://github.com/57H07/dcs-retribution/issues/30) (vols de transfert jouables), [#31](https://github.com/57H07/dcs-retribution/issues/31) (zones CTLD) |
+| TRN-03 | [#32](https://github.com/57H07/dcs-retribution/issues/32) | |
+| PER-03 | [#33](https://github.com/57H07/dcs-retribution/issues/33) | [#34](https://github.com/57H07/dcs-retribution/issues/34) (kills), [#35](https://github.com/57H07/dcs-retribution/issues/35) (carnet), [#36](https://github.com/57H07/dcs-retribution/issues/36) (grades), [#37](https://github.com/57H07/dcs-retribution/issues/37) (page Carrière), [#38](https://github.com/57H07/dcs-retribution/issues/38) (CSAR) |
+| UI-01 | [#39](https://github.com/57H07/dcs-retribution/issues/39) | [#40](https://github.com/57H07/dcs-retribution/issues/40) (légende), [#41](https://github.com/57H07/dcs-retribution/issues/41) (thème) |
+| Lot 4 (epic) | [#5](https://github.com/57H07/dcs-retribution/issues/5) | |
+| GFX-00 | [#42](https://github.com/57H07/dcs-retribution/issues/42) | |
+| GFX-01 | [#43](https://github.com/57H07/dcs-retribution/issues/43) | [#44](https://github.com/57H07/dcs-retribution/issues/44) (jetons), [#45](https://github.com/57H07/dcs-retribution/issues/45) (bascule à chaud), [#46](https://github.com/57H07/dcs-retribution/issues/46) (couleurs en dur), [#47](https://github.com/57H07/dcs-retribution/issues/47) (police) |
+| GFX-04 | [#48](https://github.com/57H07/dcs-retribution/issues/48) | [#49](https://github.com/57H07/dcs-retribution/issues/49) (fond hors ligne), [#50](https://github.com/57H07/dcs-retribution/issues/50) (Malouines), [#51](https://github.com/57H07/dcs-retribution/issues/51) (cache HTTP), [#52](https://github.com/57H07/dcs-retribution/issues/52) (jetons carte), [#53](https://github.com/57H07/dcs-retribution/issues/53) (symboles) |
+
+Les numéros de PR amont cités entre parenthèses (#929, #680…) renvoient au dépôt `dcs-retribution/dcs-retribution`.
 
 ## Annexe A — Index des sources GitHub
 
