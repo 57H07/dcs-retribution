@@ -69,6 +69,7 @@ from .frontline import FrontLine
 from .interfaces.CTLD import CTLD
 from .missiontarget import MissionTarget
 from .player import Player
+from .repairs import cancel_repairs, process_repairs
 from .theatergroundobject import (
     GenericCarrierGroundObject,
     MotorpoolGroundObject,
@@ -1038,6 +1039,9 @@ class ControlPoint(MissionTarget, SidcDescribable, ABC):
         self.retreat_air_units(game)
         self.release_parking_slots()
         self.depopulate_uncapturable_tgos()
+        # Repairs paid for by the previous owner do not carry over.
+        for tgo in self.ground_objects:
+            cancel_repairs(tgo)
         self._coalition = new_coalition
         self.base.set_strength_to_minimum()
         self._clear_front_lines(events)
@@ -1108,7 +1112,7 @@ class ControlPoint(MissionTarget, SidcDescribable, ABC):
             return
         self.runway_status.begin_repair()
 
-    def process_turn(self, game: Game) -> None:
+    def process_turn(self, game: Game, events: GameUpdateEvents) -> None:
         # We're running at the end of the turn, so the time right now is irrelevant, and
         # we don't know what time the next turn will start yet. It doesn't actually
         # matter though, because the first thing the start of turn action will do is
@@ -1120,6 +1124,9 @@ class ControlPoint(MissionTarget, SidcDescribable, ABC):
         runway_status = self.runway_status
         if runway_status is not None:
             runway_status.process_turn()
+
+        for ground_object in self.ground_objects:
+            process_repairs(game, ground_object, events)
 
         # Process movements for ships control points group
         if self.target_position is not None:
