@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from game.debriefing import Debriefing
+from game.debriefing import DamagedUnitReport, Debriefing
 from game.theater import Player
 from qt_ui.windows.GameUpdateSignal import GameUpdateSignal
 
@@ -144,6 +144,36 @@ class CaptureReport(QGroupBox):
             layout.addWidget(QLabel("No pilots were captured."), 0, 0)
 
 
+class DamagedUnitsContainer(QGroupBox):
+    """The "Damaged units" section (PER-01.4): units that survived the mission
+    damaged, with what their damage costs."""
+
+    HEADERS = ["Side", "Type", "Damage", "Unavailability"]
+
+    def __init__(self, debriefing: Debriefing, reports: list[DamagedUnitReport]):
+        super().__init__("Damaged units:")
+        grid = QGridLayout()
+        for column, header in enumerate(self.HEADERS):
+            grid.addWidget(QLabel(f"<b>{header}</b>"), 0, column)
+        for row, report in enumerate(reports, 1):
+            side = (
+                debriefing.player_country
+                if report.player.is_blue
+                else debriefing.enemy_country
+            )
+            grid.addWidget(QLabel(side), row, 0)
+            grid.addWidget(QLabel(report.unit_type), row, 1)
+            grid.addWidget(QLabel(f"{report.damage_percent} %"), row, 2)
+            grid.addWidget(QLabel(report.unavailability), row, 3)
+        scroll_content = QWidget()
+        scroll_content.setLayout(grid)
+        scroll_area = QScrollArea()
+        scroll_area.setWidget(scroll_content)
+        layout = QVBoxLayout()
+        layout.addWidget(scroll_area)
+        self.setLayout(layout)
+
+
 class QDebriefingWindow(QDialog):
     def __init__(self, debriefing: Debriefing):
         super(QDebriefingWindow, self).__init__()
@@ -175,6 +205,10 @@ class QDebriefingWindow(QDialog):
             debriefing, player=Player.RED
         )
         layout.addWidget(enemy_lost_units, 1)
+
+        damaged_units = debriefing.damaged_unit_reports()
+        if damaged_units:
+            layout.addWidget(DamagedUnitsContainer(debriefing, damaged_units), 1)
 
         layout.addWidget(RescueReport(debriefing))
         layout.addWidget(CaptureReport(debriefing))
