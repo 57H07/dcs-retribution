@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import itertools
 import logging
+import math
 from collections import defaultdict
 from dataclasses import dataclass, field
 from functools import cached_property
@@ -18,11 +19,13 @@ from uuid import UUID
 
 from game.dcs.aircrafttype import AircraftType
 from game.dcs.groundunittype import GroundUnitType
+from game.squadrons.pilot import KillCategory
 from game.theater import Airfield, ControlPoint, Player
 
 if TYPE_CHECKING:
     from game import Game
     from game.ato.flight import Flight
+    from game.squadrons import Pilot
     from game.sim.simulationresults import SimulationResults
     from game.transfers import CargoShip
     from game.unitmap import (
@@ -110,6 +113,40 @@ class SideLossCounts:
 
 
 @dataclass(frozen=True)
+class KillAttribution:
+    """One S_EVENT_KILL: the unit that scored the kill and the unit it killed."""
+
+    #: DCS name of the unit credited with the kill (the event's initiator).
+    initiator: str
+
+    #: DCS name of the unit that was killed (the event's target).
+    target: str
+
+    @classmethod
+    def from_json(cls, data: Any) -> Optional[KillAttribution]:
+        if not isinstance(data, dict):
+            return None
+        initiator = data.get("initiator")
+        target = data.get("target")
+        if initiator is None or target is None:
+            return None
+        # Map objects are reported with numeric names; the unit map only stores
+        # strings.
+        return cls(str(initiator), str(target))
+
+
+@dataclass(frozen=True)
+class PilotKill:
+    """A kill credited to the pilot of a flight member."""
+
+    pilot: Pilot
+    flight: Flight
+    category: KillCategory
+    #: DCS name of the unit that was killed.
+    target: str
+
+
+@dataclass(frozen=True)
 class StateData:
     #: True if the mission ended. If False, the mission exited abnormally.
     mission_ended: bool
@@ -126,6 +163,14 @@ class StateData:
 
     #: Mangled names of bases that were captured during the mission.
     base_capture_events: List[str]
+
+    #: Initiator and target of each S_EVENT_KILL, used to credit pilots. Empty for
+    #: missions generated before kill attribution existed.
+    kill_attributions: List[KillAttribution] = field(default_factory=list)
+    #: Remaining life ratio (0.0 to 1.0) of units that were damaged but not killed
+    #: during the mission, keyed by unit name. Empty for state files written before
+    #: damage collection existed.
+    damaged_units: Dict[str, float] = field(default_factory=dict)
 
     @classmethod
     def from_json(cls, data: Dict[str, Any], unit_map: UnitMap) -> StateData:
@@ -165,7 +210,51 @@ class StateData:
             killed_ground_units=killed_ground_units,
             destroyed_statics=data.get("destroyed_objects_positions", []),
             base_capture_events=data.get("base_capture_events", []),
+            kill_attributions=[
+                attribution
+                for attribution in map(
+                    KillAttribution.from_json,
+                    # An empty Lua table may be encoded as {} rather than [].
+                    data.get("kill_attributions") or [],
+                )
+                if attribution is not None
+            ],
+            damaged_units=cls._parse_damaged_units(
+                data.get("damaged_units", []), set(killed_units)
+            ),
         )
+
+    @staticmethod
+    def _parse_damaged_units(entries: Any, killed_units: set[str]) -> Dict[str, float]:
+        """Parses the ``damaged_units`` list of state.json.
+
+        Each entry is ``{"name": <unit name>, "life": <remaining life ratio>}``.
+        Malformed entries are skipped, ratios are clamped to [0, 1], undamaged units
+        and units that were also reported killed are dropped. If a unit is listed
+        more than once, the lowest remaining life wins.
+        """
+        damaged: Dict[str, float] = {}
+        if not isinstance(entries, list):
+            return damaged
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            name = entry.get("name")
+            life: Any = entry.get("life")
+            if name is None or isinstance(life, bool):
+                continue
+            try:
+                raw = float(life)
+            except (TypeError, ValueError):
+                continue
+            if math.isnan(raw):
+                continue
+            ratio = min(max(raw, 0.0), 1.0)
+            name = str(name)
+            if ratio >= 1.0 or name in killed_units:
+                continue
+            damaged[name] = min(ratio, damaged.get(name, 1.0))
+        return damaged
 
 
 class Debriefing:
@@ -182,6 +271,21 @@ class Debriefing:
         self.air_losses = self.dead_aircraft()
         self.ground_losses = self.dead_ground_units()
         self.base_captures = self.base_capture_events()
+        self.pilot_kills = self.attribute_kills()
+        self.damaged_units = self.persistent_damaged_units(
+            self.state_data, game.settings.persistent_damage
+        )
+
+    @staticmethod
+    def persistent_damaged_units(
+        state_data: StateData, persistent_damage: bool
+    ) -> Dict[str, float]:
+        """Damaged units (name -> remaining life ratio) that persist past this
+        mission. Empty when the Persistent damage setting is off, so that nothing
+        downstream changes."""
+        if not persistent_damage:
+            return {}
+        return dict(state_data.damaged_units)
 
     def merge_simulation_results(self, results: SimulationResults) -> None:
         for air_loss in results.air_losses:
@@ -458,6 +562,79 @@ class Debriefing:
                 continue
 
         return losses
+
+    def attribute_kills(self) -> List[PilotKill]:
+        """Links each KILL event to the pilot of the flight member that scored it.
+
+        Kills scored by units that are not flight members (ground units, ships),
+        kills of untracked targets (infantry, map objects) and friendly kills are
+        not credited. A target is credited at most once.
+        """
+        kills: List[PilotKill] = []
+        credited_targets: set[str] = set()
+        for attribution in self.state_data.kill_attributions:
+            if attribution.target in credited_targets:
+                continue
+            shooter = self.unit_map.flight(attribution.initiator)
+            if shooter is None or shooter.pilot is None:
+                continue
+            category = self._enemy_kill_category(
+                attribution.target, shooter.flight.squadron.player
+            )
+            if category is None:
+                continue
+            credited_targets.add(attribution.target)
+            kills.append(
+                PilotKill(shooter.pilot, shooter.flight, category, attribution.target)
+            )
+        return kills
+
+    def _enemy_kill_category(
+        self, target: str, shooter: Player
+    ) -> Optional[KillCategory]:
+        """Category of the target, or None if untracked or friendly to shooter."""
+        aircraft = self.unit_map.flight(target)
+        if aircraft is not None:
+            if aircraft.flight.squadron.player == shooter:
+                return None
+            return KillCategory.Air
+
+        front_line_unit = self.unit_map.front_line_unit(
+            target
+        ) or self.unit_map.motorpool_unit(target)
+        if front_line_unit is not None:
+            if front_line_unit.origin.captured == shooter:
+                return None
+            return KillCategory.Ground
+
+        convoy_unit = self.unit_map.convoy_unit(target)
+        if convoy_unit is not None:
+            if convoy_unit.convoy.player_owned == shooter:
+                return None
+            return KillCategory.Ground
+
+        cargo_ship = self.unit_map.cargo_ship(target)
+        if cargo_ship is not None:
+            if cargo_ship.player_owned == shooter:
+                return None
+            return KillCategory.Naval
+
+        ground_object = self.unit_map.theater_units(target)
+        if ground_object is not None:
+            theater_unit = ground_object.theater_unit
+            if theater_unit.ground_object.is_friendly(to_player=shooter):
+                return None
+            if theater_unit.is_ship:
+                return KillCategory.Naval
+            return KillCategory.Ground
+
+        scenery_object = self.unit_map.scenery_object(target)
+        if scenery_object is not None:
+            if scenery_object.ground_unit.ground_object.is_friendly(to_player=shooter):
+                return None
+            return KillCategory.Ground
+
+        return None
 
     def base_capture_events(self) -> List[BaseCaptureEvent]:
         """Keeps only the last instance of a base capture event for each base ID."""

@@ -8,8 +8,11 @@ crash_events = {} -- killed aircraft will be added via S_EVENT_CRASH event
 dead_events = {} -- killed units will be added via S_EVENT_DEAD event
 unit_lost_events = {} -- killed units will be added via S_EVENT_UNIT_LOST
 kill_events = {} -- killed units will be added via S_EVENT_KILL 
+kill_attributions = {} -- {initiator = ..., target = ...} pairs from S_EVENT_KILL, to credit pilots
 base_capture_events = {}
 destroyed_objects_positions = {} -- will be added via S_EVENT_DEAD event
+damaged_units_life = {} -- unit/static name -> remaining life ratio, tracked via S_EVENT_HIT
+killed_unit_names = {} -- names reported by crash/dead/lost/kill events, excluded from damaged_units
 mission_ended = false
 dirty_state = false -- Track if state has changed and needs writing
 
@@ -23,6 +26,68 @@ local function messageAll(message)
     msg.displayTime = 25
     msg.msgFor = {coa = {'all'}}
     mist.message.add(msg)
+end
+
+-- Remaining life ratio (0..1) of a unit or static object, or nil if unknown.
+-- Units expose getLife0(); statics only have getLife(), their initial life comes from getDesc().life.
+local function get_life_ratio(object)
+    local ok, ratio = pcall(function()
+        if not object or not object:isExist() then
+            return nil
+        end
+        local life = object:getLife()
+        local life0 = nil
+        if object.getLife0 then
+            life0 = object:getLife0()
+        end
+        if (not life0 or life0 <= 0) and object.getDesc then
+            local desc = object:getDesc()
+            if desc and desc.life then
+                life0 = desc.life
+            end
+        end
+        if not life or not life0 or life0 <= 0 then
+            return nil
+        end
+        return math.max(0, math.min(1, life / life0))
+    end)
+    if ok then
+        return ratio
+    end
+    return nil
+end
+
+local function find_damageable_object(name)
+    local object = Unit.getByName(name)
+    if not object then
+        object = StaticObject.getByName(name)
+    end
+    return object
+end
+
+-- Refreshes the life ratio of a tracked unit. Units that no longer exist (despawned
+-- after landing, for instance) keep their last known ratio. Returns true if it changed.
+local function refresh_damaged_unit(name)
+    local ratio = get_life_ratio(find_damageable_object(name))
+    if ratio and ratio ~= damaged_units_life[name] then
+        damaged_units_life[name] = ratio
+        return true
+    end
+    return false
+end
+
+local function collect_damaged_units()
+    local damaged_units = {}
+    for name, _ in pairs(damaged_units_life) do
+        if not killed_unit_names[name] then
+            refresh_damaged_unit(name)
+            local ratio = damaged_units_life[name]
+            if ratio and ratio < 1 then
+                damaged_units[#damaged_units + 1] = { ["name"] = name, ["life"] = ratio }
+            end
+        end
+    end
+    return damaged_units
 end
 
 function write_state()
@@ -45,8 +110,10 @@ function write_state()
         ["base_capture_events"] = base_capture_events,
 		["unit_lost_events"] = unit_lost_events,
 		["kill_events"] = kill_events,
+		["kill_attributions"] = kill_attributions,
         ["mission_ended"] = mission_ended,
         ["destroyed_objects_positions"] = destroyed_objects_positions,
+        ["damaged_units"] = collect_damaged_units(),
     }
     local ok, write_error = pcall(function()
         fp:write(json:encode(game_state))
@@ -166,25 +233,75 @@ write_state_error_handling = function()
     mist.scheduleFunction(write_state_error_handling, {}, timer.getTime() + next_schedule_in_seconds)
 end
 
+local function mark_killed(object)
+    if object and object.getName then
+        local ok, name = pcall(object.getName, object)
+        if ok and name then
+            killed_unit_names[name] = true
+        end
+    end
+end
+
+-- Damage is read a moment after the hit, once DCS has applied it to the unit's life.
+local function refresh_damaged_unit_after_hit(name)
+    if refresh_damaged_unit(name) then
+        dirty_state = true
+    end
+    return nil
+end
+
+local function track_hit(target)
+    local ok, name = pcall(function()
+        local category = Object.getCategory(target)
+        if category ~= Object.Category.UNIT and category ~= Object.Category.STATIC then
+            return nil
+        end
+        return target:getName()
+    end)
+    if not ok or not name then
+        return
+    end
+    if damaged_units_life[name] == nil then
+        damaged_units_life[name] = 1
+    end
+    refresh_damaged_unit(name)
+    timer.scheduleFunction(refresh_damaged_unit_after_hit, name, timer.getTime() + 1)
+    dirty_state = true
+end
+
 activeWeapons = {}
 local function onEvent(event)
+    if event.id == world.event.S_EVENT_HIT and event.target then
+        track_hit(event.target)
+    end
+
     if event.id == world.event.S_EVENT_CRASH and event.initiator then
         crash_events[#crash_events + 1] = event.initiator.getName(event.initiator)
+        mark_killed(event.initiator)
         dirty_state = true
     end
    
     if event.id == world.event.S_EVENT_UNIT_LOST and event.initiator then
         unit_lost_events[#unit_lost_events + 1] = event.initiator.getName(event.initiator)
+        mark_killed(event.initiator)
         dirty_state = true
     end
 	
 	if event.id == world.event.S_EVENT_KILL and event.target then
         kill_events[#kill_events + 1] = event.target.getName(event.target)
+        if event.initiator and event.initiator.getName then
+            kill_attributions[#kill_attributions + 1] = {
+                ["initiator"] = event.initiator.getName(event.initiator),
+                ["target"] = event.target.getName(event.target),
+            }
+        end
+        mark_killed(event.target)
         dirty_state = true
     end
 
     if event.id == world.event.S_EVENT_DEAD and event.initiator and event.initiator.getName then
         dead_events[#dead_events + 1] = event.initiator.getName(event.initiator)
+        mark_killed(event.initiator)
         local position = event.initiator.getPosition(event.initiator)
         local destruction = {}
         destruction.x = position.p.x
