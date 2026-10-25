@@ -69,6 +69,7 @@
 * **[Plugins]** Fix the escort leash never running (DCS has no `Group.getByID`; look the group up by name via mist), so escorts are actually held to their engagement range.
 * **[Mission Planning]** Carrier/LHA targets now offer SEAD in the flight-task list and no longer list SEAD Escort twice (their escorts are SAM platforms, so they can be suppressed directly like any other naval group).
 * **[Transfers]** A transport flight shot down in auto-resolved combat now loses its cargo instead of delivering it anyway, and helicopters are no longer picked for airlifts whose drop-off is beyond their range.
+* **[Transfers]** Changing the squadron of a transfer-generated transport flight no longer detaches its cargo (which used to skip the delivery, drop the CTLD crates and break helicopter flight plans). The squadron list for such a flight now offers every Transport-capable squadron in range, including ones kept off auto-planning, so the player can take the flight and fly it (TRN-01.3).
 * **[App]** Retribution no longer stays alive in the background after its window is closed: the API server's graceful shutdown is now bounded (uvicorn otherwise waited forever on the long-lived event-stream websocket and the join hung).
 * **[App]** Relaunching the executable while it is already running no longer spawns orphaned, windowless duplicate processes; a second instance detects the first via an OS file lock and exits immediately.
 * **[Mission]** Reliably auto-detect end of mission, even when DCS wrote the final state.json before the wait dialog started watching

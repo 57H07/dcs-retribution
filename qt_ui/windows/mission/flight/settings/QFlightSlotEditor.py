@@ -26,6 +26,7 @@ from game.dcs.aircrafttype import AircraftType
 from game.squadrons import Squadron
 from game.squadrons.pilot import Pilot
 from game.theater import ControlPoint, OffMapSpawn
+from game.transfers import Airlift, airlift_squadrons, reassign_airlift
 from game.utils import nautical_miles
 from qt_ui.models import PackageModel
 
@@ -260,15 +261,7 @@ class QSquadronSelector(QDialog):
         self.setLayout(vbox)
 
         self.selector = QComboBox()
-        air_wing = self.flight.coalition.air_wing
-        for squadron in air_wing.best_squadrons_for(
-            self.flight.package.target,
-            self.flight.flight_type,
-            self.flight.roster.max_size,
-            self.flight.is_helo,
-            True,
-            ignore_range=True,
-        ):
+        for squadron in self._candidate_squadrons():
             if squadron is self.flight.squadron:
                 continue
             self.selector.addItem(
@@ -286,6 +279,25 @@ class QSquadronSelector(QDialog):
         hbox.addWidget(cancel)
 
         vbox.addLayout(hbox)
+
+    def _candidate_squadrons(self) -> list[Squadron]:
+        air_wing = self.flight.coalition.air_wing
+        cargo = self.flight.cargo
+        if cargo is not None and isinstance(cargo.transport, Airlift):
+            # A transfer flight must keep serving its pickup and drop-off. Any
+            # Transport-capable squadron may take it, so the player can move it to
+            # a squadron kept off auto-planning and fly it.
+            return airlift_squadrons(
+                air_wing, cargo, cargo.transport.destination, self.flight.count
+            )
+        return air_wing.best_squadrons_for(
+            self.flight.package.target,
+            self.flight.flight_type,
+            self.flight.roster.max_size,
+            self.flight.is_helo,
+            True,
+            ignore_range=True,
+        )
 
 
 class QFlightSlotEditor(QGroupBox):
@@ -355,6 +367,9 @@ class QFlightSlotEditor(QGroupBox):
                 channel=self.flight.tacan,
                 callsign_tcn=self.flight.tcn_name,
             )
+            # Keep the transfer attached, otherwise deleting the old flight drops
+            # its Airlift and the cargo is neither delivered nor generated.
+            reassign_airlift(self.flight, flight)
             self.package_model.add_flight(flight)
             self.package_model.delete_flight(self.flight)
             self.squadron_changed.emit(flight)
