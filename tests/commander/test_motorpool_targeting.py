@@ -171,6 +171,18 @@ def test_motorpool_attack_precondition_fails_when_reserve_is_empty() -> None:
     assert task.preconditions_met(state) is False  # type: ignore[arg-type]
 
 
+def test_motorpool_attack_precondition_fails_when_nothing_is_rendered() -> None:
+    """Regression (BUG-03.2): reserve armor exists but the motorpool's groups are
+    empty (they are only rendered from the reserve by MotorpoolPopulator). A
+    Strike planned now would have no target, so no attack must be planned."""
+    tgo = _motorpool_target(4)
+    assert tgo.groups == []
+    state = SimpleNamespace(motorpool_targets=[tgo])
+    for task_type in (FlightType.STRIKE, FlightType.BAI):
+        task = PlanMotorpoolAttack(tgo, task_type)
+        assert task.preconditions_met(state) is False  # type: ignore[arg-type]
+
+
 # --- AttackMotorpools ---------------------------------------------------------
 
 
