@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Optional, TYPE_CHECKING
 
 from dcs.flyingunit import FlyingUnit
+from dcs.terrain import ParkingSlot
 from dcs.unitgroup import ShipGroup
 
 from game.dcs.aircrafttype import AircraftType
@@ -125,3 +126,8 @@ class MissionData:
     cp_stack: dict[UUID, Distance] = field(default_factory=dict)
     player_frontline_groups: list[FrontlineUnitGroupsInfo] = field(default_factory=list)
     enemy_frontline_groups: list[FrontlineUnitGroupsInfo] = field(default_factory=list)
+    # DCS parking slots blocked because an aircraft was placed on an overlapping
+    # helipad or ground spawn. They hold no aircraft of their own.
+    parking_slots_blocked_by_ground_spawns: set[ParkingSlot] = field(
+        default_factory=set
+    )
