@@ -23,7 +23,7 @@ const allEntries = LEGEND_SECTIONS.flatMap((section) => section.entries);
 function referencedColors(): Set<LayerColorKey> {
   const colors = new Set<LayerColorKey>();
   allEntries.forEach(({ swatch }) => {
-    if (swatch.kind === "symbol") {
+    if (swatch.kind === "symbol" || swatch.kind === "image") {
       return;
     }
     colors.add(swatch.color);

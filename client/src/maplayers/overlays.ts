@@ -15,6 +15,8 @@ export const OVERLAYS = defineOverlays({
   controlPoints: { name: "Control points", checked: true },
   aircraft: { name: "Aircraft", checked: true },
   activeCombat: { name: "Active combat", checked: true },
+  blueDownedPilots: { name: "Downed pilots (blue)", checked: true },
+  redDownedPilots: { name: "Downed pilots (red)", checked: true },
   airDefenses: { name: "Air defenses", checked: true },
   lorad: { name: "LORAD", checked: false },
   merad: { name: "MERAD", checked: false },

@@ -309,6 +309,10 @@ class GroundObjectGenerator:
                     else:
                         # Create a static group for each static unit
                         self.create_static_group(unit)
+                elif unit.inoperative and (unit.is_vehicle or unit.is_ship):
+                    # Units put out of action by persistent damage spawn as statics
+                    # so they cannot move, detect or fire.
+                    self.create_static_group(unit)
                 elif unit.is_vehicle and unit.alive:
                     # All alive Vehicles
                     vehicle_units.append(unit)

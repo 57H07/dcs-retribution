@@ -155,7 +155,7 @@ class QLiberationPreferences(QFrame):
                 self.saved_game_dir + " is not a valid directory",
                 QMessageBox.StandardButton.Ok,
             )
-            error_dialog.exec_()
+            error_dialog.exec()
             return False
 
         if self.install_dir_ignore_warning and self.dcs_install_dir == "":
@@ -198,7 +198,7 @@ class QLiberationPreferences(QFrame):
                 self.dcs_install_dir + " is not a valid DCS installation directory",
                 QMessageBox.StandardButton.Ok,
             )
-            error_dialog.exec_()
+            error_dialog.exec()
             return False
 
         liberation_install.setup(

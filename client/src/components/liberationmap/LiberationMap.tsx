@@ -7,6 +7,7 @@ import EmitterHighlightToggle from "../airdefenserangelayer/EmitterHighlightTogg
 import CombatLayer from "../combatlayer";
 import ControlPointsLayer from "../controlpointslayer";
 import CullingExclusionZones from "../cullingexclusionzones/CullingExclusionZones";
+import DownedPilotsLayer from "../downedpilotslayer";
 import FlightPlansLayer from "../flightplanslayer";
 import FrontLinesLayer from "../frontlineslayer";
 import Iadsnetworklayer from "../iadsnetworklayer";
@@ -53,6 +54,12 @@ export default function LiberationMap() {
           </LayersControl.Overlay>
           <LayersControl.Overlay {...overlayProps("activeCombat")}>
             <CombatLayer />
+          </LayersControl.Overlay>
+          <LayersControl.Overlay {...overlayProps("blueDownedPilots")}>
+            <DownedPilotsLayer blue={true} />
+          </LayersControl.Overlay>
+          <LayersControl.Overlay {...overlayProps("redDownedPilots")}>
+            <DownedPilotsLayer blue={false} />
           </LayersControl.Overlay>
           <LayersControl.Overlay {...overlayProps("airDefenses")}>
             <TgosLayer categories={["aa"]} />

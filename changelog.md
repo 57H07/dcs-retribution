@@ -1,6 +1,7 @@
 # Retribution v1.6.0
 
 ## Features/Improvements
+* **[Campaign]** Combat Search & Rescue (CSAR): ejected pilots go down on the map and can be rescued by CSAR helicopter flights (player or AI) before they go missing or are captured. Disabled by default for both sides, including in existing saves; enable it in the campaign settings. (taken over from `upstream#929` by Drexyl)
 * **[Campaign]** Kills are now credited to the pilot of the flight member that scored them (air, ground and naval kills are stored in the pilot record), groundwork for the player pilot career (PER-03).
 * **[Campaign]** Pilots now keep a logbook: sorties, combat sorties, air/ground/naval kills, deaths and planned flight time, plus a per-mission history for player pilots, whose logbooks are their careers (PER-03.2). The squadron window gains a "New player pilot" button to create your own pilot mid-campaign. No gameplay effect.
 * **[Campaign]** Destroyed or damaged buildings you control (including captured ones) can be repaired from their map panel. Cost is the building's income per turn, delay is 3 turns for ammo and fuel depots, 6 for factories and refineries, 4 for other buildings, both scaled by new campaign settings. Repaired buildings yield nothing during the works, and a strike on the site restarts them. Optional AI and HQ-automation building repairs (off by default) live in the new "Advanced Campaign Management" settings page. Takes over `upstream#680` by Anton Prokopev.
@@ -44,9 +45,11 @@
 * **[Engine]** Bump campaign version to 10.9 for motorpool support
 * **[Engine]** The mission script now records the remaining life of units and statics that were damaged but not destroyed (`damaged_units` in `state.json`), groundwork for the new "Persistent damage" campaign setting (off by default, no gameplay effect yet). (#23)
 * **[Campaign]** With "Persistent damage" on, a damaged aircraft goes into squadron maintenance instead of coming back intact: 1 turn at 20-49 % damage, 2 turns at 50-79 %, 3 turns at 80 % or more (or written off with a new option). Aircraft in maintenance stay in the squadron but cannot be assigned to flights. A second option lets automated procurement pay to finish repairs at once. (#24)
+* **[Campaign]** With "Persistent damage" on, a damaged ground unit or ship at a ground object is inoperative for 1 turn (20-49 % damage) or 2 turns (50-79 %), and destroyed at 80 % or more (or inoperative 3 turns, setting). An inoperative unit spawns as a static, has no threat or detection range, marks its site as damaged on the map, and is repaired for free when its countdown ends; an optional setting allows an immediate repair for half the unit price. (#25)
 * **[Modding]** Update UH-60L mod to v2.1.5 including MH-60L DAP
 * **[Squadrons]** The `mission_types` of squadron definitions are now honored: the autoplanner (including airlift Transport flights) only auto-assigns a squadron to tasks it lists, and campaign secondaries are limited to them. Squadrons without `mission_types` keep all their airframe's tasks. (`upstream#849`)
 * **[Plugins]** New CTLD option "Create default pickup/drop zones at bases without CTLD zones" (off by default): airfields and FOBs/FARPs whose campaign declares no `<name> CTLD` zone get generated pickup and drop zones beside the runway or the FARP; a warning explains when none can be placed.
+* **[Engine]** Upgrade PySide6 (Qt) from 6.4.2 to 6.11.2.
 
 ## Fixes
 * **[Mission Generator]** Aircraft no longer spawn on top of each other at airfields. Helipads and ground spawns now block the DCS parking slots they overlap (and are skipped when an aircraft already sits on an overlapping slot), and a flight that finds too few helipads or ground spawns no longer leaves behind a stray group stacked on a single pad: it falls back to parking, another spawn type or an air start. (#9)

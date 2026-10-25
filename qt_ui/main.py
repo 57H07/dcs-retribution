@@ -86,7 +86,7 @@ def run_ui(game: Optional[Game], ui_flags: UiFlags) -> None:
     first_start = liberation_install.init()
     if first_start:
         window = QLiberationFirstStartWindow()
-        window.exec_()
+        window.exec()
 
     logging.info("Using {} as 'Saved Game Folder'".format(persistency.base_path()))
     logging.info(
@@ -134,7 +134,7 @@ def run_ui(game: Optional[Game], ui_flags: UiFlags) -> None:
             )
             message_box.setDefaultButton(QtWidgets.QMessageBox.StandardButton.Ok)
             message_box.setCheckBox(ignore_checkbox)
-            message_box.exec_()
+            message_box.exec()
     # Replace DCS Mission scripting file to allow DCS Retribution to work
     try:
         liberation_install.replace_mission_scripting_file()

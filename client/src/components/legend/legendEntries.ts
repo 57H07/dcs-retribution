@@ -8,6 +8,7 @@ import {
   SUPPLY_ROUTE_ACTIVE_WEIGHT,
   SUPPLY_ROUTE_WEIGHT,
 } from "../../maplayers/colors";
+import { downedPilotIconDataUrl } from "../../maplayers/downedPilotIcon";
 import { OverlayId } from "../../maplayers/overlays";
 import {
   EntityKey,
@@ -30,7 +31,8 @@ export type LegendSwatch =
       overlay?: { color: LayerColorKey; weight: number };
     }
   | { kind: "ring"; color: LayerColorKey; weight: number }
-  | { kind: "area"; color: LayerColorKey; fillOpacity: number };
+  | { kind: "area"; color: LayerColorKey; fillOpacity: number }
+  | { kind: "image"; src: string };
 
 export interface LegendEntry {
   label: string;
@@ -282,6 +284,21 @@ export const LEGEND_SECTIONS: LegendSection[] = [
         label: "Commit boundary (selected flight)",
         overlays: ALL_FLIGHT_PLANS,
         swatch: { kind: "line", color: "commitBoundary", weight: 1 },
+      },
+    ],
+  },
+  {
+    title: "Downed pilots (CSAR)",
+    entries: [
+      {
+        label: "Blue downed pilot",
+        overlays: ["blueDownedPilots"],
+        swatch: { kind: "image", src: downedPilotIconDataUrl(true) },
+      },
+      {
+        label: "Red downed pilot",
+        overlays: ["redDownedPilots"],
+        swatch: { kind: "image", src: downedPilotIconDataUrl(false) },
       },
     ],
   },
