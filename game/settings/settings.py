@@ -583,6 +583,30 @@ class Settings:
             "into the following turns instead of coming back intact."
         ),
     )
+    persistent_damage_aircraft_write_off: bool = boolean_option(
+        "Persistent damage: write off heavily damaged aircraft",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=GENERAL_SECTION,
+        default=False,
+        detail=(
+            "With persistent damage, an aircraft that returns with 80 % damage or "
+            "more is lost instead of spending 3 turns in maintenance. Lighter "
+            "damage keeps an aircraft in maintenance for 1 turn (20-49 %) or 2 "
+            "turns (50-79 %)."
+        ),
+    )
+    expedited_aircraft_repair: bool = boolean_option(
+        "Persistent damage: automatic paid aircraft repair",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=GENERAL_SECTION,
+        default=False,
+        detail=(
+            "When automated procurement manages aircraft, it pays to finish "
+            "aircraft maintenance at once (a quarter of the aircraft price per "
+            "aircraft and per remaining turn) before buying new aircraft. When "
+            "off, repairs are free and take their full time."
+        ),
+    )
     apply_target_overrides_to_loadouts: bool = boolean_option(
         "Apply target-based weapon settings to player loadouts",
         page=CAMPAIGN_MANAGEMENT_PAGE,
