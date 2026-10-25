@@ -26,6 +26,7 @@ from game.theater import ControlPoint
 COMMIT_STEPS = [
     "commit_air_losses",
     "commit_pilot_experience",
+    "commit_pilot_kills",
     "commit_front_line_losses",
     "commit_motorpool_losses",
     "commit_convoy_losses",
