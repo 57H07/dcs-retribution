@@ -96,7 +96,7 @@ class QLoadoutEditor(QGroupBox):
 
     def _save_payload(self) -> None:
         payload_name_input = self._create_input_dialog()
-        if not payload_name_input.exec_():
+        if not payload_name_input.exec():
             return
         payload_name = payload_name_input.textValue()
         ac_type = self.flight.unit_type.dcs_unit_type

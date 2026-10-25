@@ -46,6 +46,7 @@
 * **[Modding]** Update UH-60L mod to v2.1.5 including MH-60L DAP
 * **[Squadrons]** The `mission_types` of squadron definitions are now honored: the autoplanner (including airlift Transport flights) only auto-assigns a squadron to tasks it lists, and campaign secondaries are limited to them. Squadrons without `mission_types` keep all their airframe's tasks. (`upstream#849`)
 * **[Plugins]** New CTLD option "Create default pickup/drop zones at bases without CTLD zones" (off by default): airfields and FOBs/FARPs whose campaign declares no `<name> CTLD` zone get generated pickup and drop zones beside the runway or the FARP; a warning explains when none can be placed.
+* **[Engine]** Upgrade PySide6 (Qt) from 6.4.2 to 6.11.2.
 
 ## Fixes
 * **[Mission Generator]** Aircraft no longer spawn on top of each other at airfields. Helipads and ground spawns now block the DCS parking slots they overlap (and are skipped when an aircraft already sits on an overlapping slot), and a flight that finds too few helipads or ground spawns no longer leaves behind a stray group stacked on a single pad: it falls back to parking, another spawn type or an air start. (#9)

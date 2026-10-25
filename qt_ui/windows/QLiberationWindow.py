@@ -609,7 +609,7 @@ class QLiberationWindow(QMainWindow):
         about.setIcon(QMessageBox.Icon.Information)
         about.setText(text)
         logging.info(about.textFormat())
-        about.exec_()
+        about.exec()
 
     def showLiberationDialog(self):
         self.subwindow = QLiberationPreferencesWindow()

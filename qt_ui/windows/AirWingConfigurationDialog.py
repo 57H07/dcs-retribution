@@ -373,7 +373,7 @@ class SquadronConfigurationBox(QGroupBox):
             self.squadron.aircraft,
             self.coalition.air_wing.squadron_defs,
         )
-        if popup.exec_() != QDialog.DialogCode.Accepted:
+        if popup.exec() != QDialog.DialogCode.Accepted:
             return None
 
         selected_def = popup.squadron_def_selector.currentData()
@@ -723,7 +723,7 @@ class AirWingConfigurationTab(QWidget):
             bases,
             self.coalition.air_wing.squadron_defs,
         )
-        if popup.exec_() != QDialog.DialogCode.Accepted:
+        if popup.exec() != QDialog.DialogCode.Accepted:
             return
 
         selected_type = popup.aircraft_type_selector.currentData()
@@ -835,7 +835,7 @@ class AirWingConfigurationDialog(QDialog):
             caption="Save Air Wing", directory=str(awd), filter="*.yaml;*.yml"
         )
         fd.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
-        if fd.exec_():
+        if fd.exec():
             for tab in self.tabs:
                 tab.apply()
             airwing = self._build_air_wing()
@@ -893,7 +893,7 @@ class AirWingConfigurationDialog(QDialog):
         fd = QFileDialog(
             caption="Load Air Wing", directory=str(awd), filter="*.yaml;*.yml"
         )
-        if fd.exec_():
+        if fd.exec():
             filename = fd.selectedFiles()[0]
             with open(filename, "r") as f:
                 airwing = yaml.safe_load(f)
