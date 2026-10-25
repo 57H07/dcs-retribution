@@ -1,6 +1,7 @@
 # Retribution v1.6.0
 
 ## Features/Improvements
+* **[Campaign]** Combat Search & Rescue (CSAR): ejected pilots go down on the map and can be rescued by CSAR helicopter flights (player or AI) before they go missing or are captured. Disabled by default for both sides, including in existing saves; enable it in the campaign settings. (taken over from `upstream#929` by Drexyl)
 * **[Campaign]** Kills are now credited to the pilot of the flight member that scored them (air, ground and naval kills are stored in the pilot record), groundwork for the player pilot career (PER-03).
 * **[Campaign]** Pilots now keep a logbook: sorties, combat sorties, air/ground/naval kills, deaths and planned flight time, plus a per-mission history for player pilots, whose logbooks are their careers (PER-03.2). The squadron window gains a "New player pilot" button to create your own pilot mid-campaign. No gameplay effect.
 * **[Campaign]** Destroyed or damaged buildings you control (including captured ones) can be repaired from their map panel. Cost is the building's income per turn, delay is 3 turns for ammo and fuel depots, 6 for factories and refineries, 4 for other buildings, both scaled by new campaign settings. Repaired buildings yield nothing during the works, and a strike on the site restarts them. Optional AI and HQ-automation building repairs (off by default) live in the new "Advanced Campaign Management" settings page. Takes over `upstream#680` by Anton Prokopev.

@@ -34,6 +34,9 @@ const SWATCH_HEIGHT = 16;
 
 function Swatch(props: { swatch: LegendSwatch }) {
   const swatch = props.swatch;
+  if (swatch.kind === "image") {
+    return <img className="legend-symbol" src={swatch.src} alt="" />;
+  }
   if (swatch.kind === "symbol") {
     return (
       <img
