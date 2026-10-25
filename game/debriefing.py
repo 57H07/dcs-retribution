@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import itertools
 import logging
+import math
 from collections import defaultdict
 from dataclasses import dataclass, field
 from functools import cached_property
@@ -166,6 +167,10 @@ class StateData:
     #: Initiator and target of each S_EVENT_KILL, used to credit pilots. Empty for
     #: missions generated before kill attribution existed.
     kill_attributions: List[KillAttribution] = field(default_factory=list)
+    #: Remaining life ratio (0.0 to 1.0) of units that were damaged but not killed
+    #: during the mission, keyed by unit name. Empty for state files written before
+    #: damage collection existed.
+    damaged_units: Dict[str, float] = field(default_factory=dict)
 
     @classmethod
     def from_json(cls, data: Dict[str, Any], unit_map: UnitMap) -> StateData:
@@ -214,7 +219,42 @@ class StateData:
                 )
                 if attribution is not None
             ],
+            damaged_units=cls._parse_damaged_units(
+                data.get("damaged_units", []), set(killed_units)
+            ),
         )
+
+    @staticmethod
+    def _parse_damaged_units(entries: Any, killed_units: set[str]) -> Dict[str, float]:
+        """Parses the ``damaged_units`` list of state.json.
+
+        Each entry is ``{"name": <unit name>, "life": <remaining life ratio>}``.
+        Malformed entries are skipped, ratios are clamped to [0, 1], undamaged units
+        and units that were also reported killed are dropped. If a unit is listed
+        more than once, the lowest remaining life wins.
+        """
+        damaged: Dict[str, float] = {}
+        if not isinstance(entries, list):
+            return damaged
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            name = entry.get("name")
+            life: Any = entry.get("life")
+            if name is None or isinstance(life, bool):
+                continue
+            try:
+                raw = float(life)
+            except (TypeError, ValueError):
+                continue
+            if math.isnan(raw):
+                continue
+            ratio = min(max(raw, 0.0), 1.0)
+            name = str(name)
+            if ratio >= 1.0 or name in killed_units:
+                continue
+            damaged[name] = min(ratio, damaged.get(name, 1.0))
+        return damaged
 
 
 class Debriefing:
@@ -232,6 +272,20 @@ class Debriefing:
         self.ground_losses = self.dead_ground_units()
         self.base_captures = self.base_capture_events()
         self.pilot_kills = self.attribute_kills()
+        self.damaged_units = self.persistent_damaged_units(
+            self.state_data, game.settings.persistent_damage
+        )
+
+    @staticmethod
+    def persistent_damaged_units(
+        state_data: StateData, persistent_damage: bool
+    ) -> Dict[str, float]:
+        """Damaged units (name -> remaining life ratio) that persist past this
+        mission. Empty when the Persistent damage setting is off, so that nothing
+        downstream changes."""
+        if not persistent_damage:
+            return {}
+        return dict(state_data.damaged_units)
 
     def merge_simulation_results(self, results: SimulationResults) -> None:
         for air_loss in results.air_losses:

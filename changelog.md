@@ -35,6 +35,7 @@
 * **[Campaigns]** Motorpool placement is Garage_A-anchored and empty reserve pools are excluded from attack planning; updated placement measurements are documented.
 * **[UX]** Add the ability to filter campaigns by version, map, and performance
 * **[Engine]** Bump campaign version to 10.9 for motorpool support
+* **[Engine]** The mission script now records the remaining life of units and statics that were damaged but not destroyed (`damaged_units` in `state.json`), groundwork for the new "Persistent damage" campaign setting (off by default, no gameplay effect yet). (#23)
 * **[Modding]** Update UH-60L mod to v2.1.5 including MH-60L DAP
 * **[Squadrons]** The `mission_types` of squadron definitions are now honored: the autoplanner (including airlift Transport flights) only auto-assigns a squadron to tasks it lists, and campaign secondaries are limited to them. Squadrons without `mission_types` keep all their airframe's tasks. (`upstream#849`)
 

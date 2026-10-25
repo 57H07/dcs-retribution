@@ -569,6 +569,16 @@ class Settings:
             "performance."
         ),
     )
+    persistent_damage: bool = boolean_option(
+        "Persistent damage",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=GENERAL_SECTION,
+        default=False,
+        detail=(
+            "Units damaged but not destroyed during a mission carry their damage "
+            "into the following turns instead of coming back intact."
+        ),
+    )
     apply_target_overrides_to_loadouts: bool = boolean_option(
         "Apply target-based weapon settings to player loadouts",
         page=CAMPAIGN_MANAGEMENT_PAGE,
