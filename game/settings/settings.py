@@ -596,15 +596,16 @@ class Settings:
         ),
     )
     expedited_aircraft_repair: bool = boolean_option(
-        "Persistent damage: automatic paid aircraft repair",
+        "Persistent damage: paid accelerated aircraft repair",
         page=CAMPAIGN_MANAGEMENT_PAGE,
         section=GENERAL_SECTION,
         default=False,
         detail=(
-            "When automated procurement manages aircraft, it pays to finish "
-            "aircraft maintenance at once (a quarter of the aircraft price per "
-            "aircraft and per remaining turn) before buying new aircraft. When "
-            "off, repairs are free and take their full time."
+            "Aircraft maintenance can be finished at once for a quarter of the "
+            "aircraft price per aircraft and per remaining turn: from the squadron "
+            "window, and by automated procurement (when it manages aircraft) "
+            "before it buys new aircraft. When off, repairs are free and take "
+            "their full time."
         ),
     )
     persistent_damage_destroys_ground_units: bool = boolean_option(

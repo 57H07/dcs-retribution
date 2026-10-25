@@ -65,10 +65,13 @@ class SquadronDelegate(TwoColumnRowDelegate):
             # "unassigned" counted airframes with no free pilot to fly them, which
             # overstated the real force available. Cap it at the crewed count.
             unassigned = squadron.untasked_crewed_aircraft
-            return (
+            text = (
                 f"{pilots} {'pilot' if pilots == 1 else 'pilots'}, "
                 f"{aircraft} aircraft ({unassigned} crewed unassigned)"
             )
+            if squadron.aircraft_in_maintenance:
+                text += f", {squadron.maintenance_text}"
+            return text
         return ""
 
 
@@ -172,6 +175,21 @@ class AircraftInventoryData:
                 "N/A",
             )
 
+    @classmethod
+    def each_in_maintenance_from_squadron(
+        cls, squadron: Squadron
+    ) -> Iterator[AircraftInventoryData]:
+        for count, turns in squadron.maintenance_summary:
+            for _ in range(count):
+                yield AircraftInventoryData(
+                    squadron.location.name,
+                    squadron.aircraft.display_name,
+                    f"In maintenance ({turns} {'turn' if turns == 1 else 'turns'})",
+                    "N/A",
+                    "N/A",
+                    "N/A",
+                )
+
 
 class AirInventoryView(QWidget):
     def __init__(self, game_model: GameModel) -> None:
@@ -243,6 +261,7 @@ class AirInventoryView(QWidget):
         )
         for squadron in coalition.air_wing.iter_squadrons():
             yield from AircraftInventoryData.each_untasked_from_squadron(squadron)
+            yield from AircraftInventoryData.each_in_maintenance_from_squadron(squadron)
 
     def get_data(self) -> Iterator[AircraftInventoryData]:
         yield from self.iter_unallocated_aircraft()

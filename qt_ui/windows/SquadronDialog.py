@@ -268,6 +268,11 @@ class SquadronDialog(QDialog):
             self.parking_slots_label = QLabel()
             left_column.addWidget(self.parking_slots_label)
 
+            self.repair_aircraft_button = QPushButton()
+            self.repair_aircraft_button.setProperty("style", "btn-success")
+            self.repair_aircraft_button.clicked.connect(self.repair_aircraft)
+            left_column.addWidget(self.repair_aircraft_button)
+
             self._refresh_aircraft_controls()
 
         auto_assigned_tasks = AutoAssignedTaskControls(squadron_model)
@@ -337,12 +342,18 @@ class SquadronDialog(QDialog):
 
     def _aircraft_stats_text(self) -> str:
         s = self.squadron
-        return (
+        text = (
             f"Initial: {s.initial_aircraft}\n"
             f"Current: {s.owned_aircraft}\n"
             f"Destroyed: {s.destroyed_aircraft}\n"
             f"Purchased: {s.purchased_aircraft}"
         )
+        if s.aircraft_in_maintenance:
+            text += (
+                f"\nAvailable: {s.available_aircraft}\n"
+                + s.maintenance_text.replace(", ", "\n")
+            )
+        return text
 
     @staticmethod
     def _purchase_amount() -> int:
@@ -378,6 +389,40 @@ class SquadronDialog(QDialog):
             if can_sell
             else "Cannot sell: no idle aircraft or pending orders."
         )
+        self._refresh_repair_button()
+
+    def _refresh_repair_button(self) -> None:
+        """Paid accelerated repair of the aircraft in maintenance (PER-01.2), only
+        offered when the setting allows it."""
+        squadron = self.squadron
+        settings = self.ato_model.game.settings
+        if not (
+            settings.expedited_aircraft_repair and squadron.aircraft_in_maintenance
+        ):
+            self.repair_aircraft_button.setVisible(False)
+            return
+        cost = squadron.expedited_repair_cost
+        self.repair_aircraft_button.setVisible(True)
+        self.repair_aircraft_button.setText(
+            f"Repair {squadron.aircraft_in_maintenance} aircraft now [{cost}M]"
+        )
+        affordable = cost <= squadron.coalition.budget
+        self.repair_aircraft_button.setEnabled(affordable)
+        self.repair_aircraft_button.setToolTip(
+            "Finish every repair of this squadron at once."
+            if affordable
+            else "Cannot repair: insufficient budget."
+        )
+
+    def repair_aircraft(self) -> None:
+        with report_errors("Could not repair aircraft", self):
+            released = self.squadron.buy_expedited_maintenance()
+            if released:
+                logging.info(
+                    f"Expedited repair of {released} aircraft of {self.squadron}"
+                )
+        self._refresh_aircraft_controls()
+        GameUpdateSignal.get_instance().updateBudget(self.ato_model.game)
 
     def buy_aircraft(self) -> None:
         try:
