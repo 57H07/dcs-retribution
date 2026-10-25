@@ -68,6 +68,17 @@ class AirLosses:
         return flight.count - losses
 
 
+@dataclass(frozen=True)
+class DamagedAircraft:
+    """An aircraft that came back from the mission damaged but not destroyed."""
+
+    unit: FlyingUnit
+    #: DCS name of the unit.
+    name: str
+    #: Remaining life ratio, 0.0 to 1.0.
+    remaining_life: float
+
+
 @dataclass
 class GroundLosses:
     player_front_line: List[FrontLineUnit] = field(default_factory=list)
@@ -305,6 +316,7 @@ class Debriefing:
         self.damaged_units = self.persistent_damaged_units(
             self.state_data, game.settings.persistent_damage
         )
+        self.damaged_aircraft = self.find_damaged_aircraft(self.damaged_units, unit_map)
         self.ejected_pilot_positions = self._ejected_pilot_positions()
         #: Downed pilots recovered this mission, keyed by their DownedPilot id so
         #: repeated state.json polls (and the AI-flight fallback added later by
@@ -389,6 +401,18 @@ class Debriefing:
         return positions
 
     @staticmethod
+    def find_damaged_aircraft(
+        damaged_units: Dict[str, float], unit_map: UnitMap
+    ) -> List[DamagedAircraft]:
+        """The damaged units that are aircraft of a flight, sorted by name."""
+        damaged = []
+        for name, life in sorted(damaged_units.items()):
+            unit = unit_map.flight(name)
+            if unit is not None:
+                damaged.append(DamagedAircraft(unit, name, life))
+        return damaged
+
+    @staticmethod
     def persistent_damaged_units(
         state_data: StateData, persistent_damage: bool
     ) -> Dict[str, float]:
@@ -400,11 +424,26 @@ class Debriefing:
         return dict(state_data.damaged_units)
 
     def merge_simulation_results(self, results: SimulationResults) -> None:
+        from game.unitmap import AirliftUnits
+
+        lost_cargo_flights: set[UUID] = set()
         for air_loss in results.air_losses:
             if air_loss.flight.squadron.player.is_blue:
                 self.air_losses.player.append(air_loss)
             else:
                 self.air_losses.enemy.append(air_loss)
+
+            # A flight killed by the simulation is never spawned in DCS, so no kill
+            # event reports its airlift units: its whole cargo is lost with it.
+            transfer = air_loss.flight.cargo
+            if transfer is None or air_loss.flight.id in lost_cargo_flights:
+                continue
+            lost_cargo_flights.add(air_loss.flight.id)
+            airlift = AirliftUnits(tuple(transfer.iter_units()), transfer)
+            if transfer.player.is_blue:
+                self.ground_losses.player_airlifts.append(airlift)
+            else:
+                self.ground_losses.enemy_airlifts.append(airlift)
 
     @property
     def front_line_losses(self) -> Iterator[FrontLineUnit]:

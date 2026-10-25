@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Optional, TYPE_CHECKING
 
 from dcs.flyingunit import FlyingUnit
+from dcs.terrain import ParkingSlot
 from dcs.unitgroup import ShipGroup
 
 from game.dcs.aircrafttype import AircraftType
@@ -145,3 +146,8 @@ class MissionData:
     #: DownedPilot's id (as a string). Used to wire the rescue helicopter's
     #: Embarking task to the right pilot, and to hand the group to Ops.CSAR.
     csar_pilot_groups: dict[str, CsarPilotGroupInfo] = field(default_factory=dict)
+    # DCS parking slots blocked because an aircraft was placed on an overlapping
+    # helipad or ground spawn. They hold no aircraft of their own.
+    parking_slots_blocked_by_ground_spawns: set[ParkingSlot] = field(
+        default_factory=set
+    )

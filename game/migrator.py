@@ -178,7 +178,7 @@ class Migrator:
                     if f.squadron == s:
                         count += f.count
                 s.return_all_pilots_and_aircraft()
-                new_claim = min(count, s.owned_aircraft)
+                new_claim = min(count, s.available_aircraft)
                 s.claim_inventory(new_claim)
                 for i in range(new_claim):
                     s.claim_available_pilot()

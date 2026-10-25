@@ -24,6 +24,11 @@
             "defaultValue": false
         },
         {
+            "nameInUI": "Create default pickup/drop zones at bases without CTLD zones",
+            "mnemonic": "defaultzones",
+            "defaultValue": false
+        },
+        {
             "nameInUI": "Use real sling loading",
             "mnemonic": "slingload",
             "defaultValue": false
