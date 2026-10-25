@@ -5,7 +5,6 @@ import random
 from dataclasses import dataclass
 from typing import Iterator, List, Optional, TYPE_CHECKING, Tuple
 
-from dcs import Point
 from dcs.unittype import VehicleType
 
 from game.config import RUNWAY_REPAIR_COST, REWARDS
@@ -22,6 +21,7 @@ from game.theater import (
 from game.theater.repairs import begin_repair
 from game.theater.theatergroundobject import (
     BuildingGroundObject,
+    EwrGroundObject,
     SamGroundObject,
     TheaterGroundObject,
 )
@@ -31,6 +31,16 @@ if TYPE_CHECKING:
     from game.ato import FlightType
     from game.factions.faction import Faction
     from game.squadrons import Squadron
+
+
+#: Order in which the units of a damaged SAM or EWR site are repaired.
+GROUND_UNIT_REPAIR_ORDER: dict[UnitClass, int] = {
+    UnitClass.SEARCH_RADAR: 0,
+    UnitClass.SEARCH_TRACK_RADAR: 0,
+    UnitClass.TRACK_RADAR: 1,
+    UnitClass.TELAR: 2,
+    UnitClass.LAUNCHER: 2,
+}
 
 
 @dataclass(frozen=True)
@@ -161,19 +171,36 @@ class ProcurementAi:
                     repair_candidates.append((priority, cost, unit))
 
         repair_candidates.sort(key=lambda entry: (-entry[0], entry[1]))
+        return budget - self.start_repairs(repair_candidates, repair_budget)
 
+    def start_repairs(
+        self,
+        candidates: list[tuple[float, float, TheaterUnit]],
+        repair_budget: float,
+    ) -> float:
+        """Starts repairs in the given order while the budget lasts.
+
+        Once a unit of a site cannot be afforded, the units after it at that site
+        are skipped, so that a cheap unit never jumps ahead of a critical one.
+        Returns the amount spent.
+        """
         # Imported here to avoid a circular import through game.sim.
         from game.sim.gameupdateevents import GameUpdateEvents
 
         spent = 0.0
         repaired_objects: dict[int, TheaterGroundObject] = {}
+        blocked_objects: set[int] = set()
         events = GameUpdateEvents()
-        for _, price, unit in repair_candidates:
+        for _, price, unit in candidates:
+            site = id(unit.ground_object)
+            if site in blocked_objects:
+                continue
             if repair_budget - spent < price:
+                blocked_objects.add(site)
                 continue
             begin_repair(self.game, unit, events)
             spent += price
-            repaired_objects[id(unit.ground_object)] = unit.ground_object
+            repaired_objects[site] = unit.ground_object
 
         for ground_object in repaired_objects.values():
             if self.is_player.is_blue:
@@ -182,8 +209,7 @@ class ProcurementAi:
                 self.game.message(
                     f"OPFOR has begun repairs at {ground_object.obj_name}"
                 )
-
-        return budget - spent
+        return spent
 
     def building_repair_priority(self, ground_object: BuildingGroundObject) -> float:
         enemy_distance = self.distance_to_nearest_enemy_control_point(ground_object)
@@ -235,20 +261,21 @@ class ProcurementAi:
         )
 
     def repair_ground_objects(self, budget: float) -> float:
-        repair_turns = self.game.settings.ground_object_repair_turns
-        if repair_turns < 0:
-            return budget
+        """Spends a share of the ground unit budget on repairing SAM and EWR sites.
 
+        Search radars are repaired first, then tracking radars, then launchers.
+        """
         repair_budget = budget * self.game.settings.sam_repair_budget_fraction
         if repair_budget <= 0:
             return budget
 
-        repair_candidates: list[tuple[float, int, TheaterUnit]] = []
+        # (site priority, repair order inside the site, price, unit)
+        repair_candidates: list[tuple[float, int, float, TheaterUnit]] = []
         for control_point in self.owned_points:
             for ground_object in control_point.ground_objects:
                 if not ground_object.is_friendly(self.is_player):
                     continue
-                if not isinstance(ground_object, SamGroundObject):
+                if not isinstance(ground_object, (SamGroundObject, EwrGroundObject)):
                     continue
                 priority = self.ground_object_repair_priority(ground_object)
                 if priority < self.game.settings.sam_repair_priority_threshold:
@@ -272,44 +299,17 @@ class ProcurementAi:
                         continue
                     if unit.unit_type.price <= 0:
                         continue
-                    repair_candidates.append((priority, unit.unit_type.price, unit))
-
-        repair_candidates.sort(key=lambda entry: (-entry[0], entry[1]))
-
-        repaired_objects: set[TheaterGroundObject] = set()
-        destroyed_units = self.game.get_destroyed_units()
-        for _, price, unit in repair_candidates:
-            if repair_budget < price:
-                continue
-            if repair_turns == 0:
-                from game.sim.gameupdateevents import GameUpdateEvents
-
-                unit.repair_turns_remaining = None
-                unit.revive(GameUpdateEvents())
-                for entry in list(destroyed_units):
-                    p = Point(
-                        float(entry["x"]),
-                        float(entry["z"]),
-                        self.game.theater.terrain,
+                    order = GROUND_UNIT_REPAIR_ORDER.get(
+                        unit.unit_type.unit_class, len(GROUND_UNIT_REPAIR_ORDER)
                     )
-                    if p.distance_to_point(unit.position) < 15:
-                        destroyed_units.remove(entry)
-            else:
-                unit.repair_turns_remaining = repair_turns
-            repair_budget -= price
-            repaired_objects.add(unit.ground_object)
+                    repair_candidates.append(
+                        (priority, order, unit.unit_type.price, unit)
+                    )
 
-        for ground_object in repaired_objects:
-            if self.is_player.is_blue:
-                self.game.message(f"We have begun repairs at {ground_object.obj_name}")
-            else:
-                self.game.message(
-                    f"OPFOR has begun repairs at {ground_object.obj_name}"
-                )
-
-        return budget - (
-            budget * self.game.settings.sam_repair_budget_fraction - repair_budget
-        )
+        # Highest site priority first, then repair order, then cheapest.
+        repair_candidates.sort(key=lambda entry: (-entry[0], entry[1], entry[2]))
+        ordered = [(p, price, unit) for p, _, price, unit in repair_candidates]
+        return budget - self.start_repairs(ordered, repair_budget)
 
     def ground_object_repair_priority(
         self, ground_object: TheaterGroundObject
@@ -340,7 +340,7 @@ class ProcurementAi:
 
     @staticmethod
     def critical_unit_types_for_sam(
-        ground_object: SamGroundObject,
+        ground_object: TheaterGroundObject,
     ) -> set[type]:
         types_in_site = {unit.type for unit in ground_object.units if unit.unit_type}
         required_classes: set[UnitClass] = getattr(

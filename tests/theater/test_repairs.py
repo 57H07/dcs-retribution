@@ -6,6 +6,7 @@ from typing import Any, cast
 import pytest
 from dcs.mapping import Point
 from dcs.statics import Fortification
+from dcs.vehicles import AirDefence
 
 from game.income import Income
 from game.point_with_heading import PointWithHeading
@@ -23,7 +24,7 @@ from game.theater.repairs import (
     cancel_repairs,
     process_repairs,
 )
-from game.theater.theatergroundobject import BuildingGroundObject
+from game.theater.theatergroundobject import BuildingGroundObject, SamGroundObject
 from game.theater.theatergroup import TheaterGroup, TheaterUnit
 from game.utils import Heading
 
@@ -41,6 +42,7 @@ class FakeGame:
             control_points_for=self.control_points_for,
             player_points=lambda: self.control_points_for(Player.BLUE),
             enemy_points=lambda: self.control_points_for(Player.RED),
+            iads_network=SimpleNamespace(update_tgo=lambda tgo, events: None),
         )
 
     def control_points_for(self, player: Player) -> list[OffMapSpawn]:
@@ -230,6 +232,7 @@ def make_procurement(
     ai.manage_front_line = False
     ai.manage_aircraft = False
     ai.manage_buildings = manage_buildings
+    ai.manage_ground_objects = False
     return ai
 
 
@@ -286,12 +289,16 @@ def test_old_settings_without_repair_fields_load() -> None:
         "building_repair_cost_multiplier",
         "building_repair_delay_multiplier",
         "ai_building_repairs",
+        "ai_ground_unit_repairs",
+        "ground_unit_repair_turns",
     ]:
         del state[key]
     settings = Settings.__new__(Settings)
     settings.__setstate__(state)
     assert settings.building_repair_delay_multiplier == 1.0
     assert not settings.ai_building_repairs
+    assert not settings.ai_ground_unit_repairs
+    assert settings.ground_unit_repair_turns == 0
 
 
 @pytest.mark.parametrize("enabled", [False, True])
@@ -323,3 +330,91 @@ def test_enemy_coalition_follows_ai_building_repair_setting(
     (args,) = calls
     manage_buildings = args[6]
     assert manage_buildings is enabled
+
+
+def make_sam_site(cp: OffMapSpawn) -> SamGroundObject:
+    location = PresetLocation(
+        name="sam", position=Point(5000, 5000, None), heading=Heading(0)  # type: ignore
+    )
+    sam = SamGroundObject(name="sam", location=location, control_point=cp, task=None)
+    types = [
+        AirDefence.x_5p73_s_125_ln,
+        AirDefence.x_5p73_s_125_ln,
+        AirDefence.snr_s_125_tr,
+        AirDefence.p_19_s_125_sr,
+    ]
+    units = [
+        TheaterUnit(
+            id=100 + i,
+            name=f"sam-{i}",
+            type=unit_type,
+            position=PointWithHeading.from_point(
+                Point(5000 + 50 * i, 5000, None), Heading(0)  # type: ignore
+            ),
+            ground_object=sam,
+            alive=False,
+        )
+        for i, unit_type in enumerate(types)
+    ]
+    sam.groups.append(TheaterGroup(1, "sam", units[0].position, units, sam))
+    cp.connected_objectives.append(sam)
+    return sam
+
+
+def alive(tgo: SamGroundObject) -> list[TheaterUnit]:
+    return [unit for unit in tgo.units if unit.alive]
+
+
+def test_ai_ground_unit_repair_disabled_by_default() -> None:
+    assert not Settings().ai_ground_unit_repairs
+    assert Settings().ground_unit_repair_turns == 0
+
+
+def test_ai_spends_nothing_on_ground_units_when_disabled(game: FakeGame) -> None:
+    cp = make_control_point(game, Player.RED)
+    sam = make_sam_site(cp)
+    ai = make_procurement(game, Player.RED, manage_buildings=False)
+    ai.manage_ground_objects = False
+
+    assert ai.spend_budget(1000) == 1000
+    assert not any(u.alive or u.repair_turns_remaining for u in sam.units)
+
+
+def test_ai_repairs_search_radar_before_launchers(
+    game: FakeGame, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    cp = make_control_point(game, Player.RED)
+    sam = make_sam_site(cp)
+    ai = make_procurement(game, Player.RED, manage_buildings=False)
+    ai.manage_ground_objects = True
+    monkeypatch.setattr(
+        ProcurementAi, "ground_object_repair_priority", lambda self, tgo: 10.0
+    )
+    launcher_a, launcher_b, track_radar, search_radar = sam.units
+
+    # 40 % of 40 = 16: one radar (14M), even though launchers (6M) are cheaper.
+    assert ai.repair_ground_objects(40) == 26
+    assert alive(sam) == [search_radar]
+
+    ai.repair_ground_objects(40)
+    assert alive(sam) == [track_radar, search_radar]
+
+
+def test_ai_ground_unit_repair_respects_delay(
+    game: FakeGame, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    game.settings.ground_unit_repair_turns = 2
+    cp = make_control_point(game, Player.RED)
+    sam = make_sam_site(cp)
+    ai = make_procurement(game, Player.RED, manage_buildings=False)
+    monkeypatch.setattr(
+        ProcurementAi, "ground_object_repair_priority", lambda self, tgo: 10.0
+    )
+    *_, search_radar = sam.units
+
+    ai.repair_ground_objects(40)
+    assert search_radar.repair_turns_remaining == 2
+    process_repairs(cast(Any, game), sam, GameUpdateEvents())
+    assert not search_radar.alive
+    process_repairs(cast(Any, game), sam, GameUpdateEvents())
+    assert search_radar.alive

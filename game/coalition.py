@@ -235,7 +235,7 @@ class Coalition:
             manage_front_line = True
             manage_aircraft = True
             manage_buildings = self.game.settings.ai_building_repairs
-            manage_ground_objects = self.game.settings.automate_ground_object_repairs
+            manage_ground_objects = self.game.settings.ai_ground_unit_repairs
 
         self.budget = ProcurementAi(
             self.game,

@@ -55,8 +55,7 @@ def repair_turns_for(unit: TheaterUnit, settings: Settings) -> int:
     """Number of turns needed to repair the given unit. 0 means instant."""
     if unit.is_static:
         return building_repair_turns(unit.ground_object.category, settings)
-    # Ground units are repaired instantly.
-    return 0
+    return settings.ground_unit_repair_turns
 
 
 def begin_repair(game: Game, unit: TheaterUnit, events: GameUpdateEvents) -> None:

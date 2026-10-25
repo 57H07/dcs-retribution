@@ -291,7 +291,7 @@ class QGroundObjectMenu(QDialog):
     def repair_unit(self, unit, price):
         if self.game.blue.budget > price:
             self.game.blue.budget -= price
-            repair_turns = self.game.settings.ground_object_repair_turns
+            repair_turns = self.game.settings.ground_unit_repair_turns
             if repair_turns == 0:
                 unit.alive = True
                 destroyed_units = self.game.get_destroyed_units()

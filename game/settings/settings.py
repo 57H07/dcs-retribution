@@ -72,7 +72,7 @@ HQ_AUTOMATION_SECTION = "HQ Automation"
 FLIGHT_PLANNER_AUTOMATION = "Flight Planner Automation"
 REPAIRS_SECTION = "Repairs"
 BUILDING_REPAIR_TUNING_SECTION = "Building Repairs"
-GROUND_OBJECT_REPAIR_TUNING_SECTION = "Ground Object Repairs"
+GROUND_OBJECT_REPAIR_TUNING_SECTION = "Ground Unit Repairs"
 
 CAMPAIGN_DOCTRINE_PAGE = "Campaign Doctrine"
 DOCTRINE_DISTANCES_SECTION = "Doctrine distances"
@@ -711,20 +711,8 @@ class Settings:
         HQ_AUTOMATION_SECTION,
         default=False,
         detail=(
-            "If enabled, AI can spend budget to repair destroyed ground object units "
-            "such as SAMs and EWRs."
-        ),
-    )
-    ground_object_repair_turns: int = bounded_int_option(
-        "Ground object repair turns",
-        CAMPAIGN_MANAGEMENT_PAGE,
-        HQ_AUTOMATION_SECTION,
-        min=0,
-        max=10,
-        default=2,
-        detail=(
-            "Turns required for repaired ground object units to return to service. "
-            "Set to 0 for instant repairs."
+            "If enabled, the HQ spends part of the ground unit budget repairing "
+            "destroyed SAM and EWR site units."
         ),
     )
     automate_aircraft_reinforcements: bool = boolean_option(
@@ -914,6 +902,18 @@ class Settings:
             "buildings. Set to 0 for instant repairs."
         ),
     )
+    ground_unit_repair_turns: int = bounded_int_option(
+        "Ground unit repair delay (turns)",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=REPAIRS_SECTION,
+        min=0,
+        max=10,
+        default=0,
+        detail=(
+            "Turns needed for a repaired ground unit (e.g. a SAM radar) to return "
+            "to service. 0 repairs it instantly."
+        ),
+    )
 
     # Advanced Campaign Management
     ai_building_repairs: bool = boolean_option(
@@ -978,7 +978,17 @@ class Settings:
         ),
     )
 
-    # Campaign Management+
+    ai_ground_unit_repairs: bool = boolean_option(
+        "Enemy AI repairs SAM and EWR sites",
+        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
+        section=GROUND_OBJECT_REPAIR_TUNING_SECTION,
+        default=False,
+        detail=(
+            "If enabled, the enemy AI spends part of its ground unit budget "
+            "repairing its damaged SAM and EWR sites, search and tracking radars "
+            "first."
+        ),
+    )
     sam_repair_budget_fraction: float = bounded_float_option(
         "SAM repair budget fraction",
         page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
