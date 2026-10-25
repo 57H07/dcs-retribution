@@ -288,11 +288,26 @@ class Debriefing:
         return dict(state_data.damaged_units)
 
     def merge_simulation_results(self, results: SimulationResults) -> None:
+        from game.unitmap import AirliftUnits
+
+        lost_cargo_flights: set[UUID] = set()
         for air_loss in results.air_losses:
             if air_loss.flight.squadron.player.is_blue:
                 self.air_losses.player.append(air_loss)
             else:
                 self.air_losses.enemy.append(air_loss)
+
+            # A flight killed by the simulation is never spawned in DCS, so no kill
+            # event reports its airlift units: its whole cargo is lost with it.
+            transfer = air_loss.flight.cargo
+            if transfer is None or air_loss.flight.id in lost_cargo_flights:
+                continue
+            lost_cargo_flights.add(air_loss.flight.id)
+            airlift = AirliftUnits(tuple(transfer.iter_units()), transfer)
+            if transfer.player.is_blue:
+                self.ground_losses.player_airlifts.append(airlift)
+            else:
+                self.ground_losses.enemy_airlifts.append(airlift)
 
     @property
     def front_line_losses(self) -> Iterator[FrontLineUnit]:

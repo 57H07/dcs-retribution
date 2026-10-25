@@ -483,6 +483,10 @@ class Game:
         # Update bullseye positions for blue & red
         self.set_bullseye()
 
+        # Must happen before transport and air assault planning, which pick their
+        # pickup and drop-off points from the CTLD zones.
+        self.update_default_ctld_zones()
+
         # Update statistics
         self.game_stats.update(self)
 
@@ -519,6 +523,16 @@ class Game:
             self.compute_unculled_zones(events)
 
         events.begin_new_turn()
+
+    def update_default_ctld_zones(self) -> list[str]:
+        """Creates (or removes) default CTLD zones per the ctld.defaultzones option."""
+        from .theater.ctldzones import apply_default_ctld_zones, default_zones_enabled
+
+        return apply_default_ctld_zones(
+            self.theater.controlpoints,
+            self.theater,
+            default_zones_enabled(self.settings),
+        )
 
     def message(self, title: str, text: str = "") -> None:
         self.informations.append(Information(title, text, turn=self.turn))
