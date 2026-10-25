@@ -65,6 +65,17 @@ class AirLosses:
         return flight.count - losses
 
 
+@dataclass(frozen=True)
+class DamagedAircraft:
+    """An aircraft that came back from the mission damaged but not destroyed."""
+
+    unit: FlyingUnit
+    #: DCS name of the unit.
+    name: str
+    #: Remaining life ratio, 0.0 to 1.0.
+    remaining_life: float
+
+
 @dataclass
 class GroundLosses:
     player_front_line: List[FrontLineUnit] = field(default_factory=list)
@@ -275,6 +286,19 @@ class Debriefing:
         self.damaged_units = self.persistent_damaged_units(
             self.state_data, game.settings.persistent_damage
         )
+        self.damaged_aircraft = self.find_damaged_aircraft(self.damaged_units, unit_map)
+
+    @staticmethod
+    def find_damaged_aircraft(
+        damaged_units: Dict[str, float], unit_map: UnitMap
+    ) -> List[DamagedAircraft]:
+        """The damaged units that are aircraft of a flight, sorted by name."""
+        damaged = []
+        for name, life in sorted(damaged_units.items()):
+            unit = unit_map.flight(name)
+            if unit is not None:
+                damaged.append(DamagedAircraft(unit, name, life))
+        return damaged
 
     @staticmethod
     def persistent_damaged_units(

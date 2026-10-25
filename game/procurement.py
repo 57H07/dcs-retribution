@@ -104,7 +104,28 @@ class ProcurementAi:
             budget += self.reinforce_front_line(armor_budget)
 
         if self.manage_aircraft:
+            if self.game.settings.expedited_aircraft_repair:
+                budget = self.repair_aircraft(budget)
             budget = self.purchase_aircraft(budget)
+        return budget
+
+    def repair_aircraft(self, budget: float) -> float:
+        """Pays to finish aircraft maintenance at once (PER-01.2), cheapest first."""
+        squadrons = sorted(
+            (s for s in self.air_wing.iter_squadrons() if s.aircraft_in_maintenance),
+            key=lambda s: s.expedited_repair_cost,
+        )
+        for squadron in squadrons:
+            cost = squadron.expedited_repair_cost
+            if cost > budget:
+                break
+            released = squadron.expedite_maintenance()
+            budget -= cost
+            if self.is_player.is_blue:
+                self.game.message(
+                    f"We have expedited the repair of {released} aircraft of "
+                    f"{squadron}"
+                )
         return budget
 
     def repair_runways(self, budget: float) -> float:

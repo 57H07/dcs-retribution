@@ -9,6 +9,7 @@ from game.debriefing import Debriefing
 from game.ground_forces.combat_stance import CombatStance
 from game.profiling import logged_duration
 from game.squadrons.pilot import KillCategory, LogbookEntry, Pilot
+from game.squadrons.maintenance import aircraft_maintenance_turns
 from game.theater import ControlPoint
 from .gameupdateevents import GameUpdateEvents
 from ..ato.airtaaskingorder import AirTaskingOrder
@@ -16,6 +17,7 @@ from ..ato.airtaaskingorder import AirTaskingOrder
 if TYPE_CHECKING:
     from ..ato.flight import Flight
     from ..game import Game
+    from ..squadrons import Squadron
 
 
 MINOR_DEFEAT_INFLUENCE = 0.1
@@ -31,6 +33,8 @@ class MissionResultsProcessor:
         with logged_duration("Committing mission results"):
             with logged_duration("commit_air_losses"):
                 self.commit_air_losses(debriefing)
+            with logged_duration("commit_aircraft_damage"):
+                self.commit_aircraft_damage(debriefing)
             with logged_duration("commit_pilot_kills"):
                 self.commit_pilot_kills(debriefing)
             with logged_duration("commit_pilot_logbooks"):
@@ -81,6 +85,36 @@ class MissionResultsProcessor:
             logging.info(f"{aircraft} destroyed from {squadron}")
             squadron.owned_aircraft -= 1
             squadron.destroyed_aircraft += 1
+
+    def commit_aircraft_damage(self, debriefing: Debriefing) -> None:
+        """Sends damaged aircraft to maintenance, or writes them off (PER-01.2).
+
+        ``debriefing.damaged_aircraft`` is empty unless persistent damage is on.
+        """
+        write_off = self.game.settings.persistent_damage_aircraft_write_off
+        batches: Counter[tuple[Squadron, int]] = Counter()
+        for damaged in debriefing.damaged_aircraft:
+            squadron = damaged.unit.flight.squadron
+            aircraft = damaged.unit.flight.unit_type
+            turns = aircraft_maintenance_turns(damaged.remaining_life, write_off)
+            if turns is None:
+                if squadron.owned_aircraft <= 0:
+                    logging.error(
+                        f"Found written-off {aircraft} from {squadron} but that "
+                        "squadron has none available."
+                    )
+                    continue
+                logging.info(f"{aircraft} from {squadron} written off after damage")
+                squadron.owned_aircraft -= 1
+                squadron.destroyed_aircraft += 1
+            elif turns > 0:
+                batches[(squadron, turns)] += 1
+        for (squadron, turns), count in batches.items():
+            logging.info(
+                f"{count} {squadron.aircraft} from {squadron} in maintenance for "
+                f"{turns} turns"
+            )
+            squadron.send_to_maintenance(count, turns)
 
     def commit_pilot_logbooks(self, debriefing: Debriefing) -> None:
         """Logs one sortie for every pilot of every flight of both ATOs.
