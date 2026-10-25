@@ -45,16 +45,8 @@ class SeadIngressBuilder(PydcsWaypointBuilder):
                 )
                 continue
 
-            # Use decoys first
-            attack_task = AttackGroup(
-                miz_group.id,
-                weapon_type=DcsWeaponType.Decoy,
-                group_attack=True,
-                expend=Expend.All,
-                altitude=round(waypoint.alt * 1.5),  # 50% increase to force a climb
-            )
-            waypoint.tasks.append(attack_task)
-
+            # Decoys are released later, at the DECOY RELEASE waypoint
+            # (DecoyReleaseBuilder): from the IP they would not reach the SAM.
             attack_task = AttackGroup(
                 miz_group.id,
                 weapon_type=DcsWeaponType.ARM,
