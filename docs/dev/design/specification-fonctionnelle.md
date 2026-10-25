@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Statut** | Brouillon v0.2, à valider |
+| **Statut** | v1.0, validée (session de revue du 2026-10-25, voir §9). Les tickets GitHub font foi pour le détail. |
 | **Date** | 2026-10-25 |
 | **Base de code** | branche `dev` @ `49e8067f` (v1.6.0), dépôt officiel `dcs-retribution/dcs-retribution` |
 | **Fork de travail** | `57H07/dcs-retribution` |
@@ -22,10 +22,12 @@ Chaque exigence porte un identifiant (`BUG-xx`, `PER-xx`, `CSAR-xx`, `TRN-xx`, `
 
 Règles communes à toutes les évolutions :
 
-1. Toute nouvelle mécanique de jeu est **optionnelle** et pilotée par un réglage. Sa valeur par défaut doit reproduire le comportement actuel, sauf pour les correctifs de bugs.
+1. Toute nouvelle **mécanique de jeu** est **optionnelle** et pilotée par un réglage. Sa valeur par défaut doit reproduire le comportement actuel, sauf pour les correctifs de bugs. Cette règle ne s'applique pas à l'apparence de l'interface (thème, icônes, disposition).
 2. Les sauvegardes existantes restent chargeables. Les nouveaux champs sont initialisés par `__setstate__` ou par la migration de `game/persistency.py` (même schéma que `game/squadrons/squadron.py:85-98`).
-3. Chaque PR vise la branche `dev` (`CONTRIBUTING.md`), passe `pytest`, `black --check` et `mypy`, et ajoute une entrée dans `changelog.md`.
-4. Quand une PR existe déjà en amont, on part de cette PR (revue, rebase, tests en vol) plutôt que de réécrire.
+3. Chaque PR vise la branche `dev` du fork `57H07/dcs-retribution`, passe `pytest`, `black --check` et `mypy`, et ajoute une entrée dans `changelog.md` (pour faciliter une remontée ultérieure en amont).
+4. Quand une PR existe déjà en amont, on part de cette PR **sans attendre son auteur ni les mainteneurs** : on récupère sa branche (`git fetch upstream pull/<n>/head`), on garde ses commits (paternité conservée) et on la rebase sur notre `dev`. Si le rebase est ingérable, on reprend le diff en un commit avec `Co-authored-by`.
+5. Le `dev` du fork est resynchronisé avec le `dev` amont au début de chaque lot. Si l'amont fusionne une PR que nous avons reprise, on adopte leur version et on ne garde que nos ajouts.
+6. Les critères d'acceptation sont séparés en critères **automatisés** (pytest) et critères **en vol** (checklist validée manuellement dans DCS). Une PR peut être ouverte quand les premiers passent ; le ticket n'est fermé qu'après la checklist en vol.
 
 ---
 
@@ -46,13 +48,13 @@ Règles communes à toutes les évolutions :
 1. La tâche de largage des leurres n'est générée que si au moins un appareil du vol emporte une arme de type `DECOY` (`Flight.any_member_has_weapon_of_type`, `game/ato/flight.py:287-290`).
 2. La tâche « leurres » est déplacée de l'IP vers un point situé à une **distance de largage configurable** de la cible (par défaut, la portée utile du leurre moins une marge). Ce point peut être le point « Search » existant.
 3. La montée forcée à 1,5 × l'altitude est conservée pour les leurres. Les missiles anti-radar restent sur INGRESS, avec `Expend.All` (comportement de la PR [#562](https://github.com/dcs-retribution/dcs-retribution/pull/562)).
-4. Un réglage `Distance de largage des leurres (NM)` est ajouté dans la doctrine de campagne.
+4. Un réglage `Distance de largage des leurres (NM)` est ajouté dans les **réglages de campagne** (onglet Mission Generator), valeur par défaut 15 NM, à ajuster après le test en vol. La doctrine (`game/data/doctrine.py`) est une dataclass par faction sans interface : elle n'est pas retenue.
 
 **Critères d'acceptation :**
 - Test unitaire : un vol sans leurres ne reçoit aucune tâche `Decoy`. Un vol avec leurres reçoit la tâche sur le point de largage, pas sur INGRESS.
 - Test en vol : un package F/A-18C « Retribution SEAD » contre un SA-6 largue ses TALD de sorte qu'ils atteignent la zone d'engagement du site, et le site tire sur au moins un leurre.
 
-**Risque :** le comportement de largage de l'IA DCS n'est pas maîtrisé côté Retribution. Il faut valider en vol, et prévoir en repli une tâche `EngageTargetsInZone` centrée sur le SAM (précédent : `seadsweepingress.py:20-31`).
+**Risque :** le comportement de largage de l'IA DCS n'est pas maîtrisé côté Retribution. Il faut valider en vol. Le repli (tâche `EngageTargetsInZone` centrée sur le SAM, précédent : `seadsweepingress.py:20-31`) n'est implémenté que si le test en vol de la première version échoue.
 
 ---
 
@@ -84,8 +86,9 @@ Règles communes à toutes les évolutions :
 
 **Exigences :**
 1. Un point de Strike sans cible ne génère aucune tâche d'attaque et ne bloque pas la génération (même garde que la fonction sœur `add_bombing_tasks`).
-2. En amont, l'autoplanner ne planifie pas de Strike contre un objectif sans cible vivante. Le motif reste à confirmer : dans le rapport de l'issue, la cible était un dépôt de véhicules (motor pool) pourtant rempli.
-3. Bug annexe signalé dans la même issue, à investiguer séparément : noms de pilotes en double dans un escadron après des transferts répétés, et capacité de base incohérente dans la boîte de dialogue de transfert.
+2. **Investigation (sous-ticket, non bloquant) :** en amont, l'autoplanner ne devrait pas planifier de Strike contre un objectif sans cible vivante. Le motif reste à confirmer : dans le rapport de l'issue, la cible était un dépôt de véhicules (motor pool) pourtant rempli.
+
+Le bug annexe signalé dans la même issue (pilotes en double, capacité de transfert) est traité par BUG-05.
 
 **Critères d'acceptation :** un test de non-régression (repris de la PR #950) échoue avant le correctif et passe après. La sauvegarde jointe à #948 génère sa mission sans erreur.
 
@@ -114,6 +117,20 @@ Règles communes à toutes les évolutions :
 
 ---
 
+### BUG-05 — Pilotes en double et capacité incohérente après des transferts · P2
+
+**Sources :** issue [#948](https://github.com/dcs-retribution/dcs-retribution/issues/948), bug annexe signalé par le même rapport (séparé de BUG-03 lors de la revue).
+
+**Constat :** après des transferts répétés d'escadron, des noms de pilotes apparaissent en double dans un escadron, et la capacité de la base affichée dans la boîte de dialogue de transfert est incohérente. Non reproduit à ce stade.
+
+**Exigences :**
+1. Reproduire le problème (sauvegarde de #948 ou scénario de transferts répétés).
+2. Corriger la cause : un pilote n'apparaît qu'une fois dans un escadron, et la capacité affichée correspond aux places réellement libres.
+
+**Critères d'acceptation :** un test de non-régression couvre le scénario de transferts répétés.
+
+---
+
 ## 2. Persistance et réalisme de la campagne
 
 ### PER-01 — Dégâts persistants sur les unités · P1
@@ -134,9 +151,9 @@ Règles communes à toutes les évolutions :
    | 0–19 % | disponible au tour suivant | disponible |
    | 20–49 % | indisponible 1 tour (en maintenance) | inopérante 1 tour |
    | 50–79 % | indisponible 2 tours | inopérante 2 tours |
-   | ≥ 80 % | indisponible 3 tours, ou perte (réglage) | détruite, ou inopérante 3 tours (réglage) |
+   | ≥ 80 % | indisponible 3 tours (défaut), ou perte (réglage) | détruite (défaut), ou inopérante 3 tours (réglage) |
 
-3. Un aéronef en maintenance reste dans l'inventaire de l'escadron, mais ne peut pas être affecté à un vol. Il est affiché comme « en maintenance (N tours) » dans la fenêtre de l'escadron et dans l'inventaire de l'Air Wing.
+3. Un aéronef en maintenance reste dans l'inventaire de l'escadron, mais ne peut pas être affecté à un vol. L'inventaire d'un escadron étant un compteur (`owned_aircraft: int`, `game/squadrons/squadron.py:72`) sans identité de cellule, l'escadron tient une liste de lots en maintenance `[(nombre, tours_restants)]` ; appareils disponibles = possédés − en maintenance. Ils sont affichés comme « en maintenance (N tours) » dans la fenêtre de l'escadron et dans l'inventaire de l'Air Wing.
 4. Une unité au sol inopérante apparaît en statique (ou désactivée) dans la mission suivante, avec le statut « endommagé » sur la carte (le symbole militaire SIDC `PRESENT_DAMAGED` existe déjà : `game/theater/theatergroundobject.py:93-102`).
 5. La réparation est gratuite et automatique (décompte de tours). Une option permet une réparation accélérée payante, sur le modèle des pistes.
 6. Le débriefing affiche une section « Unités endommagées » (camp, type, % de dégâts, indisponibilité).
@@ -144,8 +161,10 @@ Règles communes à toutes les évolutions :
 
 **Critères d'acceptation :**
 - Un `state.json` contenant `damaged_units` est lu sans erreur. Un `state.json` ancien (sans cette clé) reste compatible.
-- Un F-16 revenu à 35 % de dégâts est indisponible au tour N+1 et disponible au tour N+2.
+- Un appareil d'un escadron de F-16 revenu à 35 % de dégâts passe en maintenance : l'escadron a 1 appareil disponible de moins au tour N+1, et le retrouve au tour N+2.
 - Une ancienne sauvegarde se charge avec la fonction désactivée.
+
+**Découpage :** 4 sous-tickets : (1) collecte Lua et `StateData`, (2) aéronefs, (3) unités au sol, (4) débriefing et affichage.
 
 **Point ouvert :** la fiabilité de `getLife()` pour les statiques et pour certains mods est à vérifier en vol.
 
@@ -167,10 +186,10 @@ Règles communes à toutes les évolutions :
 **Exigences :**
 1. Le joueur peut lancer la réparation d'un bâtiment détruit ou endommagé qu'il contrôle (y compris après une conquête, cf. #912), depuis sa fiche sur la carte.
 2. Coût = revenu par tour du bâtiment × multiplicateur de coût. Délai = nombre de tours × multiplicateur de délai. Les deux multiplicateurs sont des réglages de campagne (proposition de #247).
-3. Valeurs par défaut différenciées par catégorie : piste < dépôt de munitions ou de carburant < usine ou raffinerie. Cela répond à l'objection de Starfire13 dans #247.
+3. Délais par défaut différenciés par catégorie : dépôt de munitions ou de carburant 3 tours, autres bâtiments 4 tours, usine ou raffinerie 6 tours. Les deux multiplicateurs valent 1 par défaut. Cela répond à l'objection de Starfire13 dans #247. Les pistes gardent leur mécanisme existant (`RunwayStatus`) et ne sont pas concernées.
 4. Pendant la réparation, le bâtiment ne rapporte rien. S'il est frappé pendant les travaux, la réparation repart à zéro, comme `RunwayStatus.damage()`.
-5. L'IA adverse répare selon une part configurable de son budget, en priorisant les bâtiments à forte valeur loin du front (logique de la PR #680). Pour les unités au sol (SAM, EWR), elle priorise les radars de recherche et de poursuite (logique de la PR #679).
-6. La réparation d'unités au sol par le joueur passe aussi par un délai configurable (`0` = instantané, comportement actuel).
+5. L'IA adverse répare selon une part configurable de son budget, en priorisant les bâtiments à forte valeur loin du front (logique de la PR #680). Pour les unités au sol (SAM, EWR), elle priorise les radars de recherche et de poursuite (logique de la PR #679). Cette réparation par l'IA est **désactivée par défaut** (règle 1). La réparation de bâtiments par le joueur est disponible par défaut, puisqu'elle ne change rien tant qu'elle n'est pas utilisée.
+6. La réparation d'unités au sol par le joueur passe aussi par un délai configurable (`0` = instantané, comportement actuel, valeur par défaut).
 7. Les réglages de budget de réparation sont regroupés dans une section « Gestion de campagne avancée » (proposition de prokop7 dans #679).
 8. Correction du parcours de liste dans `repair_unit`.
 
@@ -182,7 +201,7 @@ Règles communes à toutes les évolutions :
 
 ### PER-03 — Carrière du pilote joueur · P2
 
-**Sources :** issue [#965](https://github.com/dcs-retribution/dcs-retribution/issues/965). Son auteur, Cozak92, propose de l'implémenter : à contacter pour éviter un doublon. Voir aussi F-30 dans `PRD_FEATURE_IDEAS.md`.
+**Sources :** issue [#965](https://github.com/dcs-retribution/dcs-retribution/issues/965). Implémenté sur le fork sans coordination préalable (règle 4). Voir aussi F-30 dans `PRD_FEATURE_IDEAS.md`.
 
 **Constat :**
 - `PilotRecord` ne contient que `missions_flown` (`game/squadrons/pilot.py:9-11`). `Pilot` porte un drapeau `player` (`pilot.py:24`).
@@ -197,6 +216,7 @@ Règles communes à toutes les évolutions :
 5. Aucun effet sur le gameplay : pas de déblocage, pas de bonus, pas de restriction (périmètre de #965).
 6. Le modèle de données accepte plusieurs carrières, même si une seule est exposée au départ.
 7. Prérequis technique : attribuer les kills au pilote (l'événement KILL porte l'unité initiatrice, qu'il faut relier au pilote du vol).
+8. Les éjections et sauvetages issus de CSAR-01 sont comptés dans le carnet de vol (exigence déplacée depuis CSAR-01 ; dépend de CSAR-01).
 
 **Critères d'acceptation :** après une mission où le joueur abat 2 avions, sa page Carrière affiche +1 sortie et +2 kills air. Les données survivent à une sauvegarde suivie d'un rechargement.
 
@@ -266,9 +286,10 @@ Règles communes à toutes les évolutions :
 9. **Pilote joueur :** si `invulnerable_player_pilots` est actif, le comportement actuel est conservé. Sinon, le pilote joueur suit les mêmes règles.
 10. **Réglages :** activation par camp, probabilité d'éjection, durée de survie, durée de repos, hélitreuillage, sauvetage des pilotes IA, porte cabine ouverte obligatoire, type de démarrage, nombre max de CSAR par camp. Ce sont ceux de la PR #929.
 11. **Récompense :** une prime financière optionnelle est versée pour un sauvetage réussi (proposition de #104).
-12. **Carrière :** sauvetages et éjections sont comptés dans PER-03.
 
-**Mise en œuvre retenue :** partir de la PR #929, qui couvre déjà les exigences 1 à 3 et 5 à 10. Il faut la rebaser sur `dev`, la tester en vol (pilote joueur, IA, mer, territoire ennemi), puis ajouter les exigences 4, 11 et 12.
+Le comptage des sauvetages et éjections dans la carrière est porté par PER-03 (exigence 8).
+
+**Mise en œuvre retenue :** partir de la PR #929, qui couvrirait les exigences 1 à 3 et 5 à 10 (à vérifier). Premier sous-ticket : récupérer et rebaser la branche sur `dev`, puis produire une **matrice de couverture** exigence par exigence. Ensuite : tests en vol (pilote joueur, IA, mer, territoire ennemi), puis sous-tickets pour les exigences 4 et 11 et pour les écarts relevés par la matrice.
 
 **Critères d'acceptation :**
 - Un pilote IA abattu au-dessus de l'ennemi est affiché « MIA » sur la carte. Une mission CSAR jouable le récupère, et il reprend du service après N tours.
@@ -293,13 +314,13 @@ Règles communes à toutes les évolutions :
 - La PR [#849](https://github.com/dcs-retribution/dcs-retribution/pull/849), ouverte, fait respecter les `mission_types` déclarés dans le YAML des escadrons. Aujourd'hui ils sont ignorés.
 
 **Exigences :**
-1. Le joueur peut créer une mission **Transport** depuis une base amie (onglet de la base ou clic droit sur la carte) : origine, destination, fret (unités au sol en réserve ou caisses CTLD) ou troupes.
+1. Le joueur peut créer une mission **Transport** depuis une base amie (onglet de la base ou clic droit sur la carte) : origine, destination, fret (unités au sol en réserve) ou troupes. Les caisses CTLD sont exclues : elles n'ont pas d'équivalent dans l'état de campagne.
 2. Tout vol de transport généré par un transfert est **jouable** : le joueur peut s'y affecter dans l'ATO.
-3. L'autoplanner peut générer des missions logistiques (voir TRN-03) quand l'option `Planifier les missions logistiques` est active.
-4. Une mission Transport réussie (atterrissage, puis déchargement CTLD ou atterrissage à destination) livre réellement le fret à la base de destination au tour suivant. Si l'appareil est abattu, le fret est perdu.
+3. *(Déplacée dans TRN-03.)*
+4. Une mission Transport réussie (atterrissage, puis déchargement CTLD ou atterrissage à destination) livre réellement le fret à la base de destination au tour suivant. Si l'appareil est abattu, le fret est perdu. Un sous-ticket d'investigation vérifie d'abord ce que le transfert fait déjà (la perte du fret existe via `kill_all`, `game/transfers.py:425`).
 5. Le kneeboard de la mission indique la zone d'embarquement, la zone de dépose, le fret et le créneau horaire.
 6. Le type de mission respecte les `mission_types` de l'escadron (reprendre la PR #849).
-7. Les campagnes sans zones CTLD reçoivent des zones d'embarquement et de dépose par défaut autour des bases et des FARP (zones nommées `<nom> CTLD` : `game/campaignloader/mizcampaignloader.py:735-739`). Sinon, un avertissement explique pourquoi la mission est indisponible.
+7. **(P2, sous-ticket séparé)** Les campagnes sans zones CTLD reçoivent des zones d'embarquement et de dépose par défaut autour des bases et des FARP (zones nommées `<nom> CTLD` : `game/campaignloader/mizcampaignloader.py:735-739`). Sinon, un avertissement explique pourquoi la mission est indisponible.
 
 **Critères d'acceptation :**
 - Sur une campagne 10.8, le joueur crée une mission Transport UH-1H entre deux bases amies et la vole.
@@ -342,7 +363,7 @@ Vérifier aussi la compatibilité avec le C-47 (question de Starfire13).
 **Constat :** le pont aérien ne sert qu'à exécuter des transferts demandés par le joueur. Il n'existe aucune logique de ravitaillement planifiée, et les C-130 d'une faction restent souvent inemployés.
 
 **Exigences :**
-1. **Ravitaillement des bases avancées :** l'autoplanner propose des vols logistiques vers les bases et FOB du front (renforts au sol, réserves), en priorité vers celles qui n'ont pas de liaison routière.
+1. **Ravitaillement des bases avancées :** quand l'option `Planifier les missions logistiques` est active (désactivée par défaut), l'autoplanner propose des vols logistiques vers les bases et FOB du front (renforts au sol, réserves), en priorité vers celles qui n'ont pas de liaison routière.
 2. Le C-130 (et les autres transports à voilure fixe) est préféré aux hélicoptères au-delà de la portée hélicoptère (100 NM).
 3. **Effet mesurable :** une base ravitaillée reçoit ses renforts au tour suivant. Si le vol est intercepté, les renforts sont perdus. Une base coupée de toute liaison est signalée sur la carte.
 4. Le joueur peut voler ces missions (TRN-01, exigence 2).
@@ -354,7 +375,9 @@ Vérifier aussi la compatibilité avec le C-47 (question de Starfire13).
 
 ## 5. Interface et outils
 
-### UI-01 — Légende de la carte de campagne · P1
+### UI-01 — Légende de la carte de campagne · P1 (lot 3)
+
+Ticket autonome, livrable avec les couleurs actuelles, sans attendre GFX-01. Seule l'exigence 5 dépend de GFX-01 (sous-ticket bloqué par celui-ci).
 
 **Sources :** issue [#54](https://github.com/dcs-retribution/dcs-retribution/issues/54) (jsharpcsa propose d'utiliser le panneau des calques pour une option « afficher la légende »).
 
@@ -399,8 +422,12 @@ Vérifier aussi la compatibilité avec le C-47 (question de Starfire13).
 2. Le thème sombre est le thème par défaut des nouvelles installations. Les thèmes existants restent disponibles.
 3. Le thème se change **sans redémarrage**.
 4. Toutes les couleurs en dur dans les widgets sont remplacées par des jetons (inventaire à faire par recherche de `setStyleSheet` et `QColor`).
-5. Une police d'interface moderne est intégrée et utilisée partout (pas de dépendance réseau), avec mise à l'échelle correcte en haute résolution.
-6. Mise à jour de PySide6 vers une version 6.x récente maintenue, à vérifier avec PyInstaller (`pyinstaller.spec`).
+5. La police **Inter** (licence OFL) est embarquée et utilisée partout (pas de dépendance réseau), avec mise à l'échelle correcte en haute résolution.
+6. Les jetons vivent dans un **fichier JSON unique**, qui génère le QSS côté Qt et les variables CSS côté carte.
+
+### GFX-00 — Mise à jour de PySide6 · P1
+
+Ticket séparé, premier du lot 4 et bloquant pour GFX-01 : passage de PySide6 6.4.2 à une version 6.x récente maintenue, vérifiée avec PyInstaller (`pyinstaller.spec`). Aucun changement visuel attendu ; l'application se lance, la carte s'affiche et le livrable PyInstaller fonctionne.
 
 ### GFX-02 — Iconographie unifiée · P2
 
@@ -437,12 +464,11 @@ Les écrans sont refondus dans cet ordre, selon leur fréquence d'utilisation :
 **Exigences :**
 1. **Fond de secours hors ligne :** sans réseau, ou si les tuiles échouent, la carte bascule automatiquement sur un fond de base « Hors ligne » qui dessine terre et mer à partir du `landmap` du théâtre (réutilisation de `/map-zones/terrain`, stylé comme un vrai fond de carte et non comme un calque de debug). Ce fond est aussi sélectionnable manuellement dans le sélecteur de calques. Un bandeau discret indique le mode hors ligne.
 2. Pour les théâtres dont le landmap est trop lourd (Malouines), le fond est une image ou des tuiles précalculées à la construction du livrable (piste du commentaire de `routes.py`). Le poids ajouté reste limité. Objectif indicatif : moins de 50 Mo pour l'ensemble des théâtres, à confirmer.
-3. Les tuiles consultées en ligne sont mises en **cache** localement et réutilisées hors ligne.
+3. Les tuiles consultées en ligne profitent du **cache HTTP standard et persistant de QWebEngine**, conforme aux en-têtes de cache. Pas de stockage de tuiles maison : les conditions d'utilisation d'Esri (comme la politique des tuiles OSM) encadrent strictement le stockage hors ligne.
 4. Les styles de la carte (sélecteur de calques, infobulles, menus contextuels) utilisent les jetons de GFX-01, en clair comme en sombre.
 5. La taille des symboles s'adapte au zoom, et les libellés restent lisibles.
-6. La légende (UI-01) fait partie de cette refonte.
 
-**Critères d'acceptation :** application lancée sans réseau, sur une campagne Caucase, la carte affiche le contour des terres et tous les calques de jeu. Après une session en ligne, les zones déjà vues s'affichent hors ligne avec leurs tuiles.
+**Critères d'acceptation :** application lancée sans réseau, sur une campagne Caucase, la carte affiche le contour des terres et tous les calques de jeu. Non bloquant : après une session en ligne, les zones déjà vues s'affichent hors ligne au mieux, selon le cache HTTP.
 
 ### GFX-05 — Mise à jour technique du client web · P3
 
@@ -462,11 +488,36 @@ Les écrans sont refondus dans cet ordre, selon leur fréquence d'utilisation :
 
 ## 8. Ordonnancement proposé
 
-1. **Lot 1, correctifs :** BUG-03, BUG-02, BUG-01, puis l'investigation BUG-04.
+1. **Lot 1, correctifs :** BUG-03, BUG-02, BUG-01, puis les investigations BUG-04 et BUG-05.
 2. **Lot 2, reprise des PR existantes :** CSAR-01 (#929), TRN-02 (#884), PER-02 (#680 et #679), TRN-01 exigence 6 (#849).
-3. **Lot 3, nouvelles mécaniques :** PER-01, TRN-01, TRN-03, PER-03.
-4. **Lot 4, interface :** GFX-01, UI-01 et GFX-04, puis GFX-02, GFX-03, GFX-05.
-5. **En fond :** PER-05 et PER-04.
+3. **Lot 3, nouvelles mécaniques :** PER-01, TRN-01, TRN-03, PER-03, UI-01.
+4. **Lot 4, interface :** GFX-00, GFX-01, GFX-04.
+5. **Backlog sans ticket** (à réévaluer après le lot 3) : GFX-02, GFX-03, GFX-05, PER-05, PER-04.
+
+## 9. Décisions de la revue du 2026-10-25
+
+| # | Décision |
+|---|---|
+| D1 | Fork d'abord : on développe sur `57H07/dcs-retribution` sans attendre l'amont ; une remontée en amont reste possible plus tard. |
+| D2 | Les tickets sont des issues GitHub du fork, rédigées en anglais. Un ticket parent par identifiant, une sous-issue par PR pour les gros sujets, un epic par lot. |
+| D3 | Les PR amont ouvertes (#929, #884, #902, #849) et fermées (#679, #680, #950) sont reprises sans attendre leurs auteurs, en gardant leurs commits (règle 4). |
+| D4 | Critères automatisés et critères en vol séparés ; label `needs-flight-test` (règle 6). |
+| D5 | Labels : `bug`, `enhancement`, `P1`–`P3`, `lot-1`–`lot-4`, `needs-flight-test`, `from-upstream-pr`, `investigation`. |
+| D6 | Après création des tickets, ce sont eux qui font foi pour le détail ; la spec n'évolue que pour le périmètre (§7, §8). |
+| D7 | La règle 1 ne vise que les mécaniques de jeu : le thème sombre par défaut (GFX-01) est conforme. |
+| D8 | BUG-03 découpé : garde (BUG-03), investigation autoplanner (sous-ticket), pilotes en double (BUG-05). |
+| D9 | UI-01 autonome au lot 3 ; retiré de GFX-04. |
+| D10 | BUG-01 : réglage dans les réglages de campagne, défaut 15 NM ; repli `EngageTargetsInZone` conditionnel au test en vol. |
+| D11 | PER-01 : lots de maintenance par escadron, pas d'identité de cellule ; défaut ≥ 80 % = 3 tours (aéronef), destruction (sol) ; 4 sous-tickets. |
+| D12 | PER-02 : bâtiments seulement ; délais 3/4/6 tours ; réparation IA désactivée par défaut. |
+| D13 | TRN-01 : sans caisses CTLD ; exigence 3 déplacée dans TRN-03 ; exigence 7 en P2 ; investigation préalable sur l'exigence 4. |
+| D14 | CSAR-01 : premier sous-ticket = rebase et matrice de couverture de #929 ; exigence 12 déplacée dans PER-03. |
+| D15 | GFX-04 : cache HTTP standard de QWebEngine uniquement. |
+| D16 | GFX-00 (PySide6) isolé et bloquant pour GFX-01 ; jetons en JSON ; police Inter. |
+
+## Annexe B — Correspondance exigences ↔ tickets
+
+*Remplie à la création des tickets.*
 
 ## Annexe A — Index des sources GitHub
 
