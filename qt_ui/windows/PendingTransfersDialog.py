@@ -67,7 +67,7 @@ class PendingTransfersList(QListView):
         delete_action.triggered.connect(lambda: self.cancel_transfer(index))
         menu.addAction(delete_action)
 
-        menu.exec_(event.globalPos())
+        menu.exec(event.globalPos())
 
     def cancel_transfer(self, index: QModelIndex) -> None:
         """Cancels the given transfer order."""

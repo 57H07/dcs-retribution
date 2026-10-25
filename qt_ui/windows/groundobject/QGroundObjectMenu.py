@@ -298,7 +298,7 @@ class QGroundObjectMenu(QDialog):
         self.subwindow = QGroundObjectBuyMenu(
             self, self.ground_object, self.game, self.total_value
         )
-        if self.subwindow.exec_():
+        if self.subwindow.exec():
             self.update_game()
 
     def update_game(self) -> None:

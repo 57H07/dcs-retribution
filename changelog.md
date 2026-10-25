@@ -39,6 +39,7 @@
 * **[Engine]** The mission script now records the remaining life of units and statics that were damaged but not destroyed (`damaged_units` in `state.json`), groundwork for the new "Persistent damage" campaign setting (off by default, no gameplay effect yet). (#23)
 * **[Modding]** Update UH-60L mod to v2.1.5 including MH-60L DAP
 * **[Squadrons]** The `mission_types` of squadron definitions are now honored: the autoplanner (including airlift Transport flights) only auto-assigns a squadron to tasks it lists, and campaign secondaries are limited to them. Squadrons without `mission_types` keep all their airframe's tasks. (`upstream#849`)
+* **[Engine]** Upgrade PySide6 (Qt) from 6.4.2 to 6.11.2.
 
 ## Fixes
 * **[Mission Generator]** AI SEAD flights no longer release their TALD decoys at the IP, out of glide range: decoys are now released at a new "DECOY RELEASE" waypoint at a configurable distance from the target (new campaign setting "Decoy release distance (NM)", default 15 NM), and only by flights that actually carry decoys. Anti-radiation missiles are still fired from INGRESS.

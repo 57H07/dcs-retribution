@@ -253,7 +253,7 @@ class QPackageDialog(QDialog):
             self.game_model.is_ownfor,
             parent=self.window(),
         )
-        if auto_create_dialog.exec_() == QDialog.DialogCode.Accepted:
+        if auto_create_dialog.exec() == QDialog.DialogCode.Accepted:
             for f in self.package_model.package.flights:
                 EventStream.put_nowait(GameUpdateEvents().new_flight(f))
             self.package_model.update_tot()
