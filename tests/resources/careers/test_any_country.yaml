@@ -1,0 +1,7 @@
+# Test fallback rules for PER-03.3: any country, any period.
+name: Any Air Force
+ranks:
+  - name: Pilot
+decorations:
+  - name: Ace
+    requires: {air_kills: 5}

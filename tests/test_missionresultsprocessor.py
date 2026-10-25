@@ -29,6 +29,7 @@ COMMIT_STEPS = [
     "commit_aircraft_damage",
     "commit_pilot_kills",
     "commit_pilot_logbooks",
+    "commit_pilot_awards",
     "commit_front_line_losses",
     "commit_motorpool_losses",
     "commit_convoy_losses",

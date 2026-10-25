@@ -1,0 +1,19 @@
+# Test rules for PER-03.3; not loaded by the game.
+name: Test Air Force
+countries: [USA]
+from: 1950-01-01
+ranks:
+  - name: Second Lieutenant
+    abbreviation: 2nd Lt
+  - name: First Lieutenant
+    abbreviation: 1st Lt
+    requires: {sorties: 2}
+  - name: Captain
+    abbreviation: Capt
+    requires: {sorties: 3, flight_hours: 4}
+decorations:
+  - name: Ace
+    description: Five aerial victories.
+    requires: {air_kills: 5}
+  - name: Purple Heart
+    requires: {deaths: 1}

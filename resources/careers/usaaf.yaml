@@ -1,0 +1,40 @@
+# United States before the creation of the US Air Force (US Army Air Forces,
+# WWII). See generic.yaml for the file format. Award conditions are gameplay
+# approximations.
+name: United States Army Air Forces
+countries: [USA]
+until: 1947-09-17
+ranks:
+  - name: Flight Officer
+    abbreviation: F/O
+  - name: Second Lieutenant
+    abbreviation: 2nd Lt
+    requires: {sorties: 5}
+  - name: First Lieutenant
+    abbreviation: 1st Lt
+    requires: {sorties: 15}
+  - name: Captain
+    abbreviation: Capt
+    requires: {sorties: 30, flight_hours: 60}
+  - name: Major
+    abbreviation: Maj
+    requires: {sorties: 60, flight_hours: 120}
+  - name: Lieutenant Colonel
+    abbreviation: Lt Col
+    requires: {sorties: 100, flight_hours: 200}
+decorations:
+  - name: Air Medal
+    description: Five combat sorties.
+    requires: {combat_sorties: 5}
+  - name: Distinguished Flying Cross
+    description: Twenty-five combat sorties.
+    requires: {combat_sorties: 25}
+  - name: Ace
+    description: Five aerial victories.
+    requires: {air_kills: 5}
+  - name: Silver Star
+    description: Ten aerial victories.
+    requires: {air_kills: 10}
+  - name: Purple Heart
+    description: Shot down or killed in action.
+    requires: {deaths: 1}

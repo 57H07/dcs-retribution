@@ -1,0 +1,51 @@
+# Ranks and decorations of player pilot careers (PER-03.3), used when no file
+# matches the squadron's country and the campaign date.
+#
+# A file may set `countries` (DCS country names, e.g. USA, Russia, France) and a
+# period (`from` / `until`, YYYY-MM-DD). The most specific matching file wins:
+# country beats period, period beats neither. Ranks are listed lowest first.
+# `requires` takes minimums of: sorties, combat_sorties, air_kills,
+# ground_kills, naval_kills, total_kills, deaths, flight_hours.
+# Copy a file to "Saved Games/DCS/Retribution/Careers" to make your own.
+# Awards have no gameplay effect.
+name: Generic air force
+ranks:
+  - name: Lieutenant
+    abbreviation: Lt
+  - name: First Lieutenant
+    abbreviation: 1st Lt
+    requires: {sorties: 10}
+  - name: Captain
+    abbreviation: Capt
+    requires: {sorties: 25, flight_hours: 40}
+  - name: Major
+    abbreviation: Maj
+    requires: {sorties: 50, flight_hours: 80}
+  - name: Lieutenant Colonel
+    abbreviation: Lt Col
+    requires: {sorties: 100, flight_hours: 160}
+  - name: Colonel
+    abbreviation: Col
+    requires: {sorties: 150, flight_hours: 250}
+decorations:
+  - name: Combat Service Medal
+    description: Ten combat sorties.
+    requires: {combat_sorties: 10}
+  - name: Ace
+    description: Five aerial victories.
+    requires: {air_kills: 5}
+  - name: Double Ace
+    description: Ten aerial victories.
+    requires: {air_kills: 10}
+  - name: Ground Attack Medal
+    description: Twenty-five ground targets destroyed.
+    requires: {ground_kills: 25}
+  - name: Naval Strike Medal
+    description: Five ships sunk.
+    requires: {naval_kills: 5}
+  - name: Wound Badge
+    description: Shot down or killed in action.
+    requires: {deaths: 1}
+  - name: Veteran
+    description: One hundred sorties.
+    requires: {sorties: 100}

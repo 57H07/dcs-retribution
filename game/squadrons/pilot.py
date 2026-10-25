@@ -21,6 +21,28 @@ class KillCategory(Enum):
     Naval = "Naval"
 
 
+@unique
+class AwardKind(Enum):
+    Rank = "Rank"
+    Decoration = "Decoration"
+
+
+@dataclass(frozen=True)
+class Award:
+    """A rank or decoration received by a pilot (PER-03.3).
+
+    Only plain values are stored: the award outlives the rules that granted it.
+    """
+
+    kind: AwardKind
+    name: str
+    #: Campaign turn of the mission after which it was awarded.
+    turn: int
+    #: Start of that mission (campaign date and time).
+    date: datetime.datetime
+    description: str = ""
+
+
 @dataclass(frozen=True)
 class LogbookEntry:
     """One sortie in a pilot's logbook (PER-03.2).
@@ -74,6 +96,8 @@ class PilotRecord:
     deaths: int = field(default=0)
     flight_time: datetime.timedelta = field(default_factory=datetime.timedelta)
     logbook: list[LogbookEntry] = field(default_factory=list)
+    #: Ranks and decorations in the order they were awarded (PER-03.3).
+    awards: list[Award] = field(default_factory=list)
 
     def __setstate__(self, state: dict[str, Any]) -> None:
         # Saves made before kills were attributed to pilots (PER-03.1).
@@ -85,6 +109,8 @@ class PilotRecord:
         state.setdefault("deaths", 0)
         state.setdefault("flight_time", datetime.timedelta())
         state.setdefault("logbook", [])
+        # Saves made before ranks and decorations existed (PER-03.3).
+        state.setdefault("awards", [])
         self.__dict__.update(state)
 
     @property
@@ -94,6 +120,19 @@ class PilotRecord:
     @property
     def total_kills(self) -> int:
         return self.air_kills + self.ground_kills + self.naval_kills
+
+    @property
+    def rank(self) -> Optional[Award]:
+        """The latest rank awarded, if any."""
+        ranks = [a for a in self.awards if a.kind is AwardKind.Rank]
+        return ranks[-1] if ranks else None
+
+    @property
+    def decorations(self) -> list[Award]:
+        return [a for a in self.awards if a.kind is AwardKind.Decoration]
+
+    def has_award(self, kind: AwardKind, name: str) -> bool:
+        return any(a.kind is kind and a.name == name for a in self.awards)
 
     def log_sortie(self, entry: LogbookEntry, keep_history: bool) -> None:
         """Adds a sortie to the totals, and to the history if keep_history.
