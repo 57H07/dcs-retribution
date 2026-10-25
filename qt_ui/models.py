@@ -534,6 +534,12 @@ class SquadronModel(QAbstractListModel):
         pilot.player = not pilot.player
         self.endResetModel()
 
+    def create_player_pilot(self, name: str) -> Pilot:
+        self.beginResetModel()
+        pilot = self.squadron.create_player_pilot(name)
+        self.endResetModel()
+        return pilot
+
     def toggle_leave_state(self, index: QModelIndex) -> None:
         pilot = self.pilot_at_index(index)
         self.beginResetModel()

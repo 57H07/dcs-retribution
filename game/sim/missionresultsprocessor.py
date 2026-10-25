@@ -1,17 +1,26 @@
 from __future__ import annotations
 
 import logging
+from collections import Counter
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from game.debriefing import Debriefing
 from game.ground_forces.combat_stance import CombatStance
 from game.profiling import logged_duration
+from game.squadrons.pilot import KillCategory, LogbookEntry, Pilot
+from game.squadrons.maintenance import aircraft_maintenance_turns
 from game.theater import ControlPoint
+from game.theater.repairs import restart_repairs
 from .gameupdateevents import GameUpdateEvents
 from ..ato.airtaaskingorder import AirTaskingOrder
 
 if TYPE_CHECKING:
+    from ..ato.flight import Flight
     from ..game import Game
+    from ..squadrons import Squadron
+
+    from ..theater import TheaterGroundObject
 
 
 MINOR_DEFEAT_INFLUENCE = 0.1
@@ -27,10 +36,12 @@ class MissionResultsProcessor:
         with logged_duration("Committing mission results"):
             with logged_duration("commit_air_losses"):
                 self.commit_air_losses(debriefing)
-            with logged_duration("commit_pilot_experience"):
-                self.commit_pilot_experience()
+            with logged_duration("commit_aircraft_damage"):
+                self.commit_aircraft_damage(debriefing)
             with logged_duration("commit_pilot_kills"):
                 self.commit_pilot_kills(debriefing)
+            with logged_duration("commit_pilot_logbooks"):
+                self.commit_pilot_logbooks(debriefing)
             with logged_duration("commit_front_line_losses"):
                 self.commit_front_line_losses(debriefing)
             with logged_duration("commit_motorpool_losses"):
@@ -43,6 +54,8 @@ class MissionResultsProcessor:
                 self.commit_airlift_losses(debriefing)
             with logged_duration("commit_ground_losses"):
                 self.commit_ground_losses(debriefing, events)
+            with logged_duration("commit_ground_damage"):
+                self.commit_ground_damage(debriefing, events)
             with logged_duration("commit_damaged_runways"):
                 self.commit_damaged_runways(debriefing)
             # Score the front line before capturing bases: casualty_count
@@ -78,25 +91,116 @@ class MissionResultsProcessor:
             squadron.owned_aircraft -= 1
             squadron.destroyed_aircraft += 1
 
-    @staticmethod
-    def _commit_pilot_experience(ato: AirTaskingOrder) -> None:
+    def commit_aircraft_damage(self, debriefing: Debriefing) -> None:
+        """Sends damaged aircraft to maintenance, or writes them off (PER-01.2).
+
+        ``debriefing.damaged_aircraft`` is empty unless persistent damage is on.
+        """
+        write_off = self.game.settings.persistent_damage_aircraft_write_off
+        batches: Counter[tuple[Squadron, int]] = Counter()
+        for damaged in debriefing.damaged_aircraft:
+            squadron = damaged.unit.flight.squadron
+            aircraft = damaged.unit.flight.unit_type
+            turns = aircraft_maintenance_turns(damaged.remaining_life, write_off)
+            if turns is None:
+                if squadron.owned_aircraft <= 0:
+                    logging.error(
+                        f"Found written-off {aircraft} from {squadron} but that "
+                        "squadron has none available."
+                    )
+                    continue
+                logging.info(f"{aircraft} from {squadron} written off after damage")
+                squadron.owned_aircraft -= 1
+                squadron.destroyed_aircraft += 1
+            elif turns > 0:
+                batches[(squadron, turns)] += 1
+        for (squadron, turns), count in batches.items():
+            logging.info(
+                f"{count} {squadron.aircraft} from {squadron} in maintenance for "
+                f"{turns} turns"
+            )
+            squadron.send_to_maintenance(count, turns)
+
+    def commit_pilot_logbooks(self, debriefing: Debriefing) -> None:
+        """Logs one sortie for every pilot of every flight of both ATOs.
+
+        This also counts the sorties (``missions_flown``) that AI levelling uses.
+        Player pilots also get a history entry. Kills must already have been
+        credited by ``commit_pilot_kills``.
+        """
+        kills: Counter[tuple[int, KillCategory]] = Counter(
+            (id(kill.pilot), kill.category) for kill in debriefing.pilot_kills
+        )
+        lost = {
+            id(loss.pilot)
+            for loss in debriefing.air_losses.losses
+            if loss.pilot is not None
+        }
+        for ato in (self.game.blue.ato, self.game.red.ato):
+            self._commit_logbooks(ato, kills, lost)
+
+    def _commit_logbooks(
+        self,
+        ato: AirTaskingOrder,
+        kills: Counter[tuple[int, KillCategory]],
+        lost: set[int],
+    ) -> None:
         for package in ato.packages:
             for flight in package.flights:
                 if flight.returned_to_squadron:
                     # Not spawned (e.g. runway out of service): nobody flew it.
                     continue
+                flight_time = self._planned_flight_time(flight)
                 for idx, pilot in enumerate(flight.roster.iter_pilots()):
                     if pilot is None:
                         logging.error(
-                            f"Cannot award experience to pilot #{idx} of {flight} "
+                            f"Cannot log the sortie of pilot #{idx} of {flight} "
                             "because no pilot is assigned"
                         )
                         continue
-                    pilot.record.missions_flown += 1
+                    entry = self._logbook_entry(
+                        flight, pilot, flight_time, kills, id(pilot) in lost
+                    )
+                    pilot.record.log_sortie(entry, keep_history=pilot.player)
 
-    def commit_pilot_experience(self) -> None:
-        self._commit_pilot_experience(self.game.blue.ato)
-        self._commit_pilot_experience(self.game.red.ato)
+    def _logbook_entry(
+        self,
+        flight: Flight,
+        pilot: Pilot,
+        flight_time: timedelta,
+        kills: Counter[tuple[int, KillCategory]],
+        died: bool,
+    ) -> LogbookEntry:
+        air = kills[id(pilot), KillCategory.Air]
+        ground = kills[id(pilot), KillCategory.Ground]
+        naval = kills[id(pilot), KillCategory.Naval]
+        task = flight.flight_type
+        return LogbookEntry(
+            turn=self.game.turn,
+            date=self.game.conditions.start_time,
+            squadron=flight.squadron.name,
+            aircraft=str(flight.unit_type),
+            task=task,
+            combat=task.is_air_to_air
+            or task.is_air_to_ground
+            or air + ground + naval > 0,
+            flight_time=flight_time,
+            air_kills=air,
+            ground_kills=ground,
+            naval_kills=naval,
+            died=died,
+        )
+
+    @staticmethod
+    def _planned_flight_time(flight: Flight) -> timedelta:
+        """Planned takeoff-to-landing time; zero if the plan cannot tell."""
+        try:
+            plan = flight.flight_plan
+            duration = plan.landing_time - plan.takeoff_time()
+        except Exception:
+            logging.exception(f"Cannot compute the planned flight time of {flight}")
+            return timedelta()
+        return max(duration, timedelta())
 
     @staticmethod
     def commit_pilot_kills(debriefing: Debriefing) -> None:
@@ -177,10 +281,28 @@ class MissionResultsProcessor:
 
     @staticmethod
     def commit_ground_losses(debriefing: Debriefing, events: GameUpdateEvents) -> None:
+        struck: dict[int, TheaterGroundObject] = {}
         for ground_object_loss in debriefing.ground_object_losses:
             ground_object_loss.theater_unit.kill(events)
+            tgo = ground_object_loss.theater_unit.ground_object
+            struck[id(tgo)] = tgo
         for scenery_object_loss in debriefing.scenery_object_losses:
             scenery_object_loss.ground_unit.kill(events)
+            tgo = scenery_object_loss.ground_unit.ground_object
+            struck[id(tgo)] = tgo
+        # A strike on a site under repair sets the works back to the start.
+        for tgo in struck.values():
+            restart_repairs(tgo, debriefing.game.settings)
+
+    def commit_ground_damage(
+        self, debriefing: Debriefing, events: GameUpdateEvents
+    ) -> None:
+        for damaged in debriefing.inoperative_ground_units:
+            logging.info(
+                f"{damaged.theater_unit.unit_name} inoperative for "
+                f"{damaged.turns} turn(s)"
+            )
+            damaged.theater_unit.make_inoperative(damaged.turns, self.game.turn, events)
 
     @staticmethod
     def commit_damaged_runways(debriefing: Debriefing) -> None:

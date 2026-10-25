@@ -64,11 +64,15 @@ MISSION_DIFFICULTY_SECTION = "Mission Difficulty"
 MISSION_RESTRICTIONS_SECTION = "Mission Restrictions"
 
 CAMPAIGN_MANAGEMENT_PAGE = "Campaign Management"
+ADVANCED_CAMPAIGN_MANAGEMENT_PAGE = "Advanced Campaign Management"
 
 GENERAL_SECTION = "General"
 PILOTS_AND_SQUADRONS_SECTION = "Pilots and Squadrons"
 HQ_AUTOMATION_SECTION = "HQ Automation"
 FLIGHT_PLANNER_AUTOMATION = "Flight Planner Automation"
+REPAIRS_SECTION = "Repairs"
+BUILDING_REPAIR_TUNING_SECTION = "Building Repairs"
+GROUND_OBJECT_REPAIR_TUNING_SECTION = "Ground Unit Repairs"
 
 CAMPAIGN_DOCTRINE_PAGE = "Campaign Doctrine"
 DOCTRINE_DISTANCES_SECTION = "Doctrine distances"
@@ -579,6 +583,52 @@ class Settings:
             "into the following turns instead of coming back intact."
         ),
     )
+    persistent_damage_aircraft_write_off: bool = boolean_option(
+        "Persistent damage: write off heavily damaged aircraft",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=GENERAL_SECTION,
+        default=False,
+        detail=(
+            "With persistent damage, an aircraft that returns with 80 % damage or "
+            "more is lost instead of spending 3 turns in maintenance. Lighter "
+            "damage keeps an aircraft in maintenance for 1 turn (20-49 %) or 2 "
+            "turns (50-79 %)."
+        ),
+    )
+    expedited_aircraft_repair: bool = boolean_option(
+        "Persistent damage: automatic paid aircraft repair",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=GENERAL_SECTION,
+        default=False,
+        detail=(
+            "When automated procurement manages aircraft, it pays to finish "
+            "aircraft maintenance at once (a quarter of the aircraft price per "
+            "aircraft and per remaining turn) before buying new aircraft. When "
+            "off, repairs are free and take their full time."
+        ),
+    )
+    persistent_damage_destroys_ground_units: bool = boolean_option(
+        "Persistent damage: heavily damaged ground units are destroyed",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=GENERAL_SECTION,
+        default=True,
+        detail=(
+            "Ground units and ships that lost 80 % or more of their life are "
+            "destroyed. If unchecked, they are inoperative for 3 turns instead. "
+            "Lighter damage makes them inoperative for 1 turn (20-49 %) or 2 turns "
+            "(50-79 %)."
+        ),
+    )
+    persistent_damage_paid_ground_repair: bool = boolean_option(
+        "Persistent damage: allow paid accelerated repair of ground units",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=GENERAL_SECTION,
+        default=False,
+        detail=(
+            "Inoperative ground units can be repaired at once from their ground "
+            "object window, for half the unit price."
+        ),
+    )
     apply_target_overrides_to_loadouts: bool = boolean_option(
         "Apply target-based weapon settings to player loadouts",
         page=CAMPAIGN_MANAGEMENT_PAGE,
@@ -690,6 +740,26 @@ class Settings:
         CAMPAIGN_MANAGEMENT_PAGE,
         HQ_AUTOMATION_SECTION,
         default=False,
+    )
+    automate_building_repairs: bool = boolean_option(
+        "Automate building repairs",
+        CAMPAIGN_MANAGEMENT_PAGE,
+        HQ_AUTOMATION_SECTION,
+        default=False,
+        detail=(
+            "If enabled, the HQ spends part of the budget repairing destroyed "
+            "income buildings, such as depots and factories."
+        ),
+    )
+    automate_ground_object_repairs: bool = boolean_option(
+        "Automate ground object repairs",
+        CAMPAIGN_MANAGEMENT_PAGE,
+        HQ_AUTOMATION_SECTION,
+        default=False,
+        detail=(
+            "If enabled, the HQ spends part of the ground unit budget repairing "
+            "destroyed SAM and EWR site units."
+        ),
     )
     automate_aircraft_reinforcements: bool = boolean_option(
         "Automate aircraft purchases",
@@ -850,6 +920,191 @@ class Settings:
         " A smaller number will ignore squadrons with a matching primary task that are too far out.",
     )
 
+    # Repairs
+    building_repair_cost_multiplier: float = bounded_float_option(
+        "Building repair cost multiplier",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=REPAIRS_SECTION,
+        min=0,
+        max=10,
+        divisor=10,
+        default=1.0,
+        detail=(
+            "The cost of repairing a building is its income per turn times this "
+            "multiplier."
+        ),
+    )
+    building_repair_delay_multiplier: float = bounded_float_option(
+        "Building repair delay multiplier",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=REPAIRS_SECTION,
+        min=0,
+        max=5,
+        divisor=10,
+        default=1.0,
+        detail=(
+            "Multiplier applied to the building repair delay: 3 turns for ammo and "
+            "fuel depots, 6 turns for factories and refineries, 4 turns for other "
+            "buildings. Set to 0 for instant repairs."
+        ),
+    )
+    ground_unit_repair_turns: int = bounded_int_option(
+        "Ground unit repair delay (turns)",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=REPAIRS_SECTION,
+        min=0,
+        max=10,
+        default=0,
+        detail=(
+            "Turns needed for a repaired ground unit (e.g. a SAM radar) to return "
+            "to service. 0 repairs it instantly."
+        ),
+    )
+
+    # Advanced Campaign Management
+    ai_building_repairs: bool = boolean_option(
+        "Enemy AI repairs buildings",
+        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
+        section=BUILDING_REPAIR_TUNING_SECTION,
+        default=False,
+        detail=(
+            "If enabled, the enemy AI spends part of its budget repairing its "
+            "destroyed income buildings, such as depots and factories."
+        ),
+    )
+    building_repair_budget_percent: int = bounded_int_option(
+        "Building repair budget (%)",
+        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
+        section=BUILDING_REPAIR_TUNING_SECTION,
+        min=0,
+        max=100,
+        default=15,
+        detail=(
+            "Percent of the procurement budget that the enemy AI (or the HQ "
+            "automation) may spend repairing buildings."
+        ),
+    )
+    building_repair_weight_remote: float = bounded_float_option(
+        "Building repair weight: remote",
+        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
+        section=BUILDING_REPAIR_TUNING_SECTION,
+        min=0,
+        max=5,
+        divisor=10,
+        default=1.2,
+        detail=(
+            "Weight for remoteness from enemy control points in repair priority. "
+            + "Buildings farther from enemy control points will be prioritized for repair."
+        ),
+    )
+    building_repair_weight_income: float = bounded_float_option(
+        "Building repair weight: income",
+        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
+        section=BUILDING_REPAIR_TUNING_SECTION,
+        min=0,
+        max=5,
+        divisor=10,
+        default=1.0,
+        detail=(
+            "Weight for building income in repair priority. "
+            + "Buildings that generate more income will be prioritized for repair."
+        ),
+    )
+    building_repair_weight_ammo_frontline: float = bounded_float_option(
+        "Building repair weight: ammo frontline",
+        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
+        section=BUILDING_REPAIR_TUNING_SECTION,
+        min=0,
+        max=5,
+        divisor=10,
+        default=1.1,
+        detail=(
+            "Weight for frontline proximity when prioritizing ammo depots. "
+            + "Ammo depots closer to the frontline will be prioritized for repair."
+        ),
+    )
+
+    ai_ground_unit_repairs: bool = boolean_option(
+        "Enemy AI repairs SAM and EWR sites",
+        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
+        section=GROUND_OBJECT_REPAIR_TUNING_SECTION,
+        default=False,
+        detail=(
+            "If enabled, the enemy AI spends part of its ground unit budget "
+            "repairing its damaged SAM and EWR sites, search and tracking radars "
+            "first."
+        ),
+    )
+    sam_repair_budget_fraction: float = bounded_float_option(
+        "SAM repair budget fraction",
+        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
+        section=GROUND_OBJECT_REPAIR_TUNING_SECTION,
+        min=0.0,
+        max=1.0,
+        divisor=100,
+        default=0.4,
+        detail=("Fraction of ground unit budget reserved for SAM repairs."),
+    )
+    sam_repair_priority_threshold: float = bounded_float_option(
+        "SAM repair priority threshold",
+        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
+        section=GROUND_OBJECT_REPAIR_TUNING_SECTION,
+        min=0.0,
+        max=5.0,
+        divisor=10,
+        default=1.5,
+        detail=("Minimum priority score required to queue SAM repairs."),
+    )
+    sam_repair_weight_threat: float = bounded_float_option(
+        "SAM repair weight: threat range",
+        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
+        section=GROUND_OBJECT_REPAIR_TUNING_SECTION,
+        min=0.0,
+        max=5.0,
+        divisor=10,
+        default=0.5,
+        detail="Weight applied to SAM threat range coverage.",
+    )
+    sam_repair_weight_frontline: float = bounded_float_option(
+        "SAM repair weight: frontline",
+        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
+        section=GROUND_OBJECT_REPAIR_TUNING_SECTION,
+        min=0.0,
+        max=5.0,
+        divisor=10,
+        default=1.5,
+        detail="Weight applied to proximity to the front line.",
+    )
+    sam_repair_weight_cp_coverage: float = bounded_float_option(
+        "SAM repair weight: CP coverage",
+        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
+        section=GROUND_OBJECT_REPAIR_TUNING_SECTION,
+        min=0.0,
+        max=5.0,
+        divisor=10,
+        default=0.6,
+        detail="Weight applied to covered control points.",
+    )
+    sam_repair_weight_tgo_coverage: float = bounded_float_option(
+        "SAM repair weight: TGO coverage",
+        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
+        section=GROUND_OBJECT_REPAIR_TUNING_SECTION,
+        min=0.0,
+        max=5.0,
+        divisor=10,
+        default=0.4,
+        detail="Weight applied to covered ground objects.",
+    )
+    sam_repair_weight_tgo_income: float = bounded_float_option(
+        "SAM repair weight: TGO income",
+        page=ADVANCED_CAMPAIGN_MANAGEMENT_PAGE,
+        section=GROUND_OBJECT_REPAIR_TUNING_SECTION,
+        min=0.0,
+        max=5.0,
+        divisor=10,
+        default=0.4,
+        detail="Weight applied to covered ground object income.",
+    )
     # Mission Generator
     # Gameplay
     fast_forward_stop_condition: FastForwardStopCondition = choices_option(

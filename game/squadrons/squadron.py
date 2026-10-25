@@ -18,6 +18,7 @@ from game.settings import AutoAtoBehavior, Settings
 from game.theater import ParkingType
 from game.theater.player import Player
 from .pilot import Pilot, PilotStatus
+from .maintenance import MaintenanceBatch, expedited_repair_cost
 from .pilotnames import faker_for_country
 from ..db.database import Database
 from ..radio.radios import RadioFrequency
@@ -80,6 +81,18 @@ class Squadron:
     #: Cumulative aircraft purchased and delivered over the whole campaign.
     purchased_aircraft: int = field(init=False, hash=False, compare=False, default=0)
 
+    #: Damaged aircraft under repair (PER-01.2), as ``(count, turns remaining)``.
+    #: They stay in ``owned_aircraft`` but cannot be assigned to a flight.
+    maintenance_batches: list[MaintenanceBatch] = field(
+        init=False, hash=False, compare=False, default_factory=list
+    )
+    #: Batches added by the mission results of the current turn. Their countdown
+    #: starts at the end of this turn, so an aircraft sent for 1 turn misses
+    #: exactly the next turn.
+    new_maintenance_batches: list[MaintenanceBatch] = field(
+        init=False, hash=False, compare=False, default_factory=list
+    )
+
     use_livery_set: bool = False  # if livery-set should be used when present
 
     def __setstate__(self, state: dict[str, Any]) -> None:
@@ -95,6 +108,10 @@ class Squadron:
             state["destroyed_aircraft"] = 0
         if "purchased_aircraft" not in state:
             state["purchased_aircraft"] = 0
+        if "maintenance_batches" not in state:
+            state["maintenance_batches"] = []
+        if "new_maintenance_batches" not in state:
+            state["new_maintenance_batches"] = []
         self.__dict__.update(state)
 
     def __str__(self) -> str:
@@ -277,7 +294,74 @@ class Squadron:
         if self.destination is not None:
             self.relocate_to(self.destination)
         self.replenish_lost_pilots()
+        self.process_maintenance()
         self.deliver_orders()
+
+    @property
+    def aircraft_in_maintenance(self) -> int:
+        """Owned aircraft that cannot fly because they are under repair."""
+        total = sum(
+            count
+            for count, _ in self.maintenance_batches + self.new_maintenance_batches
+        )
+        return min(total, max(self.owned_aircraft, 0))
+
+    @property
+    def available_aircraft(self) -> int:
+        """Owned aircraft that are not under repair."""
+        return max(self.owned_aircraft - self.aircraft_in_maintenance, 0)
+
+    def send_to_maintenance(self, count: int, turns: int) -> None:
+        """Puts ``count`` owned aircraft under repair for the next ``turns`` turns."""
+        if count <= 0 or turns <= 0:
+            return
+        self.new_maintenance_batches.append((count, turns))
+        self._trim_maintenance()
+
+    def process_maintenance(self) -> None:
+        """Counts down repairs at the end of a turn and releases repaired aircraft."""
+        self.maintenance_batches = [
+            (count, turns - 1)
+            for count, turns in self.maintenance_batches
+            if turns > 1 and count > 0
+        ] + self.new_maintenance_batches
+        self.new_maintenance_batches = []
+        self._trim_maintenance()
+
+    def _trim_maintenance(self) -> None:
+        """Drops batch entries for aircraft that are no longer owned (lost since),
+        newest first."""
+        excess = sum(
+            c for c, _ in self.maintenance_batches + self.new_maintenance_batches
+        ) - max(self.owned_aircraft, 0)
+        for batches in (self.new_maintenance_batches, self.maintenance_batches):
+            while excess > 0 and batches:
+                count, turns = batches.pop()
+                removed = min(count, excess)
+                excess -= removed
+                if count > removed:
+                    batches.append((count - removed, turns))
+
+    @property
+    def expedited_repair_cost(self) -> int:
+        """Cost of finishing every repair of this squadron at once."""
+        aircraft_turns = sum(
+            count * turns
+            for count, turns in self.maintenance_batches + self.new_maintenance_batches
+        )
+        return expedited_repair_cost(self.aircraft.price, aircraft_turns)
+
+    def expedite_maintenance(self) -> int:
+        """Finishes every repair at once and returns the aircraft to the pool of
+        untasked aircraft. Payment is the caller's responsibility (see
+        ``expedited_repair_cost``). Returns the number of aircraft released."""
+        released = self.aircraft_in_maintenance
+        self.maintenance_batches = []
+        self.new_maintenance_batches = []
+        self.untasked_aircraft = min(
+            self.untasked_aircraft + released, self.owned_aircraft
+        )
+        return released
 
     def replenish_lost_pilots(self) -> None:
         if self.pilot_limits_enabled and self.replenish_count > 0:
@@ -285,7 +369,7 @@ class Squadron:
 
     def return_all_pilots_and_aircraft(self) -> None:
         self.available_pilots = list(self.active_pilots)
-        self.untasked_aircraft = self.owned_aircraft
+        self.untasked_aircraft = self.available_aircraft
 
     @staticmethod
     def send_on_leave(pilot: Pilot) -> None:
@@ -297,6 +381,15 @@ class Squadron:
                 f"Cannot return {pilot} from leave because {self} is full"
             )
         pilot.return_from_leave()
+
+    def create_player_pilot(self, name: str) -> Pilot:
+        """Adds a new player pilot to the roster, ready to be assigned."""
+        if not self.has_unfilled_pilot_slots:
+            raise RuntimeError(f"Cannot add a pilot to {self} because it is full")
+        pilot = Pilot(name, player=True)
+        self.current_roster.append(pilot)
+        self.available_pilots.append(pilot)
+        return pilot
 
     @property
     def faker(self) -> Faker:

@@ -1,6 +1,15 @@
 import logging
 import random
-from typing import Any, Union, Tuple, Optional, List
+from typing import (
+    Any,
+    Callable,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from dcs import Mission
 from dcs.country import Country
@@ -28,6 +37,7 @@ from dcs.unitgroup import (
     HelicopterGroup,
     PlaneGroup,
 )
+from dcs.unittype import FlyingType
 
 from game.ato import Flight
 from game.ato.flightstate import InFlight
@@ -57,6 +67,24 @@ STACK_SEPARATION = feet(200)
 RTB_ALTITUDE = meters(800)
 RTB_DISTANCE = 5000
 HELI_ALT = 500
+
+# Half-size, in meters, assumed for a DCS parking slot whose dimensions pydcs does
+# not know (terrains with version 1 parking data).
+DEFAULT_PARKING_SLOT_HALF_EXTENT = 10.0
+
+SpawnPoint = TypeVar("SpawnPoint")
+
+
+def aircraft_half_extent(unit_type: Type[FlyingType]) -> float:
+    """Radius of the circle that holds the aircraft (wingspan or rotor)."""
+    return max(unit_type.width, unit_type.length) / 2
+
+
+def parking_slot_half_extent(slot: ParkingSlot) -> float:
+    """Radius of the circle that holds the largest aircraft the slot accepts."""
+    if slot.width is None and slot.length is None:
+        return DEFAULT_PARKING_SLOT_HALF_EXTENT
+    return max(slot.width or 0, slot.length or 0) / 2
 
 
 class FlightGroupSpawner:
@@ -445,15 +473,22 @@ class FlightGroupSpawner:
     def _generate_at_cp_helipad(
         self, name: str, cp: ControlPoint
     ) -> Optional[FlyingGroup[Any]]:
-        try:
-            helipad = self.helipads[cp].pop()
-        except IndexError as ex:
-            logging.warning("Not enough helipads available at " + str(ex))
+        # Claim a pad for every aircraft up front: creating the group first and
+        # running out of pads halfway used to leave that group in the mission,
+        # its aircraft stacked 10 m apart on a single pad.
+        claimed = self._claim_spawn_points(
+            cp, [self.helipads[cp]], lambda pad: pad.position
+        )
+        if claimed is None:
+            logging.warning(
+                f"Not enough free helipads at {cp.name} for {self.flight.count} "
+                f"{self.flight.unit_type}"
+            )
             if isinstance(cp, Airfield):
                 return self._generate_at_airfield(name, cp)
-            else:
-                return None
-            # raise RuntimeError(f"Not enough helipads available at {cp}") from ex
+            return None
+        helipads = [pad for _, pad in claimed]
+        helipad = helipads[0]
 
         group = self._generate_at_group(name, helipad)
 
@@ -472,46 +507,36 @@ class FlightGroupSpawner:
             wpt.link_unit = hpad.units[0].id
             self.helipads[self.flight.arrival].append(hpad)
 
-        for i in range(self.flight.count - 1):
-            try:
-                helipad = self.helipads[cp].pop()
-                terrain = cp.coalition.game.theater.terrain
-                group.units[1 + i].position = Point(
-                    helipad.x, helipad.y, terrain=terrain
-                )
-                group.units[1 + i].heading = helipad.units[0].heading
-            except IndexError as ex:
-                logging.warning("Not enough helipads available at " + str(ex))
-                if isinstance(cp, Airfield):
-                    return self._generate_at_airfield(name, cp)
-                else:
-                    if isinstance(group, HelicopterGroup):
-                        self.country.helicopter_group.remove(group)
-                    elif isinstance(group, PlaneGroup):
-                        self.country.plane_group.remove(group)
-                    return None
+        terrain = cp.coalition.game.theater.terrain
+        for unit, helipad in zip(group.units[1:], helipads[1:]):
+            unit.position = Point(helipad.x, helipad.y, terrain=terrain)
+            unit.heading = helipad.units[0].heading
+        self._block_parking_slots_under(cp, group)
         return group
 
     def _generate_at_cp_ground_spawn(
         self, name: str, cp: ControlPoint, is_large: bool = False
     ) -> Optional[FlyingGroup[Any]]:
-        is_airbase = False
-        is_roadbase = False
-        ground_spawn: Optional[Tuple[StaticGroup, Point]] = None
-
-        if not is_large and len(self.ground_spawns_roadbase[cp]) > 0:
-            ground_spawn = self.ground_spawns_roadbase[cp].pop()
-            is_roadbase = True
-        elif not is_large and len(self.ground_spawns[cp]) > 0:
-            ground_spawn = self.ground_spawns[cp].pop()
-            is_airbase = True
-        elif len(self.ground_spawns_large[cp]) > 0:
-            ground_spawn = self.ground_spawns_large[cp].pop()
-            is_airbase = True
-
-        if ground_spawn is None:
-            logging.warning("Not enough ground spawn slots available at " + cp.name)
+        # Same preference order as before: roadbase, then regular, then large
+        # spawns. A spot is claimed for every aircraft before the group exists,
+        # so a shortage can no longer stack wingmen on the lead's spot.
+        pools = [self.ground_spawns_large[cp]]
+        if not is_large:
+            pools = [
+                self.ground_spawns_roadbase[cp],
+                self.ground_spawns[cp],
+                self.ground_spawns_large[cp],
+            ]
+        claimed = self._claim_spawn_points(cp, pools, lambda spawn: spawn[0].position)
+        if claimed is None:
+            logging.warning(
+                f"Not enough free ground spawn slots at {cp.name} for "
+                f"{self.flight.count} {self.flight.unit_type}"
+            )
             return None
+        lead_pool, ground_spawn = claimed[0]
+        is_roadbase = lead_pool is self.ground_spawns_roadbase[cp]
+        is_airbase = not is_roadbase
 
         group = self._generate_at_group(name, ground_spawn[0])
 
@@ -567,26 +592,74 @@ class FlightGroupSpawner:
             cp.coalition.game.scenery_clear_zones = []
         cp.coalition.game.scenery_clear_zones.append(ground_spawn[1])
 
-        for i in range(self.flight.count - 1):
-            try:
-                terrain = cp.coalition.game.theater.terrain
-                if not is_large and len(self.ground_spawns_roadbase[cp]) > 0:
-                    ground_spawn = self.ground_spawns_roadbase[cp].pop()
-                elif not is_large and len(self.ground_spawns[cp]) > 0:
-                    ground_spawn = self.ground_spawns[cp].pop()
-                elif len(self.ground_spawns_large[cp]) > 0:
-                    ground_spawn = self.ground_spawns_large[cp].pop()
-                group.units[1 + i].position = Point(
-                    ground_spawn[0].x, ground_spawn[0].y, terrain=terrain
-                )
-                group.units[1 + i].heading = ground_spawn[0].units[0].heading
-
-                self._remove_invisible_farps_if_requested(cp, ground_spawn[0])
-            except IndexError as ex:
-                raise NoParkingSlotError(
-                    f"Not enough STOL slots available at {cp}"
-                ) from ex
+        terrain = cp.coalition.game.theater.terrain
+        for unit, (_, ground_spawn) in zip(group.units[1:], claimed[1:]):
+            unit.position = Point(ground_spawn[0].x, ground_spawn[0].y, terrain=terrain)
+            unit.heading = ground_spawn[0].units[0].heading
+            self._remove_invisible_farps_if_requested(cp, ground_spawn[0])
+        self._block_parking_slots_under(cp, group)
         return group
+
+    def _claim_spawn_points(
+        self,
+        cp: ControlPoint,
+        pools: list[list[SpawnPoint]],
+        position_of: Callable[[SpawnPoint], Point],
+    ) -> Optional[list[tuple[list[SpawnPoint], SpawnPoint]]]:
+        """Takes one helipad or ground spawn per aircraft of the flight.
+
+        Pools are searched in order, each from its end (the order the spawns
+        used to be popped in). Spots overlapping an aircraft already parked on a
+        DCS slot are skipped. Returns (pool, spot) pairs, or None without taking
+        anything when there are not enough free spots for the whole flight.
+        """
+        claimed: list[tuple[list[SpawnPoint], SpawnPoint]] = []
+        for pool in pools:
+            for spawn_point in reversed(pool):
+                if len(claimed) == self.flight.count:
+                    break
+                if self._is_clear_of_parked_aircraft(cp, position_of(spawn_point)):
+                    claimed.append((pool, spawn_point))
+        if len(claimed) < self.flight.count:
+            return None
+        for pool, spawn_point in claimed:
+            index = next(i for i, p in enumerate(pool) if p is spawn_point)
+            del pool[index]
+        return claimed
+
+    def _is_clear_of_parked_aircraft(self, cp: ControlPoint, position: Point) -> bool:
+        if not isinstance(cp, Airfield):
+            return True
+        reach = aircraft_half_extent(self.flight.unit_type.dcs_unit_type)
+        blocked = self.mission_data.parking_slots_blocked_by_ground_spawns
+        for slot in cp.airport.parking_slots:
+            if slot.unit_id is None or slot in blocked:
+                continue
+            clearance = reach + parking_slot_half_extent(slot)
+            if slot.position.distance_to_point(position) < clearance:
+                return False
+        return True
+
+    def _block_parking_slots_under(
+        self, cp: ControlPoint, group: FlyingGroup[Any]
+    ) -> None:
+        """Marks the DCS slots overlapped by aircraft on helipads or ground spawns.
+
+        pydcs only knows about its own slots, so without this an aircraft could
+        later be parked on top of the ones spawned on campaign pads.
+        """
+        if not isinstance(cp, Airfield):
+            return
+        reach = aircraft_half_extent(self.flight.unit_type.dcs_unit_type)
+        blocked = self.mission_data.parking_slots_blocked_by_ground_spawns
+        for unit in group.units:
+            for slot in cp.airport.parking_slots:
+                if slot.unit_id is not None:
+                    continue
+                clearance = reach + parking_slot_half_extent(slot)
+                if slot.position.distance_to_point(unit.position) < clearance:
+                    slot.unit_id = unit.id
+                    blocked.add(slot)
 
     def _remove_invisible_farps_if_requested(
         self,

@@ -25,14 +25,16 @@ from game.theater import ControlPoint
 #: this list fails ``test_battle_impact_scored_before_captures_flip_ownership``.
 COMMIT_STEPS = [
     "commit_air_losses",
-    "commit_pilot_experience",
+    "commit_aircraft_damage",
     "commit_pilot_kills",
+    "commit_pilot_logbooks",
     "commit_front_line_losses",
     "commit_motorpool_losses",
     "commit_convoy_losses",
     "commit_cargo_ship_losses",
     "commit_airlift_losses",
     "commit_ground_losses",
+    "commit_ground_damage",
     "commit_damaged_runways",
     "commit_captures",
     "commit_front_line_battle_impact",

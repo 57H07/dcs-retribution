@@ -300,6 +300,14 @@ class SquadronDialog(QDialog):
         button_panel.addStretch()
         layout.addLayout(button_panel)
 
+        self.new_player_button = QPushButton("New player pilot")
+        self.new_player_button.setProperty("style", "start-button")
+        self.new_player_button.clicked.connect(self.create_player_pilot)
+        self.reset_new_player_state()
+        button_panel.addWidget(
+            self.new_player_button, alignment=Qt.AlignmentFlag.AlignRight
+        )
+
         self.rename_button = QPushButton("Rename pilot")
         self.rename_button.setProperty("style", "start-button")
         self.rename_button.clicked.connect(self.rename_pilot)
@@ -447,6 +455,28 @@ class SquadronDialog(QDialog):
         if ok:
             p.name = text
 
+    def reset_new_player_state(self) -> None:
+        if not self.squadron.aircraft.flyable:
+            self.new_player_button.setDisabled(True)
+            self.new_player_button.setToolTip("This aircraft is not flyable.")
+        elif not self.squadron.has_unfilled_pilot_slots:
+            self.new_player_button.setDisabled(True)
+            self.new_player_button.setToolTip("The squadron is full.")
+        else:
+            self.new_player_button.setEnabled(True)
+            self.new_player_button.setToolTip(
+                "Add your own pilot to the squadron. Their career starts now."
+            )
+
+    def create_player_pilot(self) -> None:
+        name, ok = QInputDialog.getText(
+            self, "New player pilot", "Pilot name: ", QLineEdit.EchoMode.Normal
+        )
+        name = name.strip()
+        if ok and name:
+            self.squadron_model.create_player_pilot(name)
+            self.reset_new_player_state()
+
     def toggle_ai(self) -> None:
         index = self.pilot_list.currentIndex()
         if not index.isValid():
@@ -473,6 +503,7 @@ class SquadronDialog(QDialog):
             logging.error("Cannot toggle on leave state: no pilot is selected")
             return
         self.squadron_model.toggle_leave_state(index)
+        self.reset_new_player_state()
 
     def reset_leave_toggle_state(self, index: QModelIndex) -> None:
         if self.check_disabled_button_states(self.toggle_leave_button, index):

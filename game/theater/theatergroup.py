@@ -45,6 +45,11 @@ class TheaterUnit:
     fixed_hdg: bool = False
     # State of the unit, dead or alive
     alive: bool = True
+    # Turns remaining until the unit is repaired and revived.
+    repair_turns_remaining: Optional[int] = None
+    # Turn on which a unit made inoperative by persistent damage is operational
+    # again. None when the unit is not inoperative.
+    operational_on_turn: Optional[int] = None
 
     @staticmethod
     def from_template(
@@ -74,13 +79,17 @@ class TheaterUnit:
         # None for not available StaticTypes
         return None
 
-    def kill(self, events: GameUpdateEvents) -> None:
-        self.alive = False
+    def _combat_state_changed(self, events: GameUpdateEvents) -> None:
         self.ground_object.invalidate_threat_poly()
         events.update_tgo(self.ground_object)
         if self.ground_object.is_iads:
             iads = self.ground_object.control_point.coalition.game.theater.iads_network
             iads.update_tgo(self.ground_object, events)
+
+    def kill(self, events: GameUpdateEvents) -> None:
+        self.alive = False
+        self.operational_on_turn = None
+        self._combat_state_changed(events)
         if self.ground_object.is_naval_control_point:
             for unit in self.ground_object.units:
                 if (
@@ -96,6 +105,7 @@ class TheaterUnit:
 
     def revive(self, events: GameUpdateEvents) -> None:
         self.alive = True
+        self.operational_on_turn = None
         self.ground_object.threat_poly()
         events.update_tgo(self.ground_object)
         if self.ground_object.is_iads:
@@ -103,19 +113,58 @@ class TheaterUnit:
             iads.update_tgo(self.ground_object, events)
 
     @property
+    def inoperative(self) -> bool:
+        """True while a damaged unit waits for repair (persistent damage)."""
+        return self.alive and self.operational_on_turn is not None
+
+    @property
+    def operational(self) -> bool:
+        return self.alive and not self.inoperative
+
+    def inoperative_turns_remaining(self, current_turn: int) -> int:
+        if not self.inoperative or self.operational_on_turn is None:
+            return 0
+        return max(self.operational_on_turn - current_turn, 0)
+
+    def make_inoperative(
+        self, turns: int, current_turn: int, events: GameUpdateEvents
+    ) -> None:
+        """Takes the unit out of action for the ``turns`` turns after
+        ``current_turn``. A unit already inoperative keeps the longer countdown."""
+        if not self.alive or turns <= 0:
+            return
+        operational_on = current_turn + turns + 1
+        if self.operational_on_turn is not None:
+            operational_on = max(operational_on, self.operational_on_turn)
+        self.operational_on_turn = operational_on
+        self._combat_state_changed(events)
+
+    def end_inoperative(self, events: GameUpdateEvents) -> None:
+        if self.operational_on_turn is None:
+            return
+        self.operational_on_turn = None
+        self._combat_state_changed(events)
+
+    @property
     def unit_name(self) -> str:
         return f"{str(self.id).zfill(4)} | {self.name}"
 
     @property
     def display_name(self) -> str:
-        dead_label = " [DEAD]" if not self.alive else ""
         unit_label = self.unit_type or self.type.name or self.name
-        return f"{str(self.id).zfill(4)} | {unit_label}{dead_label}"
+        return f"{str(self.id).zfill(4)} | {unit_label}{self._status_label}"
 
     @property
     def short_name(self) -> str:
-        dead_label = " [DEAD]" if not self.alive else ""
-        return f"<b>{self.type.id[0:18]}</b> {dead_label}"
+        return f"<b>{self.type.id[0:18]}</b> {self._status_label}"
+
+    @property
+    def _status_label(self) -> str:
+        if not self.alive:
+            return " [DEAD]"
+        if self.inoperative:
+            return " [INOPERATIVE]"
+        return ""
 
     @property
     def is_static(self) -> bool:
@@ -148,12 +197,12 @@ class TheaterUnit:
     @property
     def detection_range(self) -> Distance:
         unit_range = getattr(self.type, "detection_range", None)
-        return meters(unit_range if unit_range is not None and self.alive else 0)
+        return meters(unit_range if unit_range is not None and self.operational else 0)
 
     @property
     def threat_range(self) -> Distance:
         unit_range = getattr(self.type, "threat_range", None)
-        return meters(unit_range if unit_range is not None and self.alive else 0)
+        return meters(unit_range if unit_range is not None and self.operational else 0)
 
     def rotate_heading_clockwise(self, rotation: Heading) -> None:
         if self.fixed_hdg:
@@ -248,7 +297,7 @@ class TheaterGroup:
         live_trs = set()
         launchers: dict[Type[VehicleType], Distance] = {}
         for unit in self.units:
-            if not unit.alive or not unit.is_anti_air:
+            if not unit.operational or not unit.is_anti_air:
                 continue
             if unit.type in TRACK_RADARS:
                 live_trs.add(unit.type)
