@@ -16,7 +16,7 @@ You implement one or more GitHub issues of the fork `57H07/dcs-retribution` (rem
 ## Environment
 
 - Python: use `F:/_Projets/Jeux/DcsRetribution/venv/Scripts/python.exe` (3.11, all deps installed). Do not create another venv. If the issue changes `requirements.txt`, install into that venv and say so in your report.
-- Client (`client/`, React/TS): run `npm ci` in your worktree's `client/` only if you touch the client; `npm test -- --watchAll=false` and `npm run build` must pass.
+- Client (`client/`, React/TS): run `npm ci` in your worktree's `client/` only if you touch the client; `npm test -- --watchAll=false` and `npm run build` must pass. In a worktree under `.claude\` Jest finds no tests (backslash escape): add `--testMatch "**/src/**/*.test.{ts,tsx}"`.
 
 ## Done means
 
@@ -32,7 +32,7 @@ You implement one or more GitHub issues of the fork `57H07/dcs-retribution` (rem
 ## Shipping
 
 1. Conventional Commits messages. Keep upstream authors' commits intact.
-2. `git fetch origin && git rebase origin/dev`, re-run the checks, then `git push -u origin <branch>`.
+2. `git fetch origin && git rebase origin/dev` (only before your first push), re-run the checks, then `git push -u origin <branch>`. Force-push is not allowed: to update a branch already pushed (e.g. conflicts with `dev`), `git merge origin/dev`, resolve, re-run the checks and push normally.
 3. `gh pr create -R 57H07/dcs-retribution --base dev --title "<ID>: ..." --body-file <file>`; the body has `Closes #<n>` for each issue it completes, a short summary, decisions taken, test results, the `## Flight test` checklist if any, and ends with:
    `🤖 Generated with [Claude Code](https://claude.com/claude-code)`
 4. Do not merge, do not close issues by hand, do not edit other issues.

@@ -1,6 +1,5 @@
 import logging
-from copy import deepcopy
-from typing import Callable, Iterator, Optional, Type
+from typing import Callable, Iterator, Optional
 
 from PySide6.QtCore import QItemSelection, QItemSelectionModel, QModelIndex, Qt
 from PySide6.QtWidgets import (
@@ -18,16 +17,15 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMessageBox,
 )
-from dcs.unittype import FlyingType
 
 from game.ato.flightplans.custom import CustomFlightPlan
 from game.ato.flighttype import FlightType
 from game.ato.flightwaypointtype import FlightWaypointType
-from game.dcs.aircrafttype import AircraftType
 from game.purchaseadapter import AircraftPurchaseAdapter, TransactionError
 from game.server import EventStream
 from game.sim import GameUpdateEvents
 from game.squadrons import Pilot, Squadron
+from game.squadrons.transferparking import transfer_parking
 from game.theater import ConflictTheater, ControlPoint, ParkingType
 from qt_ui.delegates import TwoColumnRowDelegate
 from qt_ui.errorreporter import report_errors
@@ -126,9 +124,7 @@ class SquadronDestinationComboBox(QComboBox):
         for idx, destination in enumerate(sorted(self.iter_destinations(), key=str), 1):
             if destination == squadron.destination:
                 selected_index = idx
-            room = self.calculate_parking_slots(
-                destination, squadron.aircraft.dcs_unit_type
-            )
+            room = self.parking_room(destination)
             self.addItem(
                 f"Transfer to {destination} (room for {room} more aircraft)",
                 destination,
@@ -161,86 +157,29 @@ class SquadronDestinationComboBox(QComboBox):
                 continue
             if not control_point.can_operate(self.squadron.aircraft):
                 continue
-            ac_type = self.squadron.aircraft.dcs_unit_type
             if (
                 self.squadron.destination is not control_point
                 and control_point.unclaimed_parking(parking_type) < size
-                and self.calculate_parking_slots(control_point, ac_type) < size
+                and self.parking_room(control_point) < size
             ):
                 continue
             yield control_point
 
-    @staticmethod
-    def calculate_parking_slots(
-        cp: ControlPoint, dcs_unit_type: Type[FlyingType]
-    ) -> int:
-        if cp.dcs_airport:
-            ap = deepcopy(cp.dcs_airport)
-            overflow = []
-
-            parking_type = ParkingType(
-                fixed_wing=False, fixed_wing_stol=False, rotary_wing=True
+    def parking_room(self, cp: ControlPoint) -> int:
+        parking = transfer_parking(self.squadron, cp)
+        if parking.overflow:
+            overflow_msg = "".join(
+                f"{s.name} - {s.aircraft.variant_id}<br/>" for s in parking.overflow
             )
-            free_helicopter_slots = cp.total_aircraft_parking(parking_type)
-
-            parking_type = ParkingType(
-                fixed_wing=False, fixed_wing_stol=True, rotary_wing=False
+            QMessageBox.warning(
+                None,
+                "Insufficient parking space detected!",
+                f"Insufficient parking space was detected at {cp.name}:<br/><br/>"
+                f"{overflow_msg}<br/>"
+                f"Consider moving these squadrons to different airfield "
+                "to avoid possible air-starts.",
             )
-            free_ground_spawns = cp.total_aircraft_parking(parking_type)
-
-            # Squadrons whose parking must be reserved at this base next turn:
-            # every squadron currently based here (outgoing transfers included —
-            # they may need to return if the destination is captured this turn)
-            # plus any squadrons relocating in.
-            occupants = list(cp.squadrons)
-            occupants += [
-                s for s in cp.coalition.air_wing.iter_squadrons() if s.destination == cp
-            ]
-            for s in occupants:
-                for count in range(s.owned_aircraft):
-                    is_heli = s.aircraft.helicopter
-                    is_vtol = not is_heli and s.aircraft.lha_capable
-                    count_ground_spawns = (
-                        s.aircraft.flyable
-                        or cp.coalition.game.settings.ground_start_ai_planes
-                    )
-
-                    if free_helicopter_slots > 0 and is_heli:
-                        free_helicopter_slots -= 1
-                    elif free_ground_spawns > 0 and (
-                        is_heli or is_vtol or count_ground_spawns
-                    ):
-                        free_ground_spawns -= 1
-                    else:
-                        slot = ap.free_parking_slot(s.aircraft.dcs_unit_type)
-                        if slot:
-                            slot.unit_id = id(s) + count
-                        else:
-                            overflow.append(s)
-                            break
-            if overflow:
-                overflow_msg = ""
-                for s in overflow:
-                    overflow_msg += f"{s.name} - {s.aircraft.variant_id}<br/>"
-                QMessageBox.warning(
-                    None,
-                    "Insufficient parking space detected!",
-                    f"Insufficient parking space was detected at {cp.name}:<br/><br/>"
-                    f"{overflow_msg}<br/>"
-                    f"Consider moving these squadrons to different airfield "
-                    "to avoid possible air-starts.",
-                )
-            return (
-                len(ap.free_parking_slots(dcs_unit_type))
-                + free_helicopter_slots
-                + free_ground_spawns
-            )
-        else:
-            parking_type = ParkingType().from_aircraft(
-                next(AircraftType.for_dcs_type(dcs_unit_type)),
-                cp.coalition.game.settings.ground_start_ai_planes,
-            )
-            return cp.unclaimed_parking(parking_type)
+        return parking.room
 
 
 class SquadronDialog(QDialog):

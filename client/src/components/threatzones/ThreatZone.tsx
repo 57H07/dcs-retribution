@@ -1,4 +1,5 @@
 import { LatLng } from "../../api/liberationApi";
+import { LAYER_COLORS } from "../../maplayers/colors";
 import { Polygon } from "react-leaflet";
 
 interface ThreatZoneProps {
@@ -7,7 +8,9 @@ interface ThreatZoneProps {
 }
 
 export default function ThreatZone(props: ThreatZoneProps) {
-  const color = props.blue ? "#0084ff" : "#c85050";
+  const color = props.blue
+    ? LAYER_COLORS.threatBlue
+    : LAYER_COLORS.threatRed;
   return (
     <Polygon
       positions={props.poly}

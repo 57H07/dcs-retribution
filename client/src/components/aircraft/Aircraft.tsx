@@ -1,17 +1,9 @@
 import { Flight } from "../../api/liberationApi";
-import { Icon, Point } from "leaflet";
-import ms from "milsymbol";
+import { symbolIcon } from "../../maplayers/symbology";
 import { Marker } from "react-leaflet";
 
 function iconForFlight(flight: Flight) {
-  const symbol = new ms.Symbol(flight.sidc, {
-    size: 20,
-  });
-
-  return new Icon({
-    iconUrl: symbol.toDataURL(),
-    iconAnchor: new Point(symbol.getAnchor().x, symbol.getAnchor().y),
-  });
+  return symbolIcon(flight.sidc, "flight");
 }
 
 interface AircraftProps {

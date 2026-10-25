@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, TypeVar
 
 from dcs import Point
 
+from game.data.weapons import WeaponType
 from game.flightplan import HoldZoneGeometry
 from game.theater import MissionTarget
 from game.utils import nautical_miles, Speed, feet
@@ -140,6 +141,9 @@ class FormationAttackLayout(FormationLayout):
     targets: list[FlightWaypoint]
     initial: Optional[FlightWaypoint] = None
     lineup: Optional[FlightWaypoint] = None
+    # Only set for SEAD flights carrying decoys. Defaults to None so layouts
+    # pickled before this field existed still load (class attribute fallback).
+    decoy_release: Optional[FlightWaypoint] = None
 
     def iter_waypoints(self) -> Iterator[FlightWaypoint]:
         yield self.departure
@@ -150,8 +154,7 @@ class FormationAttackLayout(FormationLayout):
         if self.lineup:
             yield self.lineup
         yield self.ingress
-        if self.initial is not None:
-            yield self.initial
+        yield from self._approach_waypoints()
         yield from self.targets
         yield self.split
         if self.refuel is not None:
@@ -162,6 +165,23 @@ class FormationAttackLayout(FormationLayout):
             yield self.divert
         yield self.bullseye
         yield from self.custom_waypoints
+
+    def _approach_waypoints(self) -> list[FlightWaypoint]:
+        """Waypoints between ingress and target, farthest from the target first.
+
+        The SEAD search point and the decoy release point both lie on the
+        ingress-to-target line, but either may be the closer one depending on
+        the threat range and the decoy release setting.
+        """
+        waypoints = [
+            wpt for wpt in (self.initial, self.decoy_release) if wpt is not None
+        ]
+        target = self.targets[0].position
+        return sorted(
+            waypoints,
+            key=lambda wpt: wpt.position.distance_to_point(target),
+            reverse=True,
+        )
 
 
 FlightPlanT = TypeVar("FlightPlanT", bound=FlightPlan[FormationAttackLayout])
@@ -206,8 +226,11 @@ class FormationAttackBuilder(IBuilder[FlightPlanT, LayoutT], ABC):
         )
 
         initial = None
+        decoy_release = None
         if ingress_type == FlightWaypointType.INGRESS_SEAD:
             initial = builder.sead_search(self.package.target)
+            if self.flight.any_member_has_weapon_of_type(WeaponType.DECOY):
+                decoy_release = builder.decoy_release(self.package.target)
         elif ingress_type == FlightWaypointType.INGRESS_SEAD_SWEEP:
             initial = builder.sead_sweep(self.package.target)
 
@@ -234,6 +257,7 @@ class FormationAttackBuilder(IBuilder[FlightPlanT, LayoutT], ABC):
             lineup=lineup,
             ingress=ingress,
             initial=initial,
+            decoy_release=decoy_release,
             targets=target_waypoints,
             split=split,
             refuel=refuel,

@@ -1,3 +1,4 @@
+import { LAYER_COLORS } from "../../maplayers/colors";
 import { LatLngLiteral, Polyline as LPolyline } from "leaflet";
 import { forwardRef, useImperativeHandle, useRef } from "react";
 import { Polyline } from "react-leaflet";
@@ -27,7 +28,7 @@ export const MovementPath = forwardRef<MovementPathHandle, MovementPathProps>(
       <Polyline
         positions={[props.source, props.destination]}
         weight={1}
-        color="#80BA80"
+        color={LAYER_COLORS.movementPath}
         ref={lineRef}
       />
     );

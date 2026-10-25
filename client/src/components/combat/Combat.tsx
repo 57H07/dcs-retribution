@@ -1,4 +1,5 @@
 import CombatModel from "../../api/combat";
+import { LAYER_COLORS } from "../../maplayers/colors";
 import { LatLng } from "leaflet";
 import { Polygon, Polyline } from "react-leaflet";
 
@@ -14,7 +15,7 @@ function CombatFootprint(props: CombatProps) {
   return (
     <Polygon
       positions={props.combat.footprint}
-      color="#c85050"
+      color={LAYER_COLORS.combat}
       interactive={false}
       fillOpacity={0.2}
     />
@@ -34,7 +35,7 @@ function CombatLines(props: CombatProps) {
           <Polyline
             key={idx}
             positions={[flightPosition, position]}
-            color="#c85050"
+            color={LAYER_COLORS.combat}
             interactive={false}
           />
         );

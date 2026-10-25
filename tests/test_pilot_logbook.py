@@ -33,6 +33,7 @@ def _flight(
     flight.squadron.name = f"{side.name} squadron"
     flight.unit_type = "F-16CM"
     flight.flight_type = task
+    flight.returned_to_squadron = False
     flight.roster.iter_pilots = lambda: iter(pilots)
     flight.flight_plan.takeoff_time = lambda: TAKEOFF
     flight.flight_plan.landing_time = TAKEOFF + duration
@@ -146,6 +147,16 @@ def test_lost_aircraft_logs_a_death() -> None:
     assert mission.player.record.deaths == 1
     assert mission.player.record.logbook[0].died
     assert mission.wingman.record.deaths == 0
+
+
+def test_flight_that_never_spawned_is_not_logged() -> None:
+    mission = Mission()
+    mission.blue.returned_to_squadron = True
+
+    mission.fly()
+
+    assert mission.player.record == PilotRecord()
+    assert mission.bandit.record.sorties == 1
 
 
 def test_unknown_flight_time_counts_as_zero() -> None:
