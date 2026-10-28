@@ -150,8 +150,8 @@ class CsarService:
         if nearest.position.distance_to_point(position) > radius.meters:
             return False
 
-        # They did come down, whatever happens next. Also what lets go_mia()
-        # accept them: it only transitions a pilot who is already Downed.
+        # They did come down, whatever happens next. Also what lets
+        # take_prisoner() accept them: it only transitions a Downed pilot.
         pilot.go_down()
         if nearest.is_friendly(player):
             turns = (
@@ -166,9 +166,16 @@ class CsarService:
                 f"Recovered by Control Point. They return to duty in {turns} "
                 f"turn(s).",
             )
+        elif not self.game.settings.csar_prisoners_of_war:
+            pilot.kill()
+            self.game.message(
+                "Pilot killed",
+                f"{pilot.name} came down inside enemy lines near {nearest.name} "
+                f"and did not survive.",
+            )
         else:
             # Held by the base that took them, so retaking it brings them home.
-            pilot.go_mia(held_at=nearest.id)
+            pilot.take_prisoner(held_at=nearest.id)
             self._record_capture(
                 pilot.name,
                 squadron.aircraft.display_name,
@@ -286,11 +293,20 @@ class CsarService:
             f"and will return to {downed.squadron} in {turns} turn(s).",
         )
 
-    def go_mia(self, downed: DownedPilot) -> None:
-        captor = self._nearest_enemy_control_point(downed)
-        downed.pilot.go_mia(held_at=captor.id if captor is not None else None)
+    def expire(self, downed: DownedPilot) -> None:
+        """Settles a downed pilot whose survival countdown ran out.
+
+        Dead, unless prisoners are taken and an enemy base is close enough to
+        hold them.
+        """
+        captor = (
+            self._nearest_enemy_control_point(downed)
+            if self.game.settings.csar_prisoners_of_war
+            else None
+        )
         self._remove(downed)
         if captor is not None:
+            downed.pilot.take_prisoner(held_at=captor.id)
             self._record_capture(
                 downed.pilot.name,
                 downed.aircraft_name,
@@ -304,10 +320,11 @@ class CsarService:
                 f"is now held at {captor.name}. Taking it would bring them home.",
             )
         else:
+            downed.pilot.kill()
             self.game.message(
-                "Pilot missing in action",
+                "Pilot killed",
                 f"{downed.pilot.name} ({downed.aircraft_name}) was never rescued and "
-                f"is now missing in action.",
+                f"is now listed as dead.",
             )
 
     def _nearest_enemy_control_point(
@@ -325,7 +342,7 @@ class CsarService:
         they first come down: anyone still on the map is by definition outside
         that one, so reusing it here would mean nobody is ever captured.
 
-        Anyone else is simply missing: nobody reached them either way.
+        Anyone else dies: nobody reached them either way.
         """
         radius = nautical_miles(self.game.settings.csar_capture_radius)
         if radius.meters <= 0:
@@ -349,7 +366,7 @@ class CsarService:
             if not control_point.is_friendly(coalition.player):
                 continue
             for squadron in coalition.air_wing.iter_squadrons():
-                for pilot in list(squadron.missing_pilots):
+                for pilot in list(squadron.prisoners_of_war):
                     if pilot.held_at != control_point.id:
                         continue
                     # Per pilot, not per coalition: whether a human flew them is
@@ -379,12 +396,12 @@ class CsarService:
             pass
 
     def advance_turn_for(self, coalition: Coalition) -> None:
-        """Decrements a coalition's downed pilots' countdowns, expiring to MIA.
+        """Decrements a coalition's downed pilots' countdowns, expiring them.
 
-        Called at coalition turn end. Iterates a copy since ``go_mia`` mutates the
+        Called at coalition turn end. Iterates a copy since ``expire`` mutates the
         underlying list.
         """
         for downed in list(coalition.downed_pilots):
             downed.turns_remaining -= 1
             if downed.turns_remaining <= 0:
-                self.go_mia(downed)
+                self.expire(downed)

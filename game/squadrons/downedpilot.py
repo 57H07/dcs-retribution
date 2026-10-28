@@ -37,7 +37,7 @@ class DownedPilot(SidcDescribable, MissionTarget):
 
     Persisted with the save (in ``Coalition.downed_pilots``) so that CSAR becomes a
     campaign-persistent mission type: a downed pilot exists across turns, can be
-    targeted by a CSAR package, and expires (goes MIA) on a countdown.
+    targeted by a CSAR package, and expires (dead or prisoner) on a countdown.
 
     Implements :class:`MissionTarget` so it can be used directly as a package target
     (no changes to the package builder/fulfiller) and :class:`SidcDescribable` so the

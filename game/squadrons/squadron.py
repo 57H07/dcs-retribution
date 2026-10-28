@@ -501,8 +501,8 @@ class Squadron:
         return self._pilots_with_status(PilotStatus.Dead)
 
     @property
-    def missing_pilots(self) -> list[Pilot]:
-        return self._pilots_with_status(PilotStatus.MissingInAction)
+    def prisoners_of_war(self) -> list[Pilot]:
+        return self._pilots_with_status(PilotStatus.PrisonerOfWar)
 
     @property
     def downed_pilots(self) -> list[Pilot]:

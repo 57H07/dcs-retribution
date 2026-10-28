@@ -58,6 +58,7 @@
 * **[Engine]** Upgrade PySide6 (Qt) from 6.4.2 to 6.11.2.
 
 ## Fixes
+* **[Campaign]** CSAR: a downed pilot whose survival countdown runs out is now dead instead of missing in action forever. New setting "Unrescued pilots can be taken prisoner" (off by default) keeps the capture flow, with a distinct "Prisoner of war" status; prisoners in existing saves stay prisoners, other missing pilots load as dead. (#64)
 * **[Mission Generator]** Aircraft no longer spawn on top of each other at airfields. Helipads and ground spawns now block the DCS parking slots they overlap (and are skipped when an aircraft already sits on an overlapping slot), and a flight that finds too few helipads or ground spawns no longer leaves behind a stray group stacked on a single pad: it falls back to parking, another spawn type or an air start. (#9)
 * **[Mission Generator]** AI SEAD flights no longer release their TALD decoys at the IP, out of glide range: decoys are now released at a new "DECOY RELEASE" waypoint at a configurable distance from the target (new campaign setting "Decoy release distance (NM)", default 15 NM), and only by flights that actually carry decoys. Anti-radiation missiles are still fired from INGRESS.
 * **[Mission Generation]** Fix a ZeroDivisionError when a Strike flight is planned against an objective whose units are all already destroyed: the strike waypoint has no targets, and the units/targets ratio divided by zero, killing mission generation. The task is now skipped, matching what add_bombing_tasks already does. (#948)

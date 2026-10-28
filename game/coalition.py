@@ -157,7 +157,7 @@ class Coalition:
         For more information on turn finalization in general, see the documentation for
         `Game.finish_turn`.
         """
-        # Age downed pilots (sending expired ones MIA) before the air wing's own
+        # Age downed pilots (expired ones die or are taken prisoner) before the air wing's own
         # turn end, which advances recovering pilots and replenishes losses.
         from game.squadrons.csarservice import CsarService
 
