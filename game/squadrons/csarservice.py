@@ -321,6 +321,8 @@ class CsarService:
             )
         else:
             downed.pilot.kill()
+            # Their sortie ended in an ejection, not a death: count it now.
+            downed.pilot.record.credit_death()
             self.game.message(
                 "Pilot killed",
                 f"{downed.pilot.name} ({downed.aircraft_name}) was never rescued and "

@@ -48,6 +48,10 @@ STATISTICS: dict[str, Callable[[PilotRecord], float]] = {
     "naval_kills": lambda r: r.naval_kills,
     "total_kills": lambda r: r.total_kills,
     "deaths": lambda r: r.deaths,
+    "shot_down": lambda r: r.shot_down,
+    "ejections": lambda r: r.ejections,
+    "times_rescued": lambda r: r.times_rescued,
+    "pilots_rescued": lambda r: r.pilots_rescued,
     "flight_hours": lambda r: r.flight_time.total_seconds() / 3600,
 }
 

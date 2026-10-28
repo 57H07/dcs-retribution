@@ -39,4 +39,4 @@ decorations:
     requires: {total_kills: 25}
   - name: Purple Heart
     description: Shot down or killed in action.
-    requires: {deaths: 1}
+    requires: {shot_down: 1}
