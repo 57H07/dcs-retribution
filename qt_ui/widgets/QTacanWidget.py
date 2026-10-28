@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
 from game.radio.TacanContainer import TacanContainer
 from game.radio.tacan import TacanChannel, TacanBand
 from qt_ui.models import GameModel
+from qt_ui.theme_manager import set_style_class
 from qt_ui.windows.QTacanDialog import QTacanDialog
 
 
@@ -77,7 +78,7 @@ class QTacanWidget(QWidget):
         if self.ct.tacan is None:
             return
         if self.gm.allocated_tacan.count(self.ct.tacan) > 1:
-            self.channel.setStyleSheet("color: orange")
+            set_style_class(self.channel, "text-warning")
             self.channel.setToolTip(
                 "Double booked TACAN channel, verify that this was your intention."
             )
@@ -85,7 +86,7 @@ class QTacanWidget(QWidget):
             self._reset_color_and_tooltip()
 
     def _reset_color_and_tooltip(self):
-        self.channel.setStyleSheet("color: white")
+        set_style_class(self.channel, None)
         self.channel.setToolTip(None)
 
     def _try_remove(self) -> None:

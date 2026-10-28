@@ -1,9 +1,10 @@
 from PySide6 import QtCharts
-from PySide6.QtCore import QPoint, Qt
+from PySide6.QtCore import QPoint
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import QFrame, QGridLayout
 
 from game import Game
+from qt_ui.theme_manager import token_color
 
 
 class QAircraftChart(QFrame):
@@ -26,12 +27,13 @@ class QAircraftChart(QFrame):
         ]
 
         self.alliedAircraftSerie = QtCharts.QLineSeries()
+        self.alliedAircraftSerie.setColor(token_color("color-chart-allied"))
         self.alliedAircraftSerie.setName("Allied aircraft count")
         for a, i in enumerate(self.alliedAircraft):
             self.alliedAircraftSerie.append(QPoint(a, i))
 
         self.enemyAircraftSerie = QtCharts.QLineSeries()
-        self.enemyAircraftSerie.setColor(Qt.GlobalColor.red)
+        self.enemyAircraftSerie.setColor(token_color("color-chart-enemy"))
         self.enemyAircraftSerie.setName("Enemy aircraft count")
         for a, i in enumerate(self.enemyAircraft):
             self.enemyAircraftSerie.append(QPoint(a, i))

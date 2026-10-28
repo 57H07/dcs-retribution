@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
 
 from game.radio.CallsignContainer import CallsignContainer, Callsign
 from qt_ui.models import GameModel
+from qt_ui.theme_manager import set_style_class
 from qt_ui.windows.QCallsignDialog import QCallsignDialog
 
 
@@ -66,5 +67,5 @@ class QCallsignWidget(QWidget):
         self.callsign_changed.emit(self)
 
     def _reset_color_and_tooltip(self):
-        self.callsign.setStyleSheet("color: white")
+        set_style_class(self.callsign, None)
         self.callsign.setToolTip(None)

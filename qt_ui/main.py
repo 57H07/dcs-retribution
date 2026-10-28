@@ -34,6 +34,7 @@ from qt_ui import (
     uiconstants,
 )
 from qt_ui.fonts import apply_app_font
+from qt_ui.theme_manager import apply_theme
 from qt_ui.uiflags import UiFlags
 from qt_ui.windows.GameUpdateSignal import GameUpdateSignal
 from qt_ui.windows.QLiberationWindow import QLiberationWindow
@@ -79,7 +80,7 @@ def run_ui(game: Optional[Game], ui_flags: UiFlags) -> None:
     liberation_theme.init()
     # Bundled Inter font, sized from the design tokens (GFX-01.4).
     apply_app_font(app, liberation_theme.get_token_variant())
-    app.setStyleSheet(liberation_theme.load_stylesheet())
+    apply_theme(app)
 
     first_start = liberation_install.init()
     if first_start:

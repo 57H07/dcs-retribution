@@ -10,6 +10,7 @@ from game.ato import Flight
 from game.radio.RadioFrequencyContainer import RadioFrequencyContainer
 from game.radio.radios import RadioFrequency, RadioRange, MHz, kHz
 from qt_ui.models import GameModel
+from qt_ui.theme_manager import set_style_class
 from qt_ui.windows.QRadioFrequencyDialog import QRadioFrequencyDialog
 
 
@@ -78,20 +79,20 @@ class QFrequencyWidget(QWidget):
         if self.ct.frequency is None:
             return
         if self.gm.allocated_freqs.count(self.ct.frequency) > 1:
-            self.freq.setStyleSheet("color: orange")
+            set_style_class(self.freq, "text-warning")
             self.freq.setToolTip(
                 "Double booked frequency, verify that this was your intention."
             )
         elif self.gm.allocated_freqs.count(self.ct.frequency) == 1:
             self._reset_color_and_tooltip()
         if self.ct.frequency == MHz(243) or self.ct.frequency == MHz(121, 500):
-            self.freq.setStyleSheet("color: red")
+            set_style_class(self.freq, "text-danger")
             self.freq.setToolTip(
                 "GUARD Freq. was assigned, verify that this was your intention."
             )
 
     def _reset_color_and_tooltip(self):
-        self.freq.setStyleSheet("color: white")
+        set_style_class(self.freq, None)
         self.freq.setToolTip(None)
 
     def _try_remove(self) -> None:

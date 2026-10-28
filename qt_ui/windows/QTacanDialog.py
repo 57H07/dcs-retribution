@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 from game.radio.TacanContainer import TacanContainer
 from game.radio.tacan import TacanBand, TacanChannel
 from qt_ui.uiconstants import EVENT_ICONS
+from qt_ui.theme_manager import set_style_class
 
 
 class QTacanDialog(QDialog):
@@ -52,7 +53,7 @@ class QTacanDialog(QDialog):
         layout.addWidget(self.callsign_input)
 
         self.warning_label = QLabel()
-        self.warning_label.setStyleSheet("color: orange")
+        set_style_class(self.warning_label, "text-warning")
         layout.addWidget(self.warning_label)
         layout.addStretch()
 

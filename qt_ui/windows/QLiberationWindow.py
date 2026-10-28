@@ -33,6 +33,7 @@ from qt_ui import liberation_install
 from qt_ui.dialogs import Dialog
 from qt_ui.models import GameModel
 from qt_ui.simcontroller import SimController
+from qt_ui.theme_manager import theme_signals
 from qt_ui.uiconstants import URLS
 from qt_ui.uiflags import UiFlags
 from qt_ui.uncaughtexceptionhandler import UncaughtExceptionHandler
@@ -151,25 +152,22 @@ class QLiberationWindow(QMainWindow):
         GameUpdateSignal.get_instance().gameupdated.connect(self.setGame)
         GameUpdateSignal.get_instance().debriefingReceived.connect(self.onDebriefing)
         GameUpdateSignal.get_instance().game_state_changed.connect(self.onEndGame)
+        theme_signals().theme_changed.connect(self.refresh_theme_icons)
 
     def initActions(self):
         self.newGameAction = QAction("&New Game", self)
-        self.newGameAction.setIcon(QIcon(CONST.ICONS["New"]))
         self.newGameAction.triggered.connect(self.newGame)
         self.newGameAction.setShortcut("CTRL+N")
 
         self.openAction = QAction("&Open", self)
-        self.openAction.setIcon(QIcon(CONST.ICONS["Open"]))
         self.openAction.triggered.connect(self.openFile)
         self.openAction.setShortcut("CTRL+O")
 
         self.saveGameAction = QAction("&Save", self)
-        self.saveGameAction.setIcon(QIcon(CONST.ICONS["Save"]))
         self.saveGameAction.triggered.connect(self.saveGame)
         self.saveGameAction.setShortcut("CTRL+S")
 
         self.saveAsAction = QAction("Save &As", self)
-        self.saveAsAction.setIcon(QIcon(CONST.ICONS["Save"]))
         self.saveAsAction.triggered.connect(self.saveGameAs)
         self.saveAsAction.setShortcut("CTRL+A")
 
@@ -182,7 +180,6 @@ class QLiberationWindow(QMainWindow):
         self.showLiberationPrefDialogAction.triggered.connect(self.showLiberationDialog)
 
         self.openDiscordAction = QAction("&Discord Server", self)
-        self.openDiscordAction.setIcon(CONST.ICONS["Discord"])
         self.openDiscordAction.triggered.connect(
             lambda: webbrowser.open_new_tab(
                 "https://" + "discord.gg" + "/" + "b4x34Bg" + "4We"
@@ -190,7 +187,6 @@ class QLiberationWindow(QMainWindow):
         )
 
         self.openGithubAction = QAction("&Github Repo", self)
-        self.openGithubAction.setIcon(CONST.ICONS["Github"])
         self.openGithubAction.triggered.connect(
             lambda: webbrowser.open_new_tab(URLS["Repository"])
         )
@@ -219,21 +215,34 @@ class QLiberationWindow(QMainWindow):
         self.openLogsAction.triggered.connect(self.showLogsDialog)
 
         self.openSettingsAction = QAction("Settings", self)
-        self.openSettingsAction.setIcon(CONST.ICONS["Settings"])
         self.openSettingsAction.triggered.connect(self.showSettingsDialog)
 
         self.openStatsAction = QAction("Stats", self)
-        self.openStatsAction.setIcon(CONST.ICONS["Statistics"])
         self.openStatsAction.triggered.connect(self.showStatsDialog)
 
         self.openNotesAction = QAction("Notes", self)
-        self.openNotesAction.setIcon(CONST.ICONS["Notes"])
         self.openNotesAction.triggered.connect(self.showNotesDialog)
 
         self.importTemplatesAction = QAction("Import Layouts", self)
         self.importTemplatesAction.triggered.connect(self.import_templates)
 
+        self.refresh_theme_icons()
         self.enable_game_actions(False)
+
+    def refresh_theme_icons(self, _variant: str = "") -> None:
+        """Sets the icons that depend on the theme (reloaded on theme change)."""
+        for action, icon in (
+            (self.newGameAction, "New"),
+            (self.openAction, "Open"),
+            (self.saveGameAction, "Save"),
+            (self.saveAsAction, "Save"),
+            (self.openDiscordAction, "Discord"),
+            (self.openGithubAction, "Github"),
+            (self.openSettingsAction, "Settings"),
+            (self.openStatsAction, "Statistics"),
+            (self.openNotesAction, "Notes"),
+        ):
+            action.setIcon(QIcon(CONST.ICONS[icon]))
 
     def enable_game_actions(self, enabled: bool):
         self.openSettingsAction.setVisible(enabled)
@@ -579,7 +588,7 @@ class QLiberationWindow(QMainWindow):
         ]
         text = (
             "<h3>DCS Retribution " + VERSION + "</h3>" + "<b>Source code : </b>"
-            "<a href='https://github.com/dcs-retribution/dcs-retribution' style='color:white'>"
+            "<a href='https://github.com/dcs-retribution/dcs-retribution'>"
             "https://github.com/dcs-retribution/dcs-retribution </a>"
             + "<h4>Authors</h4>"
             + "<p>DCS Retribution is an (independent) fork of DCS Liberation, "
@@ -595,13 +604,13 @@ class QLiberationWindow(QMainWindow):
             "<b>Ciribob </b> <i>for the JTACAutoLase.lua script</i><br/>"
             "<b>Walder </b> <i>for the Skynet-IADS script</i><br/>"
             "<b>Anubis Yinepu </b> <i>for the Hercules Cargo script</i><br/>"
-            '<a href="https://www.flaticon.com/free-icons/bug" title="bug icons" style="color: #ffffff">Bug icons created by Freepik - Flaticon</a><br />'
-            'Contains information from <a href="https://osmdata.openstreetmap.de/" style="color: #ffffff">OpenStreetMap © OpenStreetMap contributors</a>, which is made available here under the <a href="https://opendatacommons.org/licenses/odbl/1-0/" style="color: #ffffff">Open Database License (ODbL)</a>.<br />'
-            '<a href="https://download.geofabrik.de/index.html/" style="color: #ffffff">OpenStreetMap Data Extracts from Geofabrik</a><br />'
-            '<a href="https://www.earthdata.nasa.gov/" style="color: #ffffff">NASA EarthData</a><br />'
+            '<a href="https://www.flaticon.com/free-icons/bug" title="bug icons">Bug icons created by Freepik - Flaticon</a><br />'
+            'Contains information from <a href="https://osmdata.openstreetmap.de/">OpenStreetMap © OpenStreetMap contributors</a>, which is made available here under the <a href="https://opendatacommons.org/licenses/odbl/1-0/">Open Database License (ODbL)</a>.<br />'
+            '<a href="https://download.geofabrik.de/index.html/">OpenStreetMap Data Extracts from Geofabrik</a><br />'
+            '<a href="https://www.earthdata.nasa.gov/">NASA EarthData</a><br />'
             + "<h4>Splash Screen  :</h4>"
             + "Artwork by Andriy Dankovych (CC BY-SA)"
-            " <a href='https://www.facebook.com/AndriyDankovych' style='color:white'>"
+            " <a href='https://www.facebook.com/AndriyDankovych'>"
             "[https://www.facebook.com/AndriyDankovych]</a>"
         )
         about = QMessageBox()

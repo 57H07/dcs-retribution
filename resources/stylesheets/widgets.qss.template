@@ -1,0 +1,35 @@
+/*
+ * Semantic widget states shared by every theme (GFX-01.3).
+ *
+ * Widgets used to hard-code these colours with setStyleSheet(); they now set
+ * a "style" property (qt_ui.theme_manager.set_style_class) matched here. Each
+ * variable reference is replaced by the design token of the theme's variant
+ * (resources/design/tokens.json), producing
+ * resources/stylesheets/generated/widgets-<variant>.qss, which
+ * liberation_theme.load_stylesheet() appends to the theme's stylesheet, the
+ * legacy "Vanilla" and "DCS World" included. Run `python -m qt_ui.design_tokens`
+ * after editing this file.
+ */
+
+/* Something to double-check: double-booked frequency or channel... */
+QLabel[style="text-warning"] {
+    color: var(--color-text-warning);
+}
+
+/* Something likely wrong: guard frequency assigned... */
+QLabel[style="text-danger"] {
+    color: var(--color-text-danger);
+}
+
+/* Read-only log output. */
+QPlainTextEdit[style="console"] {
+    background-color: var(--color-bg-sunken);
+    color: var(--color-text-primary);
+    font-family: "Courier New", monospace;
+}
+
+/* Free text typed by the player (campaign notes). */
+QPlainTextEdit[style="text-area"] {
+    background-color: var(--color-bg-sunken);
+    color: var(--color-text-primary);
+}

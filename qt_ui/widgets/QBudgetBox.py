@@ -4,6 +4,7 @@ import qt_ui.uiconstants as CONST
 from game import Game
 from game.income import Income
 from game.theater.player import Player
+from qt_ui.theme_manager import theme_signals
 from qt_ui.windows.finances.QFinancesMenu import QFinancesMenu
 
 
@@ -20,12 +21,16 @@ class QBudgetBox(QGroupBox):
         self.finances = QPushButton()
         self.finances.setDisabled(True)
         self.finances.setProperty("style", "btn-primary")
-        self.finances.setIcon(CONST.ICONS["Money"])
+        self.refresh_theme_icons()
+        theme_signals().theme_changed.connect(self.refresh_theme_icons)
         self.finances.clicked.connect(self.openFinances)
 
         self.layout = QHBoxLayout()
         self.layout.addWidget(self.finances)
         self.setLayout(self.layout)
+
+    def refresh_theme_icons(self, _variant: str = "") -> None:
+        self.finances.setIcon(CONST.ICONS["Money"])
 
     def setBudget(self, budget, reward):
         """

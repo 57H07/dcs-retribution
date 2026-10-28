@@ -7,6 +7,14 @@ from game.timeofday import TimeOfDay
 from game.weather.conditions import Conditions
 from qt_ui import uiconstants as CONST
 from qt_ui.simcontroller import SimController
+from qt_ui.theme_manager import theme_signals
+
+TIME_OF_DAY_ICONS = {
+    TimeOfDay.Dawn: "Dawn",
+    TimeOfDay.Day: "Day",
+    TimeOfDay.Dusk: "Dusk",
+    TimeOfDay.Night: "Night",
+}
 
 
 class QTimeTurnWidget(QGroupBox):
@@ -21,19 +29,14 @@ class QTimeTurnWidget(QGroupBox):
             "padding: 0px; margin-left: 5px; margin-right: 0px; margin-top: 1ex; margin-bottom: 5px; border-right: 0px"
         )
 
-        self.icons = {
-            TimeOfDay.Dawn: CONST.ICONS["Dawn"],
-            TimeOfDay.Day: CONST.ICONS["Day"],
-            TimeOfDay.Dusk: CONST.ICONS["Dusk"],
-            TimeOfDay.Night: CONST.ICONS["Night"],
-        }
+        self.time_of_day = TimeOfDay.Dawn
 
         # self.setProperty('style', 'conditions__widget--turn')
         self.layout = QHBoxLayout()
         self.setLayout(self.layout)
 
         self.daytime_icon = QLabel()
-        self.daytime_icon.setPixmap(self.icons[TimeOfDay.Dawn])
+        self.refresh_theme_icons()
         self.layout.addWidget(self.daytime_icon)
 
         self.time_column = QVBoxLayout()
@@ -46,6 +49,10 @@ class QTimeTurnWidget(QGroupBox):
         self.time_column.addWidget(self.time_display)
 
         sim_controller.sim_update.connect(self.on_sim_update)
+        theme_signals().theme_changed.connect(self.refresh_theme_icons)
+
+    def refresh_theme_icons(self, _variant: str = "") -> None:
+        self.daytime_icon.setPixmap(CONST.ICONS[TIME_OF_DAY_ICONS[self.time_of_day]])
 
     def on_sim_update(self, _events: GameUpdateEvents) -> None:
         time = self.sim_controller.current_time_in_sim_if_game_loaded
@@ -61,7 +68,8 @@ class QTimeTurnWidget(QGroupBox):
         :arg turn Current turn number.
         :arg conditions Current time and weather conditions.
         """
-        self.daytime_icon.setPixmap(self.icons[conditions.time_of_day])
+        self.time_of_day = conditions.time_of_day
+        self.refresh_theme_icons()
         self.set_date_and_time(conditions.start_time)
         self.setTitle(f"Turn {turn}")
 

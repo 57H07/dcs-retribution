@@ -456,7 +456,7 @@ class FactionSelection(QtWidgets.QWizardPage):
 
         # Docs Link
         docsText = QtWidgets.QLabel(
-            '<a href="https://github.com/dcs-retribution/dcs-retribution/wiki/Custom-Factions"><span style="color:#FFFFFF;">How to create your own faction</span></a>'
+            '<a href="https://github.com/dcs-retribution/dcs-retribution/wiki/Custom-Factions">How to create your own faction</a>'
         )
         docsText.setAlignment(Qt.AlignmentFlag.AlignCenter)
         docsText.setOpenExternalLinks(True)

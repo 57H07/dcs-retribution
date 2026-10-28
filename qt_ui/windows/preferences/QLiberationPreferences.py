@@ -15,8 +15,9 @@ from PySide6.QtWidgets import (
     QSpinBox,
 )
 
-from qt_ui import liberation_install, liberation_theme
-from qt_ui.liberation_theme import THEMES, get_theme_index, set_theme_index
+from qt_ui import liberation_install
+from qt_ui.liberation_theme import THEMES, get_theme_index
+from qt_ui.theme_manager import switch_theme
 
 
 class QLiberationPreferences(QFrame):
@@ -86,7 +87,7 @@ class QLiberationPreferences(QFrame):
         layout.addWidget(
             self.browse_install_dir, 3, 1, alignment=Qt.AlignmentFlag.AlignRight
         )
-        layout.addWidget(QLabel("<strong>Theme (Requires Restart)</strong>"), 4, 0)
+        layout.addWidget(QLabel("<strong>Theme:</strong>"), 4, 0)
         layout.addWidget(self.themeSelect, 4, 1, alignment=Qt.AlignmentFlag.AlignRight)
         self.themeSelect.setCurrentIndex(get_theme_index())
 
@@ -146,7 +147,6 @@ class QLiberationPreferences(QFrame):
         self.prefer_liberation_payloads = self.payloads_cb.isChecked()
         self.setup_preferences_on_every_start = self.setup_every_start_cb.isChecked()
         self.port = self.port_input.value()
-        set_theme_index(self.themeSelect.currentIndex())
 
         if not os.path.isdir(self.saved_game_dir):
             error_dialog = QMessageBox.critical(
@@ -209,5 +209,5 @@ class QLiberationPreferences(QFrame):
             self.port,
         )
         liberation_install.save_config()
-        liberation_theme.save_theme_config()
+        switch_theme(self.themeSelect.currentIndex())
         return True
