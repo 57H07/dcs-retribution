@@ -783,6 +783,26 @@ class WaypointBuilder:
         )
 
     @staticmethod
+    def airdrop(control_point: ControlPoint) -> FlightWaypoint:
+        """Creates the low pass of a fixed-wing transport airdropping its cargo.
+
+        Used instead of a cargo stop when the transport cannot land at the drop-off
+        base (TRN-03 logistics flights to FOBs). The cargo is delivered at turn end
+        like any airlift; the pass is what the AI and the player fly.
+        """
+        return FlightWaypoint(
+            "AIRDROP",
+            FlightWaypointType.NAV,
+            control_point.position,
+            feet(1000),
+            "RADIO",
+            description=f"Airdrop cargo over {control_point.name}",
+            pretty_name="Airdrop",
+            control_point=control_point,
+            flyover=True,
+        )
+
+    @staticmethod
     def nav(
         position: Point, altitude: Distance, altitude_is_agl: bool = False
     ) -> FlightWaypoint:

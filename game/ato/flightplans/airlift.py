@@ -164,7 +164,12 @@ class Builder(IBuilder[AirliftFlightPlan, AirliftLayout]):
                 altitude_is_agl,
             )
         if cargo.next_stop != self.flight.arrival:
-            drop_off = builder.cargo_stop(cargo.next_stop)
+            from game.transfers import delivers_by_airdrop
+
+            if delivers_by_airdrop(self.flight.unit_type, cargo.next_stop):
+                drop_off = builder.airdrop(cargo.next_stop)
+            else:
+                drop_off = builder.cargo_stop(cargo.next_stop)
             drop_off_ascent = self._create_ascent_or_descent(
                 builder,
                 cargo.origin.position,

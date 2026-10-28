@@ -5,6 +5,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from game.logistics import base_is_cut_off
 from game.server.leaflet import LeafletPoint
 
 if TYPE_CHECKING:
@@ -20,6 +21,9 @@ class ControlPointJs(BaseModel):
     mobile: bool
     destination: LeafletPoint | None
     sidc: str
+    #: No road, sea or air link to any friendly base (TRN-03, shown only when
+    #: logistics missions are enabled).
+    cut_off: bool = False
 
     class Config:
         title = "ControlPoint"
@@ -41,6 +45,7 @@ class ControlPointJs(BaseModel):
             mobile=control_point.moveable and control_point.captured.is_blue,
             destination=destination,
             sidc=str(control_point.sidc()),
+            cut_off=base_is_cut_off(control_point),
         )
 
     @staticmethod
