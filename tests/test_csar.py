@@ -830,6 +830,50 @@ def test_ejection_downs_pilot() -> None:
     assert pilot.downed
 
 
+def _eject(pilot: Pilot, **settings: Any) -> list[DownedPilot]:
+    """Processes the loss of a blue aircraft whose pilot ejected in the mission,
+    and returns the coalition's downed pilots."""
+    from game.theater.player import Player
+
+    game = _make_game(**settings)
+    game.settings.invulnerable_player_pilots = False
+    game.theater.closest_control_point.return_value.is_friendly.return_value = True
+    game.theater.conflicts.return_value = []
+    loss = _loss(pilot, Player.BLUE)
+    debriefing = MagicMock()
+    debriefing.ejected_pilot_positions = {id(pilot): Point(50.0, 60.0, _TERRAIN)}
+    with patch(
+        "game.squadrons.csarservice.find_downed_pilot_position",
+        return_value=Point(50.0, 60.0, _TERRAIN),
+    ):
+        MissionResultsProcessor(game)._process_lost_pilot(
+            loss, debriefing, CsarService(game)
+        )
+    return loss.flight.squadron.coalition.downed_pilots
+
+
+def test_ejected_ai_pilot_dies_when_ai_rescues_are_off() -> None:
+    """#69: the setting gates the campaign side, not only MOOSE's own handler."""
+    pilot = Pilot("AI", player=False)
+    downed = _eject(pilot, csar_rescue_ai_pilots=False)
+    assert pilot.status is PilotStatus.Dead
+    assert downed == []
+
+
+def test_ejected_player_pilot_goes_down_when_ai_rescues_are_off() -> None:
+    pilot = Pilot("Client", player=True)
+    downed = _eject(pilot, csar_rescue_ai_pilots=False)
+    assert pilot.downed
+    assert len(downed) == 1
+
+
+def test_ejected_ai_pilot_goes_down_when_ai_rescues_are_on() -> None:
+    pilot = Pilot("AI", player=False)
+    downed = _eject(pilot, csar_rescue_ai_pilots=True)
+    assert pilot.downed
+    assert len(downed) == 1
+
+
 def test_no_ejection_failed_roll_kills() -> None:
     from game.theater.player import Player
 

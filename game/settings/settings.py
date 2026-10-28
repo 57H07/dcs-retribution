@@ -1483,8 +1483,11 @@ class Settings:
         GAMEPLAY_SECTION,
         default=True,
         detail=(
-            "If set, Ops.CSAR will register AI downed pilots in the mission for "
-            "player flights, not only player-flown ejections."
+            "Checked (default): AI pilots who eject go down on the campaign map "
+            "and can be rescued like player pilots, and Ops.CSAR also handles AI "
+            "ejections in the mission.\n\n"
+            "Unchecked: only player pilots go down; an AI pilot is lost with their "
+            "aircraft, as without CSAR."
         ),
     )
     csar_player_hover_height: int = bounded_int_option(
