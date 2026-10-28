@@ -11,6 +11,7 @@ from game.server.settings import ServerSettings
 from qt_ui.liberation_install import server_port
 from qt_ui.liberation_theme import get_token_variant
 from qt_ui.models import GameModel
+from qt_ui.theme_manager import theme_signals
 from qt_ui.widgets.map.webprofile import map_web_profile
 
 
@@ -56,3 +57,18 @@ class QLiberationMap(QWebEngineView):
         url.setQuery(f"server={host}:{port}&theme={get_token_variant()}")
         self.page.load(url)
         self.setPage(self.page)
+        theme_signals().theme_changed.connect(self.apply_theme)
+
+    def apply_theme(self, variant: str) -> None:
+        """Restyles the loaded map without reloading it (GFX-01.2).
+
+        The page reads its initial theme from the URL; afterwards the client
+        follows the data-theme attribute of the document element.
+        """
+        self.page.runJavaScript(theme_script(variant))
+
+
+def theme_script(variant: str) -> str:
+    if not variant.isalpha():
+        raise ValueError(f"Invalid theme variant {variant!r}")
+    return f'document.documentElement.dataset.theme = "{variant}";'

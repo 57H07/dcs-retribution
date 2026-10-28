@@ -20,6 +20,7 @@ from game.settings.settings import FastForwardStopCondition
 from game.utils import meters
 from qt_ui.models import GameModel
 from qt_ui.simcontroller import SimController
+from qt_ui.theme_manager import theme_signals
 from qt_ui.uiflags import UiFlags
 from qt_ui.widgets.QBudgetBox import QBudgetBox
 from qt_ui.widgets.QConditionsWidget import QConditionsWidget
@@ -51,18 +52,19 @@ class QTopPanel(QFrame):
         if not self.game or self.game.turn == 0:
             pass_turn_text = "Begin Campaign"
         self.passTurnButton = QPushButton(pass_turn_text)
-        self.passTurnButton.setIcon(CONST.ICONS["PassTurn"])
         self.passTurnButton.setProperty("style", "btn-primary")
         self.passTurnButton.clicked.connect(self.passTurn)
         if not self.game:
             self.passTurnButton.setEnabled(False)
 
         self.proceedButton = QPushButton("Take off")
-        self.proceedButton.setIcon(CONST.ICONS["Proceed"])
         self.proceedButton.setProperty("style", "start-button")
         self.proceedButton.clicked.connect(self.launch_mission)
         if not self.game or self.game.turn == 0:
             self.proceedButton.setEnabled(False)
+
+        self.refresh_theme_icons()
+        theme_signals().theme_changed.connect(self.refresh_theme_icons)
 
         self.factionsInfos = QFactionsInfos(self.game)
 
@@ -121,6 +123,10 @@ class QTopPanel(QFrame):
         GameUpdateSignal.get_instance().budgetupdated.connect(self.budget_update)
 
     @property
+    def refresh_theme_icons(self, _variant: str = "") -> None:
+        self.passTurnButton.setIcon(CONST.ICONS["PassTurn"])
+        self.proceedButton.setIcon(CONST.ICONS["Proceed"])
+
     def game(self) -> Optional[Game]:
         return self.game_model.game
 

@@ -6,6 +6,8 @@ from game.timeofday import TimeOfDay
 from game.utils import mps
 from game.weather.conditions import Conditions
 from qt_ui import uiconstants as CONST
+from qt_ui.theme_manager import theme_signals
+from qt_ui.widgets.conditions.QTimeTurnWidget import TIME_OF_DAY_ICONS
 
 
 class QWeatherWidget(QGroupBox):
@@ -20,12 +22,7 @@ class QWeatherWidget(QGroupBox):
         super(QWeatherWidget, self).__init__("")
         self.setProperty("style", "QWeatherWidget")
 
-        self.icons = {
-            TimeOfDay.Dawn: CONST.ICONS["Dawn"],
-            TimeOfDay.Day: CONST.ICONS["Day"],
-            TimeOfDay.Dusk: CONST.ICONS["Dusk"],
-            TimeOfDay.Night: CONST.ICONS["Night"],
-        }
+        self.weather_icon_key = TIME_OF_DAY_ICONS[TimeOfDay.Dawn]
 
         self.layout = QHBoxLayout()
         self.setLayout(self.layout)
@@ -33,11 +30,16 @@ class QWeatherWidget(QGroupBox):
         self.makeWeatherIcon()
         self.makeCloudRainFogWidget()
         self.makeWindsWidget()
+        theme_signals().theme_changed.connect(self.refresh_theme_icons)
+
+    def refresh_theme_icons(self, _variant: str = "") -> None:
+        self.weather_icon.setPixmap(CONST.ICONS[self.weather_icon_key])
+        self.winds_icon.setPixmap(CONST.ICONS["Weather_winds"])
 
     def makeWeatherIcon(self):
         """Makes the Weather Icon Widget"""
         self.weather_icon = QLabel()
-        self.weather_icon.setPixmap(self.icons[TimeOfDay.Dawn])
+        self.weather_icon.setPixmap(CONST.ICONS[self.weather_icon_key])
         self.layout.addWidget(self.weather_icon)
 
     def makeCloudRainFogWidget(self):
@@ -59,7 +61,8 @@ class QWeatherWidget(QGroupBox):
         windsLayout = QGridLayout()
         self.layout.addLayout(windsLayout)
 
-        windsLayout.addWidget(self.makeIcon(CONST.ICONS["Weather_winds"]), 0, 0, 3, 1)
+        self.winds_icon = self.makeIcon(CONST.ICONS["Weather_winds"])
+        windsLayout.addWidget(self.winds_icon, 0, 0, 3, 1)
 
         windsLayout.addWidget(self.makeLabel("At GL"), 0, 1)
         windsLayout.addWidget(self.makeLabel("At FL08"), 1, 1)
@@ -203,5 +206,7 @@ class QWeatherWidget(QGroupBox):
     def update_forecast_icons(self, weather_type: str) -> None:
         time = "night" if self.conditions.time_of_day == TimeOfDay.Night else "day"
         icon_key = f"Weather_{time}-{weather_type}"
-        icon = CONST.ICONS.get(icon_key) or CONST.ICONS["Weather_night-partly-cloudy"]
-        self.weather_icon.setPixmap(icon)
+        if icon_key not in CONST.ICONS:
+            icon_key = "Weather_night-partly-cloudy"
+        self.weather_icon_key = icon_key
+        self.weather_icon.setPixmap(CONST.ICONS[icon_key])

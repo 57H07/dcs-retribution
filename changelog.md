@@ -66,6 +66,7 @@
 * **[UX]** The app and the campaign map now use the bundled Inter font (SIL Open Font License), with no network or system font needed, sized for correct rendering at 100 %, 150 % and 200 % display scaling. (GFX-01.4)
 * **[Map]** The map's layer selector, zoom and ruler buttons, tooltips, popups, scale and offline banner now use the design tokens and follow the light and dark themes, restyling live when the theme changes. (GFX-04.4)
 * **[Map]** The map legend follows the light and dark themes and uses the Inter font. (UI-01.2)
+* **[UX]** Changing the theme in the preferences now applies immediately, without restarting: every open window, the themed icons and the campaign map follow. (GFX-01.2)
 
 ## Fixes
 * **[Campaign]** CSAR: a downed pilot whose survival countdown runs out is now dead instead of missing in action forever. New setting "Unrescued pilots can be taken prisoner" (off by default) keeps the capture flow, with a distinct "Prisoner of war" status; prisoners in existing saves stay prisoners, other missing pilots load as dead. (#64)

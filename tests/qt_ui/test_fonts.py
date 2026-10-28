@@ -1,6 +1,4 @@
-import os
 from pathlib import Path
-from typing import Iterator
 
 import pytest
 from PySide6.QtGui import QFont, QGuiApplication
@@ -13,11 +11,8 @@ OFL_TITLE = "SIL OPEN FONT LICENSE Version 1.1"
 
 
 @pytest.fixture(scope="module")
-def gui_app() -> Iterator[QGuiApplication]:
-    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-    app = QGuiApplication.instance() or QGuiApplication([])
-    assert isinstance(app, QGuiApplication)
-    yield app
+def gui_app(qt_app: QGuiApplication) -> QGuiApplication:
+    return qt_app
 
 
 @pytest.mark.parametrize(
