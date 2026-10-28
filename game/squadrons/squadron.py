@@ -342,6 +342,25 @@ class Squadron:
         """Owned aircraft that are not under repair."""
         return max(self.owned_aircraft - self.aircraft_in_maintenance, 0)
 
+    @property
+    def maintenance_summary(self) -> list[MaintenanceBatch]:
+        """Aircraft under repair grouped by turns remaining, soonest first, as
+        ``(count, turns)``. Only owned aircraft are counted."""
+        by_turns: dict[int, int] = {}
+        for count, turns in self.maintenance_batches + self.new_maintenance_batches:
+            if count > 0 and turns > 0:
+                by_turns[turns] = by_turns.get(turns, 0) + count
+        return [(count, turns) for turns, count in sorted(by_turns.items())]
+
+    @property
+    def maintenance_text(self) -> str:
+        """Human readable maintenance state, e.g. "2 in maintenance (1 turn), 1 in
+        maintenance (3 turns)". Empty when no aircraft is under repair."""
+        return ", ".join(
+            f"{count} in maintenance ({turns} {'turn' if turns == 1 else 'turns'})"
+            for count, turns in self.maintenance_summary
+        )
+
     def send_to_maintenance(self, count: int, turns: int) -> None:
         """Puts ``count`` owned aircraft under repair for the next ``turns`` turns."""
         if count <= 0 or turns <= 0:
@@ -393,6 +412,16 @@ class Squadron:
             self.untasked_aircraft + released, self.owned_aircraft
         )
         return released
+
+    def buy_expedited_maintenance(self) -> int:
+        """Pays ``expedited_repair_cost`` from the coalition's budget and finishes
+        every repair at once. Returns the number of aircraft released, 0 when
+        nothing is under repair or the budget is too small."""
+        cost = self.expedited_repair_cost
+        if not self.aircraft_in_maintenance or cost > self.coalition.budget:
+            return 0
+        self.coalition.budget -= cost
+        return self.expedite_maintenance()
 
     def replenish_lost_pilots(self) -> None:
         if self.pilot_limits_enabled and self.replenish_count > 0:

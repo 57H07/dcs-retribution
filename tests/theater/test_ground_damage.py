@@ -237,3 +237,35 @@ def test_inoperative_unit_spawns_as_static() -> None:
     generator.generate()
     assert statics == [damaged]
     assert vehicles == [healthy]
+
+
+def test_debriefing_lists_damaged_units() -> None:
+    ground_object = _ground_object()
+    tank = _unit(ground_object)
+    sam = _unit(ground_object, AirDefence.M1097_Avenger)
+    scratched = _unit(ground_object)
+    game = SimpleNamespace(turn=1, settings=Settings())
+    debriefing = _debriefing({"tank": tank, "sam": sam, "scratched": scratched}, game)
+    debriefing.damaged_aircraft = []
+    debriefing.apply_ground_damage(
+        {"tank": 0.15, "sam": 0.4, "scratched": 0.9, "unknown": 0.5}, True
+    )
+
+    reports = debriefing.damaged_unit_reports()
+    assert [(r.player, r.damage_percent, r.unavailability) for r in reports] == [
+        (Player.BLUE, 85, "Destroyed"),
+        (Player.BLUE, 60, "Inoperative (2 turns)"),
+        (Player.BLUE, 10, "Operational"),
+    ]
+    assert all(r.unit_type.endswith("(armor)") for r in reports)
+    assert "Avenger" in reports[1].unit_type
+
+
+def test_debriefing_has_no_damaged_units_when_setting_off() -> None:
+    debriefing = _debriefing({}, SimpleNamespace(turn=1, settings=Settings()))
+    debriefing.damaged_aircraft = []
+    state: Any = SimpleNamespace(damaged_units={"tank": 0.1})
+    debriefing.apply_ground_damage(
+        Debriefing.persistent_damaged_units(state, False), True
+    )
+    assert debriefing.damaged_unit_reports() == []
