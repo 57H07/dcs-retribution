@@ -17,10 +17,11 @@
 --     auto-planner assigned to an AI flight -- with beacons, the F10 menu and
 --     MOOSE's own boarding.
 --
---  2. Watches for a pilot group disappearing next to a rescue helicopter, which
---     is how a completed native embark presents itself, and reports the rescue
---     back to Retribution via the global `csar_rescued` table that
---     dcs_retribution.lua writes into state.json.
+--  2. Watches for a pilot boarding an AI rescue helicopter (the group leaving
+--     the map while the helicopter is on the ground for them, which is how a
+--     completed native embark presents itself), then reports the rescue back to
+--     Retribution once that helicopter lands at a friendly base, via the global
+--     `csar_rescued` table that dcs_retribution.lua writes into state.json.
 --
 --  3. Under hover extraction there is no native mechanic at all -- DCS has no
 --     hoist -- so the whole pickup is run from here. The rescue flight's pickup
@@ -37,11 +38,6 @@ local PICKUP_RADIUS = 600
 -- A helo above this AGL is transiting, not picking anyone up.
 local PICKUP_MAX_AGL = 150
 local CHECK_INTERVAL = 5
--- How long after a rescue helicopter was last seen in the embark zone a vanishing
--- pilot still counts as having boarded it. Generous, because the only other way
--- for a tracked survivor to disappear is being killed, and the post-mission
--- fallback in Retribution re-checks the outcome anyway.
-local RESCUE_ATTRIBUTION_WINDOW = 120
 -- How long a rescue helicopter can be in the embark zone with the survivor still
 -- reporting as present before that is worth complaining about. Comfortably longer
 -- than the walk to the helicopter and the Embarking task's own hold.
@@ -99,6 +95,45 @@ end
 
 local function opscsar_warn(msg)
     env.warning("[OpsCSAR] " .. tostring(msg))
+end
+
+-- Hoist only, for players, for survivors who must be winched out (in the water).
+--
+-- Ops.CSAR picks a survivor up on whichever comes first: the helicopter landed
+-- within loadDistance, or hovering low and close for long enough. It has no
+-- notion of a pickup that must be a hoist, so a player who sets down nearby (on a
+-- ship's deck, a platform, a shoreline) would collect a pilot who is in the sea.
+-- This wraps its per-pilot proximity check so that, for those pilots, a landed
+-- helicopter is told to hover instead and nothing else happens; an airborne one
+-- gets Ops.CSAR's own hover logic untouched.
+--
+-- `is_hover_only(group_name)` says whether the survivor in that group is one of
+-- them. A global so tests can exercise it without a whole mission.
+function OpsCSAR_RequireHoverFor(instance, is_hover_only)
+    local check_close = instance._CheckCloseWoundedGroup
+    instance._CheckCloseWoundedGroup = function(
+        self, distance, heli_unit, heli_name, wounded_group, wounded_group_name
+    )
+        if is_hover_only(wounded_group_name) and not heli_unit:InAir() then
+            -- Same contract as the original: true while the helicopter is
+            -- close, which keeps Ops.CSAR checking on it.
+            if distance < 500 then
+                self:_DisplayMessageToSAR(
+                    heli_unit,
+                    "The pilot is in the water. You cannot pick them up landed: "
+                        .. "hover over them to winch them up.",
+                    self.messageTime,
+                    true,
+                    true
+                )
+                return true
+            end
+            return false
+        end
+        return check_close(
+            self, distance, heli_unit, heli_name, wounded_group, wounded_group_name
+        )
+    end
 end
 
 local function opscsar_main()
@@ -191,6 +226,11 @@ local function opscsar_main()
         -- after the mission, so with the default no player helicopter is ever a
         -- rescue helicopter: no menu, no pickup, silently.
         my.useprefix = false
+        -- Nothing can land beside a survivor in the water: players hoist them.
+        OpsCSAR_RequireHoverFor(my, function(group_name)
+            local entry = tracked_by_group(group_name)
+            return entry ~= nil and entry.player_hover_only
+        end)
         -- MOOSE defaults these to USA/Russia and applies them with InitCountry()
         -- when spawning a pilot. DCS derives coalition membership from country, so
         -- they must match the faction actually flying for this side.
@@ -395,17 +435,64 @@ local function opscsar_main()
         )
     end
 
-    -- Single place a rescue is reported back to Retribution.
-    local function record_rescue(entry, by, how)
+    -- AI rescues are credited on delivery, not at pickup, exactly as Ops.CSAR does
+    -- for players: a pilot aboard a helicopter that is shot down on the way home
+    -- was not rescued. A pickup only puts them aboard; landing at a friendly
+    -- airfield, FARP or ship (an S_EVENT_LAND with a `place` of the helicopter's
+    -- own coalition) delivers everyone aboard. A helicopter still airborne when
+    -- the mission ends delivers no one.
+    local aboard = {} -- AI helicopter unit name -> entries aboard it
+
+    -- A survivor has boarded `helo_name`: off the ground, not yet rescued.
+    local function board(entry, helo_name, how)
         if entry.done then
             return
         end
         entry.done = true
-        table.insert(csar_rescued, entry.id)
-        dirty_state = true
+        if helo_name == nil then
+            opscsar_warn(
+                "Pilot " .. entry.id .. " " .. how .. " an unknown helicopter; "
+                .. "cannot tell when they are delivered, not counting a rescue."
+            )
+            return
+        end
+        aboard[helo_name] = aboard[helo_name] or {}
+        table.insert(aboard[helo_name], entry)
         opscsar_log(
-            "Pilot " .. entry.id .. " " .. how .. " " .. tostring(by or "a helicopter")
+            "Pilot " .. entry.id .. " " .. how .. " " .. helo_name
+            .. "; rescue will be reported on delivery to a friendly base."
         )
+    end
+
+    -- Single place an AI rescue is reported back to Retribution.
+    local function deliver(helo_name, place_name)
+        local passengers = aboard[helo_name]
+        if passengers == nil then
+            return
+        end
+        aboard[helo_name] = nil
+        for _, entry in pairs(passengers) do
+            table.insert(csar_rescued, entry.id)
+            opscsar_log(
+                "Pilot " .. entry.id .. " rescued: delivered by " .. helo_name
+                .. " to " .. tostring(place_name)
+            )
+        end
+        dirty_state = true
+    end
+
+    local function lose_helicopter(helo_name)
+        local passengers = aboard[helo_name]
+        if passengers == nil then
+            return
+        end
+        aboard[helo_name] = nil
+        for _, entry in pairs(passengers) do
+            opscsar_log(
+                "Pilot " .. entry.id .. " was aboard " .. helo_name
+                .. ", which was lost before landing; not rescued."
+            )
+        end
     end
 
     -- ------------------------------------------------------------------
@@ -581,6 +668,10 @@ local function opscsar_main()
         end
 
         local by = entry.hover_group
+        -- The survivors go aboard the lead, which is the one holding over them.
+        local helo_group = Group.getByName(by)
+        local lead = helo_group and helo_group:getUnit(1)
+        local carrier = lead and lead:getName() or nil
         -- The whole cluster comes up on this hover, not just the one the flight
         -- was planned against.
         local lifted = { entry }
@@ -589,6 +680,10 @@ local function opscsar_main()
         end
         for _, survivor in pairs(lifted) do
             local group = Group.getByName(survivor.group_name)
+            -- Decided before the destroy below, which may raise a unit-lost
+            -- event for them.
+            local alive = group ~= nil and group:isExist() and group:getSize() > 0
+                and not survivor.killed
             if group and group:isExist() then
                 group:destroy()
             end
@@ -600,7 +695,11 @@ local function opscsar_main()
                     )
                 end)
             end
-            record_rescue(survivor, by, "hoisted by")
+            if alive then
+                board(survivor, carrier, "hoisted aboard")
+            else
+                survivor.done = true
+            end
         end
         release_hover(entry, "hoist complete")
     end
@@ -696,13 +795,18 @@ local function opscsar_main()
                         name .. " lifted from the pickup after "
                         .. math.floor(on_ground) .. "s on the ground."
                     )
-                    record_rescue(entry, name, "embarked on")
-                    -- Cluster-mates walk to the same landing zone, so credit any
-                    -- who have gone from the map. Checked rather than assumed:
-                    -- one still standing there did not make it aboard in time.
+                    -- Aboard only if they have gone from the map, and not by
+                    -- being killed: one still standing there did not make it
+                    -- in time. The same goes for cluster-mates, who walk to the
+                    -- same landing zone.
+                    local survivors = { entry }
                     for _, mate in pairs(cluster_with(entry)) do
-                        if survivor_in_world(mate) == nil then
-                            record_rescue(mate, name, "embarked on")
+                        table.insert(survivors, mate)
+                    end
+                    for _, survivor in pairs(survivors) do
+                        if survivor_in_world(survivor) == nil
+                            and not survivor.killed then
+                            board(survivor, name, "embarked on")
                         end
                     end
                 else
@@ -717,6 +821,47 @@ local function opscsar_main()
         end
     end
 
+    -- Delivery: an AI helicopter landed at a base. Only a friendly one counts.
+    local function on_base_landing(unit, place)
+        local name = unit:getName()
+        if aboard[name] == nil then
+            return
+        end
+        local ok, place_side = pcall(function()
+            return place:getCoalition()
+        end)
+        local place_name = "a base"
+        pcall(function()
+            place_name = place:getName()
+        end)
+        if not ok or place_side ~= unit:getCoalition() then
+            opscsar_log(
+                name .. " landed at " .. place_name .. ", which is not friendly; "
+                .. "nobody delivered."
+            )
+            return
+        end
+        deliver(name, place_name)
+    end
+
+    -- A survivor killed on the ground is never rescued, and a helicopter lost
+    -- with them aboard delivers no one.
+    local function on_unit_lost(unit)
+        local ok, name = pcall(function()
+            return unit:getName()
+        end)
+        if not ok or name == nil then
+            return
+        end
+        lose_helicopter(name)
+        for _, entry in pairs(tracked) do
+            if entry.unit_name == name and not entry.killed then
+                entry.killed = true
+                opscsar_log("Pilot " .. entry.id .. " was killed on the ground.")
+            end
+        end
+    end
+
     local embark_events = {}
     function embark_events:onEvent(event)
         -- Never let a handler error take the whole event system down.
@@ -724,9 +869,21 @@ local function opscsar_main()
             if event == nil or event.initiator == nil then
                 return
             end
+            if event.id == world.event.S_EVENT_DEAD
+                or event.id == world.event.S_EVENT_CRASH
+                or event.id == world.event.S_EVENT_PILOT_DEAD
+                or event.id == world.event.S_EVENT_UNIT_LOST then
+                on_unit_lost(event.initiator)
+                return
+            end
             -- A place means an airfield, FARP or ship: that is an RTB, not a
-            -- pickup. The LZ is bare terrain, so DCS leaves it nil.
+            -- pickup, and the moment anyone aboard is delivered. The LZ is bare
+            -- terrain, so DCS leaves it nil.
             if event.place ~= nil then
+                if event.id == world.event.S_EVENT_LAND
+                    and is_ai_helicopter(event.initiator) then
+                    on_base_landing(event.initiator, event.place)
+                end
                 return
             end
             if event.id == world.event.S_EVENT_LAND then
@@ -767,7 +924,7 @@ local function opscsar_main()
                         if carrier then
                             -- Being flown out: the pickup already happened,
                             -- whatever the survivor's unit handle still claims.
-                            record_rescue(entry, carrier, "embarked on")
+                            board(entry, carrier, "embarked on")
                         else
                             -- Remember the last rescue helicopter seen in the
                             -- embark zone, with a timestamp. Attribution can't be
@@ -811,16 +968,19 @@ local function opscsar_main()
                         service_hover(entry)
                     end
                 elseif entry.last_x then
-                    -- Gone from the map. That is the moment a rescue registers, in
-                    -- both modes: DCS deletes the survivor as it loads them and
-                    -- fires no embark event, so this is the only signal there is.
-                    -- Count it if a rescue helicopter was in the embark zone
-                    -- recently enough to have loaded them.
-                    local recent = entry.helo_seen ~= nil
-                        and (timer.getTime() - entry.helo_seen)
-                            <= RESCUE_ATTRIBUTION_WINDOW
-                    if recent then
-                        record_rescue(entry, entry.helo_name, "embarked on")
+                    -- Gone from the map. DCS deletes the survivor as it loads them
+                    -- and fires no embark event, but a survivor also goes when
+                    -- killed, so being gone is not enough. They boarded only if
+                    -- they were not killed and a rescue helicopter is on the
+                    -- ground for them right now; a helicopter merely passing
+                    -- nearby proves nothing. (A pickup the poll misses is still
+                    -- seen by on_lz_takeoff.)
+                    if entry.killed then
+                        opscsar_log(
+                            "Pilot " .. entry.id .. " was killed; not rescued."
+                        )
+                    elseif entry.embark_helo ~= nil then
+                        board(entry, entry.embark_helo, "embarked on")
                     elseif entry.moose_boarded then
                         opscsar_log(
                             "Pilot " .. entry.id .. " is aboard a player's "
@@ -829,10 +989,9 @@ local function opscsar_main()
                     else
                         opscsar_log(
                             "Pilot " .. entry.id .. " is gone but no AI rescue "
-                            .. "helicopter was in the embark zone within "
-                            .. RESCUE_ATTRIBUTION_WINDOW .. "s; not counting a "
-                            .. "rescue. (A player pickup is reported by Ops.CSAR "
-                            .. "on delivery instead.)"
+                            .. "helicopter was on the ground for them; not "
+                            .. "counting a rescue. (A player pickup is reported "
+                            .. "by Ops.CSAR on delivery instead.)"
                         )
                     end
                     entry.done = true
@@ -887,6 +1046,9 @@ local function opscsar_main()
                         -- Per pilot: the setting, or forced because they are in
                         -- the water and nothing can land beside them.
                         hover = dp.hoverExtraction == "true",
+                        -- Players too, but only in the water: over land they
+                        -- may land or hoist as they like.
+                        player_hover_only = dp.playerHoverOnly == "true",
                         -- Kept so a scripted hoist can tell Ops.CSAR to stop
                         -- tracking a pilot who is aboard a helicopter.
                         instance = instance,
@@ -907,6 +1069,8 @@ local function opscsar_main()
                         helo_first_seen = nil,
                         stuck_logged = false,
                         moose_boarded = false,
+                        -- Seen dying on the ground: never boarded, never rescued.
+                        killed = false,
                         hover_group = nil,
                         hover_since = nil,
                         smoke_until = nil,
@@ -925,13 +1089,14 @@ local function opscsar_main()
             landing_pickups = landing_pickups + 1
         end
     end
-    if landing_pickups > 0 then
-        -- Only needed for pilots being collected by a landing: for a hover pickup
-        -- OpsCSAR_BeginHover already knows exactly when it happened.
+    if #tracked > 0 then
+        -- Every mode needs it: landing pickups are seen on the LZ landing/takeoff
+        -- events, and every AI rescue is only credited on the landing at a
+        -- friendly base that delivers the pilot.
         world.addEventHandler(embark_events)
         opscsar_log(
-            "Watching for AI pickups on the LZ landing/takeoff events ("
-            .. landing_pickups .. " of " .. #tracked .. " pilots)."
+            "Watching AI rescue landings (LZ pickups for " .. landing_pickups
+            .. " of " .. #tracked .. " pilots; delivery for all)."
         )
     end
 

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import TYPE_CHECKING, Type
 
+from game.squadrons.downedpilot import DownedPilot
 from game.theater import FrontLine
 from game.utils import Distance, Speed, kph, dcs_to_shapely_point
 from game.utils import nautical_miles
@@ -19,6 +20,10 @@ from ...persistency import waypoint_debug_directory
 
 if TYPE_CHECKING:
     from ..flightwaypoint import FlightWaypoint
+
+#: Half the length of the CAS line flown over a downed pilot when escorting
+#: their rescue. The line is centred on the pilot, across the approach.
+CSAR_COVER_HALF_LENGTH = nautical_miles(3)
 
 
 @dataclass
@@ -86,16 +91,30 @@ class Builder(IBuilder[CasFlightPlan, CasLayout]):
     def layout(self, dump_debug_info: bool) -> CasLayout:
         location = self.package.target
 
-        if not isinstance(location, FrontLine):
+        if isinstance(location, FrontLine):
+            from game.missiongenerator.frontlineconflictdescription import (
+                FrontLineConflictDescription,
+            )
+
+            bounds = FrontLineConflictDescription.frontline_bounds(
+                location, self.theater
+            )
+            patrol_start = bounds.left_position
+            patrol_end = bounds.right_position
+        elif isinstance(location, DownedPilot):
+            # Escorting a rescue: cover the pickup itself. The engagement zone is
+            # centred between the two ends, so on the downed pilot.
+            approach = self.flight.departure.position.heading_between_point(
+                location.position
+            )
+            patrol_start = location.position.point_from_heading(
+                approach + 90, CSAR_COVER_HALF_LENGTH.meters
+            )
+            patrol_end = location.position.point_from_heading(
+                approach - 90, CSAR_COVER_HALF_LENGTH.meters
+            )
+        else:
             raise InvalidObjectiveLocation(self.flight.flight_type, location)
-
-        from game.missiongenerator.frontlineconflictdescription import (
-            FrontLineConflictDescription,
-        )
-
-        bounds = FrontLineConflictDescription.frontline_bounds(location, self.theater)
-        patrol_start = bounds.left_position
-        patrol_end = bounds.right_position
 
         start_distance = patrol_start.distance_to_point(self.flight.departure.position)
         end_distance = patrol_end.distance_to_point(self.flight.departure.position)

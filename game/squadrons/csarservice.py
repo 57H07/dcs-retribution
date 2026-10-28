@@ -3,14 +3,14 @@ from __future__ import annotations
 import logging
 import random
 from dataclasses import dataclass
-from typing import Optional, TYPE_CHECKING
+from typing import Iterable, Optional, TYPE_CHECKING
 
 from dcs.mapping import Point
 from shapely.geometry import LineString, Point as ShapelyPoint
 
 from game.squadrons.csarplacement import find_downed_pilot_position
 from game.squadrons.downedpilot import DownedPilot
-from game.utils import nautical_miles
+from game.utils import Distance, nautical_miles
 
 if TYPE_CHECKING:
     from game.ato.flight import Flight
@@ -18,15 +18,35 @@ if TYPE_CHECKING:
     from game.game import Game
     from game.squadrons.pilot import Pilot
     from game.squadrons.squadron import Squadron
-    from game.theater import ControlPoint
+    from game.theater import ControlPoint, FrontLine
     from game.theater.player import Player
 
 #: A downed pilot this close to a front line is treated as being in contested
-#: territory and gets the shorter survival window.
-_FRONT_LINE_DANGER = nautical_miles(30)
+#: territory: they get the shorter survival window, and the autoplanner may send
+#: a CAS escort with their rescue.
+FRONT_LINE_DANGER = nautical_miles(30)
 
 #: Fallback scatter radius (metres) when a loss has no DCS-reported position.
 _FALLBACK_SCATTER_METERS = 5000.0
+
+
+def near_a_front_line(
+    front_lines: Iterable[FrontLine], position: Point, distance: Distance
+) -> bool:
+    """Whether ``position`` is closer than ``distance`` to any of ``front_lines``.
+
+    Measured to each front line's whole route, not to a single point of it: a
+    pilot level with one end of a long front is right next to it.
+    """
+    here = ShapelyPoint(position.x, position.y)
+    for front_line in front_lines:
+        points = [(p.x, p.y) for p in front_line.points]
+        if not points:
+            continue
+        line = LineString(points) if len(points) > 1 else ShapelyPoint(points[0])
+        if line.distance(here) < distance.meters:
+            return True
+    return False
 
 
 @dataclass(frozen=True)
@@ -241,13 +261,7 @@ class CsarService:
                 return False
 
         min_front = nautical_miles(settings.csar_safe_zone_front_line_distance)
-        here = ShapelyPoint(position.x, position.y)
-        for front_line in theater.conflicts():
-            points = [(p.x, p.y) for p in front_line.points]
-            line = LineString(points) if len(points) > 1 else ShapelyPoint(points[0])
-            if line.distance(here) < min_front.meters:
-                return False
-        return True
+        return not near_a_front_line(theater.conflicts(), position, min_front)
 
     def fallback_position_for(self, flight: Flight) -> Point:
         """A scattered position near the flight's target for losses with no
@@ -262,14 +276,7 @@ class CsarService:
         nearest_cp = theater.closest_control_point(position)
         in_hostile_territory = not nearest_cp.is_friendly(player)
 
-        near_front = False
-        for front_line in theater.conflicts():
-            if (
-                front_line.position.distance_to_point(position)
-                < _FRONT_LINE_DANGER.meters
-            ):
-                near_front = True
-                break
+        near_front = near_a_front_line(theater.conflicts(), position, FRONT_LINE_DANGER)
 
         if in_hostile_territory or near_front:
             return settings.csar_survival_turns_hostile

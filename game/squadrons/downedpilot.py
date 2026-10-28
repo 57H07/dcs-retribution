@@ -126,10 +126,12 @@ class DownedPilot(SidcDescribable, MissionTarget):
         if not self.is_friendly(for_player):
             return
         yield FlightType.CSAR
-        # Escort types so escorts remain plannable for the package.
+        # Escort types so escorts remain plannable for the package: air cover,
+        # SAM suppression, and CAS to keep ground forces off the pickup.
         yield FlightType.ESCORT
         yield FlightType.SEAD_ESCORT
         yield FlightType.TARCAP
+        yield FlightType.CAS
 
     # SidcDescribable --------------------------------------------------------
 

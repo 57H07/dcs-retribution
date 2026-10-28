@@ -11,6 +11,11 @@ class EscortType(Enum):
     AirToAir = auto()
     Sead = auto()
     Refuel = auto()
+    #: Close air support against enemy ground forces near the objective. Unlike
+    #: the others, the fulfiller cannot tell from threat zones whether it is
+    #: needed, so the task proposes it only when it is; and it is best effort:
+    #: when no CAS aircraft can be found the package is planned without it.
+    Ground = auto()
 
 
 @dataclass(frozen=True)

@@ -7,6 +7,7 @@ from datetime import timedelta
 from typing import Any, TYPE_CHECKING
 from uuid import UUID
 
+from game.ato.flightstate import Completed
 from game.ato.flighttype import FlightType
 from game.debriefing import Debriefing
 from game.ground_forces.combat_stance import CombatStance
@@ -101,11 +102,13 @@ class MissionResultsProcessor:
     def commit_csar_results(self, debriefing: Debriefing) -> None:
         """Returns rescued downed pilots to recovery (hybrid resolution).
 
-        Ops.CSAR pickups reported in state.json are authoritative for any flight
-        that was actually in the mission. The fallback -- a surviving AI CSAR
+        Rescues reported in state.json are authoritative for any flight that was
+        actually in the mission; OpsCSAR.lua reports one only once the pilot has
+        been delivered to a friendly base. The fallback -- a surviving AI CSAR
         flight counts as having rescued its target -- covers only flights the
         simulation resolved before the .miz was generated, which had no chance to
-        report anything.
+        report anything, and only those that flew their whole route (out to the
+        pickup and back to land).
 
         Crediting a flown flight the mission did not confirm would also make the
         debrief disagree with the in-progress screen, which is rendered before
@@ -144,6 +147,10 @@ class MissionResultsProcessor:
                     if flight in flown:
                         # It flew, so Ops.CSAR had its say. Not reported means not
                         # rescued.
+                        continue
+                    if not isinstance(flight.state, Completed):
+                        # Never got to fly its route out to the pickup and home
+                        # (killed, or never started), so it delivered no one.
                         continue
                     if debriefing.air_losses.surviving_flight_members(flight) > 0:
                         # Worth saying out loud: this credits a rescue the mission

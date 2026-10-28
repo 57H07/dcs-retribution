@@ -140,6 +140,9 @@ class PackageFulfiller:
                 list(flight.flight_plan.escorted_waypoints())
             ):
                 threats[EscortType.Sead] = True
+        # Proposed only by tasks that have already found ground forces near the
+        # objective (see EscortType.Ground).
+        threats[EscortType.Ground] = True
         return threats
 
     def can_plan_escort(self, type: EscortType) -> bool:
@@ -155,6 +158,8 @@ class PackageFulfiller:
                     return True
         elif type == EscortType.Refuel:
             return self.air_wing_can_plan(FlightType.REFUELING)
+        elif type == EscortType.Ground:
+            return self.air_wing_can_plan(FlightType.CAS)
         return False
 
     def plan_mission(
@@ -234,6 +239,12 @@ class PackageFulfiller:
             if needed_escorts[escort.escort_type] and self.can_plan_escort(
                 escort.escort_type
             ):
+                if escort.escort_type is EscortType.Ground:
+                    # Best effort: no aircraft in range is no reason to scrub
+                    # the package, nor to buy any.
+                    with tracer.trace("Flight planning"):
+                        builder.plan_flight(escort, ignore_range=False)
+                    continue
                 with tracer.trace("Flight planning"):
                     self.plan_flight(
                         mission, escort, builder, missing_types, purchase_multiplier
