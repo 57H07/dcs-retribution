@@ -10,6 +10,7 @@ const TOKENS_JSON = path.resolve(SRC, "../../resources/design/tokens.json");
 // Stylesheets of the map chrome: controls, tooltips, legend, offline banner.
 const MAP_STYLESHEETS = [
   "theme/map.css",
+  "components/legend/Legend.css",
   "components/basemaps/Basemaps.css",
   "components/ruler/Ruler.css",
 ];

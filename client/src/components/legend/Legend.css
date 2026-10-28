@@ -1,28 +1,27 @@
-/* Panel colours are variables so the light/dark theme (UI-01.2) can swap them. */
+/* Panel colours and font come from the design tokens (GFX-01), so the legend
+   follows the light and dark themes (UI-01.2). */
 .legend {
-  --legend-background: #ffffff;
-  --legend-text: #222222;
-  --legend-muted: #666666;
-  --legend-swatch-background: #4b4b4b;
+  --legend-background: var(--color-bg-surface);
+  --legend-text: var(--color-text-primary);
+  --legend-muted: var(--color-text-secondary);
+  --legend-swatch-background: var(--color-map-swatch-background);
 
   background: var(--legend-background);
   color: var(--legend-text);
-  font:
-    12px/1.4 "Helvetica Neue",
-    Arial,
-    Helvetica,
-    sans-serif;
+  font-family: var(--font-family), var(--font-family-fallback);
+  font-size: var(--font-size-md);
+  line-height: 1.4;
 }
 
 .legend-toggle {
   display: block;
   width: 100%;
-  padding: 4px 10px;
+  padding: var(--space-xs) var(--space-md);
   border: none;
   background: transparent;
   color: inherit;
   font: inherit;
-  font-weight: bold;
+  font-weight: var(--font-weight-bold);
   cursor: pointer;
 }
 
@@ -35,7 +34,8 @@
 
 .legend-section h3 {
   margin: 8px 0 4px;
-  font-size: 12px;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
 }
 
 .legend-section ul {
@@ -61,7 +61,7 @@
    drawn on, so pale colours (sand, white) stay visible. */
 .legend-swatch {
   background: var(--legend-swatch-background);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
 }
 
 .legend-symbol {
