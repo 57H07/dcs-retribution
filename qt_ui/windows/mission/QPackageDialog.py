@@ -116,7 +116,7 @@ class QPackageDialog(QDialog):
         self.tot_column.addWidget(self.auto_asap)
 
         self.tot_help_label = QLabel(
-            '<a href="https://github.com/dcs-retribution/dcs-retribution/wiki/Mission-planning"><span style="color:#FFFFFF;">Help</span></a>'
+            '<a href="https://github.com/dcs-retribution/dcs-retribution/wiki/Mission-planning">Help</a>'
         )
         self.tot_help_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.tot_help_label.setOpenExternalLinks(True)

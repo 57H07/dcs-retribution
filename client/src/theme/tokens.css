@@ -20,6 +20,8 @@
   --color-button-disabled-text: #6b7682;
   --color-button-hover: #465465;
   --color-button-text: #e6eaee;
+  --color-chart-allied: #5fb0e6;
+  --color-chart-enemy: #f08080;
   --color-danger-default: #b23b3b;
   --color-danger-hover: #c94c4c;
   --color-info-default: #2f8f8f;
@@ -43,6 +45,7 @@
   --color-text-on-accent: #ffffff;
   --color-text-primary: #e6eaee;
   --color-text-secondary: #a9b4bf;
+  --color-text-warning: #f0a64a;
   --font-family: Inter;
   --font-family-fallback: "Segoe UI", Arial, sans-serif;
   --font-size-lg: 14px;
@@ -85,6 +88,8 @@
   --color-button-disabled-text: #9aa4ae;
   --color-button-hover: #d6dde4;
   --color-button-text: #1d242c;
+  --color-chart-allied: #1f6fae;
+  --color-chart-enemy: #b23b3b;
   --color-danger-default: #b23b3b;
   --color-danger-hover: #9a2f2f;
   --color-info-default: #237878;
@@ -108,6 +113,7 @@
   --color-text-on-accent: #ffffff;
   --color-text-primary: #1d242c;
   --color-text-secondary: #4f5b67;
+  --color-text-warning: #a35f00;
   --font-family: Inter;
   --font-family-fallback: "Segoe UI", Arial, sans-serif;
   --font-size-lg: 14px;

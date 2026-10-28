@@ -4,6 +4,7 @@ from PySide6.QtCore import QDateTime
 from PySide6.QtWidgets import QVBoxLayout, QWidget, QLabel, QHBoxLayout, QDateTimeEdit
 
 from qt_ui.widgets.conditions.QTimeTurnWidget import QTimeTurnWidget
+from qt_ui.theme_manager import set_style_class
 
 
 class QTimeAdjustmentWidget(QWidget):
@@ -18,11 +19,11 @@ class QTimeAdjustmentWidget(QWidget):
         vbox = QVBoxLayout()
 
         vbox.addWidget(QLabel("<h2><b>Time & Date:</b></h2>"))
-        vbox.addWidget(
-            QLabel(
-                '<h4 style="color:orange"><b>WARNING: CHANGING TIME/DATE WILL RE-INITIALIZE THE TURN</b></h4>'
-            )
+        warning = QLabel(
+            "<h4><b>WARNING: CHANGING TIME/DATE WILL RE-INITIALIZE THE TURN</b></h4>"
         )
+        set_style_class(warning, "text-warning")
+        vbox.addWidget(warning)
 
         hbox = QHBoxLayout()
 

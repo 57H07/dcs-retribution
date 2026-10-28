@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 )
 
 from qt_ui.logging_handler import HookableInMemoryHandler
+from qt_ui.theme_manager import set_style_class
 
 
 class QLogsWindow(QDialog):
@@ -38,9 +39,7 @@ class QLogsWindow(QDialog):
         self.textbox.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         self.textbox.move(10, 10)
         self.textbox.resize(1000, 450)
-        self.textbox.setStyleSheet(
-            "font-family: 'Courier New', monospace; background: #1D2731;"
-        )
+        set_style_class(self.textbox, "console")
         self.vbox.addWidget(self.textbox)
 
         self.clear_button = QPushButton(self)

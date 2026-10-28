@@ -1,9 +1,10 @@
 from PySide6 import QtCharts
-from PySide6.QtCore import QPoint, Qt
+from PySide6.QtCore import QPoint
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import QFrame, QGridLayout
 
 from game import Game
+from qt_ui.theme_manager import token_color
 
 
 class QArmorChart(QFrame):
@@ -26,12 +27,13 @@ class QArmorChart(QFrame):
         ]
 
         self.alliedArmorSerie = QtCharts.QLineSeries()
+        self.alliedArmorSerie.setColor(token_color("color-chart-allied"))
         self.alliedArmorSerie.setName("Allied vehicle count")
         for a, i in enumerate(self.alliedArmor):
             self.alliedArmorSerie.append(QPoint(a, i))
 
         self.enemyArmorSerie = QtCharts.QLineSeries()
-        self.enemyArmorSerie.setColor(Qt.GlobalColor.red)
+        self.enemyArmorSerie.setColor(token_color("color-chart-enemy"))
         self.enemyArmorSerie.setName("Enemy vehicle count")
         for a, i in enumerate(self.enemyArmor):
             self.enemyArmorSerie.append(QPoint(a, i))

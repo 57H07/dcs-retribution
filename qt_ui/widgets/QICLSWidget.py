@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
 
 from game.radio.ICLSContainer import ICLSContainer
 from qt_ui.models import GameModel
+from qt_ui.theme_manager import set_style_class
 from qt_ui.windows.QICLSDialog import QICLSDialog
 
 
@@ -68,7 +69,7 @@ class QICLSWidget(QWidget):
         if self.ct.icls_channel is None:
             return
         if self.gm.allocated_icls.count(self.ct.icls_channel) > 1:
-            self.channel.setStyleSheet("color: orange")
+            set_style_class(self.channel, "text-warning")
             self.channel.setToolTip(
                 "Double booked ICLS channel, verify that this was your intention."
             )
@@ -76,7 +77,7 @@ class QICLSWidget(QWidget):
             self._reset_color_and_tooltip()
 
     def _reset_color_and_tooltip(self):
-        self.channel.setStyleSheet("color: white")
+        set_style_class(self.channel, None)
         self.channel.setToolTip(None)
 
     def _try_remove(self) -> None:

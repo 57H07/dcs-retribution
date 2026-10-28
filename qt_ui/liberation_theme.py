@@ -1,10 +1,18 @@
 import json
 import logging
 import os
+from functools import lru_cache
 from pathlib import Path
 from typing import Dict, Optional
 
-from qt_ui.design_tokens import GENERATED_QSS_DIR, qss_file_name
+from qt_ui.design_tokens import (
+    GENERATED_QSS_DIR,
+    TOKENS_PATH,
+    DesignTokens,
+    load_tokens,
+    qss_file_name,
+    widgets_qss_file_name,
+)
 
 global __theme_index
 
@@ -144,15 +152,36 @@ def get_token_variant() -> str:
     return THEMES[get_theme_index()]["tokenVariant"]
 
 
+@lru_cache(maxsize=1)
+def _design_tokens() -> DesignTokens:
+    # Relative to the working directory, like every other resource, so that
+    # the packaged release finds it too.
+    return load_tokens(TOKENS_PATH)
+
+
+def get_token(name: str) -> str:
+    """Value of a design token for the current theme, e.g. "color-text-accent".
+
+    For colours the stylesheet cannot reach (painted widgets, charts, palette).
+    Read it when painting or on theme_manager's theme_changed signal so that
+    it follows a theme switch.
+    """
+    return _design_tokens().variant(get_token_variant())[name]
+
+
 def load_stylesheet() -> str:
     """Returns the Qt stylesheet of the current theme.
 
-    Apply it with QApplication.setStyleSheet(); calling this again after
-    set_theme_index() is all a live theme switch needs on the Qt side.
+    That is the theme's own stylesheet followed by the semantic widget states
+    rendered with its token variant (generated/widgets-<variant>.qss). Apply it
+    with QApplication.setStyleSheet(); see qt_ui.theme_manager.
     """
-    path = STYLESHEETS_DIR / get_theme_css_file()
-    logging.info("Loading stylesheet: %s", path)
-    return path.read_text(encoding="utf-8")
+    paths = [
+        STYLESHEETS_DIR / get_theme_css_file(),
+        GENERATED_QSS_DIR / widgets_qss_file_name(get_token_variant()),
+    ]
+    logging.info("Loading stylesheets: %s", ", ".join(str(p) for p in paths))
+    return "\n".join(path.read_text(encoding="utf-8") for path in paths)
 
 
 # save current theme index to json file

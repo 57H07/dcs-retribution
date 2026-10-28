@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
 )
 
 import qt_ui.uiconstants as CONST
+from qt_ui.theme_manager import set_style_class
 from game.game import Game
 
 
@@ -38,7 +39,7 @@ class QNotesWindow(QDialog):
             pass
         self.textbox.move(10, 10)
         self.textbox.resize(600, 450)
-        self.textbox.setStyleSheet("background: #1D2731;")
+        set_style_class(self.textbox, "text-area")
         self.vbox.addWidget(self.textbox)
 
         self.button_row = QHBoxLayout()

@@ -10,7 +10,12 @@ variant and one tree per variant (``dark``, ``light``). A token path such as
   document element, the default variant applying when it is absent);
 * Qt stylesheets have no variables, so ``theme.qss.template`` is written with
   ``var(--color-bg-canvas)`` placeholders that are substituted once per variant
-  into ``resources/stylesheets/generated/retribution-<variant>.qss``.
+  into ``resources/stylesheets/generated/retribution-<variant>.qss``;
+* ``widgets.qss.template`` holds the semantic widget states (warning text,
+  console boxes...) that replace colours once hard-coded in the widgets
+  (GFX-01.3). It is rendered into ``generated/widgets-<variant>.qss`` and
+  appended to every theme, legacy ones included, by
+  ``liberation_theme.load_stylesheet()``.
 
 The generated files are committed (the PyInstaller package and the client build
 need no extra step) and a test fails when they are stale. Regenerate them with::
@@ -32,6 +37,7 @@ from typing import Any, Dict, Mapping
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TOKENS_PATH = Path("resources/design/tokens.json")
 QSS_TEMPLATE_PATH = Path("resources/stylesheets/theme.qss.template")
+WIDGETS_QSS_TEMPLATE_PATH = Path("resources/stylesheets/widgets.qss.template")
 GENERATED_QSS_DIR = Path("resources/stylesheets/generated")
 MAP_CSS_PATH = Path("client/src/theme/tokens.css")
 
@@ -138,14 +144,21 @@ def qss_file_name(variant: str) -> str:
     return f"retribution-{variant}.qss"
 
 
+def widgets_qss_file_name(variant: str) -> str:
+    return f"widgets-{variant}.qss"
+
+
 def generated_files(root: Path = REPO_ROOT) -> Dict[Path, str]:
     """Returns the content of every generated file, keyed by repo-relative path."""
     design = load_tokens(root / TOKENS_PATH)
     template = (root / QSS_TEMPLATE_PATH).read_text(encoding="utf-8")
+    widgets_template = (root / WIDGETS_QSS_TEMPLATE_PATH).read_text(encoding="utf-8")
     files = {MAP_CSS_PATH: render_css(design)}
     for name in sorted(design.variants):
-        files[GENERATED_QSS_DIR / qss_file_name(name)] = render_qss(
-            template, design.variants[name]
+        tokens = design.variants[name]
+        files[GENERATED_QSS_DIR / qss_file_name(name)] = render_qss(template, tokens)
+        files[GENERATED_QSS_DIR / widgets_qss_file_name(name)] = render_qss(
+            widgets_template, tokens
         )
     return files
 

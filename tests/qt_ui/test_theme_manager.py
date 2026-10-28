@@ -8,7 +8,13 @@ from PySide6.QtWidgets import QApplication, QDialog, QLabel, QVBoxLayout
 
 from qt_ui import liberation_theme, uiconstants
 from qt_ui.design_tokens import REPO_ROOT, load_tokens
-from qt_ui.theme_manager import apply_theme, switch_theme, theme_signals
+from qt_ui.theme_manager import (
+    apply_theme,
+    set_style_class,
+    switch_theme,
+    theme_signals,
+    token_color,
+)
 from qt_ui.widgets.map.QLiberationMap import theme_script
 
 DARK = 2
@@ -90,3 +96,42 @@ def test_map_theme_script() -> None:
     assert theme_script("light") == 'document.documentElement.dataset.theme = "light";'
     with pytest.raises(ValueError):
         theme_script('dark"; alert("x')
+
+
+def test_links_follow_the_accent_token(themed_app: QApplication) -> None:
+    for theme, variant in ((LIGHT, "light"), (DARK, "dark")):
+        switch_theme(theme)
+        accent = load_tokens().variant(variant)["color-text-accent"]
+        link = themed_app.palette().color(QPalette.ColorRole.Link)
+        assert link.name() == accent
+
+
+@pytest.mark.parametrize("theme_index", sorted(liberation_theme.THEMES))
+def test_every_theme_styles_the_semantic_widget_states(
+    themed_app: QApplication, theme_index: int
+) -> None:
+    liberation_theme.set_theme_index(theme_index)
+    stylesheet = liberation_theme.load_stylesheet()
+    tokens = load_tokens().variant(liberation_theme.get_token_variant())
+    assert 'QLabel[style="text-warning"]' in stylesheet
+    assert tokens["color-text-warning"] in stylesheet
+
+
+def test_style_class_restyles_the_widget(themed_app: QApplication) -> None:
+    label = QLabel("121.500 MHz")
+    label.ensurePolished()
+    normal = label.palette().color(QPalette.ColorRole.WindowText).name()
+
+    set_style_class(label, "text-danger")
+    danger = label.palette().color(QPalette.ColorRole.WindowText).name()
+    assert danger == liberation_theme.get_token("color-text-danger")
+
+    set_style_class(label, None)
+    assert label.palette().color(QPalette.ColorRole.WindowText).name() == normal
+
+
+def test_token_color(themed_app: QApplication) -> None:
+    expected = liberation_theme.get_token("color-chart-enemy")
+    assert token_color("color-chart-enemy").name() == expected
+    with pytest.raises(ValueError):
+        token_color("space-md")
