@@ -159,6 +159,16 @@ class QBaseMenu2(QDialog):
             bottom_row.addWidget(transfer_button)
             transfer_button.clicked.connect(self.open_transfer_dialog)
 
+        if self.cp.captured.is_blue and self.cp.can_deploy_ground_units:
+            transport_button = QPushButton("Transport Mission")
+            transport_button.setToolTip(
+                "Airlift reserve ground units to another friendly base with a "
+                "squadron of your choice, and fly it yourself."
+            )
+            transport_button.setProperty("style", "btn-success")
+            bottom_row.addWidget(transport_button)
+            transport_button.clicked.connect(self.open_transport_mission_dialog)
+
         if self.cheat_capturable:
             label = "Sink/Resurrect" if self.cp.is_fleet else "Capture"
             capture_button = QPushButton(f"CHEAT: {label}")
@@ -389,6 +399,11 @@ class QBaseMenu2(QDialog):
 
     def open_transfer_dialog(self) -> None:
         NewUnitTransferDialog(self.game_model, self.cp, parent=self.window()).show()
+
+    def open_transport_mission_dialog(self) -> None:
+        NewUnitTransferDialog(
+            self.game_model, self.cp, parent=self.window(), transport_mission=True
+        ).show()
 
     def update_budget(self, game: Game) -> None:
         self.budget_display.setText(

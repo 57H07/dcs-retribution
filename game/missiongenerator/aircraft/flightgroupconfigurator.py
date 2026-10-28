@@ -101,14 +101,14 @@ class FlightGroupConfigurator:
                 self.game.theater, self.game.conditions, self.dynamic_runways
             )
 
+        transfer = None
+        if self.flight.flight_type == FlightType.TRANSPORT:
+            coalition = self.game.coalition_for(player=self.flight.blue)
+            transfer = coalition.transfers.transfer_for_flight(self.flight)
         if self.flight.flight_type in [
             FlightType.TRANSPORT,
             FlightType.AIR_ASSAULT,
         ] and self.game.settings.plugin_option("ctld"):
-            transfer = None
-            if self.flight.flight_type == FlightType.TRANSPORT:
-                coalition = self.game.coalition_for(player=self.flight.blue)
-                transfer = coalition.transfers.transfer_for_flight(self.flight)
             self.mission_data.logistics.append(
                 LogisticsGenerator(
                     self.flight, self.group, self.mission, self.game.settings, transfer
@@ -169,6 +169,7 @@ class FlightGroupConfigurator:
             joker_fuel=bingo_estimator.estimate_joker(),
             custom_name=self.flight.custom_name,
             laser_codes=laser_codes,
+            cargo=transfer,
         )
 
         self.register_escort_leash()

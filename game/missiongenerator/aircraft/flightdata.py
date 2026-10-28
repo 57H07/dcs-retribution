@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from game.radio.radios import RadioFrequency
     from game.runways import RunwayData
     from game.theater.player import Player
+    from game.transfers import TransferOrder
 
 
 @dataclass(frozen=True)
@@ -71,6 +72,9 @@ class FlightData:
     laser_codes: list[Optional[int]]
 
     custom_name: Optional[str]
+
+    #: Ground units carried by a Transport flight, if any.
+    cargo: Optional[TransferOrder] = None
 
     callsign: str = field(init=False)
 

@@ -23,6 +23,7 @@ from game.game import Game
 from game.radio.radios import RadioFrequency
 from game.server import EventStream
 from game.sim import GameUpdateEvents
+from game.theater import ControlPoint
 from game.theater.missiontarget import MissionTarget
 from qt_ui.models import GameModel, PackageModel
 from qt_ui.uiconstants import EVENT_ICONS
@@ -342,10 +343,37 @@ class QNewPackageDialog(QPackageDialog):
         # other UI elements until the new package has either been finalized or canceled.
         self.setModal(True)
 
+        if (
+            game_model.is_ownfor
+            and isinstance(target, ControlPoint)
+            and target.captured.is_blue
+            and target.can_deploy_ground_units
+        ):
+            # Map right-click entry point for player Transport missions (TRN-01.2),
+            # which need cargo and are planned by their own dialog.
+            transport_button = QPushButton("Transport Mission...")
+            transport_button.setToolTip(
+                "Airlift reserve ground units from this base with a squadron of "
+                "your choice."
+            )
+            transport_button.clicked.connect(
+                lambda: self.open_transport_mission(target)
+            )
+            self.button_layout.addWidget(transport_button)
+
         self.save_button = QPushButton("Save")
         self.save_button.setProperty("style", "start-button")
         self.save_button.clicked.connect(self.accept)
         self.button_layout.addWidget(self.save_button)
+
+    def open_transport_mission(self, origin: ControlPoint) -> None:
+        from qt_ui.windows.basemenu.NewUnitTransferDialog import NewUnitTransferDialog
+
+        parent = self.parentWidget()
+        self.reject()
+        NewUnitTransferDialog(
+            self.game_model, origin, parent=parent, transport_mission=True
+        ).show()
 
     def on_save(self) -> None:
         """Saves the created package.

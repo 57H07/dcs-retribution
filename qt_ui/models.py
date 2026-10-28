@@ -28,7 +28,12 @@ from game.squadrons.squadron import Pilot, Squadron
 from game.squadrons.pilot import PilotStatus
 from game.theater import NavalControlPoint, Player
 from game.theater.missiontarget import MissionTarget
-from game.transfers import PendingTransfers, TransferOrder
+from game.transfers import (
+    PendingTransfers,
+    PlayerAirliftError,
+    TransferOrder,
+    player_airlift_problem,
+)
 from qt_ui.simcontroller import SimController
 from qt_ui.uiconstants import AIRCRAFT_ICONS
 
@@ -183,6 +188,9 @@ class PackageModel(QAbstractListModel):
     def delete_flight(self, flight: Flight) -> None:
         """Removes the given flight from the package."""
         with self.game_model.sim_controller.paused_sim():
+            # A deleted player Transport mission returns its cargo to the origin
+            # instead of leaving it for the AI to airlift next turn.
+            transport_mission = flight.coalition.transfers.player_airlift_for(flight)
             index = self.package.flights.index(flight)
             self.beginRemoveRows(QModelIndex(), index, index)
             self.package.remove_flight(flight)
@@ -190,6 +198,8 @@ class PackageModel(QAbstractListModel):
             self.update_tot()
             self.game_model.release_freq(flight.frequency)
             self.game_model.release_tacan(flight.tacan)
+            if transport_mission is not None:
+                self.game_model.transfer_model.cancel_transfer(transport_mission)
 
     def flight_at_index(self, index: QModelIndex) -> Flight:
         """Returns the flight located at the given index."""
@@ -305,10 +315,17 @@ class AtoModel(QAbstractListModel):
     def _delete_package(self, package: Package) -> None:
         """Removes the given package from the ATO."""
         self.package_models.release(package)
+        transport_missions = [
+            transfer
+            for flight in package.flights
+            if (transfer := flight.coalition.transfers.player_airlift_for(flight))
+        ]
         index = self.ato.packages.index(package)
         self.beginRemoveRows(QModelIndex(), index, index)
         self.ato.remove_package(package)
         self.endRemoveRows()
+        for transfer in transport_missions:
+            self.game_model.transfer_model.cancel_transfer(transfer)
         # noinspection PyUnresolvedReferences
         self.client_slots_changed.emit()
         self.on_packages_changed()
@@ -411,6 +428,20 @@ class TransferModel(QAbstractListModel):
         self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
         # TODO: Needs to regenerate base inventory tab.
         self.transfers.new_transfer(transfer, now)
+        self.endInsertRows()
+
+    def new_player_airlift(
+        self, transfer: TransferOrder, squadron: Squadron, now: datetime.datetime
+    ) -> None:
+        """Creates a player Transport mission flown by the given squadron.
+
+        Raises PlayerAirliftError (and changes nothing) if the squadron cannot fly it.
+        """
+        problem = player_airlift_problem(squadron, transfer, transfer.destination)
+        if problem is not None:
+            raise PlayerAirliftError(problem)
+        self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
+        self.transfers.new_player_airlift(transfer, squadron, now)
         self.endInsertRows()
 
     def cancel_transfer_at_index(self, index: QModelIndex) -> None:
