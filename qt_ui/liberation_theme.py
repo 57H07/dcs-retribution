@@ -1,32 +1,83 @@
 import json
 import logging
 import os
-from typing import Dict
+from pathlib import Path
+from typing import Dict, Optional
+
+from qt_ui.design_tokens import GENERATED_QSS_DIR, qss_file_name
 
 global __theme_index
 
 THEME_PREFERENCES_FILE_PATH = "liberation_theme.json"
 
-DEFAULT_THEME_INDEX = 1
+STYLESHEETS_DIR = Path("resources/stylesheets")
+
+# Theme of installs that predate the design tokens and never saved a theme.
+LEGACY_DEFAULT_THEME_INDEX = 1
+
+# Theme of fresh installs (GFX-01: dark by default).
+DEFAULT_THEME_INDEX = 2
 
 
-# new themes can be added here
+# New themes can be added here. Indices are persisted in
+# liberation_theme.json, so never renumber an existing theme.
+# - themeFile: stylesheet, relative to resources/stylesheets.
+# - themeIcons: icon sub-folder of resources/ui/misc and resources/ui/conditions.
+# - tokenVariant: design token variant (resources/design/tokens.json) used by
+#   the map client and by widgets that need a token value outside the QSS.
 THEMES: Dict[int, Dict[str, str]] = {
     0: {
         "themeName": "Vanilla",
         "themeFile": "windows-style.css",
         "themeIcons": "medium",
+        "tokenVariant": "light",
     },
     1: {
         "themeName": "DCS World",
         "themeFile": "style-dcs.css",
         "themeIcons": "light",
+        "tokenVariant": "dark",
+    },
+    2: {
+        "themeName": "Dark",
+        "themeFile": (GENERATED_QSS_DIR / qss_file_name("dark"))
+        .relative_to(STYLESHEETS_DIR)
+        .as_posix(),
+        "themeIcons": "light",
+        "tokenVariant": "dark",
+    },
+    3: {
+        "themeName": "Light",
+        "themeFile": (GENERATED_QSS_DIR / qss_file_name("light"))
+        .relative_to(STYLESHEETS_DIR)
+        .as_posix(),
+        "themeIcons": "medium",
+        "tokenVariant": "light",
     },
 }
 
 
-def init():
+def default_theme_index(existing_install: bool) -> int:
+    """Theme used when no theme was ever saved.
+
+    Existing installs keep the theme they had (the old default, "DCS World");
+    fresh installs start in the dark theme.
+    """
+    return LEGACY_DEFAULT_THEME_INDEX if existing_install else DEFAULT_THEME_INDEX
+
+
+def init(preferences_path: Optional[Path] = None):
+    """Loads the saved theme.
+
+    preferences_path is the Retribution preferences file: if it exists while no
+    theme was saved, this is an existing install that keeps its theme.
+    """
     global __theme_index
+
+    if preferences_path is None:
+        from qt_ui.liberation_install import PREFERENCES_PATH
+
+        preferences_path = PREFERENCES_PATH
 
     __theme_index = DEFAULT_THEME_INDEX
 
@@ -35,6 +86,8 @@ def init():
             with open(THEME_PREFERENCES_FILE_PATH) as prefs:
                 pref_data = json.loads(prefs.read())
                 __theme_index = pref_data["theme_index"]
+                if __theme_index not in THEMES:
+                    raise ValueError(f"Unknown theme index {__theme_index}")
                 set_theme_index(__theme_index)
                 save_theme_config()
         except:
@@ -42,12 +95,18 @@ def init():
             set_theme_index(DEFAULT_THEME_INDEX)
             logging.exception("Unable to change theme")
     else:
-        # is this necessary?
-        set_theme_index(DEFAULT_THEME_INDEX)
-        logging.error(
-            f"Using default theme because {THEME_PREFERENCES_FILE_PATH} "
-            "does not exist"
+        existing_install = preferences_path.exists()
+        set_theme_index(default_theme_index(existing_install))
+        logging.info(
+            "No %s: using the %s theme (%s install)",
+            THEME_PREFERENCES_FILE_PATH,
+            get_theme_name(),
+            "existing" if existing_install else "new",
         )
+        if existing_install:
+            # Pin the theme the user has always had so it survives later
+            # default changes.
+            save_theme_config()
 
 
 # set theme index then use save_theme_config to save to file
@@ -78,6 +137,22 @@ def get_theme_icons():
 def get_theme_css_file():
     theme_file = THEMES[get_theme_index()]["themeFile"]
     return str(theme_file)
+
+
+def get_token_variant() -> str:
+    """Design token variant ("dark" or "light") matching the current theme."""
+    return THEMES[get_theme_index()]["tokenVariant"]
+
+
+def load_stylesheet() -> str:
+    """Returns the Qt stylesheet of the current theme.
+
+    Apply it with QApplication.setStyleSheet(); calling this again after
+    set_theme_index() is all a live theme switch needs on the Qt side.
+    """
+    path = STYLESHEETS_DIR / get_theme_css_file()
+    logging.info("Loading stylesheet: %s", path)
+    return path.read_text(encoding="utf-8")
 
 
 # save current theme index to json file

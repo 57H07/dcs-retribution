@@ -9,6 +9,7 @@ from PySide6.QtWebEngineWidgets import QWebEngineView
 
 from game.server.settings import ServerSettings
 from qt_ui.liberation_install import server_port
+from qt_ui.liberation_theme import get_token_variant
 from qt_ui.models import GameModel
 from qt_ui.widgets.map.webprofile import map_web_profile
 
@@ -52,6 +53,6 @@ class QLiberationMap(QWebEngineView):
         if host.startswith("::"):
             host = f"[{host}]"
         port = server_settings.server_port
-        url.setQuery(f"server={host}:{port}")
+        url.setQuery(f"server={host}:{port}&theme={get_token_variant()}")
         self.page.load(url)
         self.setPage(self.page)

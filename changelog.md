@@ -56,6 +56,7 @@
 * **[Squadrons]** The `mission_types` of squadron definitions are now honored: the autoplanner (including airlift Transport flights) only auto-assigns a squadron to tasks it lists, and campaign secondaries are limited to them. Squadrons without `mission_types` keep all their airframe's tasks. (`upstream#849`)
 * **[Plugins]** New CTLD option "Create default pickup/drop zones at bases without CTLD zones" (off by default): airfields and FOBs/FARPs whose campaign declares no `<name> CTLD` zone get generated pickup and drop zones beside the runway or the FARP; a warning explains when none can be placed.
 * **[Engine]** Upgrade PySide6 (Qt) from 6.4.2 to 6.11.2.
+* **[UX]** New "Dark" and "Light" themes built from design tokens (colours, typography, spacing, radii) kept in a single JSON file that generates both the Qt stylesheets and the map's CSS variables. Fresh installs start in the dark theme; existing installs keep their theme, and "Vanilla" and "DCS World" stay available. (GFX-01.1)
 
 ## Fixes
 * **[Campaign]** CSAR: a downed pilot whose survival countdown runs out is now dead instead of missing in action forever. New setting "Unrescued pilots can be taken prisoner" (off by default) keeps the capture flow, with a distinct "Prisoner of war" status; prisoners in existing saves stay prisoners, other missing pilots load as dead. (#64)
