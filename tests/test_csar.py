@@ -1323,6 +1323,7 @@ def _csar_planning_state(targets: list[DownedPilot], max_flights: int) -> Any:
         SimpleNamespace(
             settings=SimpleNamespace(
                 max_csar_flights=max_flights,
+                csar_cas_escort=False,
                 # Clustering off unless a test is exercising it.
                 csar_cluster_radius=0,
             )

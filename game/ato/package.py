@@ -175,6 +175,9 @@ class Package(RadioFrequencyContainer):
         # priority order for package task names. The package's primary task will be the
         # first task in this list that matches a flight in the package.
         tasks_by_priority = [
+            # First: a CSAR flight only ever flies in a rescue package, which may
+            # also carry a CAS escort.
+            FlightType.CSAR,
             FlightType.CAS,
             FlightType.STRIKE,
             FlightType.ANTISHIP,
@@ -184,7 +187,6 @@ class Package(RadioFrequencyContainer):
             FlightType.DEAD,
             FlightType.TRANSPORT,
             FlightType.AIR_ASSAULT,
-            FlightType.CSAR,
             FlightType.ARMED_RECON,
             FlightType.SEAD,
             FlightType.SEAD_SWEEP,

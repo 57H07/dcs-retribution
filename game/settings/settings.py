@@ -1160,6 +1160,18 @@ class Settings:
             "not apply to CSAR either way."
         ),
     )
+    csar_cas_escort: bool = boolean_option(
+        "CAS escort for CSAR near enemy ground forces",
+        CAMPAIGN_MANAGEMENT_PAGE,
+        FLIGHT_PLANNER_AUTOMATION,
+        default=False,
+        detail=(
+            "Adds a CAS flight to auto-planned rescue packages when the downed "
+            "pilot is within 30 NM of a front line or of enemy armour, to keep "
+            "ground forces off the pickup. Optional: the rescue is still planned "
+            "when no CAS aircraft is available."
+        ),
+    )
 
     # Repairs
     building_repair_cost_multiplier: float = bounded_float_option(
