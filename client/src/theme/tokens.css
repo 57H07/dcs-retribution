@@ -38,6 +38,7 @@
   --color-task-sead: #aa7744;
   --color-task-strike: #ab2244;
   --color-text-accent: #5fb0e6;
+  --color-text-danger: #f08080;
   --color-text-disabled: #6b7682;
   --color-text-on-accent: #ffffff;
   --color-text-primary: #e6eaee;
@@ -102,6 +103,7 @@
   --color-task-sead: #aa7744;
   --color-task-strike: #ab2244;
   --color-text-accent: #1f6fae;
+  --color-text-danger: #b23b3b;
   --color-text-disabled: #9aa4ae;
   --color-text-on-accent: #ffffff;
   --color-text-primary: #1d242c;

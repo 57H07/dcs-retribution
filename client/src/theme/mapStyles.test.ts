@@ -131,6 +131,8 @@ const TEXT_PAIRS: [string, string][] = [
   ["color.text.primary", "color.bg.surface"],
   ["color.text.secondary", "color.bg.surface"],
   ["color.text.accent", "color.bg.surface"],
+  // Cut-off warning in base tooltips (LocationTooltipText).
+  ["color.text.danger", "color.bg.surface"],
   ["color.text.primary", "color.button.hover"],
   ["color.overlay.text", "color.overlay.background"],
 ];
