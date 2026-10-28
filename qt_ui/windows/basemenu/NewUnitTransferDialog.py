@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from typing import Callable, Dict, Type
+from typing import Callable, Dict, Optional, Type
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
     QLabel,
+    QMessageBox,
     QPushButton,
     QScrollArea,
     QSizePolicy,
@@ -25,8 +26,19 @@ from dcs.unittype import UnitType
 
 from game import Game
 from game.dcs.groundunittype import GroundUnitType
+from game.squadrons import Squadron
 from game.theater import ControlPoint, Player
-from game.transfers import TransferOrder
+from game.theater.ctldzones import (
+    ctld_zone_unavailable_reason,
+    default_zones_enabled,
+)
+from game.transfers import (
+    PlayerAirliftError,
+    TransferOrder,
+    airlift_squadrons,
+    max_airlift_capacity,
+    player_airlift_problem,
+)
 from qt_ui.models import GameModel
 from qt_ui.widgets.QLabeledWidget import QLabeledWidget
 
@@ -90,8 +102,28 @@ class TransferOptionsPanel(QVBoxLayout):
         self.transport_type = QComboBox()
         self.transport_type.addItem("Auto", "auto")
         self.transport_type.addItem("Airlift", "airlift")
+        self.squadron = QComboBox()
+        self.squadron.setToolTip(
+            "Pick a squadron to create a Transport mission you can fly. "
+            "AI-assigned lets the AI plan the airlift with auto-assignable squadrons."
+        )
         self.addLayout(QLabeledWidget("Destination:", self.source_combo_box))
         self.addLayout(QLabeledWidget("Requested transport type:", self.transport_type))
+        self.addLayout(QLabeledWidget("Transport squadron:", self.squadron))
+        self.warning = QLabel()
+        self.warning.setWordWrap(True)
+        self.warning.setVisible(False)
+        self.addWidget(self.warning)
+
+    @property
+    def selected_squadron(self) -> Optional[Squadron]:
+        if not self.request_airlift:
+            return None
+        return self.squadron.currentData()
+
+    def show_warning(self, text: Optional[str]) -> None:
+        self.warning.setText(text or "")
+        self.warning.setVisible(bool(text))
 
     @property
     def changed(self):
@@ -277,15 +309,26 @@ class ScrollingUnitTransferGrid(QFrame):
 
 
 class NewUnitTransferDialog(QDialog):
+    """Unit transfer order, or a player Transport mission when a squadron is picked.
+
+    A Transport mission (TRN-01.2) is an airlift transfer flown by one flight of a
+    squadron chosen by the player: delivery at the end of the turn, cargo lost with
+    the aircraft, like any airlift.
+    """
+
     def __init__(
         self,
         game_model: GameModel,
         origin: ControlPoint,
         parent=None,
+        transport_mission: bool = False,
     ) -> None:
         super().__init__(parent)
         self.origin = origin
-        self.setWindowTitle(f"New unit transfer from {origin.name}")
+        if transport_mission:
+            self.setWindowTitle(f"New Transport mission from {origin.name}")
+        else:
+            self.setWindowTitle(f"New unit transfer from {origin.name}")
 
         self.game_model = game_model
 
@@ -296,9 +339,7 @@ class NewUnitTransferDialog(QDialog):
         layout.addLayout(self.dest_panel)
 
         self.transfer_panel = ScrollingUnitTransferGrid(origin, game_model)
-        self.transfer_panel.transfer_quantity_changed.connect(
-            self.on_transfer_quantity_changed
-        )
+        self.transfer_panel.transfer_quantity_changed.connect(self.update_state)
         layout.addWidget(self.transfer_panel)
 
         self.submit_button = QPushButton("Create Transfer Order", parent=self)
@@ -307,18 +348,99 @@ class NewUnitTransferDialog(QDialog):
         self.submit_button.setDisabled(True)
         layout.addWidget(self.submit_button)
 
+        if transport_mission:
+            self.dest_panel.transport_type.setCurrentIndex(
+                self.dest_panel.transport_type.findData("airlift")
+            )
+        self.refresh_squadrons(prefer_player_squadron=transport_mission)
+        self.dest_panel.changed.connect(lambda: self.refresh_squadrons())
+        self.dest_panel.transport_type.currentIndexChanged.connect(
+            lambda: self.refresh_squadrons()
+        )
+        self.dest_panel.squadron.currentIndexChanged.connect(self.update_state)
+
+    @property
+    def selected_units(self) -> dict[GroundUnitType, int]:
+        return {
+            unit_type: count
+            for unit_type, count in self.transfer_panel.transfers.items()
+            if count
+        }
+
+    def draft_transfer(self) -> Optional[TransferOrder]:
+        destination = self.dest_panel.current
+        if destination is None:
+            return None
+        return TransferOrder(self.origin, destination, self.selected_units)
+
+    def refresh_squadrons(self, prefer_player_squadron: bool = False) -> None:
+        combo = self.dest_panel.squadron
+        previous = combo.currentData()
+        combo.blockSignals(True)
+        try:
+            combo.clear()
+            combo.addItem("AI-assigned", None)
+            draft = self.draft_transfer()
+            if draft is not None:
+                air_wing = self.game_model.game.blue.air_wing
+                for squadron in airlift_squadrons(air_wing, draft, draft.destination):
+                    combo.addItem(
+                        f"{squadron.name} - {squadron.aircraft.display_name} at "
+                        f"{squadron.location.name} (up to "
+                        f"{max_airlift_capacity(squadron)} units)",
+                        squadron,
+                    )
+            index = combo.findData(previous) if previous is not None else -1
+            if index < 0 and prefer_player_squadron and combo.count() > 1:
+                index = 1
+            combo.setCurrentIndex(max(index, 0))
+            combo.setEnabled(self.dest_panel.request_airlift)
+        finally:
+            combo.blockSignals(False)
+        self.update_state()
+
+    def _no_squadron_warning(self, draft: TransferOrder) -> str:
+        lines = [
+            f"No Transport-capable squadron can fly between {draft.origin.name} and "
+            f"{draft.destination.name} this turn (aircraft, pilots, base type or "
+            "helicopter range)."
+        ]
+        settings = self.game_model.game.settings
+        land = self.game_model.game.theater if default_zones_enabled(settings) else None
+        for cp in (draft.origin, draft.destination):
+            if (reason := ctld_zone_unavailable_reason(cp, land)) is not None:
+                lines.append(reason)
+        return "\n".join(lines)
+
+    def update_state(self) -> None:
+        has_units = bool(self.selected_units)
+        squadron = self.dest_panel.selected_squadron
+        draft = self.draft_transfer()
+        warning: Optional[str] = None
+        if squadron is not None:
+            self.submit_button.setText("Create Transport Mission")
+            if draft is not None and has_units:
+                warning = player_airlift_problem(squadron, draft, draft.destination)
+        else:
+            self.submit_button.setText("Create Transfer Order")
+            if (
+                self.dest_panel.request_airlift
+                and draft is not None
+                and self.dest_panel.squadron.count() <= 1
+            ):
+                warning = self._no_squadron_warning(draft)
+        self.dest_panel.show_warning(warning)
+        blocked = squadron is not None and warning is not None
+        self.submit_button.setDisabled(not has_units or blocked)
+
     def on_submit(self) -> None:
         destination = self.dest_panel.current
-        transfers = {}
-        for unit_type, count in self.transfer_panel.transfers.items():
-            if not count:
-                continue
-
+        transfers = self.selected_units
+        for unit_type, count in transfers.items():
             logging.info(
                 f"Transferring {count} {unit_type} from {self.origin} to "
                 f"{destination}"
             )
-            transfers[unit_type] = count
 
         transfer = TransferOrder(
             origin=self.origin,
@@ -326,11 +448,18 @@ class NewUnitTransferDialog(QDialog):
             units=transfers,
             request_airflift=self.dest_panel.request_airlift,
         )
-        self.game_model.transfer_model.new_transfer(
-            transfer, self.game_model.sim_controller.current_time_in_sim
-        )
+        now = self.game_model.sim_controller.current_time_in_sim
+        squadron = self.dest_panel.selected_squadron
+        if squadron is not None:
+            try:
+                self.game_model.transfer_model.new_player_airlift(
+                    transfer, squadron, now
+                )
+            except PlayerAirliftError as ex:
+                QMessageBox.warning(self, "Cannot create Transport mission", str(ex))
+                return
+        else:
+            self.game_model.transfer_model.new_transfer(transfer, now)
+        # Airlifts add packages to the ATO behind the model's back.
+        self.game_model.ato_model.replace_from_game(player=True)
         self.close()
-
-    def on_transfer_quantity_changed(self) -> None:
-        has_transfer_items = any(self.transfer_panel.transfers.values())
-        self.submit_button.setDisabled(not has_transfer_items)

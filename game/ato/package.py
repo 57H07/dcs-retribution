@@ -139,8 +139,11 @@ class Package(RadioFrequencyContainer):
         self.flights.remove(flight)
         self._db.remove(flight.id)
         flight.return_pilots_and_aircraft()
-        if flight.cargo is not None:
-            flight.cargo.transport = None
+        if flight.cargo is not None and flight.cargo.transport is not None:
+            # Leave the transport alone if it was handed to a replacement flight
+            # (see game.transfers.reassign_airlift).
+            if getattr(flight.cargo.transport, "flight", flight) is flight:
+                flight.cargo.transport = None
         if not self.flights:
             self.waypoints = None
 

@@ -44,7 +44,7 @@ from game.data.alic import AlicCodes
 from game.dcs.aircrafttype import AircraftType
 from game.radio.radios import RadioFrequency
 from game.runways import RunwayData
-from game.theater import TheaterGroundObject, TheaterUnit
+from game.theater import ControlPoint, TheaterGroundObject, TheaterUnit
 from game.theater.bullseye import Bullseye
 from game.utils import Distance, UnitSystem, meters, mps, pounds
 from game.weather.weather import Weather
@@ -813,6 +813,77 @@ class StrikeTaskPage(KneeboardPage):
         return display_name
 
 
+class TransportTaskPage(KneeboardPage):
+    """A kneeboard page with the pickup zone, drop zone, cargo and time slot."""
+
+    def __init__(
+        self, flight: FlightData, start_time: datetime.datetime, dark_kneeboard: bool
+    ) -> None:
+        self.flight = flight
+        self.start_time = start_time
+        self.dark_kneeboard = dark_kneeboard
+
+    def _stop_row(
+        self, label: str, zone_type: FlightWaypointType, base: ControlPoint
+    ) -> List[str]:
+        for number, waypoint in enumerate(self.flight.waypoints):
+            if waypoint.waypoint_type == zone_type:
+                return [
+                    label,
+                    str(number),
+                    f"{base.name} CTLD zone",
+                    waypoint.position.latlng().format_dms(),
+                    FlightPlanBuilder._format_time(waypoint.tot),
+                ]
+        # Fixed-wing transports load and unload on the airfield itself.
+        return [label, "", base.name, base.position.latlng().format_dms(), ""]
+
+    def stop_rows(self) -> List[List[str]]:
+        cargo = self.flight.cargo
+        if cargo is None:
+            return []
+        drop_off = (
+            cargo.transport.destination
+            if cargo.transport is not None
+            else cargo.destination
+        )
+        return [
+            self._stop_row("Pickup", FlightWaypointType.PICKUP_ZONE, cargo.origin),
+            self._stop_row("Drop-off", FlightWaypointType.DROPOFF_ZONE, drop_off),
+        ]
+
+    def cargo_rows(self) -> List[List[str]]:
+        if self.flight.cargo is None:
+            return []
+        return [
+            [unit_type.display_name, str(count)]
+            for unit_type, count in sorted(
+                self.flight.cargo.units.items(), key=lambda i: i[0].display_name
+            )
+            if count
+        ]
+
+    def departure_time(self) -> str:
+        return FlightPlanBuilder._format_time(
+            self.start_time + self.flight.departure_delay
+        )
+
+    def write(self, path: Path) -> None:
+        writer = KneeboardPageWriter(dark_theme=self.dark_kneeboard)
+        if self.flight.custom_name:
+            custom_name_title = ' ("{}")'.format(self.flight.custom_name)
+        else:
+            custom_name_title = ""
+        writer.title(f"{self.flight.callsign} Transport Task Info{custom_name_title}")
+        writer.text(f"Departure: {self.departure_time()}")
+        writer.table(
+            self.stop_rows(), headers=["Stop", "STPT", "Zone", "Location", "ETA"]
+        )
+        writer.heading("Cargo")
+        writer.table(self.cargo_rows(), headers=["Unit", "Count"])
+        writer.write(path)
+
+
 class NotesPage(KneeboardPage):
     """A kneeboard page containing the campaign owner's notes."""
 
@@ -883,11 +954,15 @@ class KneeboardGenerator(MissionInfoGenerator):
             )
         return all_flights
 
-    def generate_task_page(self, flight: FlightData) -> Optional[KneeboardPage]:
+    def generate_task_page(
+        self, flight: FlightData, start_time: datetime.datetime
+    ) -> Optional[KneeboardPage]:
         if flight.flight_type in (FlightType.DEAD, FlightType.SEAD):
             return SeadTaskPage(flight, self.dark_kneeboard)
         elif flight.flight_type is FlightType.STRIKE:
             return StrikeTaskPage(flight, self.dark_kneeboard)
+        elif flight.flight_type is FlightType.TRANSPORT and flight.cargo is not None:
+            return TransportTaskPage(flight, start_time, self.dark_kneeboard)
         return None
 
     def generate_flight_kneeboard(
@@ -926,7 +1001,7 @@ class KneeboardGenerator(MissionInfoGenerator):
         if notes := self.game.notes:
             pages.append(NotesPage(notes, self.dark_kneeboard))
 
-        if (target_page := self.generate_task_page(flight)) is not None:
+        if (target_page := self.generate_task_page(flight, zoned_time)) is not None:
             pages.append(target_page)
 
         return pages

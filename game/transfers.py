@@ -75,7 +75,7 @@ from game.utils import meters, nautical_miles
 
 if TYPE_CHECKING:
     from game import Game
-    from game.squadrons import Squadron
+    from game.squadrons import AirWing, Squadron
     from game.theater import Coalition
 
 
@@ -116,6 +116,11 @@ class TransferOrder:
     transport: Optional[Transport] = field(default=None)
 
     request_airflift: bool = field(default=False)
+
+    #: True for a Transport mission the player created with an explicit squadron.
+    #: Deleting its flight cancels the transfer instead of leaving it to the AI. The
+    #: class-level default keeps older saves loadable.
+    player_requested: bool = field(default=False)
 
     def __str__(self) -> str:
         """Returns the text that should be displayed for the transfer."""
@@ -268,13 +273,134 @@ class Airlift(Transport):
         )
 
 
-class AirliftPlanner:
-    #: Maximum range from for any link in the route of takeoff, pickup, dropoff, and RTB
-    #: for a helicopter to be considered for airlift. Total route length is not
-    #: considered because the helicopter can refuel at each stop. Cargo planes have no
-    #: maximum range.
-    HELO_MAX_RANGE = nautical_miles(100)
+#: Maximum range from for any link in the route of takeoff, pickup, dropoff, and RTB for
+#: a helicopter to be considered for airlift. Total route length is not considered
+#: because the helicopter can refuel at each stop. Cargo planes have no maximum range.
+HELO_AIRLIFT_MAX_RANGE = nautical_miles(100)
 
+
+def airlift_capacity_per_aircraft(unit_type: AircraftType) -> int:
+    """Number of ground units one aircraft of this type carries in an airlift."""
+    return 1 if unit_type.dcs_unit_type.helicopter else 2
+
+
+def airlift_compatible(
+    unit_type: AircraftType,
+    home: ControlPoint,
+    transfer: TransferOrder,
+    next_stop: ControlPoint,
+) -> bool:
+    """True if an aircraft based at home can airlift transfer to next_stop."""
+    if not unit_type.capable_of(FlightType.TRANSPORT):
+        return False
+    if not transfer.origin.can_operate(unit_type):
+        return False
+    if not next_stop.can_operate(unit_type):
+        return False
+
+    # Cargo planes have no maximum range.
+    if not unit_type.dcs_unit_type.helicopter:
+        return True
+
+    # A helicopter that is transport capable and able to operate at both bases. Need to
+    # check that no leg of the journey exceeds the maximum range. This doesn't account
+    # for any routing around threats that might take place, but it's close enough.
+    pickup = transfer.position.position
+    drop_off = next_stop.position
+    return all(
+        meters(a.distance_to_point(b)) <= HELO_AIRLIFT_MAX_RANGE
+        for a, b in (
+            (home.position, pickup),
+            (pickup, drop_off),
+            (drop_off, home.position),
+        )
+    )
+
+
+def airlift_squadrons(
+    air_wing: AirWing,
+    transfer: TransferOrder,
+    next_stop: ControlPoint,
+    size: int = 1,
+) -> list[Squadron]:
+    """Squadrons the player may pick to airlift transfer to next_stop.
+
+    Unlike :class:`AirliftPlanner`, which only uses squadrons auto-assignable to
+    Transport, this is an explicit player choice: any Transport-capable squadron
+    qualifies, including one kept off auto-planning. The squadron must be able to
+    launch ``size`` aircraft this turn.
+    """
+    return [
+        squadron
+        for squadron in air_wing.iter_squadrons()
+        if squadron.capable_of(FlightType.TRANSPORT)
+        and squadron.untasked_crewed_aircraft >= size
+        and airlift_compatible(
+            squadron.aircraft, squadron.location, transfer, next_stop
+        )
+    ]
+
+
+def reassign_airlift(old_flight: Flight, new_flight: Flight) -> None:
+    """Hands the airlift carried by old_flight over to new_flight.
+
+    Used when the player replaces a transport flight (e.g. changes its squadron): the
+    transfer keeps its Airlift, so it is still delivered this turn, CTLD crates are
+    still generated and the flight plan can still find its drop-off.
+    """
+    cargo = old_flight.cargo
+    if cargo is None:
+        return
+    transport = cargo.transport
+    if isinstance(transport, Airlift) and transport.flight is old_flight:
+        new_flight.cargo = cargo
+        cargo.transport = Airlift(cargo, new_flight, transport.destination)
+
+
+def max_airlift_capacity(squadron: Squadron) -> int:
+    """Ground units one flight of this squadron can carry this turn."""
+    flight_size = min(
+        squadron.untasked_crewed_aircraft,
+        squadron.aircraft.dcs_unit_type.group_size_max,
+    )
+    return max(flight_size, 0) * airlift_capacity_per_aircraft(squadron.aircraft)
+
+
+def player_airlift_problem(
+    squadron: Squadron, transfer: TransferOrder, next_stop: ControlPoint
+) -> Optional[str]:
+    """Why squadron cannot airlift transfer to next_stop in one flight, or None."""
+    if not squadron.capable_of(FlightType.TRANSPORT):
+        return f"{squadron} cannot fly Transport missions."
+    if not airlift_compatible(
+        squadron.aircraft, squadron.location, transfer, next_stop
+    ):
+        return (
+            f"{squadron} cannot fly from {squadron.location} to {transfer.origin} and "
+            f"{next_stop} (base type or helicopter range)."
+        )
+    if squadron.aircraft.dcs_unit_type.helicopter:
+        # Helicopter transports land in CTLD pickup and drop-off zones.
+        from game.theater.ctldzones import ctld_zone_unavailable_reason
+
+        for cp in (transfer.origin, next_stop):
+            reason = ctld_zone_unavailable_reason(cp)
+            if reason is not None:
+                return reason
+    capacity = max_airlift_capacity(squadron)
+    if capacity < transfer.size:
+        return (
+            f"{squadron} can carry {capacity} units this turn, {transfer.size} "
+            "selected."
+        )
+    return None
+
+
+class PlayerAirliftError(ValueError):
+    """A player-created Transport mission cannot be planned as requested."""
+
+
+class AirliftPlanner:
     def __init__(
         self, game: Game, transfer: TransferOrder, next_stop: ControlPoint
     ) -> None:
@@ -287,35 +413,7 @@ class AirliftPlanner:
     def compatible_with_mission(
         self, unit_type: AircraftType, airfield: ControlPoint
     ) -> bool:
-        if not unit_type.capable_of(FlightType.TRANSPORT):
-            return False
-        if not self.transfer.origin.can_operate(unit_type):
-            return False
-        if not self.next_stop.can_operate(unit_type):
-            return False
-
-        # Cargo planes have no maximum range.
-        if not unit_type.dcs_unit_type.helicopter:
-            return True
-
-        # A helicopter that is transport capable and able to operate at both bases. Need
-        # to check that no leg of the journey exceeds the maximum range. This doesn't
-        # account for any routing around threats that might take place, but it's close
-        # enough.
-
-        home = airfield.position
-        pickup = self.transfer.position.position
-        drop_off = self.next_stop.position
-        if meters(home.distance_to_point(pickup)) > self.HELO_MAX_RANGE:
-            return False
-
-        if meters(pickup.distance_to_point(drop_off)) > self.HELO_MAX_RANGE:
-            return False
-
-        if meters(drop_off.distance_to_point(home)) > self.HELO_MAX_RANGE:
-            return False
-
-        return True
+        return airlift_compatible(unit_type, airfield, self.transfer, self.next_stop)
 
     def create_package_for_airlift(self, now: datetime) -> None:
         distance_cache = ObjectiveDistanceCache.get_closest_airfields(
@@ -335,6 +433,22 @@ class AirliftPlanner:
                         and self.transfer.transport is None
                     ):
                         self.create_airlift_flight(squadron)
+        self._commit_package(now)
+
+    def check_player_squadron(self, squadron: Squadron) -> None:
+        """Raises PlayerAirliftError unless squadron can fly this airlift in one flight."""
+        problem = player_airlift_problem(squadron, self.transfer, self.next_stop)
+        if problem is not None:
+            raise PlayerAirliftError(problem)
+
+    def create_package_for_squadron(self, squadron: Squadron, now: datetime) -> Package:
+        """Plans the airlift with one flight of the player-chosen squadron."""
+        self.check_player_squadron(squadron)
+        self.create_airlift_flight(squadron)
+        self._commit_package(now)
+        return self.package
+
+    def _commit_package(self, now: datetime) -> None:
         if self.package.flights:
             self.package.set_tot_asap(now)
             self.game.ato_for(self.for_player).add_package(self.package)
@@ -348,7 +462,7 @@ class AirliftPlanner:
 
     def create_airlift_flight(self, squadron: Squadron) -> int:
         available_aircraft = squadron.untasked_aircraft
-        capacity_each = 1 if squadron.aircraft.dcs_unit_type.helicopter else 2
+        capacity_each = airlift_capacity_per_aircraft(squadron.aircraft)
         required = math.ceil(self.transfer.size / capacity_each)
         flight_size = min(
             required,
@@ -653,6 +767,33 @@ class PendingTransfers:
         self.pending_transfers.append(transfer)
         self.arrange_transport(transfer, now)
         self._send_supply_route_event_stream_update()
+
+    def new_player_airlift(
+        self, transfer: TransferOrder, squadron: Squadron, now: datetime
+    ) -> Package:
+        """Registers a player-created Transport mission and plans its flight.
+
+        The transfer is airlifted straight to its destination by one flight of the
+        chosen squadron, through the same Airlift as any transfer: delivery at turn
+        end, cargo lost with the aircraft. Raises PlayerAirliftError, leaving the game
+        untouched, if that squadron cannot carry the whole cargo there.
+        """
+        transfer.request_airflift = True
+        transfer.player_requested = True
+        planner = AirliftPlanner(self.game, transfer, transfer.destination)
+        planner.check_player_squadron(squadron)
+        transfer.origin.base.commit_losses(transfer.units)
+        self.pending_transfers.append(transfer)
+        package = planner.create_package_for_squadron(squadron, now)
+        self._send_supply_route_event_stream_update()
+        return package
+
+    def player_airlift_for(self, flight: Flight) -> Optional[TransferOrder]:
+        """The player-created Transport mission flown by flight, if any."""
+        transfer = self.transfer_for_flight(flight)
+        if transfer is not None and transfer.player_requested:
+            return transfer
+        return None
 
     def split_transfer(self, transfer: TransferOrder, size: int) -> TransferOrder:
         """Creates a smaller transfer that is a subset of the original."""
