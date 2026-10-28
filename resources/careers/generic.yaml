@@ -5,7 +5,10 @@
 # period (`from` / `until`, YYYY-MM-DD). The most specific matching file wins:
 # country beats period, period beats neither. Ranks are listed lowest first.
 # `requires` takes minimums of: sorties, combat_sorties, air_kills,
-# ground_kills, naval_kills, total_kills, deaths, flight_hours.
+# ground_kills, naval_kills, total_kills, deaths, flight_hours, and with CSAR:
+# shot_down (aircraft lost with the pilot aboard, ejected or killed),
+# ejections, times_rescued (rescued after coming down) and pilots_rescued
+# (downed pilots picked up by the pilot's CSAR flights).
 # Copy a file to "Saved Games/DCS/Retribution/Careers" to make your own.
 # Awards have no gameplay effect.
 name: Generic air force
@@ -45,7 +48,13 @@ decorations:
     requires: {naval_kills: 5}
   - name: Wound Badge
     description: Shot down or killed in action.
-    requires: {deaths: 1}
+    requires: {shot_down: 1}
+  - name: Survivor Badge
+    description: Ejected and rescued by a CSAR flight.
+    requires: {times_rescued: 1}
+  - name: Rescue Medal
+    description: Five downed airmen rescued.
+    requires: {pilots_rescued: 5}
   - name: Veteran
     description: One hundred sorties.
     requires: {sorties: 100}

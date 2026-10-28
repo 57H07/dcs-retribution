@@ -41,7 +41,11 @@ def totals(record: PilotRecord) -> list[tuple[str, str]]:
         ("Air kills", str(record.air_kills)),
         ("Ground kills", str(record.ground_kills)),
         ("Naval kills", str(record.naval_kills)),
-        ("Shot down / killed", str(record.deaths)),
+        ("Shot down", str(record.shot_down)),
+        ("Ejections", str(record.ejections)),
+        ("Rescued by CSAR", str(record.times_rescued)),
+        ("Pilots rescued", str(record.pilots_rescued)),
+        ("Killed", str(record.deaths)),
         ("Flight time", format_duration(record.flight_time)),
     ]
 
@@ -67,8 +71,19 @@ HISTORY_HEADERS = [
     "Air",
     "Ground",
     "Naval",
+    "Rescues",
     "Lost",
 ]
+
+
+def _loss(entry: LogbookEntry) -> str:
+    if entry.ejected and entry.died:
+        return "Ejected, killed"
+    if entry.ejected:
+        return "Ejected"
+    if entry.died:
+        return "Killed"
+    return ""
 
 
 def history_rows(logbook: Sequence[LogbookEntry]) -> list[list[str]]:
@@ -85,7 +100,8 @@ def history_rows(logbook: Sequence[LogbookEntry]) -> list[list[str]]:
             str(e.air_kills),
             str(e.ground_kills),
             str(e.naval_kills),
-            "Yes" if e.died else "",
+            str(e.rescues) if e.rescues else "",
+            _loss(e),
         ]
         for e in reversed(logbook)
     ]

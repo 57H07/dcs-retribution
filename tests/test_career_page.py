@@ -48,7 +48,9 @@ def test_totals_show_the_logbook() -> None:
     assert rows["Sorties"] == "2"
     assert rows["Combat sorties"] == "2"
     assert rows["Air kills"] == "2"
-    assert rows["Shot down / killed"] == "1"
+    assert rows["Shot down"] == "1"
+    assert rows["Killed"] == "1"
+    assert rows["Ejections"] == "0"
     assert rows["Flight time"] == "2:10"
 
 
@@ -60,7 +62,8 @@ def test_history_lists_both_missions_most_recent_first() -> None:
     assert [row[0] for row in rows] == ["2", "1"]
     assert rows[0][1] == "2026-06-02 08:30"
     assert rows[1][HISTORY_HEADERS.index("Air")] == "2"
-    assert rows[0][HISTORY_HEADERS.index("Lost")] == "Yes"
+    assert rows[0][HISTORY_HEADERS.index("Lost")] == "Killed"
+    assert rows[1][HISTORY_HEADERS.index("Lost")] == ""
     assert rows[1][HISTORY_HEADERS.index("Task")] == "BARCAP"
 
 

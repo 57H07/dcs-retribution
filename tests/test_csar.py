@@ -260,6 +260,7 @@ def _make_game(**settings: Any) -> Any:
         csar_player_recovery_turns=1,
         csar_prisoners_of_war=False,
         csar_rescue_ai_pilots=True,
+        csar_cluster_radius=0,
     )
     defaults.update(settings)
     game = MagicMock()

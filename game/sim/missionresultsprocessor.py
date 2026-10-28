@@ -15,9 +15,16 @@ from game.squadrons.awards import award_careers
 from game.squadrons.csarservice import CsarService
 from game.squadrons.downedpilot import DownedPilot
 from game.squadrons.maintenance import aircraft_maintenance_turns
-from game.squadrons.pilot import AwardKind, KillCategory, LogbookEntry, Pilot
+from game.squadrons.pilot import (
+    AwardKind,
+    KillCategory,
+    LogbookEntry,
+    Pilot,
+    PilotStatus,
+)
 from game.theater import ControlPoint
 from game.theater.repairs import restart_repairs
+from game.utils import meters
 from .gameupdateevents import GameUpdateEvents
 from ..ato.airtaaskingorder import AirTaskingOrder
 
@@ -37,6 +44,12 @@ STRONG_DEFEAT_INFLUENCE = 0.5
 class MissionResultsProcessor:
     def __init__(self, game: Game) -> None:
         self.game = game
+        #: ``id()`` of the pilots who ejected from their lost aircraft this
+        #: mission, filled by ``commit_air_losses`` for the logbooks.
+        self.ejected_pilots: set[int] = set()
+        #: Downed pilots each pilot (by ``id()``) rescued this mission, filled by
+        #: ``commit_csar_results`` for the logbooks.
+        self.pilot_rescues: Counter[int] = Counter()
 
     def commit(self, debriefing: Debriefing, events: GameUpdateEvents) -> None:
         with logged_duration("Committing mission results"):
@@ -145,7 +158,11 @@ class MissionResultsProcessor:
                         )
                         rescued.add(target)
 
+        # Before rescuing: csar.rescue takes the pilots off the map, and the
+        # rescuers are found from the pilots still there.
+        self._credit_rescuers(rescued, flown, debriefing)
         for downed in rescued:
+            downed.pilot.record.credit_rescued()
             # Record before rescuing: csar.rescue removes the pilot from the db,
             # and the debriefing windows read this to report the recovery.
             debriefing.record_rescue(downed)
@@ -153,6 +170,44 @@ class MissionResultsProcessor:
             bounty = self.game.settings.csar_rescue_bounty
             if bounty > 0:
                 downed.squadron.coalition.adjust_budget(bounty)
+
+    def _credit_rescuers(
+        self,
+        rescued: set[DownedPilot],
+        flown: set[Flight],
+        debriefing: Debriefing,
+    ) -> None:
+        """Counts each rescue for the crews of the CSAR flights sent after it.
+
+        Only the rescued pilots' ids reach the campaign, not who picked them up,
+        so every CSAR flight tasked with a rescued pilot (or with one close
+        enough to be lifted together, see ``DownedPilot.cluster``) gets the
+        credit: player or flown flights, which had the mission to do it, and
+        simulated AI flights that survived, the same test as the fallback above.
+        """
+        if not rescued:
+            return
+        for coalition in self.game.coalitions:
+            for package in coalition.ato.packages:
+                for flight in package.flights:
+                    if flight.flight_type is not FlightType.CSAR:
+                        continue
+                    target = flight.package.target
+                    if not isinstance(target, DownedPilot):
+                        continue
+                    radius = meters(self.game.settings.csar_cluster_radius)
+                    saved = sum(1 for p in target.cluster(radius) if p in rescued)
+                    if not saved:
+                        continue
+                    if (
+                        flight.client_count == 0
+                        and flight not in flown
+                        and debriefing.air_losses.surviving_flight_members(flight) <= 0
+                    ):
+                        continue
+                    for pilot in flight.roster.iter_pilots():
+                        if pilot is not None:
+                            self.pilot_rescues[id(pilot)] += saved
 
     def commit_air_losses(self, debriefing: Debriefing) -> None:
         csar = CsarService(self.game)
@@ -184,6 +239,11 @@ class MissionResultsProcessor:
         if pilot is None:
             return
 
+        # A real in-mission ejection, whatever becomes of the pilot next.
+        ejection_pos = debriefing.ejected_pilot_positions.get(id(pilot))
+        if ejection_pos is not None:
+            self.ejected_pilots.add(id(pilot))
+
         # Invulnerable player pilots survive untouched, exactly as before.
         if pilot.player and self.game.settings.invulnerable_player_pilots:
             return
@@ -202,10 +262,11 @@ class MissionResultsProcessor:
         # A real in-mission ejection always produces a downed pilot at the recorded
         # landing position. Otherwise roll the survival chance and scatter near the
         # flight's target (the only position we have for AI/simulated losses).
-        ejection_pos = debriefing.ejected_pilot_positions.get(id(pilot))
         if ejection_pos is not None:
             position = ejection_pos
         elif random.randint(1, 100) <= self.game.settings.csar_ejection_chance:
+            # A simulated loss the pilot survived: they ejected.
+            self.ejected_pilots.add(id(pilot))
             position = csar.fallback_position_for(flight)
         else:
             pilot.kill()
@@ -263,6 +324,21 @@ class MissionResultsProcessor:
         for ato in (self.game.blue.ato, self.game.red.ato):
             self._commit_logbooks(ato, kills, lost)
 
+    def _sortie_outcome(self, pilot: Pilot, lost: set[int]) -> tuple[bool, bool]:
+        """Whether the pilot ejected and whether they died, as (ejected, died).
+
+        Must run after ``commit_air_losses``. A pilot who ejected only died if
+        their fate was settled on the spot (nowhere to survive, enemy lines
+        without prisoners, CSAR off); one never rescued dies later, when the
+        survival countdown ends. A lost aircraft without an ejection is a death,
+        even for an invulnerable player pilot.
+        """
+        if id(pilot) not in lost:
+            return False, False
+        if id(pilot) not in self.ejected_pilots:
+            return False, True
+        return True, pilot.status is PilotStatus.Dead
+
     def commit_pilot_awards(self) -> None:
         """Grants the ranks and decorations player pilots earned (PER-03.3).
 
@@ -295,8 +371,9 @@ class MissionResultsProcessor:
                             "because no pilot is assigned"
                         )
                         continue
+                    ejected, died = self._sortie_outcome(pilot, lost)
                     entry = self._logbook_entry(
-                        flight, pilot, flight_time, kills, id(pilot) in lost
+                        flight, pilot, flight_time, kills, died, ejected
                     )
                     pilot.record.log_sortie(entry, keep_history=pilot.player)
 
@@ -307,6 +384,7 @@ class MissionResultsProcessor:
         flight_time: timedelta,
         kills: Counter[tuple[int, KillCategory]],
         died: bool,
+        ejected: bool,
     ) -> LogbookEntry:
         air = kills[id(pilot), KillCategory.Air]
         ground = kills[id(pilot), KillCategory.Ground]
@@ -326,6 +404,8 @@ class MissionResultsProcessor:
             ground_kills=ground,
             naval_kills=naval,
             died=died,
+            ejected=ejected,
+            rescues=self.pilot_rescues[id(pilot)],
         )
 
     @staticmethod

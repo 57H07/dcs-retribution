@@ -65,9 +65,15 @@ class LogbookEntry:
     air_kills: int = 0
     ground_kills: int = 0
     naval_kills: int = 0
-    #: True if the pilot's aircraft was lost with the pilot aboard. Counted even
-    #: when the pilot survived because player pilots are invulnerable.
+    #: True if the pilot died on this sortie: killed with their aircraft, or
+    #: after ejecting where nobody could reach them. Also true when an
+    #: invulnerable player pilot's aircraft was lost without an ejection, since
+    #: the pilot only survived because of that setting.
     died: bool = False
+    #: True if the pilot ejected (or bailed out) of their lost aircraft (PER-03.5).
+    ejected: bool = False
+    #: Downed pilots this pilot's CSAR flight rescued on this sortie (PER-03.5).
+    rescues: int = 0
 
     def kills(self, category: KillCategory) -> int:
         if category is KillCategory.Air:
@@ -93,7 +99,18 @@ class PilotRecord:
     ground_kills: int = field(default=0)
     naval_kills: int = field(default=0)
     combat_sorties: int = field(default=0)
+    #: Times the pilot died. Includes a downed pilot never rescued and listed
+    #: dead turns later, which has no sortie of its own.
     deaths: int = field(default=0)
+    #: Sorties on which the pilot's aircraft was lost with them aboard, whether
+    #: they ejected or died.
+    shot_down: int = field(default=0)
+    #: Ejections from a lost aircraft (PER-03.5).
+    ejections: int = field(default=0)
+    #: Times this pilot was rescued by a CSAR flight after coming down (PER-03.5).
+    times_rescued: int = field(default=0)
+    #: Downed pilots rescued by CSAR flights this pilot flew in (PER-03.5).
+    pilots_rescued: int = field(default=0)
     flight_time: datetime.timedelta = field(default_factory=datetime.timedelta)
     logbook: list[LogbookEntry] = field(default_factory=list)
     #: Ranks and decorations in the order they were awarded (PER-03.3).
@@ -111,6 +128,12 @@ class PilotRecord:
         state.setdefault("logbook", [])
         # Saves made before ranks and decorations existed (PER-03.3).
         state.setdefault("awards", [])
+        # Saves made before ejections and rescues were counted (PER-03.5). Back
+        # then every lost aircraft counted as a death, so that is what they were.
+        state.setdefault("shot_down", state["deaths"])
+        state.setdefault("ejections", 0)
+        state.setdefault("times_rescued", 0)
+        state.setdefault("pilots_rescued", 0)
         self.__dict__.update(state)
 
     @property
@@ -146,9 +169,22 @@ class PilotRecord:
             self.combat_sorties += 1
         if entry.died:
             self.deaths += 1
+        if entry.died or entry.ejected:
+            self.shot_down += 1
+        if entry.ejected:
+            self.ejections += 1
+        self.pilots_rescued += entry.rescues
         self.flight_time += entry.flight_time
         if keep_history:
             self.logbook.append(entry)
+
+    def credit_rescued(self) -> None:
+        """Counts a CSAR rescue of this pilot, on a sortie flown by others."""
+        self.times_rescued += 1
+
+    def credit_death(self) -> None:
+        """Counts a death that happened outside a sortie (never rescued)."""
+        self.deaths += 1
 
     def credit_kill(self, category: KillCategory) -> None:
         if category is KillCategory.Air:
