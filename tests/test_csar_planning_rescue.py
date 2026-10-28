@@ -575,3 +575,205 @@ def test_ops_csar_wires_hover_only_pilots_for_players() -> None:
 
     assert "OpsCSAR_RequireHoverFor(my," in lua
     assert 'player_hover_only = dp.playerHoverOnly == "true"' in lua
+
+
+# ---------------------------------------------------------------------------
+# #68: AI rescues are credited only on delivery to a friendly base
+#
+# OpsCSAR.lua run under lupa against a stubbed DCS API: one survivor on land
+# and one AI rescue helicopter, driven through the events DCS would raise.
+# ---------------------------------------------------------------------------
+
+_DCS_STUBS = """
+env = { info = function() end, warning = function() end,
+        error = function(msg) error(msg) end }
+now = 0
+units = {}
+handler = nil
+poll = nil
+csar_rescued = {}
+BLUE, RED = 2, 1
+coalition = { side = { RED = RED, BLUE = BLUE },
+              getGroups = function() return {} end }
+world = {
+    event = { S_EVENT_TAKEOFF = 3, S_EVENT_LAND = 4, S_EVENT_CRASH = 5,
+              S_EVENT_DEAD = 8, S_EVENT_PILOT_DEAD = 9, S_EVENT_UNIT_LOST = 30 },
+    addEventHandler = function(h) handler = h end,
+}
+timer = {
+    getTime = function() return now end,
+    scheduleFunction = function(f) poll = f end,
+}
+land = { getHeight = function() return 0 end }
+trigger = { action = { smoke = function() end },
+            smokeColor = { Red = 1, Blue = 4 } }
+GROUP = { FindByName = function() return {} end }
+Group = { Category = { HELICOPTER = 2 },
+          getByName = function() return nil end }
+Unit = { getByName = function(name) return units[name] end }
+
+function make_unit(name, side, category)
+    local unit = {}
+    local group = {
+        getCategory = function() return category end,
+        getUnits = function() return { unit } end,
+        getName = function() return name .. " group" end,
+    }
+    unit.getName = function() return name end
+    unit.getCoalition = function() return side end
+    unit.isExist = function() return true end
+    unit.getLife = function() return 1 end
+    unit.getPoint = function() return { x = 0, y = 0, z = 0 } end
+    unit.getPlayerName = function() return nil end
+    unit.getGroup = function() return group end
+    return unit
+end
+
+survivor = make_unit("Survivor #1", BLUE, 0)
+units["Survivor #1"] = survivor
+helo = make_unit("Rescue #1", BLUE, Group.Category.HELICOPTER)
+
+dcsRetribution = { CSAR = {
+    blueEnabled = "true", redEnabled = "false",
+    downedPilots = { {
+        id = "pilot-1", groupName = "Survivor", unitName = "Survivor #1",
+        coalition = "blue", x = "0", z = "0", hoverExtraction = "false",
+    } },
+} }
+
+function event(id, initiator, place)
+    handler:onEvent({ id = id, initiator = initiator, place = place })
+end
+function base(side)
+    return { getCoalition = function() return side end,
+             getName = function() return "Base" end }
+end
+function picked_up()
+    poll()                                 -- survivor seen on the ground
+    event(world.event.S_EVENT_LAND, helo)  -- touches down at the LZ
+    now = now + 60
+    units["Survivor #1"] = nil             -- DCS loads them
+    poll()
+    event(world.event.S_EVENT_TAKEOFF, helo)
+end
+"""
+
+
+def _ops_csar_mission() -> Any:
+    import lupa
+
+    lua = lupa.LuaRuntime(unpack_returned_tuples=True)
+    lua.execute(_DCS_STUBS)
+    lua.execute(_OPSCSAR.read_text(encoding="utf-8"))
+    return lua
+
+
+def _rescued(lua: Any) -> list[str]:
+    table = lua.globals().csar_rescued
+    return [table[i] for i in range(1, len(table) + 1)]
+
+
+def test_ai_pickup_is_not_a_rescue_until_delivered_to_a_friendly_base() -> None:
+    lua = _ops_csar_mission()
+
+    lua.execute("picked_up()")
+    assert _rescued(lua) == []
+
+    lua.execute("event(world.event.S_EVENT_LAND, helo, base(RED))")
+    assert _rescued(lua) == []
+
+    lua.execute("event(world.event.S_EVENT_LAND, helo, base(BLUE))")
+    assert _rescued(lua) == ["pilot-1"]
+
+
+def test_ai_helicopter_lost_with_the_pilot_aboard_rescues_no_one() -> None:
+    lua = _ops_csar_mission()
+
+    lua.execute("picked_up()")
+    lua.execute("event(world.event.S_EVENT_CRASH, helo)")
+    lua.execute("event(world.event.S_EVENT_LAND, helo, base(BLUE))")
+
+    assert _rescued(lua) == []
+
+
+def test_pilot_killed_on_the_ground_is_never_rescued() -> None:
+    lua = _ops_csar_mission()
+
+    lua.execute("""
+        poll()
+        event(world.event.S_EVENT_LAND, helo)
+        now = now + 60
+        event(world.event.S_EVENT_DEAD, survivor)
+        units["Survivor #1"] = nil
+        poll()
+        event(world.event.S_EVENT_TAKEOFF, helo)
+        event(world.event.S_EVENT_LAND, helo, base(BLUE))
+    """)
+
+    assert _rescued(lua) == []
+
+
+def _simulated_csar_result(state: Any) -> DownedPilot:
+    """Commits the results of an AI CSAR flight resolved by the simulation (not
+    in the generated mission) that survived, in the given flight state."""
+    from game.sim.missionresultsprocessor import MissionResultsProcessor
+
+    downed = _downed_at(Point(0.0, 0.0, _TERRAIN))
+    flight = MagicMock()
+    flight.flight_type = FlightType.CSAR
+    flight.client_count = 0
+    flight.package.target = downed
+    flight.state = state
+    game = MagicMock()
+    game.settings = SimpleNamespace(
+        csar_rescue_bounty=0,
+        csar_cluster_radius=0,
+        csar_ai_recovery_turns=2,
+        csar_player_recovery_turns=1,
+    )
+    package = SimpleNamespace(flights=[flight])
+    game.coalitions = [
+        SimpleNamespace(ato=SimpleNamespace(packages=[package])),
+    ]
+    debriefing = MagicMock()
+    debriefing.state_data.rescued_pilot_ids = []
+    debriefing.unit_map.aircraft.values.return_value = []
+    debriefing.air_losses.surviving_flight_members.return_value = 2
+    MissionResultsProcessor(game).commit_csar_results(debriefing)
+    return downed
+
+
+def test_simulated_flight_that_never_reached_the_pickup_rescues_no_one() -> None:
+    from game.ato.flightstate import Navigating
+
+    downed = _simulated_csar_result(Navigating.__new__(Navigating))
+
+    assert not downed.pilot.recovering
+
+
+def test_simulated_flight_that_flew_out_and_back_rescues_its_pilot() -> None:
+    from game.ato.flightstate import Completed
+
+    downed = _simulated_csar_result(Completed.__new__(Completed))
+
+    assert downed.pilot.recovering
+
+
+def test_pilot_vanishing_near_a_passing_helicopter_is_not_a_pickup() -> None:
+    """The old heuristic: gone while a rescue helicopter was within 600 m in the
+    last 120 s. Without one landed for them, that proves nothing."""
+    lua = _ops_csar_mission()
+
+    lua.execute("""
+        coalition.getGroups = function() return { {
+            isExist = function() return true end,
+            getUnits = function() return { helo } end,
+        } } end
+        poll()
+        now = now + 10
+        units["Survivor #1"] = nil
+        poll()
+        event(world.event.S_EVENT_LAND, helo, base(BLUE))
+    """)
+
+    assert _rescued(lua) == []

@@ -1026,9 +1026,13 @@ def _flown_in_mission(*flights: Any) -> Any:
 
 def test_simulated_ai_flight_rescues_via_the_fallback() -> None:
     """A flight the simulation resolved before the .miz was generated never had a
-    chance to report anything, so surviving is all we have to go on."""
+    chance to report anything, so surviving its whole route is all we have to go
+    on."""
+    from game.ato.flightstate import Completed
+
     downed = _standalone_downed()
     flight = _csar_flight_targeting(downed, client_count=0)
+    flight.state = Completed.__new__(Completed)
     game = _game_with_csar_package(downed, flight)
     debriefing = MagicMock()
     debriefing.state_data.rescued_pilot_ids = []
@@ -1253,8 +1257,8 @@ def test_lua_collects_the_cluster_on_both_pickup_paths() -> None:
     assert "local function cluster_with(entry)" in lua
     # Hover: everyone comes up on the same hold.
     assert "for _, mate in pairs(cluster_with(entry)) do" in lua
-    # Landing: only those who actually left the map are credited.
-    assert "if survivor_in_world(mate) == nil then" in lua
+    # Landing: only those who actually left the map, alive, are boarded.
+    assert "if survivor_in_world(survivor) == nil" in lua
 
 
 def test_csar_package_size_ignores_the_flight_weight_factors() -> None:
