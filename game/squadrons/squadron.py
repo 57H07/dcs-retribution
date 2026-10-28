@@ -435,6 +435,22 @@ class Squadron:
     def send_on_leave(pilot: Pilot) -> None:
         pilot.send_on_leave()
 
+    def release_prisoner(self, pilot: Pilot, recovery_turns: int) -> bool:
+        """Frees a prisoner of war whose base was retaken.
+
+        A prisoner keeps their slot, so they normally go straight into recovery.
+        If the squadron is over its limit anyway (the limit was lowered while they
+        were held), they are sent on leave instead, which does not count against
+        the limit, and can be recalled from leave once a slot frees up. Returns
+        whether the pilot went into recovery.
+        """
+        pilot.release_from_captivity(recovery_turns)
+        if self.pilot_limits_enabled and self._number_of_unfilled_pilot_slots < 0:
+            pilot.begin_recovery(0)
+            pilot.send_on_leave()
+            return False
+        return True
+
     def return_from_leave(self, pilot: Pilot) -> None:
         if not self.has_unfilled_pilot_slots:
             raise RuntimeError(
@@ -501,8 +517,8 @@ class Squadron:
         return self._pilots_with_status(PilotStatus.Dead)
 
     @property
-    def missing_pilots(self) -> list[Pilot]:
-        return self._pilots_with_status(PilotStatus.MissingInAction)
+    def prisoners_of_war(self) -> list[Pilot]:
+        return self._pilots_with_status(PilotStatus.PrisonerOfWar)
 
     @property
     def downed_pilots(self) -> list[Pilot]:
@@ -514,10 +530,15 @@ class Squadron:
 
     @property
     def _number_of_unfilled_pilot_slots(self) -> int:
-        # Downed and recovering pilots still hold their roster slot: a downed
-        # pilot may be rescued and a recovering one will return, so we must not
-        # recruit a fresh pilot into a slot that is about to be reclaimed.
-        reserved = len(self.downed_pilots) + len(self.recovering_pilots)
+        # Downed, recovering and captive pilots still hold their roster slot: a
+        # downed pilot may be rescued, a recovering one will return and a prisoner
+        # is freed when their base is retaken, so we must not recruit a fresh pilot
+        # into a slot that may be reclaimed (CSAR-01 requirement 3, #63).
+        reserved = (
+            len(self.downed_pilots)
+            + len(self.recovering_pilots)
+            + len(self.prisoners_of_war)
+        )
         return self.pilot_limit - len(self.active_pilots) - reserved
 
     @property

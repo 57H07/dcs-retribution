@@ -193,6 +193,12 @@ class MissionResultsProcessor:
             pilot.kill()
             return
 
+        # With AI rescues off, only player pilots go down; AI pilots are lost
+        # with their aircraft, as before CSAR (#69).
+        if not pilot.player and not self.game.settings.csar_rescue_ai_pilots:
+            pilot.kill()
+            return
+
         # A real in-mission ejection always produces a downed pilot at the recorded
         # landing position. Otherwise roll the survival chance and scatter near the
         # flight's target (the only position we have for AI/simulated losses).

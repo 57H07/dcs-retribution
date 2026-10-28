@@ -1,7 +1,7 @@
 """Tests for the campaign-persistent CSAR mechanic.
 
 Covers the pilot/downed-pilot state machine, squadron slot reservation, the CSAR
-service (creation, survival window, rescue/MIA, turn ageing), the hybrid rescue
+service (creation, survival window, rescue/death/capture, turn ageing), the hybrid rescue
 resolution in the results processor, the aircraft CSAR-capability derivation, and
 state.json parsing of the new ejection/rescue keys.
 """
@@ -66,12 +66,18 @@ def test_pilot_down_recover_active_cycle() -> None:
     assert pilot.turns_until_available == 0
 
 
-def test_pilot_down_to_mia() -> None:
+def test_pilot_down_to_prisoner_of_war() -> None:
     pilot = Pilot("Jane")
     pilot.go_down()
-    pilot.go_mia()
-    assert pilot.missing_in_action
-    assert not pilot.alive
+    pilot.take_prisoner(held_at=uuid4())
+    assert pilot.prisoner_of_war
+    # A prisoner is alive, just out of reach.
+    assert pilot.alive
+
+
+def test_only_downed_pilots_can_be_taken_prisoner() -> None:
+    with pytest.raises(RuntimeError):
+        Pilot("Active").take_prisoner(held_at=uuid4())
 
 
 def test_begin_recovery_zero_turns_returns_active_immediately() -> None:
@@ -127,6 +133,47 @@ def test_downed_and_recovering_pilots_hold_their_slot() -> None:
     assert recovering in sqn.recovering_pilots
 
 
+def _prisoner() -> Pilot:
+    pilot = Pilot("POW")
+    pilot.go_down()
+    pilot.take_prisoner(held_at=uuid4())
+    return pilot
+
+
+def test_prisoner_keeps_their_slot_at_turn_end() -> None:
+    """#63: a full squadron with a prisoner does not recruit a replacement."""
+    prisoner = _prisoner()
+    sqn = _make_squadron([Pilot(f"A{i}") for i in range(9)] + [prisoner])
+    sqn.pilot_pool = []
+    sqn.available_pilots = []
+
+    assert sqn._number_of_unfilled_pilot_slots == 0
+    sqn.replenish_lost_pilots()
+    assert len(sqn.current_roster) == 10
+
+
+def test_freed_prisoner_reclaims_their_slot() -> None:
+    prisoner = _prisoner()
+    sqn = _make_squadron([Pilot(f"A{i}") for i in range(9)] + [prisoner])
+
+    assert sqn.release_prisoner(prisoner, 2)
+    assert prisoner.recovering
+    assert sqn._number_of_unfilled_pilot_slots == 0
+
+
+def test_freed_prisoner_goes_on_leave_when_the_squadron_is_full() -> None:
+    """The documented rule for #63: if the limit was lowered while they were held,
+    the freed pilot goes on leave (outside the limit) rather than overfilling."""
+    prisoner = _prisoner()
+    sqn = _make_squadron([Pilot(f"A{i}") for i in range(9)] + [prisoner])
+    sqn.settings.squadron_pilot_limit = 9
+
+    assert not sqn.release_prisoner(prisoner, 2)
+    assert prisoner.on_leave
+    assert prisoner.held_at is None
+    assert sqn._number_of_unfilled_pilot_slots == 0
+
+
 def test_downed_pilots_are_untaskable_without_pilot_limits() -> None:
     """With per-squadron pilot limits off there is no slot to reserve, and
     replenishment is skipped entirely -- but a downed or recovering pilot must
@@ -170,14 +217,17 @@ def test_process_pilot_recovery_advances_countdown() -> None:
     assert recovering.status is PilotStatus.Active
 
 
-def test_living_pilots_excludes_mia() -> None:
+def test_living_pilots_includes_prisoners_but_not_the_dead() -> None:
     active = Pilot("A")
-    mia = Pilot("M")
-    mia.go_down()
-    mia.go_mia()
-    sqn = _make_squadron([active, mia])
-    assert active in sqn.living_pilots
-    assert mia not in sqn.living_pilots
+    prisoner = Pilot("P")
+    prisoner.go_down()
+    prisoner.take_prisoner(held_at=uuid4())
+    dead = Pilot("D")
+    dead.go_down()
+    dead.kill()
+    sqn = _make_squadron([active, prisoner, dead])
+    assert sqn.living_pilots == [active, prisoner]
+    assert sqn.prisoners_of_war == [prisoner]
 
 
 # ---------------------------------------------------------------------------
@@ -208,6 +258,8 @@ def _make_game(**settings: Any) -> Any:
         csar_survival_turns_hostile=2,
         csar_ai_recovery_turns=2,
         csar_player_recovery_turns=1,
+        csar_prisoners_of_war=False,
+        csar_rescue_ai_pilots=True,
     )
     defaults.update(settings)
     game = MagicMock()
@@ -304,18 +356,28 @@ def test_player_pilot_down_inside_a_friendly_base_uses_the_player_turns() -> Non
 
 def test_pilot_down_inside_an_enemy_base_is_captured() -> None:
     pilot, result, squadron = _down_near_control_point(
+        friendly=False, distance_meters=0, csar_prisoners_of_war=True
+    )
+
+    assert result is None
+    assert pilot.prisoner_of_war
+    assert squadron.coalition.downed_pilots == []
+
+
+def test_pilot_down_inside_an_enemy_base_dies_without_prisoners() -> None:
+    pilot, result, squadron = _down_near_control_point(
         friendly=False, distance_meters=0
     )
 
     assert result is None
-    assert pilot.missing_in_action
+    assert pilot.status is PilotStatus.Dead
     assert squadron.coalition.downed_pilots == []
 
 
 def test_pilot_captured_at_a_base_is_held_by_that_base() -> None:
     """Coming down on top of an enemy base is a capture like any other, so it has
     to be recoverable by retaking the base rather than a permanent loss."""
-    game = _make_game(csar_control_point_radius=15)
+    game = _make_game(csar_control_point_radius=15, csar_prisoners_of_war=True)
     control_point = _control_point("Krymsk", friendly_to_blue=False, x=0.0)
     control_point.position.distance_to_point = MagicMock(return_value=0.0)
     game.theater.closest_control_point.return_value = control_point
@@ -328,7 +390,7 @@ def test_pilot_captured_at_a_base_is_held_by_that_base() -> None:
     flight.squadron = squadron
     CsarService(game).down_pilot(flight, pilot, False, Point(0.0, 0.0, _TERRAIN))
 
-    assert pilot.missing_in_action
+    assert pilot.prisoner_of_war
     assert pilot.held_at == control_point.id
 
 
@@ -395,57 +457,70 @@ def _expire_near(game: Any, control_point: Any, distance_meters: float) -> Downe
     downed = _standalone_downed()
     downed._position = Point(0.0, 0.0, _TERRAIN)
     downed.pilot.go_down()
-    CsarService(game).go_mia(downed)
+    CsarService(game).expire(downed)
     return downed
 
 
 def test_unrescued_pilot_in_enemy_territory_is_taken_prisoner() -> None:
     """Behind enemy lines and close enough to be found, so the campaign has
     somewhere to send a rescue in the form of a ground offensive."""
-    game = _make_game()
+    game = _make_game(csar_prisoners_of_war=True)
     captor = _control_point("Krymsk", friendly_to_blue=False, x=1000.0)
     downed = _expire_near(game, captor, distance_meters=1000.0)
 
-    assert downed.pilot.missing_in_action
+    assert downed.pilot.prisoner_of_war
     assert downed.pilot.held_at == captor.id
 
 
-def test_unrescued_pilot_beyond_the_capture_radius_is_simply_missing() -> None:
-    """The bug this fixes: without a distance test every expired pilot was
-    recorded as captured by whatever enemy base was nearest, however far away."""
+def test_unrescued_pilot_dies_when_prisoners_are_not_taken() -> None:
+    """The default (#64): an enemy base in range changes nothing, the pilot is
+    dead when the countdown runs out."""
+    game = _make_game()
+    captor = _control_point("Krymsk", friendly_to_blue=False, x=1000.0)
+    game.pilots_captured_this_turn = []
+    downed = _expire_near(game, captor, distance_meters=1000.0)
+
+    assert downed.pilot.status is PilotStatus.Dead
+    assert downed.pilot.held_at is None
+    assert game.pilots_captured_this_turn == []
+
+
+def test_unrescued_pilot_beyond_the_capture_radius_dies() -> None:
+    """Without a distance test every expired pilot was recorded as captured by
+    whatever enemy base was nearest, however far away."""
     from game.utils import nautical_miles
 
-    game = _make_game(csar_capture_radius=30)
+    game = _make_game(csar_capture_radius=30, csar_prisoners_of_war=True)
     captor = _control_point("Krymsk", friendly_to_blue=False, x=1000.0)
     downed = _expire_near(game, captor, distance_meters=nautical_miles(30).meters + 1)
 
-    assert downed.pilot.missing_in_action
+    assert downed.pilot.status is PilotStatus.Dead
     assert downed.pilot.held_at is None
 
 
-def test_unrescued_pilot_in_friendly_territory_is_simply_missing() -> None:
+def test_unrescued_pilot_in_friendly_territory_dies() -> None:
     """Nobody came for them, but the enemy never had them either."""
-    game = _make_game()
+    game = _make_game(csar_prisoners_of_war=True)
     friendly = _control_point("Batumi", friendly_to_blue=True, x=500.0)
     downed = _expire_near(game, friendly, distance_meters=500.0)
 
-    assert downed.pilot.missing_in_action
+    assert downed.pilot.status is PilotStatus.Dead
     assert downed.pilot.held_at is None
 
 
 def test_zero_capture_radius_never_takes_prisoners() -> None:
-    game = _make_game(csar_capture_radius=0)
+    game = _make_game(csar_capture_radius=0, csar_prisoners_of_war=True)
     captor = _control_point("Krymsk", friendly_to_blue=False, x=0.0)
     downed = _expire_near(game, captor, distance_meters=0.0)
 
-    assert downed.pilot.missing_in_action
+    assert downed.pilot.status is PilotStatus.Dead
     assert downed.pilot.held_at is None
 
 
 def test_capture_is_recorded_for_the_debrief_with_its_control_point() -> None:
     """The debrief needs to name the base holding them; by the time it is drawn
     the pilot only carries a held_at id, and nothing says it happened this turn."""
-    game = _make_game()
+    game = _make_game(csar_prisoners_of_war=True)
     captor = _control_point("Krymsk", friendly_to_blue=False, x=1000.0)
     game.pilots_captured_this_turn = []
 
@@ -459,7 +534,7 @@ def test_capture_is_recorded_for_the_debrief_with_its_control_point() -> None:
 
 
 def test_capture_on_landing_is_also_recorded() -> None:
-    game = _make_game(csar_control_point_radius=15)
+    game = _make_game(csar_control_point_radius=15, csar_prisoners_of_war=True)
     game.pilots_captured_this_turn = []
     control_point = _control_point("Krymsk", friendly_to_blue=False, x=0.0)
     control_point.position.distance_to_point = MagicMock(return_value=0.0)
@@ -489,10 +564,11 @@ def test_missing_pilot_with_no_captor_is_not_reported_as_captured() -> None:
 def _game_with_prisoner(held_at: Any) -> tuple[Any, Pilot, Any]:
     prisoner = Pilot("Captured")
     prisoner.go_down()
-    prisoner.go_mia(held_at=held_at)
+    prisoner.take_prisoner(held_at=held_at)
 
-    squadron = MagicMock()
-    squadron.missing_pilots = [prisoner]
+    squadron = _make_squadron([prisoner])
+    squadron.name = "VF-1"
+    squadron.nickname = None
     game = _make_game()
     game.blue.player = _blue_red_player().BLUE
     game.red.player = _blue_red_player().RED
@@ -532,7 +608,7 @@ def test_losing_a_base_does_not_free_our_prisoners() -> None:
 
     CsarService(game).liberate_prisoners_at(base)
 
-    assert prisoner.missing_in_action
+    assert prisoner.prisoner_of_war
     assert prisoner.held_at == base.id
 
 
@@ -543,13 +619,13 @@ def test_capturing_a_different_base_leaves_prisoners_alone() -> None:
 
     CsarService(game).liberate_prisoners_at(elsewhere)
 
-    assert prisoner.missing_in_action
+    assert prisoner.prisoner_of_war
 
 
 def test_released_prisoner_goes_into_recovery_not_straight_to_active() -> None:
     prisoner = Pilot("Captured")
     prisoner.go_down()
-    prisoner.go_mia(held_at=uuid4())
+    prisoner.take_prisoner(held_at=uuid4())
 
     prisoner.release_from_captivity(2)
     assert prisoner.recovering
@@ -557,7 +633,7 @@ def test_released_prisoner_goes_into_recovery_not_straight_to_active() -> None:
     assert prisoner.alive
 
 
-def test_only_missing_pilots_can_be_released() -> None:
+def test_only_prisoners_can_be_released() -> None:
     active = Pilot("Active")
     with pytest.raises(RuntimeError):
         active.release_from_captivity(1)
@@ -616,15 +692,16 @@ def test_rescue_ai_pilot_recovers_two_turns() -> None:
     assert downed.pilot.turns_until_available == 2
 
 
-def test_advance_turn_expires_to_mia() -> None:
+def test_advance_turn_expires_to_dead() -> None:
     from game.theater.player import Player
 
     game = _make_game()
     downed = _make_downed(game, Player.BLUE, was_player=True)
     downed.turns_remaining = 1
     coalition = downed.squadron.coalition
+    game.turn = downed.turn_downed + 2  # end of the turn after they went down
     CsarService(game).advance_turn_for(coalition)
-    assert downed.pilot.missing_in_action
+    assert downed.pilot.status is PilotStatus.Dead
     assert downed not in coalition.downed_pilots
 
 
@@ -634,9 +711,67 @@ def test_advance_turn_decrements_without_expiry() -> None:
     game = _make_game()
     downed = _make_downed(game, Player.BLUE, was_player=True)
     downed.turns_remaining = 3
+    game.turn = downed.turn_downed + 2
     CsarService(game).advance_turn_for(downed.squadron.coalition)
     assert downed.turns_remaining == 2
     assert downed.pilot.downed
+
+
+def _finish_turn(game: Any, coalition: Any) -> None:
+    """What Game.finish_turn does for CSAR: bump the turn, then age the pilots
+    (Coalition.end_turn). test_finish_turn_increments_before_coalition_end_turn
+    pins that order."""
+    game.turn += 1
+    CsarService(game).advance_turn_for(coalition)
+
+
+def test_survival_one_leaves_one_rescue_turn() -> None:
+    """#70: a pilot downed with survival 1 is still on the board, and targetable
+    by a CSAR package, at the start of the next turn."""
+    from game.theater.player import Player
+
+    game = _make_game(csar_survival_turns=1)
+    downed = _make_downed(game, Player.BLUE, was_player=False)
+    coalition = downed.squadron.coalition
+    assert downed.turns_remaining == 1
+
+    _finish_turn(game, coalition)  # end of the turn they went down in
+    assert downed in coalition.downed_pilots
+    assert downed.pilot.downed
+    assert downed.turns_remaining == 1
+    assert FlightType.CSAR in set(downed.mission_types(Player.BLUE))
+
+    _finish_turn(game, coalition)  # nobody came during that turn
+    assert downed not in coalition.downed_pilots
+    assert downed.pilot.status is PilotStatus.Dead
+
+
+def test_survival_counts_rescue_missions() -> None:
+    from game.theater.player import Player
+
+    game = _make_game(csar_survival_turns=3)
+    downed = _make_downed(game, Player.BLUE, was_player=False)
+    coalition = downed.squadron.coalition
+    _finish_turn(game, coalition)
+    seen = []
+    while downed in coalition.downed_pilots:
+        seen.append(downed.turns_remaining)
+        _finish_turn(game, coalition)
+    assert seen == [3, 2, 1]
+
+
+def test_finish_turn_increments_before_coalition_end_turn() -> None:
+    from game.game import Game
+
+    game = MagicMock()
+    game.turn = 5
+    seen: list[int] = []
+    game.blue.end_turn.side_effect = lambda: seen.append(game.turn)
+    game.red.end_turn.side_effect = lambda: seen.append(game.turn)
+    game.theater.controlpoints = []
+    with patch("game.theater.shipmovement.move_and_reparent_ships"):
+        Game.finish_turn(game, MagicMock(), skipped=True)
+    assert seen == [6, 6]
 
 
 # ---------------------------------------------------------------------------
@@ -752,6 +887,50 @@ def test_ejection_downs_pilot() -> None:
     ):
         processor._process_lost_pilot(loss, debriefing, CsarService(game))
     assert pilot.downed
+
+
+def _eject(pilot: Pilot, **settings: Any) -> list[DownedPilot]:
+    """Processes the loss of a blue aircraft whose pilot ejected in the mission,
+    and returns the coalition's downed pilots."""
+    from game.theater.player import Player
+
+    game = _make_game(**settings)
+    game.settings.invulnerable_player_pilots = False
+    game.theater.closest_control_point.return_value.is_friendly.return_value = True
+    game.theater.conflicts.return_value = []
+    loss = _loss(pilot, Player.BLUE)
+    debriefing = MagicMock()
+    debriefing.ejected_pilot_positions = {id(pilot): Point(50.0, 60.0, _TERRAIN)}
+    with patch(
+        "game.squadrons.csarservice.find_downed_pilot_position",
+        return_value=Point(50.0, 60.0, _TERRAIN),
+    ):
+        MissionResultsProcessor(game)._process_lost_pilot(
+            loss, debriefing, CsarService(game)
+        )
+    return loss.flight.squadron.coalition.downed_pilots
+
+
+def test_ejected_ai_pilot_dies_when_ai_rescues_are_off() -> None:
+    """#69: the setting gates the campaign side, not only MOOSE's own handler."""
+    pilot = Pilot("AI", player=False)
+    downed = _eject(pilot, csar_rescue_ai_pilots=False)
+    assert pilot.status is PilotStatus.Dead
+    assert downed == []
+
+
+def test_ejected_player_pilot_goes_down_when_ai_rescues_are_off() -> None:
+    pilot = Pilot("Client", player=True)
+    downed = _eject(pilot, csar_rescue_ai_pilots=False)
+    assert pilot.downed
+    assert len(downed) == 1
+
+
+def test_ejected_ai_pilot_goes_down_when_ai_rescues_are_on() -> None:
+    pilot = Pilot("AI", player=False)
+    downed = _eject(pilot, csar_rescue_ai_pilots=True)
+    assert pilot.downed
+    assert len(downed) == 1
 
 
 def test_no_ejection_failed_roll_kills() -> None:
@@ -873,7 +1052,7 @@ def test_flown_ai_flight_needs_the_mission_to_confirm_the_rescue() -> None:
     processor = MissionResultsProcessor(game)
     processor.commit_csar_results(debriefing)
     assert not downed.pilot.recovering
-    assert not downed.pilot.missing_in_action
+    assert downed.pilot.status is PilotStatus.Active
 
 
 def test_flown_ai_flight_is_credited_when_the_mission_confirms_it() -> None:

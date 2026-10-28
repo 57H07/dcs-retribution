@@ -593,7 +593,7 @@ class SquadronDialog(QDialog):
         if self.check_disabled_button_states(self.toggle_leave_button, index):
             return
         pilot = self.squadron_model.pilot_at_index(index)
-        # Leave only applies to active/on-leave pilots. Downed, recovering and MIA
+        # Leave only applies to active/on-leave pilots. Downed, recovering and captive
         # pilots cannot be toggled, so disable the button and label their state.
         if pilot.status not in (PilotStatus.Active, PilotStatus.OnLeave):
             self.toggle_leave_button.setEnabled(False)

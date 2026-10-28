@@ -781,9 +781,10 @@ class Settings:
         detail=(
             "A pilot who comes down this close to a control point does not need a "
             "rescue flight: inside a friendly one they make their own way back and "
-            "go straight into recovery, inside an enemy one they are captured and "
-            "go missing in action. Only pilots outside every control point's radius "
-            "become downed pilots on the map. Set to 0 to always require a rescue."
+            "go straight into recovery, inside an enemy one they are taken "
+            "prisoner (or killed if prisoners are not taken). Only pilots outside "
+            "every control point's radius become downed pilots on the map. Set to 0 "
+            "to always require a rescue."
         ),
     )
     csar_safe_zone_recovery: bool = boolean_option(
@@ -820,6 +821,19 @@ class Settings:
         max=200,
         detail="How far from every front line a pilot must come down to count as safe.",
     )
+    csar_prisoners_of_war: bool = boolean_option(
+        "Unrescued pilots can be taken prisoner",
+        CAMPAIGN_MANAGEMENT_PAGE,
+        PILOTS_AND_SQUADRONS_SECTION,
+        default=False,
+        detail=(
+            "Unchecked (default): a downed pilot whose survival turns run out is "
+            "dead, and so is one who comes down on top of an enemy base.\n\n"
+            "Checked: such a pilot is instead taken prisoner of war by the enemy "
+            "base within the capture radius below, keeps their squadron slot, and "
+            "comes home if that base is captured. Anyone out of range still dies."
+        ),
+    )
     csar_capture_radius: int = bounded_int_option(
         "Capture radius for unrescued pilots (nm)",
         CAMPAIGN_MANAGEMENT_PAGE,
@@ -828,12 +842,12 @@ class Settings:
         min=0,
         max=200,
         detail=(
-            "A pilot whose survival turns run out is taken prisoner only if they "
-            "are in enemy territory and this close to the enemy base that finds "
-            "them. Anyone further out is simply missing in action -- nobody "
-            "reached them either way. Prisoners come home if their base is "
-            "captured; the missing do not. Set to 0 so an unrescued pilot is "
-            "always missing rather than captured. "
+            "Only used when unrescued pilots can be taken prisoner. A pilot whose "
+            "survival turns run out is taken prisoner only if they are in enemy "
+            "territory and this close to the enemy base that finds them. Anyone "
+            "further out dies -- nobody reached them either way. Prisoners come "
+            "home if their base is captured. Set to 0 so an unrescued pilot is "
+            "never captured. "
             "Kept separate from the landing radius above, which resolves a pilot "
             "the moment they come down: anyone still on the map is by definition "
             "outside it, so reusing it here would mean no one is ever captured."
@@ -863,7 +877,7 @@ class Settings:
         max=10,
         detail=(
             "Number of turns a downed pilot in friendly rear territory waits for "
-            "rescue before going missing in action."
+            "rescue before being declared dead (or taken prisoner)."
         ),
     )
     csar_survival_turns_hostile: int = bounded_int_option(
@@ -876,7 +890,7 @@ class Settings:
         detail=(
             "Number of turns a downed pilot in hostile territory or close to a front "
             "line, where enemy ground forces are more likely to capture them waits for "
-            "rescue before going missing in action."
+            "rescue before being declared dead (or taken prisoner)."
         ),
     )
     csar_ai_recovery_turns: int = bounded_int_option(
@@ -1469,8 +1483,11 @@ class Settings:
         GAMEPLAY_SECTION,
         default=True,
         detail=(
-            "If set, Ops.CSAR will register AI downed pilots in the mission for "
-            "player flights, not only player-flown ejections."
+            "Checked (default): AI pilots who eject go down on the campaign map "
+            "and can be rescued like player pilots, and Ops.CSAR also handles AI "
+            "ejections in the mission.\n\n"
+            "Unchecked: only player pilots go down; an AI pilot is lost with their "
+            "aircraft, as without CSAR."
         ),
     )
     csar_player_hover_height: int = bounded_int_option(

@@ -175,7 +175,13 @@ class PilotStatus(Enum):
     Downed = "Downed"
     #: Rescued by CSAR but temporarily unavailable while recovering.
     Recovering = "Recovering"
-    #: A downed pilot who was never rescued in time.
+    #: A downed pilot who was never rescued and is held by an enemy base
+    #: (``Pilot.held_at``). Retaking that base frees them. Only reachable with the
+    #: ``csar_prisoners_of_war`` setting on.
+    PrisonerOfWar = "Prisoner of war"
+    #: Legacy: saves made before #64 stored unrescued pilots here. Never assigned
+    #: any more; ``Pilot.__setstate__`` converts it to PrisonerOfWar (held at a
+    #: base) or Dead (not held). Kept so those saves still unpickle.
     MissingInAction = "Missing in action"
 
 
@@ -188,15 +194,22 @@ class Pilot:
     #: Number of turns until a Recovering pilot returns to Active. Only meaningful
     #: while status is Recovering.
     turns_until_available: int = field(default=0)
-    #: The control point holding this pilot prisoner, for one who went missing
-    #: rather than being rescued. Retaking that base frees them. None means their
-    #: fate is not tied to any base, and they stay missing.
+    #: The control point holding this pilot prisoner. Only set while status is
+    #: PrisonerOfWar; retaking that base frees them.
     held_at: Optional[UUID] = field(default=None)
 
     def __setstate__(self, state: dict[str, Any]) -> None:
         # Older saves predate CSAR and won't have these fields.
         state.setdefault("turns_until_available", 0)
         state.setdefault("held_at", None)
+        # Saves made before #64: an unrescued pilot was MissingInAction, held by a
+        # base or not. A held one is a prisoner; anyone else was never coming back,
+        # which is what Dead now says.
+        if state.get("status") is PilotStatus.MissingInAction:
+            if state["held_at"] is not None:
+                state["status"] = PilotStatus.PrisonerOfWar
+            else:
+                state["status"] = PilotStatus.Dead
         self.__dict__.update(state)
 
     @property
@@ -216,8 +229,8 @@ class Pilot:
         return self.status is PilotStatus.Recovering
 
     @property
-    def missing_in_action(self) -> bool:
-        return self.status is PilotStatus.MissingInAction
+    def prisoner_of_war(self) -> bool:
+        return self.status is PilotStatus.PrisonerOfWar
 
     def send_on_leave(self) -> None:
         if self.status is not PilotStatus.Active:
@@ -236,21 +249,20 @@ class Pilot:
         """Marks the pilot as shot down and awaiting CSAR rescue."""
         self.status = PilotStatus.Downed
 
-    def go_mia(self, held_at: Optional[UUID] = None) -> None:
-        """Marks a downed pilot as missing in action (rescue never came).
+    def take_prisoner(self, held_at: UUID) -> None:
+        """Marks a downed pilot as a prisoner of war held at a control point.
 
-        ``held_at`` is the control point that took them prisoner, if any. Taking
-        that base back frees them; see ``release_from_captivity``.
+        Taking that base back frees them; see ``release_from_captivity``.
         """
         if self.status is not PilotStatus.Downed:
-            raise RuntimeError("Only downed pilots may go missing in action")
-        self.status = PilotStatus.MissingInAction
+            raise RuntimeError("Only downed pilots may be taken prisoner")
+        self.status = PilotStatus.PrisonerOfWar
         self.held_at = held_at
 
     def release_from_captivity(self, turns: int) -> None:
         """Frees a prisoner when the base holding them is retaken."""
-        if self.status is not PilotStatus.MissingInAction:
-            raise RuntimeError("Only missing pilots may be released from captivity")
+        if self.status is not PilotStatus.PrisonerOfWar:
+            raise RuntimeError("Only prisoners of war may be released from captivity")
         self.held_at = None
         self.status = PilotStatus.Downed
         self.begin_recovery(turns)

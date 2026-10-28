@@ -2,6 +2,7 @@
 
 import pickle
 from typing import Any
+from uuid import uuid4
 
 from game.coalition import Coalition
 from game.db.gamedb import GameDb
@@ -76,3 +77,23 @@ def test_old_pilot_loads_as_an_active_pilot() -> None:
     assert restored.status is PilotStatus.Active
     assert restored.turns_until_available == 0
     assert restored.held_at is None
+
+
+def _legacy_missing_pilot(held_at: Any) -> Pilot:
+    """A pilot pickled before #64, when an unrescued pilot was MissingInAction."""
+    pilot = Pilot("Legacy")
+    pilot.status = PilotStatus.MissingInAction
+    pilot.held_at = held_at
+    return pickle.loads(pickle.dumps(pilot))
+
+
+def test_old_save_prisoner_loads_as_a_prisoner_of_war() -> None:
+    held_at = uuid4()
+    restored = _legacy_missing_pilot(held_at)
+    assert restored.status is PilotStatus.PrisonerOfWar
+    assert restored.held_at == held_at
+
+
+def test_old_save_missing_pilot_loads_as_dead() -> None:
+    restored = _legacy_missing_pilot(None)
+    assert restored.status is PilotStatus.Dead

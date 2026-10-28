@@ -575,7 +575,7 @@ class SquadronModel(QAbstractListModel):
     def toggle_leave_state(self, index: QModelIndex) -> None:
         pilot = self.pilot_at_index(index)
         # send_on_leave/return_from_leave only accept Active/OnLeave pilots and
-        # raise otherwise, so downed/recovering/MIA pilots are a no-op here.
+        # raise otherwise, so downed/recovering/captive pilots are a no-op here.
         if not (pilot.on_leave or pilot.status is PilotStatus.Active):
             return
         self.beginResetModel()
