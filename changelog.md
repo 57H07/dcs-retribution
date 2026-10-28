@@ -57,6 +57,7 @@
 * **[Plugins]** New CTLD option "Create default pickup/drop zones at bases without CTLD zones" (off by default): airfields and FOBs/FARPs whose campaign declares no `<name> CTLD` zone get generated pickup and drop zones beside the runway or the FARP; a warning explains when none can be placed.
 * **[Engine]** Upgrade PySide6 (Qt) from 6.4.2 to 6.11.2.
 * **[UX]** New "Dark" and "Light" themes built from design tokens (colours, typography, spacing, radii) kept in a single JSON file that generates both the Qt stylesheets and the map's CSS variables. Fresh installs start in the dark theme; existing installs keep their theme, and "Vanilla" and "DCS World" stay available. (GFX-01.1)
+* **[UX]** The app and the campaign map now use the bundled Inter font (SIL Open Font License), with no network or system font needed, sized for correct rendering at 100 %, 150 % and 200 % display scaling. (GFX-01.4)
 
 ## Fixes
 * **[Campaign]** CSAR: a downed pilot whose survival countdown runs out is now dead instead of missing in action forever. New setting "Unrescued pilots can be taken prisoner" (off by default) keeps the capture flow, with a distinct "Prisoner of war" status; prisoners in existing saves stay prisoners, other missing pilots load as dead. (#64)
