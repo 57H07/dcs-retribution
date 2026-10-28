@@ -20,7 +20,8 @@ export const StaticControlPoint = (props: StaticControlPointProps) => {
           radius={22}
           interactive={false}
           pathOptions={{
-            color: "#d32f2f",
+            // --color-danger-default: SVG stroke attributes do not resolve CSS variables.
+            color: "#b23b3b",
             weight: 3,
             dashArray: "6 4",
             fill: false,
