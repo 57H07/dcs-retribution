@@ -1,0 +1,18 @@
+/* Bundled Inter variable font (GFX-01.4), SIL Open Font License 1.1: see
+   fonts/OFL.txt (shipped in the build as licenses/Inter-OFL.txt). The files
+   are bundled by the build, so the map needs no network access for its font. */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("./fonts/InterVariable.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("./fonts/InterVariable-Italic.woff2") format("woff2");
+}

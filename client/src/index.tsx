@@ -3,9 +3,14 @@ import { setupStore } from "./app/store";
 import { SocketProvider } from "./components/socketprovider/socketprovider";
 import "./index.css";
 import * as serviceWorker from "./serviceWorker";
+import "./theme/fonts.css";
+import "./theme/tokens.css";
+import { applyTheme, themeFromQuery } from "./theme/theme";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
+
+applyTheme(themeFromQuery(window.location.search));
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
