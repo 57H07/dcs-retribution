@@ -400,6 +400,11 @@ class LuaGenerator:
                     "hoverExtraction",
                     "true" if downed.needs_hover_extraction(settings) else "false",
                 )
+                # Players hoist a survivor in the water too; over land they may
+                # land or hoist, csar_hover_extraction being for the AI only.
+                item.add_key_value(
+                    "playerHoverOnly", "true" if downed.in_water else "false"
+                )
 
         rescue_types = csar_object.get_or_create_item("rescueTypes")
         seen: set[str] = set()

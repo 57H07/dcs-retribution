@@ -3,6 +3,7 @@ delivery-only AI rescues and front proximity (#65, #66, #67, #68, #71)."""
 
 from __future__ import annotations
 
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Optional, cast
 from unittest.mock import MagicMock, patch
@@ -445,3 +446,132 @@ def test_pilot_inside_a_sam_ring_gets_no_csar_even_at_full_aggressiveness() -> N
     assert not _plan_with_route(PlanCsar(target), state, package)
     assert target in state.csar_targets
     assert sam in state.threatening_air_defenses
+
+
+# ---------------------------------------------------------------------------
+# #67: hoist mandatory for player pickups at sea
+# ---------------------------------------------------------------------------
+
+_OPSCSAR = Path("resources/plugins/opscsar/OpsCSAR.lua")
+
+
+def _generated_csar_pilots(*in_water: bool) -> Any:
+    import lupa
+
+    from game.missiongenerator.luagenerator import LuaData, LuaGenerator
+    from game.missiongenerator.missiondata import CsarPilotGroupInfo, MissionData
+
+    game = MagicMock()
+    game.settings.csar_enabled = True
+    game.settings.csar_enabled_red = False
+    # Player choice over land; the AI setting must not leak into it.
+    game.settings.csar_hover_extraction = False
+    game.settings.csar_player_hover_height = 20
+    game.settings.csar_player_hover_distance = 10
+    game.settings.csar_cluster_radius = 0
+    game.blue.player = Player.BLUE
+    game.red.player = Player.RED
+    game.red.downed_pilots = []
+    game.blue.faction.country.id = 2
+    game.red.faction.country.id = 0
+    mission_data = MissionData()
+    pilots = []
+    for wet in in_water:
+        downed = _downed_at(Point(0.0, 0.0, _TERRAIN))
+        downed.in_water = wet
+        pilots.append(downed)
+        mission_data.csar_pilot_groups[str(downed.id)] = CsarPilotGroupInfo(
+            group_name=f"CSAR {downed.id}",
+            unit_name=f"CSAR {downed.id} Unit #1",
+            group_id=1,
+            blue=True,
+        )
+    game.blue.downed_pilots = pilots
+
+    generator = LuaGenerator.__new__(LuaGenerator)
+    generator.game = game
+    generator.mission_data = mission_data
+    lua_data = LuaData("dcsRetribution")
+    generator.generate_csar_data(lua_data)
+    runtime = lupa.LuaRuntime()
+    runtime.execute(lua_data.serialize())
+    return runtime.globals().dcsRetribution.CSAR.downedPilots
+
+
+def test_pilot_in_the_water_is_hover_only_for_players() -> None:
+    pilots = _generated_csar_pilots(True, False)
+
+    assert pilots[1].playerHoverOnly == "true"
+    assert pilots[2].playerHoverOnly == "false"
+
+
+def _ops_csar_runtime() -> Any:
+    import lupa
+
+    runtime = lupa.LuaRuntime(unpack_returned_tuples=True)
+    runtime.execute(
+        "env = { info = function() end, warning = function() end,"
+        " error = function(msg) error(msg) end }"
+    )
+    # No CSAR data injected: the script defines its globals and returns.
+    runtime.execute(_OPSCSAR.read_text(encoding="utf-8"))
+    runtime.execute("""
+        calls = {}
+        messages = {}
+        instance = { messageTime = 10 }
+        function instance:_CheckCloseWoundedGroup(d, heli, name, group, group_name)
+            table.insert(calls, group_name)
+            return "original"
+        end
+        function instance:_DisplayMessageToSAR(unit, text)
+            table.insert(messages, text)
+        end
+        OpsCSAR_RequireHoverFor(instance, function(group_name)
+            return group_name == "wet"
+        end)
+        function heli(in_air)
+            return { InAir = function() return in_air end }
+        end
+    """)
+    return runtime
+
+
+def test_player_cannot_pick_up_a_pilot_in_the_water_landed() -> None:
+    lua = _ops_csar_runtime()
+
+    result = lua.eval(
+        'instance:_CheckCloseWoundedGroup(40, heli(false), "h", nil, "wet")'
+    )
+
+    assert result is True
+    assert len(lua.globals().calls) == 0
+    assert "hover" in lua.globals().messages[1]
+
+
+def test_player_hovering_over_a_pilot_in_the_water_gets_the_normal_hoist() -> None:
+    lua = _ops_csar_runtime()
+
+    result = lua.eval(
+        'instance:_CheckCloseWoundedGroup(40, heli(true), "h", nil, "wet")'
+    )
+
+    assert result == "original"
+    assert lua.globals().calls[1] == "wet"
+
+
+def test_player_may_land_for_a_pilot_on_land() -> None:
+    lua = _ops_csar_runtime()
+
+    result = lua.eval(
+        'instance:_CheckCloseWoundedGroup(40, heli(false), "h", nil, "dry")'
+    )
+
+    assert result == "original"
+    assert lua.globals().calls[1] == "dry"
+
+
+def test_ops_csar_wires_hover_only_pilots_for_players() -> None:
+    lua = _OPSCSAR.read_text(encoding="utf-8")
+
+    assert "OpsCSAR_RequireHoverFor(my," in lua
+    assert 'player_hover_only = dp.playerHoverOnly == "true"' in lua

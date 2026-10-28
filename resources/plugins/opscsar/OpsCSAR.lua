@@ -101,6 +101,45 @@ local function opscsar_warn(msg)
     env.warning("[OpsCSAR] " .. tostring(msg))
 end
 
+-- Hoist only, for players, for survivors who must be winched out (in the water).
+--
+-- Ops.CSAR picks a survivor up on whichever comes first: the helicopter landed
+-- within loadDistance, or hovering low and close for long enough. It has no
+-- notion of a pickup that must be a hoist, so a player who sets down nearby (on a
+-- ship's deck, a platform, a shoreline) would collect a pilot who is in the sea.
+-- This wraps its per-pilot proximity check so that, for those pilots, a landed
+-- helicopter is told to hover instead and nothing else happens; an airborne one
+-- gets Ops.CSAR's own hover logic untouched.
+--
+-- `is_hover_only(group_name)` says whether the survivor in that group is one of
+-- them. A global so tests can exercise it without a whole mission.
+function OpsCSAR_RequireHoverFor(instance, is_hover_only)
+    local check_close = instance._CheckCloseWoundedGroup
+    instance._CheckCloseWoundedGroup = function(
+        self, distance, heli_unit, heli_name, wounded_group, wounded_group_name
+    )
+        if is_hover_only(wounded_group_name) and not heli_unit:InAir() then
+            -- Same contract as the original: true while the helicopter is
+            -- close, which keeps Ops.CSAR checking on it.
+            if distance < 500 then
+                self:_DisplayMessageToSAR(
+                    heli_unit,
+                    "The pilot is in the water. You cannot pick them up landed: "
+                        .. "hover over them to winch them up.",
+                    self.messageTime,
+                    true,
+                    true
+                )
+                return true
+            end
+            return false
+        end
+        return check_close(
+            self, distance, heli_unit, heli_name, wounded_group, wounded_group_name
+        )
+    end
+end
+
 local function opscsar_main()
     if not dcsRetribution or type(dcsRetribution.CSAR) ~= "table" then
         opscsar_log("No CSAR data injected; nothing to do.")
@@ -191,6 +230,11 @@ local function opscsar_main()
         -- after the mission, so with the default no player helicopter is ever a
         -- rescue helicopter: no menu, no pickup, silently.
         my.useprefix = false
+        -- Nothing can land beside a survivor in the water: players hoist them.
+        OpsCSAR_RequireHoverFor(my, function(group_name)
+            local entry = tracked_by_group(group_name)
+            return entry ~= nil and entry.player_hover_only
+        end)
         -- MOOSE defaults these to USA/Russia and applies them with InitCountry()
         -- when spawning a pilot. DCS derives coalition membership from country, so
         -- they must match the faction actually flying for this side.
@@ -887,6 +931,9 @@ local function opscsar_main()
                         -- Per pilot: the setting, or forced because they are in
                         -- the water and nothing can land beside them.
                         hover = dp.hoverExtraction == "true",
+                        -- Players too, but only in the water: over land they
+                        -- may land or hoist as they like.
+                        player_hover_only = dp.playerHoverOnly == "true",
                         -- Kept so a scripted hoist can tell Ops.CSAR to stop
                         -- tracking a pilot who is aboard a helicopter.
                         instance = instance,
