@@ -133,6 +133,47 @@ def test_downed_and_recovering_pilots_hold_their_slot() -> None:
     assert recovering in sqn.recovering_pilots
 
 
+def _prisoner() -> Pilot:
+    pilot = Pilot("POW")
+    pilot.go_down()
+    pilot.take_prisoner(held_at=uuid4())
+    return pilot
+
+
+def test_prisoner_keeps_their_slot_at_turn_end() -> None:
+    """#63: a full squadron with a prisoner does not recruit a replacement."""
+    prisoner = _prisoner()
+    sqn = _make_squadron([Pilot(f"A{i}") for i in range(9)] + [prisoner])
+    sqn.pilot_pool = []
+    sqn.available_pilots = []
+
+    assert sqn._number_of_unfilled_pilot_slots == 0
+    sqn.replenish_lost_pilots()
+    assert len(sqn.current_roster) == 10
+
+
+def test_freed_prisoner_reclaims_their_slot() -> None:
+    prisoner = _prisoner()
+    sqn = _make_squadron([Pilot(f"A{i}") for i in range(9)] + [prisoner])
+
+    assert sqn.release_prisoner(prisoner, 2)
+    assert prisoner.recovering
+    assert sqn._number_of_unfilled_pilot_slots == 0
+
+
+def test_freed_prisoner_goes_on_leave_when_the_squadron_is_full() -> None:
+    """The documented rule for #63: if the limit was lowered while they were held,
+    the freed pilot goes on leave (outside the limit) rather than overfilling."""
+    prisoner = _prisoner()
+    sqn = _make_squadron([Pilot(f"A{i}") for i in range(9)] + [prisoner])
+    sqn.settings.squadron_pilot_limit = 9
+
+    assert not sqn.release_prisoner(prisoner, 2)
+    assert prisoner.on_leave
+    assert prisoner.held_at is None
+    assert sqn._number_of_unfilled_pilot_slots == 0
+
+
 def test_downed_pilots_are_untaskable_without_pilot_limits() -> None:
     """With per-squadron pilot limits off there is no slot to reserve, and
     replenishment is skipped entirely -- but a downed or recovering pilot must
@@ -525,8 +566,9 @@ def _game_with_prisoner(held_at: Any) -> tuple[Any, Pilot, Any]:
     prisoner.go_down()
     prisoner.take_prisoner(held_at=held_at)
 
-    squadron = MagicMock()
-    squadron.prisoners_of_war = [prisoner]
+    squadron = _make_squadron([prisoner])
+    squadron.name = "VF-1"
+    squadron.nickname = None
     game = _make_game()
     game.blue.player = _blue_red_player().BLUE
     game.red.player = _blue_red_player().RED

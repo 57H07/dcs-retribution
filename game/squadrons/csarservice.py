@@ -378,12 +378,14 @@ class CsarService:
                         if pilot.player
                         else self.game.settings.csar_ai_recovery_turns
                     )
-                    pilot.release_from_captivity(turns)
+                    if squadron.release_prisoner(pilot, turns):
+                        outcome = f"returns to {squadron} in {turns} turn(s)"
+                    else:
+                        outcome = f"is on leave until {squadron} has a free slot"
                     self.game.message(
                         "Prisoner of war freed",
                         f"{pilot.name} was freed by the capture of "
-                        f"{control_point.name} and returns to {squadron} in "
-                        f"{turns} turn(s).",
+                        f"{control_point.name} and {outcome}.",
                     )
 
     def _remove(self, downed: DownedPilot) -> None:
