@@ -1,9 +1,9 @@
 @import "~leaflet-ruler/src/leaflet-ruler.css";
 
 .result-tooltip{
-  border-color: #435466;
+  border-color: var(--color-border-strong);
 }
 
 .moving-tooltip{
-  border-color: #435466;
+  border-color: var(--color-border-strong);
 }
