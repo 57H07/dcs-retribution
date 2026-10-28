@@ -97,6 +97,8 @@ def _planning_state(
     state = TheaterState.__new__(TheaterState)
     state.csar_targets = [target]
     state.csar_flights_planned = 0
+    state.enemy_air_defenses = []
+    state.enemy_ships = []
     state.active_front_lines = front_lines or []
     battle_positions = SimpleNamespace(
         in_priority_order=[SimpleNamespace(position=p) for p in armour or []]
@@ -319,3 +321,127 @@ def test_cas_escort_is_planned_when_aircraft_are_available() -> None:
     assert result is not None
     planned = [call.args[0].task for call in builder.plan_flight.call_args_list]
     assert planned == [FlightType.CSAR, FlightType.CAS]
+
+
+# ---------------------------------------------------------------------------
+# #66: the autoplanner keeps CSAR routes out of SAM zones
+# ---------------------------------------------------------------------------
+
+
+def _sam(x_nm: float, range_nm: float) -> Any:
+    from game.data.groups import GroupTask
+
+    sam = MagicMock()
+    sam.position = Point(x_nm * _NM, 0.0, _TERRAIN)
+    sam.task = GroupTask.MERAD
+    sam.max_threat_range.return_value = nautical_miles(range_nm)
+    sam.max_detection_range.return_value = nautical_miles(range_nm)
+    sam.distance_to.side_effect = lambda target: sam.position.distance_to_point(
+        target.position
+    )
+    return sam
+
+
+def _sam_state(target: DownedPilot, sam: Any, aggressiveness: int = 0) -> Any:
+    from shapely.geometry import Point as ShapelyPoint, Polygon
+
+    from game.threatzones import ThreatZones
+
+    state = _planning_state(target, cas_escort=False)
+    state.enemy_air_defenses = [sam]
+    state.threatening_air_defenses = []
+    state.detecting_air_defenses = []
+    ring = ShapelyPoint(sam.position.x, sam.position.y).buffer(
+        sam.max_threat_range.return_value.meters
+    )
+    state.threat_zones = ThreatZones(MagicMock(), Polygon(), ring, ring)
+    state.context.coalition = MagicMock()
+    state.context.coalition.player = Player.BLUE
+    state.context.coalition.game.settings = SimpleNamespace(
+        ownfor_autoplanner_aggressiveness=aggressiveness,
+        opfor_autoplanner_aggressiveness=aggressiveness,
+    )
+    return state
+
+
+def _planned_package(*route_nm: tuple[float, float]) -> Any:
+    """A CSAR package whose helicopters fly through these (x, y) points (nm)."""
+    from game.ato.flightwaypointtype import FlightWaypointType
+
+    waypoints = [
+        SimpleNamespace(
+            position=Point(x * _NM, y * _NM, _TERRAIN),
+            waypoint_type=FlightWaypointType.NAV,
+        )
+        for x, y in route_nm
+    ]
+    # Not flown, so never a reason to cancel: right on top of the SAM.
+    waypoints.append(
+        SimpleNamespace(
+            position=Point(50 * _NM, 0.0, _TERRAIN),
+            waypoint_type=FlightWaypointType.BULLSEYE,
+        )
+    )
+    flight = MagicMock()
+    flight.flight_type = FlightType.CSAR
+    flight.flight_plan.waypoints = waypoints
+    package = MagicMock()
+    package.flights = [flight]
+    package.remove_flight.side_effect = package.flights.remove
+    return package, flight
+
+
+def _plan_with_route(task: Any, state: Any, package: Any) -> bool:
+    from game.commander.tasks.packageplanningtask import PackagePlanningTask
+
+    def fulfil(self: Any, _state: Any) -> bool:
+        self.package = package
+        return True
+
+    with patch.object(PackagePlanningTask, "preconditions_met", fulfil):
+        return bool(task.preconditions_met(state))
+
+
+def test_csar_route_through_a_sam_ring_is_not_planned() -> None:
+    from game.commander.tasks.primitive.csar import PlanCsar
+
+    target = _downed_at(Point(100 * _NM, 0.0, _TERRAIN))
+    sam = _sam(50, 10)
+    state = _sam_state(target, sam)
+    package, flight = _planned_package((0, 0), (100, 0), (0, 0))
+    task = PlanCsar(target)
+
+    assert not _plan_with_route(task, state, package)
+
+    # Aircraft go back to the inventory...
+    package.remove_flight.assert_called_once_with(flight)
+    assert task.package is None
+    # ...the pilot stays on the board for a later turn...
+    assert target in state.csar_targets
+    assert state.csar_flights_planned == 0
+    # ...and the SAM in the way is a threat worth clearing.
+    assert sam in state.threatening_air_defenses
+
+
+def test_csar_route_around_a_sam_ring_is_planned() -> None:
+    from game.commander.tasks.primitive.csar import PlanCsar
+
+    target = _downed_at(Point(100 * _NM, 0.0, _TERRAIN))
+    state = _sam_state(target, _sam(50, 10))
+    # Detour 30 nm north of the SAM, out and back.
+    package, _ = _planned_package((0, 0), (50, 30), (100, 0), (50, 30), (0, 0))
+
+    assert _plan_with_route(PlanCsar(target), state, package)
+
+
+def test_pilot_inside_a_sam_ring_gets_no_csar_even_at_full_aggressiveness() -> None:
+    from game.commander.tasks.primitive.csar import PlanCsar
+
+    target = _downed_at(Point(52 * _NM, 0.0, _TERRAIN))
+    sam = _sam(50, 10)
+    state = _sam_state(target, sam, aggressiveness=100)
+    package, _ = _planned_package((0, 0), (52, 0), (0, 0))
+
+    assert not _plan_with_route(PlanCsar(target), state, package)
+    assert target in state.csar_targets
+    assert sam in state.threatening_air_defenses

@@ -1318,6 +1318,8 @@ def _csar_planning_state(targets: list[DownedPilot], max_flights: int) -> Any:
     state = TheaterState.__new__(TheaterState)
     state.csar_targets = list(targets)
     state.csar_flights_planned = 0
+    state.enemy_air_defenses = []
+    state.enemy_ships = []
     state.context = cast(
         Any,
         SimpleNamespace(
