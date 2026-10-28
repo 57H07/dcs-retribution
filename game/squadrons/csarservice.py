@@ -402,8 +402,17 @@ class CsarService:
 
         Called at coalition turn end. Iterates a copy since ``expire`` mutates the
         underlying list.
+
+        A pilot who went down in the mission that just ended is not aged: that
+        mission was no rescue opportunity. ``Game.finish_turn`` has already
+        incremented the turn counter, so they are the ones downed on the
+        previous turn. Without this, survival S gave only S - 1 rescue missions
+        (#70); with it, ``turns_remaining`` is the number of rescue missions left.
         """
+        just_ended = self.game.turn - 1
         for downed in list(coalition.downed_pilots):
+            if downed.turn_downed >= just_ended:
+                continue
             downed.turns_remaining -= 1
             if downed.turns_remaining <= 0:
                 self.expire(downed)

@@ -699,6 +699,7 @@ def test_advance_turn_expires_to_dead() -> None:
     downed = _make_downed(game, Player.BLUE, was_player=True)
     downed.turns_remaining = 1
     coalition = downed.squadron.coalition
+    game.turn = downed.turn_downed + 2  # end of the turn after they went down
     CsarService(game).advance_turn_for(coalition)
     assert downed.pilot.status is PilotStatus.Dead
     assert downed not in coalition.downed_pilots
@@ -710,9 +711,67 @@ def test_advance_turn_decrements_without_expiry() -> None:
     game = _make_game()
     downed = _make_downed(game, Player.BLUE, was_player=True)
     downed.turns_remaining = 3
+    game.turn = downed.turn_downed + 2
     CsarService(game).advance_turn_for(downed.squadron.coalition)
     assert downed.turns_remaining == 2
     assert downed.pilot.downed
+
+
+def _finish_turn(game: Any, coalition: Any) -> None:
+    """What Game.finish_turn does for CSAR: bump the turn, then age the pilots
+    (Coalition.end_turn). test_finish_turn_increments_before_coalition_end_turn
+    pins that order."""
+    game.turn += 1
+    CsarService(game).advance_turn_for(coalition)
+
+
+def test_survival_one_leaves_one_rescue_turn() -> None:
+    """#70: a pilot downed with survival 1 is still on the board, and targetable
+    by a CSAR package, at the start of the next turn."""
+    from game.theater.player import Player
+
+    game = _make_game(csar_survival_turns=1)
+    downed = _make_downed(game, Player.BLUE, was_player=False)
+    coalition = downed.squadron.coalition
+    assert downed.turns_remaining == 1
+
+    _finish_turn(game, coalition)  # end of the turn they went down in
+    assert downed in coalition.downed_pilots
+    assert downed.pilot.downed
+    assert downed.turns_remaining == 1
+    assert FlightType.CSAR in set(downed.mission_types(Player.BLUE))
+
+    _finish_turn(game, coalition)  # nobody came during that turn
+    assert downed not in coalition.downed_pilots
+    assert downed.pilot.status is PilotStatus.Dead
+
+
+def test_survival_counts_rescue_missions() -> None:
+    from game.theater.player import Player
+
+    game = _make_game(csar_survival_turns=3)
+    downed = _make_downed(game, Player.BLUE, was_player=False)
+    coalition = downed.squadron.coalition
+    _finish_turn(game, coalition)
+    seen = []
+    while downed in coalition.downed_pilots:
+        seen.append(downed.turns_remaining)
+        _finish_turn(game, coalition)
+    assert seen == [3, 2, 1]
+
+
+def test_finish_turn_increments_before_coalition_end_turn() -> None:
+    from game.game import Game
+
+    game = MagicMock()
+    game.turn = 5
+    seen: list[int] = []
+    game.blue.end_turn.side_effect = lambda: seen.append(game.turn)
+    game.red.end_turn.side_effect = lambda: seen.append(game.turn)
+    game.theater.controlpoints = []
+    with patch("game.theater.shipmovement.move_and_reparent_ships"):
+        Game.finish_turn(game, MagicMock(), skipped=True)
+    assert seen == [6, 6]
 
 
 # ---------------------------------------------------------------------------
