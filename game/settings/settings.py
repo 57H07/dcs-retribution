@@ -999,6 +999,32 @@ class Settings:
         HQ_AUTOMATION_SECTION,
         default=True,
     )
+    plan_logistics_missions: bool = boolean_option(
+        "Plan logistics missions",
+        CAMPAIGN_MANAGEMENT_PAGE,
+        HQ_AUTOMATION_SECTION,
+        default=False,
+        detail=(
+            "If enabled, the auto-planner flies ground units held in reserve at rear "
+            "bases to front-line bases and FOBs, bases without a road link first. "
+            "Cargo planes airdrop at bases they cannot land at and are used beyond "
+            "helicopter range (100 NM). Units arrive next turn and are lost with "
+            "the aircraft. Bases cut off from any road, sea or air link are flagged "
+            "on the map."
+        ),
+    )
+    logistics_transport_fleet_share: int = bounded_int_option(
+        "Share of the transport fleet used for logistics (%)",
+        CAMPAIGN_MANAGEMENT_PAGE,
+        HQ_AUTOMATION_SECTION,
+        default=50,
+        min=0,
+        max=100,
+        detail=(
+            "Caps the auto-assignable transport aircraft that logistics missions may "
+            "use each turn, keeping the rest available for Air Assault."
+        ),
+    )
     automate_front_line_stance: bool = boolean_option(
         "Automatically manage front line stances",
         CAMPAIGN_MANAGEMENT_PAGE,

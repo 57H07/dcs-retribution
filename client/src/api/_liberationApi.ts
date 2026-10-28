@@ -465,6 +465,7 @@ export type ControlPoint = {
   mobile: boolean;
   destination?: LatLng;
   sidc: string;
+  cut_off?: boolean;
 };
 export type ValidationError = {
   loc: (string | number)[];

@@ -203,6 +203,10 @@ class Coalition:
             self.transfers.plan_transports(self.game.conditions.start_time)
 
         if not is_turn_0:
+            # Before mission planning, which would otherwise take every transport for
+            # Air Assault; the logistics fleet share keeps the rest for it.
+            with logged_duration("Logistics planning"):
+                self.plan_logistics(self.game.conditions.start_time)
             self.plan_missions(self.game.conditions.start_time)
         self.plan_procurement()
 
@@ -218,6 +222,11 @@ class Coalition:
             cp.ground_unit_orders.refund_all(self)
         for squadron in self.air_wing.iter_squadrons():
             squadron.refund_orders()
+
+    def plan_logistics(self, now: datetime) -> None:
+        from game.logistics import plan_logistics
+
+        plan_logistics(self.game, self.player, now)
 
     def plan_missions(self, now: datetime) -> None:
         color = "Blue" if self.player.is_blue else "Red"

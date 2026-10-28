@@ -5,6 +5,7 @@ import { PropsWithChildren } from "react";
 
 const mockMarker = jest.fn();
 const mockLayerGroup = jest.fn();
+const mockCircleMarker = jest.fn();
 jest.mock("react-leaflet", () => ({
   LayerGroup: (props: PropsWithChildren<any>) => {
     mockLayerGroup(props);
@@ -12,6 +13,9 @@ jest.mock("react-leaflet", () => ({
   },
   Marker: (props: any) => {
     mockMarker(props);
+  },
+  CircleMarker: (props: any) => {
+    mockCircleMarker(props);
   },
 }));
 
@@ -42,6 +46,29 @@ describe("ControlPointsLayer", () => {
       },
     });
     expect(mockMarker).toBeCalledTimes(2);
+    expect(mockCircleMarker).not.toHaveBeenCalled();
+  });
+
+  it("flags cut-off control points", () => {
+    renderWithProviders(<ControlPointsLayer />, {
+      preloadedState: {
+        controlPoints: {
+          controlPoints: {
+            foo: {
+              id: "foo",
+              name: "Foo",
+              blue: true,
+              position: new LatLng(0, 0),
+              mobile: false,
+              sidc: "",
+              cut_off: true,
+            },
+          },
+        },
+      },
+    });
+    expect(mockMarker).toBeCalledTimes(1);
+    expect(mockCircleMarker).toBeCalledTimes(1);
   });
 
   it("renders LayerGroup but no contents if no combat", () => {

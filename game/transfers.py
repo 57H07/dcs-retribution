@@ -284,18 +284,37 @@ def airlift_capacity_per_aircraft(unit_type: AircraftType) -> int:
     return 1 if unit_type.dcs_unit_type.helicopter else 2
 
 
+def delivers_by_airdrop(unit_type: AircraftType, destination: ControlPoint) -> bool:
+    """True if a transport of this type would airdrop its cargo at destination.
+
+    A fixed-wing transport that cannot land at the destination (a FOB, a FARP, a
+    closed runway) drops the cargo on a low pass instead. Only planned logistics
+    flights (TRN-03) are allowed to do that, see ``airlift_compatible``.
+    """
+    return not unit_type.dcs_unit_type.helicopter and not destination.can_operate(
+        unit_type
+    )
+
+
 def airlift_compatible(
     unit_type: AircraftType,
     home: ControlPoint,
     transfer: TransferOrder,
     next_stop: ControlPoint,
+    allow_airdrop: bool = False,
 ) -> bool:
-    """True if an aircraft based at home can airlift transfer to next_stop."""
+    """True if an aircraft based at home can airlift transfer to next_stop.
+
+    With allow_airdrop, a fixed-wing transport may serve a next_stop it cannot land
+    at by airdropping the cargo there.
+    """
     if not unit_type.capable_of(FlightType.TRANSPORT):
         return False
     if not transfer.origin.can_operate(unit_type):
         return False
-    if not next_stop.can_operate(unit_type):
+    if not next_stop.can_operate(unit_type) and not (
+        allow_airdrop and delivers_by_airdrop(unit_type, next_stop)
+    ):
         return False
 
     # Cargo planes have no maximum range.
@@ -444,6 +463,15 @@ class AirliftPlanner:
     def create_package_for_squadron(self, squadron: Squadron, now: datetime) -> Package:
         """Plans the airlift with one flight of the player-chosen squadron."""
         self.check_player_squadron(squadron)
+        return self.create_package_with(squadron, now)
+
+    def create_package_with(self, squadron: Squadron, now: datetime) -> Package:
+        """Plans the airlift with one flight of squadron, without further checks.
+
+        The caller has already checked that the squadron can carry the whole
+        transfer to the next stop (see ``player_airlift_problem`` and the logistics
+        planner).
+        """
         self.create_airlift_flight(squadron)
         self._commit_package(now)
         return self.package
