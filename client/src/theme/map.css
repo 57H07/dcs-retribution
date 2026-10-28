@@ -1,0 +1,142 @@
+/* Leaflet controls, tooltips and popups styled with the design tokens
+   (GFX-04.4), so they follow the light and dark themes. The tokens are CSS
+   variables switched by data-theme on the document element: changing the
+   theme restyles the map without reloading it.
+
+   Selectors are prefixed with body so they win over leaflet.css and plugin
+   stylesheets whatever the import order. The map context menus are Qt menus
+   (the map posts the click to the backend), styled by the Qt stylesheet. */
+
+/* Shown before the first tiles arrive and around the offline basemap. */
+body .leaflet-container {
+  background: var(--color-bg-canvas);
+}
+
+/* Layer selector. */
+body .leaflet-control-layers,
+body .leaflet-control-layers-expanded {
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 1px 5px var(--color-shadow-default);
+}
+
+body .leaflet-control-layers-separator {
+  border-top-color: var(--color-border-default);
+}
+
+body .leaflet-control-layers-selector {
+  accent-color: var(--color-accent-default);
+}
+
+/* The layer and ruler icons are dark pictures: the icon filter turns them
+   light on a dark surface. */
+body .leaflet-control-layers-toggle {
+  filter: var(--map-icon-filter);
+}
+
+/* Bars: zoom buttons, ruler, legend. */
+body .leaflet-bar {
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 5px var(--color-shadow-default);
+}
+
+body .leaflet-bar a {
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  border-bottom-color: var(--color-border-default);
+}
+
+body .leaflet-bar a:hover,
+body .leaflet-bar a:focus {
+  background-color: var(--color-button-hover);
+}
+
+body .leaflet-bar a.leaflet-disabled {
+  background-color: var(--color-button-disabled-background);
+  color: var(--color-button-disabled-text);
+}
+
+body .leaflet-ruler {
+  position: relative;
+  background-image: none;
+}
+
+body .leaflet-ruler::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("~leaflet-ruler/dist/icon.png") no-repeat center;
+  filter: var(--map-icon-filter);
+}
+
+body .leaflet-ruler:hover::before,
+body .leaflet-ruler-clicked::before {
+  background-image: url("~leaflet-ruler/dist/icon-colored.png");
+  filter: none;
+}
+
+body .leaflet-ruler-clicked {
+  border-color: var(--color-accent-default) !important;
+}
+
+/* Scale and attribution. */
+body .leaflet-control-scale-line {
+  background: var(--color-overlay-background);
+  color: var(--color-overlay-text);
+  border-color: var(--color-overlay-text);
+}
+
+body .leaflet-control-attribution {
+  background: var(--color-overlay-background);
+  color: var(--color-overlay-text);
+}
+
+body .leaflet-control-attribution a {
+  color: var(--color-text-accent);
+}
+
+/* Tooltips (labels of bases, objectives, routes, ruler distances). */
+body .leaflet-tooltip {
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-strong);
+  box-shadow: 0 1px 3px var(--color-shadow-default);
+}
+
+body .leaflet-tooltip-top::before {
+  border-top-color: var(--color-border-strong);
+}
+
+body .leaflet-tooltip-bottom::before {
+  border-bottom-color: var(--color-border-strong);
+}
+
+body .leaflet-tooltip-left::before {
+  border-left-color: var(--color-border-strong);
+}
+
+body .leaflet-tooltip-right::before {
+  border-right-color: var(--color-border-strong);
+}
+
+/* Popups. */
+body .leaflet-popup-content-wrapper,
+body .leaflet-popup-tip {
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  box-shadow: 0 3px 14px var(--color-shadow-default);
+}
+
+body .leaflet-container a.leaflet-popup-close-button {
+  color: var(--color-text-secondary);
+}
+
+body .leaflet-container a.leaflet-popup-close-button:hover,
+body .leaflet-container a.leaflet-popup-close-button:focus {
+  color: var(--color-text-primary);
+}

@@ -4,6 +4,7 @@ import { SocketProvider } from "./components/socketprovider/socketprovider";
 import "./index.css";
 import * as serviceWorker from "./serviceWorker";
 import "./theme/fonts.css";
+import "./theme/map.css";
 import "./theme/tokens.css";
 import { applyTheme, themeFromQuery } from "./theme/theme";
 import React from "react";
