@@ -786,6 +786,40 @@ class Settings:
             "become downed pilots on the map. Set to 0 to always require a rescue."
         ),
     )
+    csar_safe_zone_recovery: bool = boolean_option(
+        "Recover pilots who come down in a safe zone",
+        CAMPAIGN_MANAGEMENT_PAGE,
+        PILOTS_AND_SQUADRONS_SECTION,
+        default=False,
+        detail=(
+            "A pilot who comes down on land over friendly territory, far enough "
+            "from enemy threat zones and from every front line (distances below), "
+            "is picked up by friendly forces without a rescue flight and goes "
+            "straight into recovery. When off, only the control point radius above "
+            "spares a pilot the rescue."
+        ),
+    )
+    csar_safe_zone_threat_distance: int = bounded_int_option(
+        "Safe zone: minimum distance to enemy threats (nm)",
+        CAMPAIGN_MANAGEMENT_PAGE,
+        PILOTS_AND_SQUADRONS_SECTION,
+        default=10,
+        min=0,
+        max=200,
+        detail=(
+            "How far outside the enemy's air defence and air threat zones a pilot "
+            "must come down to count as safe. 0 only requires being outside them."
+        ),
+    )
+    csar_safe_zone_front_line_distance: int = bounded_int_option(
+        "Safe zone: minimum distance to the front line (nm)",
+        CAMPAIGN_MANAGEMENT_PAGE,
+        PILOTS_AND_SQUADRONS_SECTION,
+        default=30,
+        min=0,
+        max=200,
+        detail="How far from every front line a pilot must come down to count as safe.",
+    )
     csar_capture_radius: int = bounded_int_option(
         "Capture radius for unrescued pilots (nm)",
         CAMPAIGN_MANAGEMENT_PAGE,
@@ -867,6 +901,19 @@ class Settings:
         detail=(
             "Number of turns a rescued human pilot is unavailable (recovering) before "
             "returning to active duty."
+        ),
+    )
+    csar_rescue_bounty: int = bounded_int_option(
+        "CSAR rescue bounty ($M)",
+        CAMPAIGN_MANAGEMENT_PAGE,
+        PILOTS_AND_SQUADRONS_SECTION,
+        default=0,
+        min=0,
+        max=1000,
+        detail=(
+            "Money credited to a coalition's budget for each of its downed pilots "
+            "rescued by a CSAR flight. Pilots who walk home or are picked up in a "
+            "safe zone earn nothing. Set to 0 to disable."
         ),
     )
 

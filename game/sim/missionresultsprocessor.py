@@ -150,6 +150,9 @@ class MissionResultsProcessor:
             # and the debriefing windows read this to report the recovery.
             debriefing.record_rescue(downed)
             csar.rescue(downed)
+            bounty = self.game.settings.csar_rescue_bounty
+            if bounty > 0:
+                downed.squadron.coalition.adjust_budget(bounty)
 
     def commit_air_losses(self, debriefing: Debriefing) -> None:
         csar = CsarService(self.game)

@@ -457,6 +457,12 @@ class Debriefing:
     def rescued_pilots_for(self, player: Player) -> list[RescuedPilot]:
         return [p for p in self.rescued_pilots.values() if p.player == player]
 
+    def rescue_bounty_for(self, player: Player) -> int:
+        """Money ($M) credited to ``player`` for this mission's CSAR rescues."""
+        return self.game.settings.csar_rescue_bounty * len(
+            self.rescued_pilots_for(player)
+        )
+
     def captured_pilots_for(self, player: Player) -> list[CapturedPilot]:
         """Pilots taken prisoner this turn.
 

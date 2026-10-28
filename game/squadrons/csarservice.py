@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Optional, TYPE_CHECKING
 
 from dcs.mapping import Point
+from shapely.geometry import LineString, Point as ShapelyPoint
 
 from game.squadrons.csarplacement import find_downed_pilot_position
 from game.squadrons.downedpilot import DownedPilot
@@ -75,6 +76,9 @@ class CsarService:
             pilot, position, player, was_player, squadron
         )
         if resolved:
+            return None
+
+        if self._resolve_in_safe_zone(pilot, position, player, was_player):
             return None
 
         valid = find_downed_pilot_position(self.game.theater, position)
@@ -177,6 +181,65 @@ class CsarService:
                 f"{pilot.name} came down inside enemy lines near {nearest.name} "
                 f"and is now held there.",
             )
+        return True
+
+    def _resolve_in_safe_zone(
+        self, pilot: Pilot, position: Point, player: Player, was_player: bool
+    ) -> bool:
+        """Recovers a pilot who came down in a safe zone, if the setting is on.
+
+        Safe means on land over friendly territory, at least
+        csar_safe_zone_threat_distance outside the enemy's threat zones and
+        csar_safe_zone_front_line_distance from every front line. Friendly forces
+        pick them up without a rescue flight, so they go straight into recovery
+        and are back on duty from the next turn. Returns whether the pilot was
+        dealt with here.
+        """
+        if not self.game.settings.csar_safe_zone_recovery:
+            return False
+        if not self.is_safe_zone(position, player):
+            return False
+
+        pilot.go_down()
+        turns = (
+            self.game.settings.csar_player_recovery_turns
+            if was_player
+            else self.game.settings.csar_ai_recovery_turns
+        )
+        pilot.begin_recovery(turns)
+        self.game.message(
+            "Pilot recovered",
+            f"{pilot.name} came down in a safe zone and was picked up by friendly "
+            f"forces. They return to duty in {turns} turn(s).",
+        )
+        return True
+
+    def is_safe_zone(self, position: Point, player: Player) -> bool:
+        """Whether a pilot of ``player`` coming down at ``position`` is safe."""
+        settings = self.game.settings
+        theater = self.game.theater
+
+        if theater.is_in_sea(position):
+            # Nobody walks home from the water: a ditched pilot needs a hoist.
+            return False
+        if not theater.closest_control_point(position).is_friendly(player):
+            return False
+
+        threats = self.game.threat_zone_for(player.opponent)
+        if not threats.all.is_empty:
+            if threats.threatened(position):
+                return False
+            min_threat = nautical_miles(settings.csar_safe_zone_threat_distance)
+            if threats.distance_to_threat(position) < min_threat:
+                return False
+
+        min_front = nautical_miles(settings.csar_safe_zone_front_line_distance)
+        here = ShapelyPoint(position.x, position.y)
+        for front_line in theater.conflicts():
+            points = [(p.x, p.y) for p in front_line.points]
+            line = LineString(points) if len(points) > 1 else ShapelyPoint(points[0])
+            if line.distance(here) < min_front.meters:
+                return False
         return True
 
     def fallback_position_for(self, flight: Flight) -> Point:

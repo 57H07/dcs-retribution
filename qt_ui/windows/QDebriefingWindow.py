@@ -105,6 +105,11 @@ class RescueReport(QGroupBox):
                 row = layout.rowCount()
                 layout.addWidget(QLabel(pilot.name), row, 0)
                 layout.addWidget(QLabel(f"{pilot.squadron} ({pilot.aircraft})"), row, 1)
+            bounty = debriefing.rescue_bounty_for(player)
+            if bounty > 0:
+                layout.addWidget(
+                    QLabel(f"Rescue bounty: ${bounty}M"), layout.rowCount(), 0
+                )
 
         if not any_rescues:
             layout.addWidget(QLabel("No pilots were recovered."), 0, 0)
