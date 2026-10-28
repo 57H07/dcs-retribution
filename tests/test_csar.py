@@ -656,7 +656,7 @@ def test_survival_turns_hostile_when_near_front() -> None:
     csar = CsarService(game)
     # Friendly-owned nearest CP, but a front line right on top of the pilot.
     game.theater.closest_control_point.return_value.is_friendly.return_value = True
-    front = SimpleNamespace(position=Point(0.0, 0.0, _TERRAIN))
+    front = SimpleNamespace(points=[Point(0.0, 0.0, _TERRAIN)])
     game.theater.conflicts.return_value = [front]
     turns = csar._survival_turns(Point(0.0, 0.0, _TERRAIN), Player.BLUE)
     assert turns == 2
