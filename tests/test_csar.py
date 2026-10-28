@@ -201,6 +201,7 @@ def _make_game(**settings: Any) -> Any:
         # Off unless a test is exercising it, so the rest keep placing pilots on
         # the map rather than resolving them against a mocked control point.
         csar_control_point_radius=0,
+        csar_safe_zone_recovery=False,
         csar_capture_radius=30,
         csar_survival_turns=3,
         csar_survival_turns_hostile=2,
