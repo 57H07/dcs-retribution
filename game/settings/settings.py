@@ -902,6 +902,19 @@ class Settings:
             "returning to active duty."
         ),
     )
+    csar_rescue_bounty: int = bounded_int_option(
+        "CSAR rescue bounty ($M)",
+        CAMPAIGN_MANAGEMENT_PAGE,
+        PILOTS_AND_SQUADRONS_SECTION,
+        default=0,
+        min=0,
+        max=1000,
+        detail=(
+            "Money credited to a coalition's budget for each of its downed pilots "
+            "rescued by a CSAR flight. Pilots who walk home or are picked up in a "
+            "safe zone earn nothing. Set to 0 to disable."
+        ),
+    )
 
     # HQ Automation
     automate_runway_repair: bool = boolean_option(
