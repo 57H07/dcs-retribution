@@ -8,7 +8,7 @@ interface MapZonesState {
 }
 
 const initialState: MapZonesState = {
-  mapZones: { inclusion: [], exclusion: [], sea: [] },
+  mapZones: { inclusion: [], exclusion: [], sea: [], offline_image: null },
 };
 
 const mapZonesSlice = createSlice({
@@ -21,6 +21,8 @@ const mapZonesSlice = createSlice({
         state.mapZones.exclusion = action.payload.map_zones.exclusion;
         state.mapZones.inclusion = action.payload.map_zones.inclusion;
         state.mapZones.sea = action.payload.map_zones.sea;
+        state.mapZones.offline_image =
+          action.payload.map_zones.offline_image ?? null;
       }
     });
     builder.addCase(gameUnloaded, (state) => {

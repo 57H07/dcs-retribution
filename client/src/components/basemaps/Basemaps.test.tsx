@@ -1,9 +1,11 @@
 // Must come before leaflet: lets Leaflet draw the offline basemap polygons.
 import "../../testutils/leafletSvg";
 import { renderWithProviders } from "../../testutils";
+import { MapZones } from "../../api/_liberationApi";
 import Basemaps, {
   OFFLINE_BASEMAP_NAME,
   OnlineLayerRenderer,
+  offlineBasemapImageUrl,
 } from "./Basemaps";
 import { TILE_ERROR_THRESHOLD, TileHealth } from "./tileHealth";
 import { act, screen } from "@testing-library/react";
@@ -28,7 +30,20 @@ const SQUARE = [
   ],
 ];
 
-function renderMap() {
+const VECTOR_ZONES: MapZones = { inclusion: [SQUARE], exclusion: [], sea: [] };
+
+// A heavy theatre (Falklands): no polygons, a precomputed image instead.
+const IMAGE_ZONES: MapZones = {
+  inclusion: [],
+  exclusion: [],
+  sea: [],
+  offline_image: {
+    south_west: { lat: 41, lng: 41 },
+    north_east: { lat: 43, lng: 43 },
+  },
+};
+
+function renderMap(mapZones: MapZones = VECTOR_ZONES) {
   const map = createRef<Map>();
   renderWithProviders(
     <MapContainer center={[42, 42]} zoom={8} ref={map}>
@@ -38,7 +53,7 @@ function renderMap() {
     </MapContainer>,
     {
       preloadedState: {
-        mapZones: { mapZones: { inclusion: [SQUARE], exclusion: [], sea: [] } },
+        mapZones: { mapZones },
       },
     },
   );
@@ -125,5 +140,24 @@ describe("Basemaps", () => {
     const map = renderMap();
     expect(tileLayersOn(map)).toHaveLength(0);
     expect(screen.getByRole("status")).toBeTruthy();
+  });
+
+  it("draws the precomputed image of a heavy theatre", () => {
+    jest.spyOn(window.navigator, "onLine", "get").mockReturnValue(false);
+    const map = renderMap(IMAGE_ZONES);
+
+    const pane = map.getPane("offlineBasemap");
+    const image = pane?.querySelector("img");
+    expect(image?.getAttribute("src")).toBe(offlineBasemapImageUrl());
+    expect(pane?.querySelector("path")).toBeNull();
+  });
+});
+
+describe("offlineBasemapImageUrl", () => {
+  it("asks for the offline basemap colours", () => {
+    const url = new URL(offlineBasemapImageUrl());
+    expect(url.pathname).toBe("/map-zones/offline-basemap");
+    expect(url.searchParams.get("sea")).toMatch(/^[0-9a-f]{6}$/i);
+    expect(url.searchParams.get("land_excluded")).toMatch(/^[0-9a-f]{6}$/i);
   });
 });

@@ -99,6 +99,20 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: () => ({ url: `/map-zones/terrain` }),
     }),
+    getOfflineBasemapImage: build.query<
+      GetOfflineBasemapImageApiResponse,
+      GetOfflineBasemapImageApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/map-zones/offline-basemap`,
+        params: {
+          sea: queryArg.sea,
+          land: queryArg.land,
+          land_excluded: queryArg.landExcluded,
+          coastline: queryArg.coastline,
+        },
+      }),
+    }),
     listUnculledZones: build.query<
       ListUnculledZonesApiResponse,
       ListUnculledZonesApiArg
@@ -330,6 +344,14 @@ export type GetGameStateApiArg = void;
 export type GetTerrainZonesApiResponse =
   /** status 200 Successful Response */ MapZones;
 export type GetTerrainZonesApiArg = void;
+export type GetOfflineBasemapImageApiResponse =
+  /** status 200 Successful Response */ any;
+export type GetOfflineBasemapImageApiArg = {
+  sea?: string;
+  land?: string;
+  landExcluded?: string;
+  coastline?: string;
+};
 export type ListUnculledZonesApiResponse =
   /** status 200 Successful Response */ UnculledZone[];
 export type ListUnculledZonesApiArg = void;
@@ -575,10 +597,15 @@ export type Game = {
   unculled_zones: UnculledZone[];
   map_zones: MapZones;
 };
+export type OfflineBasemapImage = {
+  south_west: LatLng;
+  north_east: LatLng;
+};
 export type MapZones = {
   inclusion: LatLng[][][];
   exclusion: LatLng[][][];
   sea: LatLng[][][];
+  offline_image?: OfflineBasemapImage | null;
 };
 export const {
   useListControlPointsQuery,
@@ -595,6 +622,7 @@ export const {
   useGetFrontLineByIdQuery,
   useGetGameStateQuery,
   useGetTerrainZonesQuery,
+  useGetOfflineBasemapImageQuery,
   useListUnculledZonesQuery,
   useGetThreatZonesQuery,
   useGetNavmeshQuery,
