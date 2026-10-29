@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from game.game import TurnState
     from game.server.qt.models import QtDialog, QtLink
     from qt_ui.models import GameModel
+    from qt_ui.simcontroller import SimController
 
 
 class GameContext:
@@ -33,6 +34,21 @@ class GameContext:
     def get_model(cls) -> GameModel:
         return cls._game_model
 
+    @classmethod
+    def get_sim(cls) -> SimController:
+        """The turn simulation (sim speed, fast forward, mission generation)."""
+        return cls._game_model.sim_controller
+
+
+class UiOptions:
+    """Command-line options of the UI the web client needs (`qt_ui.uiflags`)."""
+
+    show_sim_speed_controls: bool = False
+
+    @classmethod
+    def set(cls, show_sim_speed_controls: bool) -> None:
+        cls.show_sim_speed_controls = show_sim_speed_controls
+
 
 class QtCallbacks:
     def __init__(
@@ -45,6 +61,7 @@ class QtCallbacks:
         open_dialog: Callable[[QtDialog], None] | None = None,
         open_link: Callable[[QtLink], None] | None = None,
         edit_package: Callable[[Package], None] | None = None,
+        mission_generated: Callable[[], None] | None = None,
     ) -> None:
         self.create_new_package = create_new_package
         self.show_tgo_info = show_tgo_info
@@ -59,6 +76,9 @@ class QtCallbacks:
         self.open_dialog = open_dialog
         self.open_link = open_link
         self.edit_package = edit_package
+        # Opens the Qt window waiting for the mission result once the web UI took
+        # off (WEB-01.1), until WEB-05.1 migrates it. Same contract: emit a signal.
+        self.mission_generated = mission_generated
 
 
 class QtContext:

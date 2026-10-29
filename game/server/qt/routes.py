@@ -175,8 +175,6 @@ def open_qt_dialog(
     open_dialog = _require_callback(qt.open_dialog)
     if dialog.needs_game and game is None:
         raise CommandError("No campaign is loaded.")
-    if dialog is QtDialog.TAKE_OFF and game is not None and game.turn == 0:
-        raise CommandError("Begin the campaign before taking off.")
     open_dialog(dialog)
 
 

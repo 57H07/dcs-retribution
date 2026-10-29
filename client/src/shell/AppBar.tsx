@@ -1,8 +1,8 @@
-// Minimal app bar of the web shell (WEB-00.3): every action of the Qt menus,
-// toolbars and top panel stays reachable. The full top bar is WEB-01.1.
-import { commandErrorMessage } from "../api/commands";
-import { usePassTurnMutation } from "../api/liberationApi";
-import { Button, Menu, MenuEntry, useToast } from "../ui";
+// Top bar of the command view (WEB-01.1, after the WEB-00.3 app bar): the
+// campaign state of QTopPanel, the campaign screens and every action of the Qt
+// menus and toolbars. The turn buttons sit at the bottom right of the map.
+import { CampaignStatus } from "../command/CampaignStatus";
+import { Button, IconButton, Menu, MenuEntry } from "../ui";
 import styles from "./AppBar.module.css";
 import { PATHS } from "./paths";
 import { QtCommands, useQtCommands } from "./useQtCommands";
@@ -110,23 +110,20 @@ export function appMenus({
 export function AppBar({ onNewPackage, onShowHelp }: AppBarProps) {
   const qt = useQtCommands();
   const navigate = useNavigate();
-  const toast = useToast();
-  const [passTurn, { isLoading: passingTurn }] = usePassTurnMutation();
-
-  const onPassTurn = async () => {
-    const result = await passTurn();
-    if ("error" in result) {
-      toast({
-        title: "Could not pass the turn",
-        description: commandErrorMessage(result.error),
-        tone: "danger",
-      });
-    }
-  };
 
   return (
     <header className={styles.bar}>
       <NavLink to={PATHS.command} className={styles.brand} end>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          aria-hidden="true"
+        >
+          <path d="M12 2l9 5v10l-9 5-9-5V7z" />
+          <path d="M12 7l4 2.5v5L12 17l-4-2.5v-5z" />
+        </svg>
         Retribution
       </NavLink>
       <nav className={styles.menus} aria-label="Main menu">
@@ -134,28 +131,36 @@ export function AppBar({ onNewPackage, onShowHelp }: AppBarProps) {
           <Menu key={menu.label} label={menu.label} items={menu.items} />
         ))}
       </nav>
-      <div className={styles.quick}>
+      <CampaignStatus
+        onOpenFinances={() => qt.openDialog("finances")}
+        onOpenIntel={() => qt.openDialog("intel")}
+      />
+      <nav className={styles.screens} aria-label="Campaign screens">
         <Button variant="ghost" onClick={() => navigate(PATHS.airWing)}>
           Air Wing
         </Button>
         <Button variant="ghost" onClick={() => qt.openDialog("transfers")}>
           Transfers
         </Button>
-        <Button
-          variant="ghost"
-          onClick={() => qt.openDialog("air-tasking-order")}
+        <Button variant="ghost" onClick={() => navigate(PATHS.reports)}>
+          Reports
+        </Button>
+        <IconButton
+          aria-label="Settings"
+          onClick={() => navigate(PATHS.settings)}
         >
-          Packages
-        </Button>
-      </div>
-      <div className={styles.turn}>
-        <Button onClick={onPassTurn} disabled={passingTurn}>
-          Pass turn
-        </Button>
-        <Button variant="primary" onClick={() => qt.openDialog("take-off")}>
-          Take off
-        </Button>
-      </div>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z" />
+          </svg>
+        </IconButton>
+      </nav>
     </header>
   );
 }

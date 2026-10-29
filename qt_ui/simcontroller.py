@@ -49,6 +49,12 @@ class SimController(QObject):
         return time
 
     @property
+    def simulation_speed(self) -> SimSpeedSetting:
+        if self.game_loop is None:
+            return SimSpeedSetting.PAUSED
+        return self.game_loop.timer.simulation_speed
+
+    @property
     def elapsed_time(self) -> timedelta:
         if self.game_loop is None:
             return timedelta()

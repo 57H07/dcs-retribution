@@ -7,6 +7,8 @@ from PySide6.QtCore import QObject, Signal
 from game import Game
 from game.debriefing import Debriefing
 from game.game import TurnState
+from game.server import EventStream
+from game.sim import GameUpdateEvents
 
 
 class GameUpdateSignal(QObject):
@@ -32,6 +34,8 @@ class GameUpdateSignal(QObject):
     def updateBudget(self, game: Game):
         # noinspection PyUnresolvedReferences
         self.budgetupdated.emit(game)
+        # The web top bar refreshes the budget on this event (WEB-01.1).
+        EventStream.put_nowait(GameUpdateEvents().update_budget())
 
     def sendDebriefing(self, debriefing: Debriefing) -> None:
         # noinspection PyUnresolvedReferences

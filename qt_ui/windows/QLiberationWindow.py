@@ -33,7 +33,7 @@ from game.layout import LAYOUTS
 from game.persistency import pre_pretense_backups_dir
 from game.pretense.pretensemissiongenerator import PretenseMissionGenerator
 from game.server import EventStream, GameContext
-from game.server.dependencies import QtCallbacks, QtContext
+from game.server.dependencies import QtCallbacks, QtContext, UiOptions
 from game.server.qt.models import QtDialog, QtLink
 from game.theater import ControlPoint, MissionTarget, TheaterGroundObject
 from game.theater.controlpoint import motorpools_inside_capture_zone
@@ -48,11 +48,16 @@ from qt_ui.uncaughtexceptionhandler import UncaughtExceptionHandler
 from qt_ui.widgets.QTopPanel import QTopPanel
 from qt_ui.widgets.ato import QAirTaskingOrderPanel
 from qt_ui.widgets.map.QLiberationMap import QLiberationMap
+from qt_ui.windows.AirWingDialog import AirWingDialog
 from qt_ui.windows.GameUpdateSignal import GameUpdateSignal
+from qt_ui.windows.PendingTransfersDialog import PendingTransfersDialog
 from qt_ui.windows.QDebriefingWindow import QDebriefingWindow
+from qt_ui.windows.QWaitingForMissionResultWindow import QWaitingForMissionResultWindow
 from qt_ui.windows.basemenu.QBaseMenu2 import QBaseMenu2
+from qt_ui.windows.finances.QFinancesMenu import QFinancesMenu
 from qt_ui.windows.groundobject.QGroundObjectMenu import QGroundObjectMenu
 from qt_ui.windows.infos.QInfoPanel import QInfoPanel
+from qt_ui.windows.intel import IntelWindow
 from qt_ui.windows.logs.QLogsWindow import QLogsWindow
 from qt_ui.windows.newgame.QNewGameWizard import NewGameWizard
 from qt_ui.windows.notes.QNotesWindow import QNotesWindow
@@ -85,6 +90,8 @@ class QLiberationWindow(QMainWindow):
     open_dialog_signal = Signal(object)
     open_link_signal = Signal(object)
     edit_package_signal = Signal(object)
+    # WEB-01.1: the web UI took off; the Qt window waits for the mission result.
+    mission_generated_signal = Signal()
 
     def __init__(self, game: Game | None, ui_flags: UiFlags) -> None:
         super().__init__()
@@ -92,6 +99,10 @@ class QLiberationWindow(QMainWindow):
         self._uncaught_exception_handler = UncaughtExceptionHandler(self)
         # WEB-00.3: the web view fills the window and replaces the Qt chrome.
         self.web_ui = liberation_install.web_ui_enabled()
+        UiOptions.set(show_sim_speed_controls=ui_flags.show_sim_speed_controls)
+        # The Qt top panel only exists without the web UI (WEB-01.1).
+        self.top_panel: QTopPanel | None = None
+        self.dialog: QWidget | None = None
 
         self.game = game
         self.sim_controller = SimController(self.game)
@@ -107,6 +118,7 @@ class QLiberationWindow(QMainWindow):
         self.open_dialog_signal.connect(self.open_dialog)
         self.open_link_signal.connect(self.open_link)
         self.edit_package_signal.connect(self.open_edit_package_dialog)
+        self.mission_generated_signal.connect(self.wait_for_mission_result)
         QtContext.set_callbacks(
             QtCallbacks(
                 lambda target: self.new_package_signal.emit(target),
@@ -117,6 +129,7 @@ class QLiberationWindow(QMainWindow):
                 open_dialog=lambda dialog: self.open_dialog_signal.emit(dialog),
                 open_link=lambda link: self.open_link_signal.emit(link),
                 edit_package=lambda package: self.edit_package_signal.emit(package),
+                mission_generated=lambda: self.mission_generated_signal.emit(),
             )
         )
         Dialog.set_game(self.game_model)
@@ -191,12 +204,8 @@ class QLiberationWindow(QMainWindow):
     def _init_web_ui(self, ui_flags: UiFlags) -> None:
         """The map fills the window; the Qt panels move to windows opened on demand.
 
-        The top panel stays alive but hidden: it still refreshes after a turn passed
-        through the API and runs the take-off checks for the web shell.
+        The web top bar replaces QTopPanel (WEB-01.1): it is not created at all.
         """
-        self.top_panel = QTopPanel(self.game_model, self.sim_controller, ui_flags)
-        self.top_panel.setParent(self)
-        self.top_panel.hide()
         self.ato_window = self._panel_window("Air Tasking Order", self.ato_panel)
         self.reports_window = self._panel_window("Reports", self.info_panel)
         self.setCentralWidget(self.liberation_map)
@@ -226,7 +235,7 @@ class QLiberationWindow(QMainWindow):
 
     def connectSignals(self):
         GameUpdateSignal.get_instance().gameupdated.connect(self.setGame)
-        self.turn_passed_signal.connect(self.top_panel.on_turn_passed)
+        self.turn_passed_signal.connect(self.on_turn_passed)
         GameUpdateSignal.get_instance().debriefingReceived.connect(self.onDebriefing)
         GameUpdateSignal.get_instance().game_state_changed.connect(self.onEndGame)
         theme_signals().theme_changed.connect(self.refresh_theme_icons)
@@ -543,7 +552,8 @@ class QLiberationWindow(QMainWindow):
 
         GameUpdateSignal.get_instance().updateGame(None)
 
-        self.top_panel.setControls(False)
+        if self.top_panel is not None:
+            self.top_panel.setControls(False)
 
         title = "Victory!" if TurnState.WIN else "Defeat!"
         msgvar = "won" if TurnState.WIN else "lost"
@@ -725,18 +735,46 @@ class QLiberationWindow(QMainWindow):
             QtDialog.ABOUT: self.showAboutDialog,
             QtDialog.IMPORT_LAYOUTS: self.import_templates,
             QtDialog.PRETENSE_CAMPAIGN: self.newPretenseCampaign,
-            QtDialog.AIR_WING: self.top_panel.open_air_wing,
-            QtDialog.TRANSFERS: self.top_panel.open_transfers,
+            QtDialog.AIR_WING: self.open_air_wing,
+            QtDialog.TRANSFERS: self.open_transfers,
             QtDialog.AIR_TASKING_ORDER: lambda: self._show_panel("ato_window"),
             QtDialog.REPORTS: lambda: self._show_panel("reports_window"),
+            QtDialog.FINANCES: self.open_finances,
+            QtDialog.INTEL: self.open_intel,
             QtDialog.DEBRIEFING: self.show_last_debriefing,
-            QtDialog.TAKE_OFF: self.top_panel.launch_mission,
             QtDialog.QUIT: self.close,
         }
         # The game may have been unloaded between the request and this slot.
         if dialog.needs_game and self.game is None:
             return
         handlers[dialog]()
+
+    def on_turn_passed(self, state: TurnState) -> None:
+        """Refresh the Qt widgets once the web UI passed the turn."""
+        GameUpdateSignal.get_instance().updateGame(self.game)
+        GameUpdateSignal.get_instance().gameStateChanged(state)
+
+    def open_air_wing(self) -> None:
+        self.dialog = AirWingDialog(self.game_model, self)
+        self.dialog.show()
+
+    def open_transfers(self) -> None:
+        self.dialog = PendingTransfersDialog(self.game_model)
+        self.dialog.show()
+
+    def open_finances(self) -> None:
+        self.dialog = QFinancesMenu(self.game)
+        self.dialog.show()
+
+    def open_intel(self) -> None:
+        self.dialog = IntelWindow(self.game)
+        self.dialog.show()
+
+    def wait_for_mission_result(self) -> None:
+        """The web UI generated the mission: wait for its result (until WEB-05.1)."""
+        if self.game is None:
+            return
+        QWaitingForMissionResultWindow(self.game, self.sim_controller, self).exec()
 
     def _show_panel(self, name: str) -> None:
         # Without the web shell the panel is already part of the main window.

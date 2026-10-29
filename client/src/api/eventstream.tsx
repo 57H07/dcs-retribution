@@ -21,8 +21,10 @@ import {
   Flight,
   FrontLine,
   IadsConnection,
+  liberationApi,
   NavMesh,
   SupplyRoute,
+  Tags,
   Tgo,
   ThreatZones,
   UnculledZone,
@@ -35,7 +37,7 @@ import { LatLng } from "leaflet";
 import { updateIadsConnection, removeIadsConnection } from "./iadsNetworkSlice";
 import { supplyRoutesUpdated } from "./supplyRoutesSlice";
 
-interface GameUpdateEvents {
+export interface GameUpdateEvents {
   updated_flight_positions: { [id: string]: LatLng };
   new_combats: Combat[];
   updated_combats: Combat[];
@@ -58,6 +60,7 @@ interface GameUpdateEvents {
   reset_on_map_center: LatLng | null;
   game_unloaded: boolean;
   new_turn: boolean;
+  budget_updated: boolean;
 }
 
 export const handleStreamedEvents = (
@@ -153,4 +156,22 @@ export const handleStreamedEvents = (
   if (events.new_turn) {
     reloadGameState(dispatch, true);
   }
+
+  if (topBarChanged(events)) {
+    dispatch(liberationApi.util.invalidateTags([Tags.TOP_BAR]));
+  }
 };
+
+/** Events after which the top bar (WEB-01.1) refetches its data. */
+export function topBarChanged(events: GameUpdateEvents): boolean {
+  return (
+    events.new_turn ||
+    events.budget_updated ||
+    events.game_unloaded ||
+    events.reset_on_map_center != null ||
+    events.new_flights.length > 0 ||
+    events.updated_flights.length > 0 ||
+    events.deleted_flights.length > 0 ||
+    events.updated_control_points.length > 0
+  );
+}

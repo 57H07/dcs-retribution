@@ -1,0 +1,151 @@
+.campaign,
+.stat {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  min-width: 0;
+}
+
+.name {
+  font-family: var(--ui-font-display);
+  font-size: var(--ui-font-size-lg);
+  font-weight: var(--ui-font-weight-semibold);
+  letter-spacing: var(--ui-letter-spacing-display);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.sub {
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-xs);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
+}
+
+.divider {
+  width: 1px;
+  height: 32px;
+  background: var(--ui-color-line);
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-xl);
+}
+
+.stat {
+  border-radius: var(--ui-radius-md);
+}
+
+.stat:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-shadow-focus);
+}
+
+.label {
+  color: var(--ui-color-text-secondary);
+  font-family: var(--ui-font-display);
+  font-size: var(--ui-font-size-xs);
+  letter-spacing: var(--ui-letter-spacing-display);
+  text-transform: uppercase;
+}
+
+.value,
+.money,
+.income,
+.friendly,
+.enemy {
+  font-family: var(--ui-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.value {
+  font-size: var(--ui-font-size-lg);
+  font-weight: var(--ui-font-weight-medium);
+  white-space: nowrap;
+}
+
+.text {
+  font-size: var(--ui-font-size-md);
+  font-weight: var(--ui-font-weight-medium);
+  white-space: nowrap;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.boxes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-md);
+}
+
+.box {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-md);
+  min-height: var(--ui-size-control);
+  padding: var(--ui-space-sm) var(--ui-space-lg);
+  background: var(--ui-color-bg-canvas);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-color-text-primary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.box:hover {
+  border-color: var(--ui-color-line-strong);
+}
+
+.box:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-shadow-focus);
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+  color: var(--ui-color-accent);
+}
+
+.money {
+  font-size: var(--ui-font-size-lg);
+  font-weight: var(--ui-font-weight-medium);
+}
+
+.income {
+  color: var(--ui-color-success);
+  font-size: var(--ui-font-size-sm);
+}
+
+.friendly {
+  color: var(--ui-color-friendly);
+}
+
+.enemy {
+  color: var(--ui-color-hostile);
+}
+
+.slash {
+  color: var(--ui-color-text-disabled);
+}
+
+.box .label + .friendly {
+  margin-left: calc(-1 * var(--ui-space-xs));
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-xxs);
+}
+
+.placeholder {
+  color: var(--ui-color-text-secondary);
+}

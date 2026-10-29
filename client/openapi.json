@@ -566,6 +566,33 @@
         }
       }
     },
+    "/game/top-bar": {
+      "get": {
+        "summary": "Top Bar",
+        "description": "What the top bar and the turn buttons show; null without a campaign.",
+        "operationId": "get_top_bar",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/TopBarJs"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Top Bar"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/game/turn/pass": {
       "post": {
         "summary": "Pass Turn",
@@ -588,6 +615,142 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/game/mission/checks": {
+      "get": {
+        "summary": "Mission Checks",
+        "description": "What to confirm before taking off: no player pilot, missing pilots, flights\nstarting before the mission start.",
+        "operationId": "get_mission_checks",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionChecksJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/game/mission/fix-tots": {
+      "post": {
+        "summary": "Fix Tots",
+        "description": "\"Fix TOTs automatically\": moves each package with a flight starting before\nthe mission start to its earliest feasible TOT.",
+        "operationId": "fix_tots",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FixedTotsJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/game/mission": {
+      "post": {
+        "summary": "Take Off",
+        "description": "\"Take off\": fast forwards to first contact if the settings ask for it, writes\nthe mission for DCS, then opens the window waiting for its result.\n\nThe client runs the confirmations of `GET /game/mission/checks` first.",
+        "operationId": "generate_mission",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded, it has not begun, or flights are missing pilots.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/game/sim/speed": {
+      "put": {
+        "summary": "Sim Speed",
+        "description": "Pauses the turn simulation or runs it at a speed (sim speed controls).",
+        "operationId": "set_sim_speed",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimSpeedChangeJs"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded, it has not begun, or the simulation is complete.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -1635,6 +1798,22 @@
         ],
         "title": "DownedPilot"
       },
+      "FixedTotsJs": {
+        "properties": {
+          "packages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Packages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "packages"
+        ],
+        "title": "FixedTots"
+      },
       "FlightJs": {
         "properties": {
           "id": {
@@ -1715,6 +1894,30 @@
           "timing"
         ],
         "title": "Waypoint"
+      },
+      "ForceBalanceJs": {
+        "properties": {
+          "friendly": {
+            "type": "integer",
+            "title": "Friendly"
+          },
+          "enemy": {
+            "type": "integer",
+            "title": "Enemy"
+          },
+          "assessment": {
+            "type": "string",
+            "title": "Assessment"
+          }
+        },
+        "type": "object",
+        "required": [
+          "friendly",
+          "enemy",
+          "assessment"
+        ],
+        "title": "ForceBalance",
+        "description": "Friendly and enemy strength of one arm, as the Intel box rated it."
       },
       "FrontLineJs": {
         "properties": {
@@ -2142,6 +2345,55 @@
         ],
         "title": "MapZones"
       },
+      "MissionChecksJs": {
+        "properties": {
+          "has_player_pilots": {
+            "type": "boolean",
+            "title": "Has Player Pilots"
+          },
+          "flights_missing_pilots": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Flights Missing Pilots"
+          },
+          "packages_starting_in_the_past": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Packages Starting In The Past"
+          },
+          "max_player_count": {
+            "type": "integer",
+            "title": "Max Player Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "has_player_pilots",
+          "flights_missing_pilots",
+          "packages_starting_in_the_past",
+          "max_player_count"
+        ],
+        "title": "MissionChecks",
+        "description": "What the player must confirm or fix before taking off."
+      },
+      "MissionJs": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "title": "Mission",
+        "description": "The mission written for DCS."
+      },
       "NavMeshJs": {
         "properties": {
           "polys": {
@@ -2243,8 +2495,9 @@
           "transfers",
           "air-tasking-order",
           "reports",
+          "finances",
+          "intel",
           "debriefing",
-          "take-off",
           "quit"
         ],
         "title": "QtDialog"
@@ -2263,6 +2516,49 @@
         ],
         "title": "QtLink",
         "description": "External pages of the Help menu, opened in the system browser by Qt."
+      },
+      "SimJs": {
+        "properties": {
+          "speed": {
+            "$ref": "#/components/schemas/SimSpeedJs"
+          },
+          "time": {
+            "title": "Time",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "speed"
+        ],
+        "title": "Sim",
+        "description": "Speed and current time of the turn simulation."
+      },
+      "SimSpeedChangeJs": {
+        "properties": {
+          "speed": {
+            "$ref": "#/components/schemas/SimSpeedJs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "speed"
+        ],
+        "title": "SimSpeedChange"
+      },
+      "SimSpeedJs": {
+        "type": "string",
+        "enum": [
+          "paused",
+          "1x",
+          "2x",
+          "5x",
+          "10x",
+          "100x",
+          "1000x"
+        ],
+        "title": "SimSpeedJs",
+        "description": "Mirror of `SimSpeedSetting` (whose values are tuples, unfit for OpenAPI)."
       },
       "SupplyRouteJs": {
         "properties": {
@@ -2475,6 +2771,95 @@
         ],
         "title": "ThreatZones"
       },
+      "TopBarJs": {
+        "properties": {
+          "campaign_name": {
+            "title": "Campaign Name",
+            "type": "string"
+          },
+          "theater": {
+            "type": "string",
+            "title": "Theater"
+          },
+          "player_faction": {
+            "type": "string",
+            "title": "Player Faction"
+          },
+          "enemy_faction": {
+            "type": "string",
+            "title": "Enemy Faction"
+          },
+          "turn": {
+            "type": "integer",
+            "title": "Turn"
+          },
+          "mission_start_date": {
+            "type": "string",
+            "title": "Mission Start Date"
+          },
+          "mission_start_time": {
+            "type": "string",
+            "title": "Mission Start Time"
+          },
+          "time_of_day": {
+            "type": "string",
+            "title": "Time Of Day"
+          },
+          "weather": {
+            "$ref": "#/components/schemas/WeatherJs"
+          },
+          "budget": {
+            "type": "number",
+            "title": "Budget"
+          },
+          "income": {
+            "type": "number",
+            "title": "Income"
+          },
+          "air": {
+            "$ref": "#/components/schemas/ForceBalanceJs"
+          },
+          "ground": {
+            "$ref": "#/components/schemas/ForceBalanceJs"
+          },
+          "economy": {
+            "type": "string",
+            "title": "Economy"
+          },
+          "max_player_count": {
+            "type": "integer",
+            "title": "Max Player Count"
+          },
+          "sim": {
+            "$ref": "#/components/schemas/SimJs"
+          },
+          "show_sim_speed_controls": {
+            "type": "boolean",
+            "title": "Show Sim Speed Controls"
+          }
+        },
+        "type": "object",
+        "required": [
+          "theater",
+          "player_faction",
+          "enemy_faction",
+          "turn",
+          "mission_start_date",
+          "mission_start_time",
+          "time_of_day",
+          "weather",
+          "budget",
+          "income",
+          "air",
+          "ground",
+          "economy",
+          "max_player_count",
+          "sim",
+          "show_sim_speed_controls"
+        ],
+        "title": "TopBar",
+        "description": "Everything the top bar and the turn buttons of the command view show."
+      },
       "TurnJs": {
         "properties": {
           "turn": {
@@ -2542,6 +2927,68 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "WeatherJs": {
+        "properties": {
+          "clouds": {
+            "type": "string",
+            "title": "Clouds"
+          },
+          "precipitation": {
+            "type": "string",
+            "title": "Precipitation"
+          },
+          "fog": {
+            "type": "string",
+            "title": "Fog"
+          },
+          "cloud_base_m": {
+            "title": "Cloud Base M",
+            "type": "integer"
+          },
+          "cloud_base_ft": {
+            "title": "Cloud Base Ft",
+            "type": "integer"
+          },
+          "winds": {
+            "items": {
+              "$ref": "#/components/schemas/WindJs"
+            },
+            "type": "array",
+            "title": "Winds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "clouds",
+          "precipitation",
+          "fog",
+          "winds"
+        ],
+        "title": "Weather"
+      },
+      "WindJs": {
+        "properties": {
+          "altitude": {
+            "type": "string",
+            "title": "Altitude"
+          },
+          "direction": {
+            "type": "integer",
+            "title": "Direction"
+          },
+          "speed_kt": {
+            "type": "integer",
+            "title": "Speed Kt"
+          }
+        },
+        "type": "object",
+        "required": [
+          "altitude",
+          "direction",
+          "speed_kt"
+        ],
+        "title": "Wind"
       }
     }
   }

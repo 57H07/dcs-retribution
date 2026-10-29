@@ -1,0 +1,102 @@
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--ui-space-md);
+  pointer-events: none;
+}
+
+.actions > * {
+  pointer-events: auto;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--ui-space-md);
+}
+
+.turn,
+.takeOff {
+  min-height: 52px;
+  font-family: var(--ui-font-display);
+  font-weight: var(--ui-font-weight-bold);
+  letter-spacing: var(--ui-letter-spacing-display);
+  text-transform: uppercase;
+}
+
+.turn {
+  padding: 0 22px;
+  font-size: var(--ui-font-size-lg);
+}
+
+.takeOff {
+  padding: 0 28px;
+  font-size: var(--ui-font-size-xl);
+  gap: 10px;
+}
+
+.takeOff svg {
+  width: 18px;
+  height: 18px;
+}
+
+.players,
+.speeds {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-xs);
+  padding: var(--ui-space-xs) var(--ui-space-md);
+  background: var(--ui-color-bg-panel);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.players strong {
+  color: var(--ui-color-text-primary);
+  font-family: var(--ui-font-mono);
+}
+
+.players:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-shadow-focus);
+}
+
+.simTime {
+  margin-right: var(--ui-space-sm);
+  color: var(--ui-color-text-primary);
+  font-family: var(--ui-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.speed {
+  min-width: 36px;
+  min-height: 28px;
+  padding: 0 var(--ui-space-sm);
+  background: var(--ui-color-bg-control);
+  border: 1px solid var(--ui-color-line-strong);
+  border-radius: var(--ui-radius-sm);
+  color: var(--ui-color-text-strong);
+  font: inherit;
+  cursor: pointer;
+}
+
+.speed[aria-pressed="true"] {
+  background: var(--ui-color-accent-soft);
+  border-color: var(--ui-color-accent);
+  color: var(--ui-color-accent-hover);
+}
+
+.speed:disabled {
+  color: var(--ui-color-text-disabled);
+  cursor: not-allowed;
+}
+
+.speed:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-shadow-focus);
+}

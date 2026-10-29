@@ -128,3 +128,8 @@ callback that emits a `QLiberationWindow` signal, so the dialog opens on the Qt
 main thread after the lock is released. A migrated screen removes its `QtDialog`
 value, its Qt slot and the dialog itself (W9), and replaces its `QtScreen`
 element in `client/src/shell/routes.tsx`.
+
+A command may also hand over to a Qt window that is not migrated yet: `POST
+/game/mission` (take off, WEB-01.1) generates the mission, then calls
+`QtCallbacks.mission_generated`, which opens `QWaitingForMissionResultWindow`
+until WEB-05.1 replaces it.

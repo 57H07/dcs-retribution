@@ -1,0 +1,80 @@
+.view {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* At 1366x768 both panels fit beside a usable map; below, they shrink. */
+.side {
+  min-width: 0;
+  max-width: 28vw;
+}
+
+.center {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.map {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.map :global(.leaflet-container) {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  min-height: 0;
+}
+
+.turnActions {
+  position: absolute;
+  right: var(--ui-space-lg);
+  bottom: var(--ui-space-xxl);
+  z-index: 1000; /* above the Leaflet panes and controls */
+  max-width: calc(100% - 2 * var(--ui-space-lg));
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-md);
+  padding: var(--ui-space-sm) var(--ui-space-xl) var(--ui-space-lg);
+  background: var(--ui-color-bg-panel);
+  border-top: 1px solid var(--ui-color-line);
+}
+
+.timeline[data-state="closed"] {
+  padding-bottom: var(--ui-space-sm);
+}
+
+.timelineHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.timelineTitle {
+  color: var(--ui-color-text-secondary);
+  font-family: var(--ui-font-display);
+  font-size: var(--ui-font-size-sm);
+  font-weight: var(--ui-font-weight-semibold);
+  letter-spacing: var(--ui-letter-spacing-display);
+  text-transform: uppercase;
+}
+
+.empty {
+  margin: 0;
+  padding: var(--ui-space-lg);
+  color: var(--ui-color-text-secondary);
+}
+
+.empty p {
+  margin: 0 0 var(--ui-space-lg);
+}
