@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Air Wing</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0B0F12}
+a{color:#7FB8EE}a:hover{color:#A9D0F5}
+.hd{font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.08em}
+.mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+th{font-weight:500;text-align:left}
+</style>
+</helmet>
+<div style="font-family: Inter, sans-serif; color: #E6EAED; background: #0B0F12; width: 100%; min-height: 900px; display: flex; flex-direction: column; font-size: 13px">
+
+<header style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 0 16px; min-height: 56px; background: #12181D; border-bottom: 1px solid #263039">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 8px; min-height: 44px; text-decoration: none; color: #C9D2D9"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9D2D9" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg><span class="hd" style="font-size: 13px; font-weight: 600">Command view</span></a>
+<div style="width: 1px; height: 28px; background: #263039"></div>
+<h1 class="hd" style="margin: 0; font-size: 22px; font-weight: 700">Air Wing</h1>
+<span style="color: #9AA6B0">14 squadrons · 96 aircraft · 118 pilots</span>
+<span style="flex: 1"></span>
+<div style="display: flex; gap: 4px">
+<button class="hd" style="min-height: 36px; padding: 0 12px; background: #1B232A; border: 1px solid {{accent}}; border-radius: 4px; font-size: 12px; font-weight: 600">Squadrons</button>
+<button class="hd" style="min-height: 36px; padding: 0 12px; background: transparent; border: 1px solid #263039; border-radius: 4px; font-size: 12px; font-weight: 600; color: #9AA6B0">Aircraft</button>
+<button class="hd" style="min-height: 36px; padding: 0 12px; background: transparent; border: 1px solid #263039; border-radius: 4px; font-size: 12px; font-weight: 600; color: #9AA6B0">Pilots</button>
+</div>
+</header>
+
+<div style="display: flex; flex-wrap: wrap; flex: 1">
+
+<aside style="flex: 1 1 300px; max-width: 360px; background: #12181D; border-right: 1px solid #263039; padding: 12px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span class="hd" style="font-size: 12px; font-weight: 600; color: #9AA6B0">Krymsk</span>
+<div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: #1A2229; border: 1px solid {{accent}}; border-radius: 4px">
+<div style="width: 36px; height: 36px; border-radius: 4px; background: #16304A; display: flex; align-items: center; justify-content: center" class="hd"><span style="font-size: 13px; font-weight: 700; color: #8CC3F2">40</span></div>
+<div style="flex: 1; display: flex; flex-direction: column"><span style="font-weight: 600">40th Tactical Aviation Bde</span><span style="font-size: 12px; color: #9AA6B0">MiG-29 9.13 · BARCAP, Escort</span></div>
+<span class="mono">10/12</span>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: #161D23; border: 1px solid #263039; border-radius: 4px">
+<div style="width: 36px; height: 36px; border-radius: 4px; background: #2E1A14; display: flex; align-items: center; justify-content: center" class="hd"><span style="font-size: 13px; font-weight: 700; color: #F3A07C">299</span></div>
+<div style="flex: 1; display: flex; flex-direction: column"><span style="font-weight: 600">299th Tactical Aviation Bde</span><span style="font-size: 12px; color: #9AA6B0">Su-25T · CAS, BAI</span></div>
+<span class="mono">8/12</span>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span class="hd" style="font-size: 12px; font-weight: 600; color: #9AA6B0">Anapa</span>
+<div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: #161D23; border: 1px solid #263039; border-radius: 4px">
+<div style="width: 36px; height: 36px; border-radius: 4px; background: #3A2A12; display: flex; align-items: center; justify-content: center" class="hd"><span style="font-size: 13px; font-weight: 700; color: #F2BE6B">7</span></div>
+<div style="flex: 1; display: flex; flex-direction: column"><span style="font-weight: 600">7th Tactical Aviation Bde</span><span style="font-size: 12px; color: #9AA6B0">Su-24M · Strike, DEAD</span></div>
+<span class="mono" style="color: #F2BE6B">4/12</span>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: #161D23; border: 1px solid #263039; border-radius: 4px">
+<div style="width: 36px; height: 36px; border-radius: 4px; background: #1C2A1F; display: flex; align-items: center; justify-content: center" class="hd"><span style="font-size: 13px; font-weight: 700; color: #8FD6A6">16</span></div>
+<div style="flex: 1; display: flex; flex-direction: column"><span style="font-weight: 600">16th Army Aviation Bde</span><span style="font-size: 12px; color: #9AA6B0">Mi-8MTV2 · CSAR, Transport</span></div>
+<span class="mono">6/8</span>
+</div>
+</div>
+</aside>
+
+<main style="flex: 999 1 560px; min-width: 0; padding: 20px 24px; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 20px">
+<div style="width: 88px; height: 88px; border-radius: 6px; background: #16304A; border: 1px solid #2E4C68; display: flex; align-items: center; justify-content: center"><span class="hd" style="font-size: 34px; font-weight: 700; color: #8CC3F2">40</span></div>
+<div style="flex: 1; min-width: 260px; display: flex; flex-direction: column; gap: 4px">
+<h2 class="hd" style="margin: 0; font-size: 28px; font-weight: 700">40th Tactical Aviation Brigade</h2>
+<span style="color: #9AA6B0">MiG-29 9.13 Fulcrum-C · based at Krymsk · callsign “Vorona”</span>
+<div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px">
+<span class="hd" style="font-size: 11px; font-weight: 700; padding: 3px 8px; background: #12293D; color: #8CC3F2; border-radius: 3px">BARCAP</span>
+<span class="hd" style="font-size: 11px; font-weight: 700; padding: 3px 8px; background: #12293D; color: #8CC3F2; border-radius: 3px">Escort</span>
+<span class="hd" style="font-size: 11px; font-weight: 700; padding: 3px 8px; background: #1B232A; color: #9AA6B0; border-radius: 3px">Intercept</span>
+</div>
+</div>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<button style="min-height: 40px; padding: 0 14px; background: #1B232A; border: 1px solid #33404B; border-radius: 4px; font-weight: 600">Transfer</button>
+<button style="min-height: 40px; padding: 0 14px; background: {{accent}}; color: #14100A; border: 0; border-radius: 4px; font-weight: 600">Buy 2 aircraft · $56M</button>
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px">
+<div style="background: #12181D; border: 1px solid #263039; border-radius: 6px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+<span class="hd" style="font-size: 12px; color: #9AA6B0">Aircraft</span><span class="mono" style="font-size: 26px">10<span style="font-size: 15px; color: #9AA6B0"> / 12</span></span>
+<div style="display: flex; gap: 2px"><span style="flex: 10; height: 6px; background: #7FB8EE"></span><span style="flex: 2; height: 6px; background: #263039"></span></div>
+</div>
+<div style="background: #12181D; border: 1px solid #263039; border-radius: 6px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+<span class="hd" style="font-size: 12px; color: #9AA6B0">Pilots ready</span><span class="mono" style="font-size: 26px">11<span style="font-size: 15px; color: #9AA6B0"> / 14</span></span>
+<div style="display: flex; gap: 2px"><span style="flex: 11; height: 6px; background: #6FCB8F"></span><span style="flex: 1; height: 6px; background: #E8A33D"></span><span style="flex: 2; height: 6px; background: #263039"></span></div>
+</div>
+<div style="background: #12181D; border: 1px solid #263039; border-radius: 6px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+<span class="hd" style="font-size: 12px; color: #9AA6B0">Sorties · kills</span><span class="mono" style="font-size: 26px">38<span style="font-size: 15px; color: #9AA6B0"> · 9</span></span>
+<span style="font-size: 12px; color: #9AA6B0">2 losses this campaign</span>
+</div>
+<div style="background: #12181D; border: 1px solid #263039; border-radius: 6px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+<span class="hd" style="font-size: 12px; color: #9AA6B0">Next turn</span><span style="font-size: 15px; font-weight: 600">2 aircraft arriving</span>
+<span style="font-size: 12px; color: #9AA6B0">1 pilot back from medical</span>
+</div>
+</div>
+
+<div style="background: #12181D; border: 1px solid #263039; border-radius: 6px; overflow-x: auto">
+<table style="width: 100%; border-collapse: collapse; min-width: 640px">
+<thead><tr class="hd" style="font-size: 12px; color: #9AA6B0; border-bottom: 1px solid #263039"><th style="padding: 10px 14px">Pilot</th><th style="padding: 10px 14px">Status</th><th style="padding: 10px 14px">Player</th><th style="padding: 10px 14px; text-align: right">Sorties</th><th style="padding: 10px 14px; text-align: right">Kills</th><th style="padding: 10px 14px">Notes</th></tr></thead>
+<tbody>
+<tr style="border-bottom: 1px solid #1C252C"><td style="padding: 10px 14px; font-weight: 600">Maj. O. Kravets</td><td style="padding: 10px 14px"><span style="color: #6FCB8F">● Ready</span></td><td style="padding: 10px 14px"><input type="checkbox" checked aria-label="Player pilot"></td><td class="mono" style="padding: 10px 14px; text-align: right">12</td><td class="mono" style="padding: 10px 14px; text-align: right">4</td><td style="padding: 10px 14px; color: #9AA6B0">Flight lead</td></tr>
+<tr style="border-bottom: 1px solid #1C252C"><td style="padding: 10px 14px; font-weight: 600">Capt. I. Bondar</td><td style="padding: 10px 14px"><span style="color: #6FCB8F">● Ready</span></td><td style="padding: 10px 14px"><input type="checkbox" aria-label="Player pilot"></td><td class="mono" style="padding: 10px 14px; text-align: right">9</td><td class="mono" style="padding: 10px 14px; text-align: right">2</td><td style="padding: 10px 14px; color: #9AA6B0"></td></tr>
+<tr style="border-bottom: 1px solid #1C252C"><td style="padding: 10px 14px; font-weight: 600">Capt. D. Hrytsenko</td><td style="padding: 10px 14px"><span style="color: #E8A33D">● Down · awaiting CSAR</span></td><td style="padding: 10px 14px"><input type="checkbox" aria-label="Player pilot"></td><td class="mono" style="padding: 10px 14px; text-align: right">7</td><td class="mono" style="padding: 10px 14px; text-align: right">1</td><td style="padding: 10px 14px; color: #9AA6B0">Near Abinsk, rescue planned</td></tr>
+<tr style="border-bottom: 1px solid #1C252C"><td style="padding: 10px 14px; font-weight: 600">Lt. S. Moroz</td><td style="padding: 10px 14px"><span style="color: #F08A5D">● Prisoner of war</span></td><td style="padding: 10px 14px"><input type="checkbox" aria-label="Player pilot" disabled></td><td class="mono" style="padding: 10px 14px; text-align: right">5</td><td class="mono" style="padding: 10px 14px; text-align: right">0</td><td style="padding: 10px 14px; color: #9AA6B0">Slot released</td></tr>
+<tr><td style="padding: 10px 14px; font-weight: 600">Lt. A. Lysenko</td><td style="padding: 10px 14px"><span style="color: #9AA6B0">● Medical · back T05</span></td><td style="padding: 10px 14px"><input type="checkbox" aria-label="Player pilot"></td><td class="mono" style="padding: 10px 14px; text-align: right">5</td><td class="mono" style="padding: 10px 14px; text-align: right">2</td><td style="padding: 10px 14px; color: #9AA6B0"></td></tr>
+</tbody>
+</table>
+</div>
+</main>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#E8A33D","options":["#E8A33D","#4FB3A9","#D9D2C3","#7FB8EE"]},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#E8A33D' };
+}
+}
+</script>
+</body>
+</html>

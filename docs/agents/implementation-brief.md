@@ -18,6 +18,15 @@ You implement one or more GitHub issues of the fork `57H07/dcs-retribution` (rem
 - Python: use `F:/_Projets/Jeux/DcsRetribution/venv/Scripts/python.exe` (3.11, all deps installed). Do not create another venv. If the issue changes `requirements.txt`, install into that venv and say so in your report.
 - Client (`client/`, React/TS): run `npm ci` in your worktree's `client/` only if you touch the client; `npm test -- --watchAll=false` and `npm run build` must pass. In a worktree under `.claude\` Jest finds no tests (backslash escape): add `--testMatch "**/src/**/*.test.{ts,tsx}"`.
 
+## Web UI work (label `web`)
+
+- Spec: `docs/dev/design/specification-interface-web.md`; its §6 decisions (W1-W19) win over everything else. ADR: `docs/adr/0001-interface-web-locale.md`.
+- Visual reference: `docs/dev/design/mockups/*.dc.html` (direction A). Read them as HTML for layout, colors and copy; their `<x-dc>`/`{{accent}}` markup is a mockup format, not code to reuse. Accent = `#E8A33D`.
+- The engine stays the source of truth: no game rule in the client. Commands are REST per resource (W3) and mutate `Game` under the global lock once WEB-00.4 is merged.
+- A migrated screen deletes its Qt equivalent in the same PR (W9). Keep old saves loadable.
+- Client checks: before WEB-00.1 is merged, `npm test -- --watchAll=false` (Jest); after, the Vitest/Vite scripts it introduces (read `client/package.json`). After WEB-00.5, regenerate the API client offline with the script it adds; before, start the server only if you must.
+- Do not ask for in-game DCS tests: manual testing is suspended (W19). List DCS-only checks under `## Flight test` as usual.
+
 ## Done means
 
 - Tests first where practical (`tests/`), covering every automated acceptance criterion.

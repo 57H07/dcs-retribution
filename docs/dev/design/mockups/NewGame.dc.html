@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>New campaign</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0B0F12}
+a{color:#7FB8EE}a:hover{color:#A9D0F5}
+.hd{font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.08em}
+.mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+</style>
+</helmet>
+<div style="font-family: Inter, sans-serif; color: #E6EAED; background: #0B0F12; width: 100%; min-height: 900px; display: flex; flex-direction: column; font-size: 13px">
+
+<header style="display: flex; flex-wrap: wrap; align-items: center; gap: 24px; padding: 0 24px; min-height: 64px; background: #12181D; border-bottom: 1px solid #263039">
+<h1 class="hd" style="margin: 0; font-size: 22px; font-weight: 700">New campaign</h1>
+<ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center">
+<li style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid {{accent}}; border-radius: 16px"><span class="mono" style="color: {{accent}}">1</span><span class="hd" style="font-size: 13px; font-weight: 600">Theater</span></li>
+<li style="width: 18px; height: 1px; background: #33404B"></li>
+<li style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid #263039; border-radius: 16px; color: #9AA6B0"><span class="mono">2</span><span class="hd" style="font-size: 13px; font-weight: 600">Factions</span></li>
+<li style="width: 18px; height: 1px; background: #33404B"></li>
+<li style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid #263039; border-radius: 16px; color: #9AA6B0"><span class="mono">3</span><span class="hd" style="font-size: 13px; font-weight: 600">Campaign options</span></li>
+<li style="width: 18px; height: 1px; background: #33404B"></li>
+<li style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid #263039; border-radius: 16px; color: #9AA6B0"><span class="mono">4</span><span class="hd" style="font-size: 13px; font-weight: 600">Generator</span></li>
+<li style="width: 18px; height: 1px; background: #33404B"></li>
+<li style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid #263039; border-radius: 16px; color: #9AA6B0"><span class="mono">5</span><span class="hd" style="font-size: 13px; font-weight: 600">Summary</span></li>
+</ol>
+</header>
+
+<div style="display: flex; flex-wrap: wrap; flex: 1">
+
+<aside style="flex: 1 1 320px; max-width: 380px; background: #12181D; border-right: 1px solid #263039; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<label style="display: flex; align-items: center; gap: 8px; padding: 0 10px; height: 40px; background: #0B0F12; border: 1px solid #263039; border-radius: 4px">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9AA6B0" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+<input placeholder="Search campaigns" aria-label="Search campaigns" style="flex: 1; background: transparent; border: 0; outline: none">
+</label>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<button style="min-height: 30px; padding: 0 10px; background: #1B232A; border: 1px solid {{accent}}; border-radius: 15px; font-size: 12px">Caucasus</button>
+<button style="min-height: 30px; padding: 0 10px; background: transparent; border: 1px solid #263039; border-radius: 15px; font-size: 12px; color: #9AA6B0">Syria</button>
+<button style="min-height: 30px; padding: 0 10px; background: transparent; border: 1px solid #263039; border-radius: 15px; font-size: 12px; color: #9AA6B0">Persian Gulf</button>
+<button style="min-height: 30px; padding: 0 10px; background: transparent; border: 1px solid #263039; border-radius: 15px; font-size: 12px; color: #9AA6B0">Cold War</button>
+<button style="min-height: 30px; padding: 0 10px; background: transparent; border: 1px solid #263039; border-radius: 15px; font-size: 12px; color: #9AA6B0">Modern</button>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="padding: 10px 12px; background: #1A2229; border: 1px solid {{accent}}; border-radius: 4px; display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">Slava Ukraini</span><span style="font-size: 12px; color: #9AA6B0">Caucasus · 2020s · medium</span></div>
+<div style="padding: 10px 12px; background: #161D23; border: 1px solid #263039; border-radius: 4px; display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">Black Sea</span><span style="font-size: 12px; color: #9AA6B0">Caucasus · modern · large</span></div>
+<div style="padding: 10px 12px; background: #161D23; border: 1px solid #263039; border-radius: 4px; display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">Tbilisi Gap</span><span style="font-size: 12px; color: #9AA6B0">Caucasus · modern · small</span></div>
+<div style="padding: 10px 12px; background: #161D23; border: 1px solid #263039; border-radius: 4px; display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">Kutaisi to Batumi</span><span style="font-size: 12px; color: #9AA6B0">Caucasus · cold war · small</span></div>
+<div style="padding: 10px 12px; background: #161D23; border: 1px solid #263039; border-radius: 4px; display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">Caucasus Multi · Full</span><span style="font-size: 12px; color: #9AA6B0">Caucasus · modern · very large</span></div>
+</div>
+</aside>
+
+<main style="flex: 999 1 560px; min-width: 0; padding: 24px; display: flex; flex-direction: column; gap: 18px">
+<div style="height: 280px; background: #10171C; border: 1px solid #263039; border-radius: 6px; overflow: hidden">
+<svg width="100%" height="100%" viewBox="0 0 800 280" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Campaign map preview: friendly bases west, enemy bases east, front line between them">
+<rect width="800" height="280" fill="#141D23"></rect>
+<path d="M0 170 C80 160 120 210 190 220 C260 230 300 270 320 280 L0 280 Z" fill="#0C1419"></path>
+<path d="M150 170 L220 140 L300 150 L380 110 L470 125 L560 90 L690 100" fill="none" stroke="#E8A33D" stroke-width="3"></path>
+<g fill="#16304A" stroke="#7FB8EE" stroke-width="2"><rect x="200" y="200" width="24" height="16"></rect><rect x="330" y="215" width="24" height="16"></rect><rect x="120" y="235" width="24" height="16"></rect></g>
+<g fill="#3A1C12" stroke="#F08A5D" stroke-width="2"><path d="M470 70 l14 14 l-14 14 l-14 -14z"></path><path d="M590 50 l14 14 l-14 14 l-14 -14z"></path><path d="M690 40 l14 14 l-14 14 l-14 -14z"></path></g>
+</svg>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 24px">
+<div style="flex: 2 1 380px; display: flex; flex-direction: column; gap: 10px">
+<h2 class="hd" style="margin: 0; font-size: 30px; font-weight: 700">Slava Ukraini</h2>
+<p style="margin: 0; color: #C9D2D9; line-height: 1.6; max-width: 640px">[Campaign description from the campaign YAML: setting, objectives and starting situation.]</p>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<span style="padding: 4px 10px; background: #12293D; color: #8CC3F2; border-radius: 3px">Blue · Ukraine 2020</span>
+<span style="padding: 4px 10px; background: #2E1A14; color: #F3A07C; border-radius: 3px">Red · Redfor (Russia) 2020</span>
+</div>
+</div>
+<div style="flex: 1 1 240px; background: #12181D; border: 1px solid #263039; border-radius: 6px; padding: 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+<div style="display: flex; flex-direction: column"><span class="hd" style="font-size: 11px; color: #9AA6B0">Bases</span><span class="mono" style="font-size: 18px">6 : 9</span></div>
+<div style="display: flex; flex-direction: column"><span class="hd" style="font-size: 11px; color: #9AA6B0">Front lines</span><span class="mono" style="font-size: 18px">1</span></div>
+<div style="display: flex; flex-direction: column"><span class="hd" style="font-size: 11px; color: #9AA6B0">Start date</span><span class="mono" style="font-size: 18px">2022-05</span></div>
+<div style="display: flex; flex-direction: column"><span class="hd" style="font-size: 11px; color: #9AA6B0">Performance</span><span style="font-size: 15px; color: #F2BE6B">Medium</span></div>
+</div>
+</div>
+<div style="display: flex; gap: 8px; margin-top: auto; flex-wrap: wrap">
+<button style="min-height: 44px; padding: 0 18px; background: transparent; border: 1px solid #33404B; border-radius: 4px">Cancel</button>
+<span style="flex: 1"></span>
+<button style="min-height: 44px; padding: 0 18px; background: #1B232A; border: 1px solid #33404B; border-radius: 4px; color: #5D6A75" disabled>Back</button>
+<button class="hd" style="min-height: 44px; padding: 0 26px; background: {{accent}}; color: #14100A; border: 0; border-radius: 4px; font-size: 16px; font-weight: 700">Next · Factions</button>
+</div>
+</main>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#E8A33D","options":["#E8A33D","#4FB3A9","#D9D2C3","#7FB8EE"]},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#E8A33D' };
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Base management</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0B0F12}
+a{color:#7FB8EE}a:hover{color:#A9D0F5}
+.hd{font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.08em}
+.mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+th{font-weight:500;text-align:left}
+</style>
+</helmet>
+<div style="font-family: Inter, sans-serif; color: #E6EAED; background: #0B0F12; width: 100%; min-height: 900px; display: flex; flex-direction: column; font-size: 13px">
+
+<header style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 0 16px; min-height: 56px; background: #12181D; border-bottom: 1px solid #263039">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 8px; min-height: 44px; text-decoration: none; color: #C9D2D9"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9D2D9" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg><span class="hd" style="font-size: 13px; font-weight: 600">Command view</span></a>
+<div style="width: 1px; height: 28px; background: #263039"></div>
+<svg width="30" height="20" viewBox="0 0 30 20" aria-hidden="true"><rect x="1" y="1" width="28" height="18" fill="#16304A" stroke="#7FB8EE" stroke-width="2"></rect><path d="M8 10h14M15 4v12" stroke="#7FB8EE" stroke-width="2"></path></svg>
+<h1 class="hd" style="margin: 0; font-size: 22px; font-weight: 700">Krymsk</h1>
+<span style="color: #9AA6B0">Airfield · 12 nm from the Anapa–Maykop front</span>
+<span style="flex: 1"></span>
+<div style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: #0B0F12; border: 1px solid #263039; border-radius: 4px"><span class="hd" style="font-size: 11px; color: #9AA6B0">Budget</span><span class="mono" style="font-size: 14px">$1 240M</span></div>
+</header>
+
+<nav aria-label="Base sections" style="display: flex; flex-wrap: wrap; gap: 4px; padding: 0 16px; background: #12181D; border-bottom: 1px solid #263039">
+<button class="hd" style="min-height: 44px; padding: 0 14px; background: transparent; border: 0; border-bottom: 2px solid {{accent}}; font-size: 13px; font-weight: 600">Airfield command</button>
+<button class="hd" style="min-height: 44px; padding: 0 14px; background: transparent; border: 0; border-bottom: 2px solid transparent; font-size: 13px; font-weight: 600; color: #9AA6B0">Ground forces HQ</button>
+<button class="hd" style="min-height: 44px; padding: 0 14px; background: transparent; border: 0; border-bottom: 2px solid transparent; font-size: 13px; font-weight: 600; color: #9AA6B0">Intel</button>
+<button class="hd" style="min-height: 44px; padding: 0 14px; background: transparent; border: 0; border-bottom: 2px solid transparent; font-size: 13px; font-weight: 600; color: #9AA6B0">Departing convoys</button>
+</nav>
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px; padding: 20px 24px; flex: 1">
+
+<aside style="flex: 1 1 280px; max-width: 320px; display: flex; flex-direction: column; gap: 14px">
+<section style="background: #12181D; border: 1px solid #263039; border-radius: 6px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h2 class="hd" style="margin: 0; font-size: 14px; font-weight: 700">Base status</h2>
+<div style="display: grid; grid-template-columns: 86px 1fr 46px; gap: 8px; align-items: center; font-size: 12px">
+<span style="color: #9AA6B0">Runway</span><div style="height: 6px; background: #263039; border-radius: 3px"><div style="width: 100%; height: 6px; background: #6FCB8F; border-radius: 3px"></div></div><span class="mono" style="text-align: right">OK</span>
+<span style="color: #9AA6B0">Parking</span><div style="height: 6px; background: #263039; border-radius: 3px"><div style="width: 72%; height: 6px; background: #7FB8EE; border-radius: 3px"></div></div><span class="mono" style="text-align: right">18/25</span>
+<span style="color: #9AA6B0">Fuel depot</span><div style="height: 6px; background: #263039; border-radius: 3px"><div style="width: 45%; height: 6px; background: #E8A33D; border-radius: 3px"></div></div><span class="mono" style="text-align: right">45%</span>
+<span style="color: #9AA6B0">Ammo depot</span><div style="height: 6px; background: #263039; border-radius: 3px"><div style="width: 90%; height: 6px; background: #6FCB8F; border-radius: 3px"></div></div><span class="mono" style="text-align: right">90%</span>
+</div>
+</section>
+<section style="background: #12181D; border: 1px solid #263039; border-radius: 6px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h2 class="hd" style="margin: 0; font-size: 14px; font-weight: 700">Repairs</h2>
+<div style="display: flex; justify-content: space-between"><span>Fuel depot</span><span class="mono">$25M · 1 turn</span></div>
+<div style="display: flex; justify-content: space-between"><span>2 damaged MiG-29</span><span class="mono">$15M · 2 turns</span></div>
+<button style="min-height: 40px; background: #1B232A; border: 1px solid #33404B; border-radius: 4px; font-weight: 600">Repair all · $40M</button>
+</section>
+<section style="background: #12181D; border: 1px solid #263039; border-radius: 6px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+<h2 class="hd" style="margin: 0; font-size: 14px; font-weight: 700">Air defense</h2>
+<span>SA-15 Tor · 1 battery</span>
+<span>ZU-23 · 4 emplacements</span>
+<span style="color: #F2BE6B">No long-range SAM coverage</span>
+</section>
+</aside>
+
+<main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap"><h2 class="hd" style="margin: 0; font-size: 18px; font-weight: 700">Squadrons at Krymsk</h2><span style="color: #9AA6B0">Aircraft ordered now arrive next turn</span></div>
+<div style="background: #12181D; border: 1px solid #263039; border-radius: 6px; overflow-x: auto">
+<table style="width: 100%; border-collapse: collapse; min-width: 640px">
+<thead><tr class="hd" style="font-size: 12px; color: #9AA6B0; border-bottom: 1px solid #263039"><th style="padding: 10px 14px">Squadron</th><th style="padding: 10px 14px">Aircraft</th><th style="padding: 10px 14px; text-align: right">Unit cost</th><th style="padding: 10px 14px; text-align: right">Owned</th><th style="padding: 10px 14px; text-align: center">Order</th></tr></thead>
+<tbody>
+<tr style="border-bottom: 1px solid #1C252C"><td style="padding: 12px 14px; font-weight: 600">40th Tactical Aviation Bde</td><td style="padding: 12px 14px">MiG-29 9.13</td><td class="mono" style="padding: 12px 14px; text-align: right">$28M</td><td class="mono" style="padding: 12px 14px; text-align: right">10 / 12</td><td style="padding: 8px 14px"><div style="display: flex; align-items: center; justify-content: center; gap: 6px"><button aria-label="Remove one" style="width: 36px; height: 36px; background: #1B232A; border: 1px solid #33404B; border-radius: 4px">−</button><span class="mono" style="width: 28px; text-align: center; color: {{accent}}; font-size: 15px">+2</span><button aria-label="Add one" style="width: 36px; height: 36px; background: #1B232A; border: 1px solid #33404B; border-radius: 4px">+</button></div></td></tr>
+<tr style="border-bottom: 1px solid #1C252C"><td style="padding: 12px 14px; font-weight: 600">299th Tactical Aviation Bde</td><td style="padding: 12px 14px">Su-25T</td><td class="mono" style="padding: 12px 14px; text-align: right">$18M</td><td class="mono" style="padding: 12px 14px; text-align: right">8 / 12</td><td style="padding: 8px 14px"><div style="display: flex; align-items: center; justify-content: center; gap: 6px"><button aria-label="Remove one" style="width: 36px; height: 36px; background: #1B232A; border: 1px solid #33404B; border-radius: 4px">−</button><span class="mono" style="width: 28px; text-align: center; color: {{accent}}; font-size: 15px">+4</span><button aria-label="Add one" style="width: 36px; height: 36px; background: #1B232A; border: 1px solid #33404B; border-radius: 4px">+</button></div></td></tr>
+<tr><td style="padding: 12px 14px; font-weight: 600">16th Army Aviation Bde</td><td style="padding: 12px 14px">Mi-24P</td><td class="mono" style="padding: 12px 14px; text-align: right">$12M</td><td class="mono" style="padding: 12px 14px; text-align: right">4 / 8</td><td style="padding: 8px 14px"><div style="display: flex; align-items: center; justify-content: center; gap: 6px"><button aria-label="Remove one" style="width: 36px; height: 36px; background: #1B232A; border: 1px solid #33404B; border-radius: 4px">−</button><span class="mono" style="width: 28px; text-align: center; color: #9AA6B0; font-size: 15px">0</span><button aria-label="Add one" style="width: 36px; height: 36px; background: #1B232A; border: 1px solid #33404B; border-radius: 4px">+</button></div></td></tr>
+</tbody>
+</table>
+</div>
+<button style="align-self: flex-start; min-height: 40px; padding: 0 14px; background: transparent; border: 1px dashed #33404B; border-radius: 4px; color: #C9D2D9">+ Create a squadron at Krymsk</button>
+</main>
+
+<aside style="flex: 1 1 260px; max-width: 300px; background: #12181D; border: 1px solid #263039; border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 10px; align-self: flex-start">
+<h2 class="hd" style="margin: 0; font-size: 14px; font-weight: 700">Order summary</h2>
+<div style="display: flex; justify-content: space-between"><span>2 × MiG-29 9.13</span><span class="mono">$56M</span></div>
+<div style="display: flex; justify-content: space-between"><span>4 × Su-25T</span><span class="mono">$72M</span></div>
+<div style="height: 1px; background: #263039"></div>
+<div style="display: flex; justify-content: space-between; font-weight: 600"><span>Total</span><span class="mono">$128M</span></div>
+<div style="display: flex; justify-content: space-between; color: #9AA6B0"><span>Budget after order</span><span class="mono">$1 112M</span></div>
+<div style="display: flex; justify-content: space-between; color: #9AA6B0"><span>Parking after delivery</span><span class="mono">24 / 25</span></div>
+<button class="hd" style="min-height: 48px; margin-top: 6px; background: {{accent}}; color: #14100A; border: 0; border-radius: 4px; font-size: 16px; font-weight: 700">Confirm order</button>
+</aside>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#E8A33D","options":["#E8A33D","#4FB3A9","#D9D2C3","#7FB8EE"]},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#E8A33D' };
+}
+}
+</script>
+</body>
+</html>

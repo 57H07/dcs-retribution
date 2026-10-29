@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settings</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0B0F12}
+a{color:#7FB8EE}a:hover{color:#A9D0F5}
+.hd{font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.08em}
+.mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+</style>
+</helmet>
+<div style="font-family: Inter, sans-serif; color: #E6EAED; background: #0B0F12; width: 100%; min-height: 900px; display: flex; flex-direction: column; font-size: 13px">
+
+<header style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 0 16px; min-height: 56px; background: #12181D; border-bottom: 1px solid #263039">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 8px; min-height: 44px; text-decoration: none; color: #C9D2D9"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9D2D9" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg><span class="hd" style="font-size: 13px; font-weight: 600">Command view</span></a>
+<div style="width: 1px; height: 28px; background: #263039"></div>
+<h1 class="hd" style="margin: 0; font-size: 22px; font-weight: 700">Settings</h1>
+<label style="flex: 1; max-width: 420px; display: flex; align-items: center; gap: 8px; padding: 0 10px; height: 36px; background: #0B0F12; border: 1px solid #263039; border-radius: 4px">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9AA6B0" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+<input placeholder="Search all settings" aria-label="Search all settings" style="flex: 1; background: transparent; border: 0; outline: none">
+</label>
+<span style="flex: 1"></span>
+<span style="color: #9AA6B0">3 changes from defaults</span>
+<button style="min-height: 36px; padding: 0 12px; background: #1B232A; border: 1px solid #33404B; border-radius: 4px">Reset page</button>
+</header>
+
+<div style="display: flex; flex-wrap: wrap; flex: 1">
+
+<nav aria-label="Settings pages" style="flex: 1 1 240px; max-width: 280px; background: #12181D; border-right: 1px solid #263039; padding: 12px; display: flex; flex-direction: column; gap: 2px">
+<a href="#" style="min-height: 40px; padding: 0 12px; display: flex; align-items: center; text-decoration: none; color: #C9D2D9; border-radius: 4px">Difficulty</a>
+<a href="#" style="min-height: 40px; padding: 0 12px; display: flex; align-items: center; text-decoration: none; color: #E6EAED; background: #1A2229; border-left: 3px solid {{accent}}; border-radius: 4px; font-weight: 600">Campaign Management</a>
+<a href="#" style="min-height: 40px; padding: 0 12px; display: flex; align-items: center; text-decoration: none; color: #C9D2D9; border-radius: 4px">Advanced Campaign Management</a>
+<a href="#" style="min-height: 40px; padding: 0 12px; display: flex; align-items: center; text-decoration: none; color: #C9D2D9; border-radius: 4px">Campaign Doctrine</a>
+<a href="#" style="min-height: 40px; padding: 0 12px; display: flex; align-items: center; text-decoration: none; color: #C9D2D9; border-radius: 4px">Mission Generator</a>
+<a href="#" style="min-height: 40px; padding: 0 12px; display: flex; align-items: center; text-decoration: none; color: #C9D2D9; border-radius: 4px">LUA Plugins Options</a>
+<a href="#" style="min-height: 40px; padding: 0 12px; display: flex; align-items: center; text-decoration: none; color: #C9D2D9; border-radius: 4px">Pretense</a>
+<a href="#" style="min-height: 40px; padding: 0 12px; display: flex; align-items: center; text-decoration: none; color: #C9D2D9; border-radius: 4px">Cheats</a>
+</nav>
+
+<main style="flex: 999 1 560px; min-width: 0; padding: 20px 28px; display: flex; flex-direction: column; gap: 22px; max-width: 920px">
+
+<section style="display: flex; flex-direction: column; gap: 2px">
+<h2 class="hd" style="margin: 0 0 8px; font-size: 16px; font-weight: 700; color: #9AA6B0">Pilots and Squadrons</h2>
+<div style="display: flex; align-items: center; gap: 16px; padding: 12px 14px; background: #12181D; border: 1px solid #263039; border-radius: 4px 4px 0 0">
+<div style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">Allow AI pilot leveling</span><span style="font-size: 12px; color: #9AA6B0">Pilot level affects AI skill, so you may face an ace.</span></div>
+<button role="switch" aria-checked="true" aria-label="Allow AI pilot leveling" style="width: 44px; height: 24px; border-radius: 12px; background: {{accent}}; border: 0; position: relative"><span style="position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; background: #14100A"></span></button>
+</div>
+<div style="display: flex; align-items: center; gap: 16px; padding: 12px 14px; background: #12181D; border: 1px solid #263039; border-top: 0">
+<div style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">Maximum number of pilots per squadron</span><span style="font-size: 12px; color: #9AA6B0">Takes effect through replenishment on future turns.</span></div>
+<input class="mono" value="12" aria-label="Maximum number of pilots per squadron" style="width: 64px; height: 36px; padding: 0 8px; text-align: right; background: #0B0F12; border: 1px solid #33404B; border-radius: 4px">
+</div>
+<div style="display: flex; align-items: center; gap: 16px; padding: 12px 14px; background: #12181D; border: 1px solid #263039; border-top: 0">
+<div style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">Enable CSAR for the enemy coalition</span></div>
+<button role="switch" aria-checked="false" aria-label="Enable CSAR for the enemy coalition" style="width: 44px; height: 24px; border-radius: 12px; background: #33404B; border: 0; position: relative"><span style="position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #9AA6B0"></span></button>
+</div>
+<div style="display: flex; align-items: center; gap: 16px; padding: 12px 14px; background: #12181D; border: 1px solid #263039; border-top: 0; border-radius: 0 0 4px 4px">
+<div style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">CSAR pilot survival chance (%)</span></div>
+<div style="display: flex; align-items: center; gap: 10px"><div style="width: 180px; height: 4px; background: #33404B; border-radius: 2px; position: relative"><div style="width: 60%; height: 4px; background: {{accent}}; border-radius: 2px"></div><span style="position: absolute; left: 60%; top: -6px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: #E6EAED"></span></div><span class="mono" style="width: 34px; text-align: right">60</span></div>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 2px">
+<h2 class="hd" style="margin: 0 0 8px; font-size: 16px; font-weight: 700; color: #9AA6B0">HQ Automation</h2>
+<div style="display: flex; align-items: center; gap: 16px; padding: 12px 14px; background: #12181D; border: 1px solid #263039; border-radius: 4px 4px 0 0">
+<div style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">AI spends its surplus budget filling squadrons</span><span style="font-size: 12px; color: #9AA6B0">Repairs first, then squadrons topped up to their maximum size.</span></div>
+<span class="hd" style="font-size: 11px; padding: 2px 6px; border: 1px solid #33404B; color: #9AA6B0; border-radius: 3px">Modified</span>
+<button role="switch" aria-checked="true" aria-label="AI spends its surplus budget filling squadrons" style="width: 44px; height: 24px; border-radius: 12px; background: {{accent}}; border: 0; position: relative"><span style="position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; background: #14100A"></span></button>
+</div>
+<div style="display: flex; align-items: center; gap: 16px; padding: 12px 14px; background: #12181D; border: 1px solid #263039; border-top: 0; border-radius: 0 0 4px 4px">
+<div style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">AI surplus spending reserve ($M)</span><span style="font-size: 12px; color: #9AA6B0">Kept in the bank before surplus spending starts.</span></div>
+<input class="mono" value="300" aria-label="AI surplus spending reserve in millions" style="width: 80px; height: 36px; padding: 0 8px; text-align: right; background: #0B0F12; border: 1px solid #33404B; border-radius: 4px">
+</div>
+</section>
+
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#E8A33D","options":["#E8A33D","#4FB3A9","#D9D2C3","#7FB8EE"]},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#E8A33D' };
+}
+}
+</script>
+</body>
+</html>

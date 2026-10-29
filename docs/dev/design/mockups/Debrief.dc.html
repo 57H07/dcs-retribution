@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>After-action report</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0B0F12}
+a{color:#7FB8EE}a:hover{color:#A9D0F5}
+.hd{font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.08em}
+.mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="font-family: Inter, sans-serif; color: #E6EAED; background: #0B0F12; width: 100%; min-height: 900px; display: flex; flex-direction: column; font-size: 13px">
+
+<header style="padding: 28px 32px 22px; background: #12181D; border-bottom: 1px solid #263039; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span class="hd" style="font-size: 13px; font-weight: 600; color: #9AA6B0">After-action report · Turn 04 · 17 May 2022</span>
+<h1 class="hd" style="margin: 0; font-size: 40px; font-weight: 700; color: #6FCB8F">Tactical victory</h1>
+<span style="color: #C9D2D9">Krasnodar IADS degraded. Front line pushed 4 nm east of Krymsk.</span>
+</div>
+<span style="flex: 1"></span>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<button style="min-height: 44px; padding: 0 16px; background: #1B232A; border: 1px solid #33404B; border-radius: 4px; font-weight: 600">Reload state.json</button>
+<a href="Main.dc.html" class="hd" style="min-height: 44px; padding: 0 22px; background: {{accent}}; color: #14100A; border-radius: 4px; font-size: 16px; font-weight: 700; display: flex; align-items: center; text-decoration: none">Accept results</a>
+</div>
+</header>
+
+<div style="padding: 24px 32px; display: flex; flex-direction: column; gap: 20px">
+
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+<div style="background: #12181D; border: 1px solid #263039; border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 6px"><span class="hd" style="font-size: 12px; color: #9AA6B0">Air kills</span><span class="mono" style="font-size: 30px; color: #7FB8EE">7 <span style="font-size: 16px; color: #9AA6B0">: 2</span></span><span style="font-size: 12px; color: #9AA6B0">friendly : enemy</span></div>
+<div style="background: #12181D; border: 1px solid #263039; border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 6px"><span class="hd" style="font-size: 12px; color: #9AA6B0">Ground units destroyed</span><span class="mono" style="font-size: 30px; color: #7FB8EE">23 <span style="font-size: 16px; color: #9AA6B0">: 9</span></span><span style="font-size: 12px; color: #9AA6B0">incl. 2 SA-11 TELARs</span></div>
+<div style="background: #12181D; border: 1px solid #263039; border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 6px"><span class="hd" style="font-size: 12px; color: #9AA6B0">Pilots</span><span class="mono" style="font-size: 30px">1 <span style="font-size: 16px; color: #9AA6B0">rescued · 1 POW</span></span><span style="font-size: 12px; color: #9AA6B0">1 still down, CSAR next turn</span></div>
+<div style="background: #12181D; border: 1px solid #263039; border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 6px"><span class="hd" style="font-size: 12px; color: #9AA6B0">Budget next turn</span><span class="mono" style="font-size: 30px">$1 420M</span><span style="font-size: 12px; color: #6FCB8F">+180 income · 0 repairs</span></div>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px">
+
+<section style="flex: 999 1 560px; min-width: 0; background: #12181D; border: 1px solid #263039; border-radius: 6px; display: flex; flex-direction: column">
+<h2 class="hd" style="margin: 0; padding: 14px 16px; font-size: 15px; font-weight: 700; border-bottom: 1px solid #263039">Packages</h2>
+<div style="display: flex; flex-direction: column">
+<div style="display: grid; grid-template-columns: 90px minmax(0, 1fr) 120px 110px; gap: 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid #1C252C">
+<span class="hd" style="font-size: 11px; font-weight: 700; padding: 2px 6px; background: #3A2A12; color: #F2BE6B; border-radius: 3px; justify-self: start">DEAD</span>
+<span><b>SA-11 Krasnodar East</b><br><span style="color: #9AA6B0; font-size: 12px">Viper 1, Hornet 2, Eagle 3</span></span>
+<span class="mono" style="color: #9AA6B0">0 / 8 lost</span>
+<span style="color: #6FCB8F; font-weight: 600">Target destroyed</span>
+</div>
+<div style="display: grid; grid-template-columns: 90px minmax(0, 1fr) 120px 110px; gap: 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid #1C252C">
+<span class="hd" style="font-size: 11px; font-weight: 700; padding: 2px 6px; background: #2E1A14; color: #F3A07C; border-radius: 3px; justify-self: start">CAS</span>
+<span><b>Front · Anapa–Maykop</b><br><span style="color: #9AA6B0; font-size: 12px">Rook 4, Hind 5</span></span>
+<span class="mono" style="color: #F2BE6B">1 / 4 lost</span>
+<span style="color: #6FCB8F; font-weight: 600">Line advanced</span>
+</div>
+<div style="display: grid; grid-template-columns: 90px minmax(0, 1fr) 120px 110px; gap: 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid #1C252C">
+<span class="hd" style="font-size: 11px; font-weight: 700; padding: 2px 6px; background: #1C2A1F; color: #8FD6A6; border-radius: 3px; justify-self: start">CSAR</span>
+<span><b>Capt. Hrytsenko</b><br><span style="color: #9AA6B0; font-size: 12px">Hip 6, escort Hind 7</span></span>
+<span class="mono" style="color: #9AA6B0">0 / 3 lost</span>
+<span style="color: #F2BE6B; font-weight: 600">Not reached</span>
+</div>
+<div style="display: grid; grid-template-columns: 90px minmax(0, 1fr) 120px 110px; gap: 12px; align-items: center; padding: 12px 16px">
+<span class="hd" style="font-size: 11px; font-weight: 700; padding: 2px 6px; background: #2A2333; color: #C7B3E6; border-radius: 3px; justify-self: start">STRIKE</span>
+<span><b>Ammo depot Krasnodar</b><br><span style="color: #9AA6B0; font-size: 12px">Fencer 8</span></span>
+<span class="mono" style="color: #F08A5D">1 / 3 lost</span>
+<span style="color: #F08A5D; font-weight: 600">Target 40%</span>
+</div>
+</div>
+</section>
+
+<section style="flex: 1 1 320px; background: #12181D; border: 1px solid #263039; border-radius: 6px; display: flex; flex-direction: column">
+<h2 class="hd" style="margin: 0; padding: 14px 16px; font-size: 15px; font-weight: 700; border-bottom: 1px solid #263039">Event log</h2>
+<ol style="list-style: none; margin: 0; padding: 8px 16px 14px; display: flex; flex-direction: column; gap: 10px">
+<li style="display: flex; gap: 10px"><span class="mono" style="color: #9AA6B0">06:52</span><span>Eagle 3-1 splashes MiG-31 over Abinsk</span></li>
+<li style="display: flex; gap: 10px"><span class="mono" style="color: #9AA6B0">07:04</span><span>Viper 1-2 shoots HARM at SA-11 search radar</span></li>
+<li style="display: flex; gap: 10px"><span class="mono" style="color: #9AA6B0">07:11</span><span style="color: #6FCB8F">SA-11 Krasnodar East destroyed</span></li>
+<li style="display: flex; gap: 10px"><span class="mono" style="color: #9AA6B0">07:31</span><span style="color: #F08A5D">Rook 4-2 shot down by SA-15 · pilot ejected</span></li>
+<li style="display: flex; gap: 10px"><span class="mono" style="color: #9AA6B0">07:58</span><span style="color: #F08A5D">Fencer 8-3 lost · Lt. Moroz captured</span></li>
+<li style="display: flex; gap: 10px"><span class="mono" style="color: #9AA6B0">08:12</span><span>Mission ended by host</span></li>
+</ol>
+</section>
+
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#E8A33D","options":["#E8A33D","#4FB3A9","#D9D2C3","#7FB8EE"]},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#E8A33D' };
+}
+}
+</script>
+</body>
+</html>

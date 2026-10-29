@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Package editor</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0B0F12}
+a{color:#7FB8EE}a:hover{color:#A9D0F5}
+.hd{font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.08em}
+.mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+th{font-weight:500;text-align:left}
+</style>
+</helmet>
+<div style="font-family: Inter, sans-serif; color: #E6EAED; background: #0B0F12; width: 100%; min-height: 900px; display: flex; flex-direction: column; font-size: 13px">
+
+<header style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 0 16px; min-height: 56px; background: #12181D; border-bottom: 1px solid #263039">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 8px; min-height: 44px; text-decoration: none; color: #C9D2D9"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9D2D9" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg><span class="hd" style="font-size: 13px; font-weight: 600">Command view</span></a>
+<div style="width: 1px; height: 28px; background: #263039"></div>
+<span class="hd" style="font-size: 12px; font-weight: 700; padding: 3px 8px; background: #3A2A12; color: #F2BE6B; border-radius: 3px">DEAD</span>
+<h1 class="hd" style="margin: 0; font-size: 22px; font-weight: 700">SA-11 Krasnodar East</h1>
+<span style="color: #9AA6B0">Package 3 · 64 nm from Krymsk</span>
+<span style="flex: 1"></span>
+<label style="display: flex; align-items: center; gap: 8px"><span class="hd" style="font-size: 12px; color: #9AA6B0">Time on target</span><input class="mono" value="07:12" aria-label="Time on target" style="width: 70px; height: 36px; padding: 0 8px; background: #0B0F12; border: 1px solid #33404B; border-radius: 4px"></label>
+<button style="min-height: 36px; padding: 0 12px; background: #1B232A; border: 1px solid #33404B; border-radius: 4px">Earliest TOT</button>
+<button style="min-height: 36px; padding: 0 12px; background: #1B232A; border: 1px solid #5A2A20; border-radius: 4px; color: #F3A07C">Delete package</button>
+</header>
+
+<div style="display: flex; flex-wrap: wrap; flex: 1">
+
+<aside style="flex: 1 1 280px; max-width: 320px; background: #12181D; border-right: 1px solid #263039; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center"><span class="hd" style="font-size: 12px; font-weight: 600; color: #9AA6B0">Flights · 3</span><span style="flex: 1"></span><button style="min-height: 32px; padding: 0 10px; background: {{accent}}; color: #14100A; border: 0; border-radius: 4px; font-weight: 600">+ Flight</button></div>
+<div style="padding: 10px 12px; background: #1A2229; border: 1px solid {{accent}}; border-radius: 4px; display: flex; flex-direction: column; gap: 4px">
+<div style="display: flex; gap: 8px; align-items: center"><span class="hd" style="font-size: 16px; font-weight: 700">Viper 1</span><span class="hd" style="font-size: 11px; padding: 1px 6px; border: 1px solid {{accent}}; color: {{accent}}; border-radius: 3px">Player</span></div>
+<span style="color: #9AA6B0">4 × F-16CM · SEAD · Krymsk</span>
+<span class="mono" style="font-size: 12px">Start 06:31 · T/O 06:41</span>
+</div>
+<div style="padding: 10px 12px; background: #161D23; border: 1px solid #263039; border-radius: 4px; display: flex; flex-direction: column; gap: 4px">
+<span class="hd" style="font-size: 16px; font-weight: 700">Hornet 2</span>
+<span style="color: #9AA6B0">2 × F/A-18C · DEAD · Anapa</span>
+<span class="mono" style="font-size: 12px">Start 06:28 · T/O 06:38</span>
+</div>
+<div style="padding: 10px 12px; background: #161D23; border: 1px solid #263039; border-radius: 4px; display: flex; flex-direction: column; gap: 4px">
+<span class="hd" style="font-size: 16px; font-weight: 700">Eagle 3</span>
+<span style="color: #9AA6B0">2 × F-15C · Escort · Krymsk</span>
+<span class="mono" style="font-size: 12px">Start 06:33 · T/O 06:43</span>
+</div>
+</aside>
+
+<main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+<nav aria-label="Flight sections" style="display: flex; flex-wrap: wrap; gap: 4px; padding: 0 16px; border-bottom: 1px solid #263039">
+<button class="hd" style="min-height: 44px; padding: 0 14px; background: transparent; border: 0; border-bottom: 2px solid transparent; font-size: 13px; font-weight: 600; color: #9AA6B0">General</button>
+<button class="hd" style="min-height: 44px; padding: 0 14px; background: transparent; border: 0; border-bottom: 2px solid {{accent}}; font-size: 13px; font-weight: 600">Route</button>
+<button class="hd" style="min-height: 44px; padding: 0 14px; background: transparent; border: 0; border-bottom: 2px solid transparent; font-size: 13px; font-weight: 600; color: #9AA6B0">Payload</button>
+<button class="hd" style="min-height: 44px; padding: 0 14px; background: transparent; border: 0; border-bottom: 2px solid transparent; font-size: 13px; font-weight: 600; color: #9AA6B0">Pilots</button>
+<button class="hd" style="min-height: 44px; padding: 0 14px; background: transparent; border: 0; border-bottom: 2px solid transparent; font-size: 13px; font-weight: 600; color: #9AA6B0">Radios &amp; TACAN</button>
+</nav>
+<div style="display: flex; flex-wrap: wrap; gap: 16px; padding: 16px">
+<div style="flex: 1 1 380px; min-height: 300px; background: #10171C; border: 1px solid #263039; border-radius: 6px; overflow: hidden">
+<svg width="100%" height="100%" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Route of Viper 1 from Krymsk to the SA-11 site">
+<rect width="400" height="300" fill="#141D23"></rect>
+<circle cx="300" cy="110" r="70" fill="#F08A5D" fill-opacity=".07" stroke="#F08A5D" stroke-opacity=".5" stroke-dasharray="5 5"></circle>
+<path d="M60 250 L120 200 L210 170 L270 125 L300 110" fill="none" stroke="{{accent}}" stroke-width="2.5"></path>
+<path d="M300 110 L320 170 L200 230 L60 250" fill="none" stroke="{{accent}}" stroke-width="1.5" stroke-dasharray="4 4"></path>
+<g fill="#0B0F12" stroke="{{accent}}" stroke-width="2"><circle cx="120" cy="200" r="5"></circle><circle cx="210" cy="170" r="5"></circle><circle cx="270" cy="125" r="5"></circle><circle cx="320" cy="170" r="5"></circle><circle cx="200" cy="230" r="5"></circle></g>
+<rect x="45" y="242" width="28" height="16" fill="#16304A" stroke="#7FB8EE" stroke-width="2"></rect>
+<path d="M300 98 L312 110 L300 122 L288 110 Z" fill="#3A1C12" stroke="#F08A5D" stroke-width="2"></path>
+<g font-family="JetBrains Mono" font-size="10" fill="#C9D2D9"><text x="128" y="196">1 HOLD</text><text x="218" y="166">2 IP</text><text x="236" y="118">3 INGRESS</text><text x="326" y="174">4 EGRESS</text></g>
+</svg>
+</div>
+<div style="flex: 1 1 420px; min-width: 0; background: #12181D; border: 1px solid #263039; border-radius: 6px; overflow-x: auto">
+<table style="width: 100%; border-collapse: collapse; min-width: 420px">
+<thead><tr class="hd" style="font-size: 12px; color: #9AA6B0; border-bottom: 1px solid #263039"><th style="padding: 10px 12px">#</th><th style="padding: 10px 12px">Waypoint</th><th style="padding: 10px 12px; text-align: right">Alt</th><th style="padding: 10px 12px; text-align: right">Time</th><th style="padding: 10px 12px; text-align: right">Fuel</th></tr></thead>
+<tbody class="mono">
+<tr style="border-bottom: 1px solid #1C252C"><td style="padding: 9px 12px">0</td><td style="padding: 9px 12px; font-family: Inter">Take off · Krymsk</td><td style="padding: 9px 12px; text-align: right">—</td><td style="padding: 9px 12px; text-align: right">06:41</td><td style="padding: 9px 12px; text-align: right">7 160</td></tr>
+<tr style="border-bottom: 1px solid #1C252C"><td style="padding: 9px 12px">1</td><td style="padding: 9px 12px; font-family: Inter">Hold</td><td style="padding: 9px 12px; text-align: right">20 000</td><td style="padding: 9px 12px; text-align: right">06:52</td><td style="padding: 9px 12px; text-align: right">6 480</td></tr>
+<tr style="border-bottom: 1px solid #1C252C"><td style="padding: 9px 12px">2</td><td style="padding: 9px 12px; font-family: Inter">Initial point</td><td style="padding: 9px 12px; text-align: right">20 000</td><td style="padding: 9px 12px; text-align: right">07:04</td><td style="padding: 9px 12px; text-align: right">5 790</td></tr>
+<tr style="border-bottom: 1px solid #1C252C; background: #1A2229"><td style="padding: 9px 12px; color: {{accent}}">3</td><td style="padding: 9px 12px; font-family: Inter; font-weight: 600">Ingress · SA-11</td><td style="padding: 9px 12px; text-align: right">24 000</td><td style="padding: 9px 12px; text-align: right; color: {{accent}}">07:12</td><td style="padding: 9px 12px; text-align: right">5 120</td></tr>
+<tr style="border-bottom: 1px solid #1C252C"><td style="padding: 9px 12px">4</td><td style="padding: 9px 12px; font-family: Inter">Egress</td><td style="padding: 9px 12px; text-align: right">24 000</td><td style="padding: 9px 12px; text-align: right">07:18</td><td style="padding: 9px 12px; text-align: right">4 610</td></tr>
+<tr><td style="padding: 9px 12px">5</td><td style="padding: 9px 12px; font-family: Inter">Landing · Krymsk</td><td style="padding: 9px 12px; text-align: right">—</td><td style="padding: 9px 12px; text-align: right">07:39</td><td style="padding: 9px 12px; text-align: right">2 980</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px; padding: 0 16px 16px">
+<button style="min-height: 40px; padding: 0 14px; background: #1B232A; border: 1px solid #33404B; border-radius: 4px">Add waypoint</button>
+<button style="min-height: 40px; padding: 0 14px; background: #1B232A; border: 1px solid #33404B; border-radius: 4px">Recreate route</button>
+<span style="flex: 1"></span>
+<span style="align-self: center; color: #F2BE6B">Waypoint 3 is inside the SA-11 ring until it is destroyed</span>
+</div>
+</main>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#E8A33D","options":["#E8A33D","#4FB3A9","#D9D2C3","#7FB8EE"]},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#E8A33D' };
+}
+}
+</script>
+</body>
+</html>
