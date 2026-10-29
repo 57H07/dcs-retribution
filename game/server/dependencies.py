@@ -62,6 +62,7 @@ class QtCallbacks:
         edit_package: Callable[[Package], None] | None = None,
         mission_generated: Callable[[], None] | None = None,
         game_changed: Callable[[], None] | None = None,
+        packages_changed: Callable[[], None] | None = None,
     ) -> None:
         self.create_new_package = create_new_package
         self.show_tgo_info = show_tgo_info
@@ -82,6 +83,9 @@ class QtCallbacks:
         # (Qt: GameUpdateSignal.updateGame), e.g. a cheat or an expensive setting
         # (WEB-07.1). Same contract as turn_passed: emit a signal.
         self.game_changed = game_changed
+        # Resyncs the Qt ATO models and radio allocations after an API command
+        # removed a package (WEB-01.2). Same contract as turn_passed: emit a signal.
+        self.packages_changed = packages_changed
 
 
 class QtContext:

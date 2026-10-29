@@ -89,6 +89,8 @@ class QLiberationWindow(QMainWindow):
     mission_generated_signal = Signal()
     # WEB-07.1: a web command changed the game in depth (cheats, settings).
     game_changed_signal = Signal()
+    # WEB-01.2: a web command removed a package.
+    packages_changed_signal = Signal()
 
     def __init__(self, game: Game | None, ui_flags: UiFlags) -> None:
         super().__init__()
@@ -118,6 +120,7 @@ class QLiberationWindow(QMainWindow):
         self.game_changed_signal.connect(
             lambda: GameUpdateSignal.get_instance().updateGame(self.game)
         )
+        self.packages_changed_signal.connect(self.on_packages_changed)
         QtContext.set_callbacks(
             QtCallbacks(
                 lambda target: self.new_package_signal.emit(target),
@@ -129,6 +132,7 @@ class QLiberationWindow(QMainWindow):
                 edit_package=lambda package: self.edit_package_signal.emit(package),
                 mission_generated=lambda: self.mission_generated_signal.emit(),
                 game_changed=lambda: self.game_changed_signal.emit(),
+                packages_changed=lambda: self.packages_changed_signal.emit(),
             )
         )
         # WEB-00.7: file dialogs, folders, links and quit for the web UI.
@@ -143,7 +147,10 @@ class QLiberationWindow(QMainWindow):
         )
         NativeContext.set_bridge(self.native_bridge)
         Dialog.set_game(self.game_model)
-        self.ato_panel = QAirTaskingOrderPanel(self.game_model)
+        # The web packages panel replaces the Qt ATO panel (WEB-01.2).
+        self.ato_panel: QAirTaskingOrderPanel | None = (
+            None if self.web_ui else QAirTaskingOrderPanel(self.game_model)
+        )
         self.info_panel = QInfoPanel(self.game)
         self.liberation_map = QLiberationMap(
             self.game_model, ui_flags.dev_ui_webserver, self, web_shell=self.web_ui
@@ -191,6 +198,7 @@ class QLiberationWindow(QMainWindow):
             return
         hbox = QSplitter(Qt.Orientation.Horizontal)
         vbox = QSplitter(Qt.Orientation.Vertical)
+        assert self.ato_panel is not None
         hbox.addWidget(self.ato_panel)
         hbox.addWidget(vbox)
         vbox.addWidget(self.liberation_map)
@@ -214,9 +222,9 @@ class QLiberationWindow(QMainWindow):
     def _init_web_ui(self, ui_flags: UiFlags) -> None:
         """The map fills the window; the Qt panels move to windows opened on demand.
 
-        The web top bar replaces QTopPanel (WEB-01.1): it is not created at all.
+        The web top bar replaces QTopPanel (WEB-01.1) and the web packages panel the
+        ATO panel (WEB-01.2): they are not created at all.
         """
-        self.ato_window = self._panel_window("Air Tasking Order", self.ato_panel)
         self.reports_window = self._panel_window("Reports", self.info_panel)
         self.setCentralWidget(self.liberation_map)
 
@@ -734,7 +742,6 @@ class QLiberationWindow(QMainWindow):
             QtDialog.PRETENSE_CAMPAIGN: self.newPretenseCampaign,
             QtDialog.AIR_WING: self.open_air_wing,
             QtDialog.TRANSFERS: self.open_transfers,
-            QtDialog.AIR_TASKING_ORDER: lambda: self._show_panel("ato_window"),
             QtDialog.REPORTS: lambda: self._show_panel("reports_window"),
             QtDialog.FINANCES: self.open_finances,
             QtDialog.INTEL: self.open_intel,
@@ -809,7 +816,14 @@ class QLiberationWindow(QMainWindow):
         self._cp_dialog.show()
 
     def on_select_flight(self, flight: Flight) -> None:
-        self.ato_panel.select_flight_on_map(flight)
+        # Without the Qt panel, the select-flight route already told the web UI.
+        if self.ato_panel is not None:
+            self.ato_panel.select_flight_on_map(flight)
+
+    def on_packages_changed(self) -> None:
+        """Resync the Qt ATO models and radio allocations after a web deletion."""
+        self.game_model.set(self.game)
+        self.game_model.init_comms_registry()
 
     def _qsettings(self) -> QSettings:
         return QSettings("DCS Retribution", "Qt UI")

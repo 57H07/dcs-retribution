@@ -17,6 +17,7 @@ from game.ato.airtaaskingorder import AirTaskingOrder
 from game.ato.flight import Flight
 from game.ato.flighttype import FlightType
 from game.ato.package import Package
+from game.commands.packages import cancel_or_abort_package
 from game.dcs.beacons import Beacons
 from game.game import Game
 from game.radio.RadioFrequencyContainer import RadioFrequencyContainer
@@ -296,40 +297,39 @@ class AtoModel(QAbstractListModel):
         self.cancel_or_abort_package(self.package_at_index(index))
 
     def cancel_or_abort_package(self, package: Package) -> None:
+        """Cancels the package, or aborts its flights under way (game.commands)."""
+        if self.game is None:
+            return
         with self.game_model.sim_controller.paused_sim():
+            flights = list(package.flights)
+            package_model = self.find_matching_package_model(package)
+            transfer_model = self.game_model.transfer_model
+            self.beginResetModel()
+            if package_model is not None:
+                package_model.beginResetModel()
+            transfer_model.beginResetModel()
             with EventStream.event_context() as events:
-                if all(f.state.cancelable for f in package.flights):
-                    events.delete_flights_in_package(package)
-                    self._delete_package(package)
-                    return
-
-                package_model = self.find_matching_package_model(package)
-                for flight in package.flights:
-                    if flight.state.cancelable:
-                        package_model.delete_flight(flight)
-                        events.delete_flight(flight)
-                    else:
-                        flight.abort()
-                        events.update_flight(flight)
-
-    def _delete_package(self, package: Package) -> None:
-        """Removes the given package from the ATO."""
-        self.package_models.release(package)
-        transport_missions = [
-            transfer
-            for flight in package.flights
-            if (transfer := flight.coalition.transfers.player_airlift_for(flight))
-        ]
-        index = self.ato.packages.index(package)
-        self.beginRemoveRows(QModelIndex(), index, index)
-        self.ato.remove_package(package)
-        self.endRemoveRows()
-        for transfer in transport_missions:
-            self.game_model.transfer_model.cancel_transfer(transfer)
-        # noinspection PyUnresolvedReferences
-        self.client_slots_changed.emit()
-        self.on_packages_changed()
-        self.release_comms_for_package(package)
+                removed = cancel_or_abort_package(
+                    self.game,
+                    package,
+                    events,
+                    self.game_model.sim_controller.current_time_in_sim_if_game_loaded,
+                )
+            transfer_model.endResetModel()
+            if package_model is not None:
+                package_model.endResetModel()
+                if not removed:
+                    package_model.tot_changed.emit()
+            if removed:
+                self.package_models.release(package)
+                self.game_model.release_freq(package.frequency)
+            self.endResetModel()
+            for flight in flights:
+                if removed or flight not in package.flights:
+                    self.game_model.release_freq(flight.frequency)
+                    self.game_model.release_tacan(flight.tacan)
+            # noinspection PyUnresolvedReferences
+            self.client_slots_changed.emit()
 
     def on_packages_changed(self) -> None:
         if self.game is not None:
@@ -377,12 +377,6 @@ class AtoModel(QAbstractListModel):
 
     def on_sim_update(self, _events: GameUpdateEvents) -> None:
         self.dataChanged.emit(self.index(0), self.index(self.rowCount()))
-
-    def release_comms_for_package(self, package: Package):
-        self.game_model.release_freq(package.frequency)
-        for f in package.flights:
-            self.game_model.release_freq(f.frequency)
-            self.game_model.release_tacan(f.tacan)
 
 
 class TransferModel(QAbstractListModel):

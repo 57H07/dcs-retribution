@@ -1,0 +1,122 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.toolbar {
+  display: flex;
+  gap: var(--ui-space-md);
+  padding: var(--ui-space-lg);
+}
+
+.filter {
+  flex: 1;
+  min-width: 0;
+  height: var(--ui-size-control);
+  box-sizing: border-box;
+  padding: 0 10px;
+  background: var(--ui-color-bg-canvas);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-color-text-primary);
+  font: inherit;
+}
+
+.filter:focus-visible {
+  outline: 2px solid var(--ui-color-accent);
+  outline-offset: 1px;
+}
+
+.content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-sm);
+  margin: 0;
+  padding: 0 var(--ui-space-lg) var(--ui-space-lg);
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-xs);
+}
+
+.warning {
+  color: var(--ui-color-accent-hover);
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-sm);
+  padding: var(--ui-space-sm) 0 var(--ui-space-sm) var(--ui-space-lg);
+  border-left: 2px solid var(--ui-color-accent);
+}
+
+.flights {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-xxs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.flight {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--ui-space-sm) var(--ui-space-md);
+  width: 100%;
+  padding: var(--ui-space-xs) var(--ui-space-md);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--ui-radius-sm);
+  color: var(--ui-color-text-primary);
+  font: inherit;
+  font-size: var(--ui-font-size-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.flight:hover {
+  background: var(--ui-color-bg-hover);
+}
+
+.flight[aria-pressed="true"] {
+  background: var(--ui-color-bg-selected);
+  border-color: var(--ui-color-line-strong);
+}
+
+.flight:focus-visible {
+  outline: 2px solid var(--ui-color-accent);
+  outline-offset: 1px;
+}
+
+.flightTask {
+  font-weight: var(--ui-font-weight-semibold);
+}
+
+.flightFrom {
+  color: var(--ui-color-text-secondary);
+}
+
+.actions {
+  display: flex;
+  gap: var(--ui-space-md);
+}
+
+.empty {
+  margin: 0;
+  padding: var(--ui-space-lg);
+  color: var(--ui-color-text-secondary);
+}
