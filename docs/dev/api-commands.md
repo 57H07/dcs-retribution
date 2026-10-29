@@ -129,6 +129,11 @@ main thread after the lock is released. A migrated screen removes its `QtDialog`
 value, its Qt slot and the dialog itself (W9), and replaces its `QtScreen`
 element in `client/src/shell/routes.tsx`.
 
+A command may also hand over to a Qt window that is not migrated yet: `POST
+/game/mission` (take off, WEB-01.1) generates the mission, then calls
+`QtCallbacks.mission_generated`, which opens `QWaitingForMissionResultWindow`
+until WEB-05.1 replaces it.
+
 ## 9. System actions: the native bridge `/native/*` (WEB-00.7, W7)
 
 What a web page cannot do goes through `NativeBridge` (`game/native/bridge.py`),

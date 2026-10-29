@@ -1,3 +1,4 @@
+import { CommandView } from "../command/CommandView";
 import LiberationMap from "../components/liberationmap";
 import { toggleOverlay } from "../maplayers/layerToggle";
 import { ToastProvider, useToast } from "../ui";
@@ -56,9 +57,10 @@ function ShellLayout() {
     <div className={styles.shell}>
       <AppBar onNewPackage={newPackage} onShowHelp={() => setHelpOpen(true)} />
       <main className={styles.content}>
-        <div className={styles.map}>
-          <LiberationMap />
-        </div>
+        <CommandView
+          map={<LiberationMap />}
+          onOpenPackages={() => qt.openDialog("air-tasking-order")}
+        />
         <Outlet />
       </main>
       <HelpOverlay open={helpOpen} onOpenChange={setHelpOpen} />
@@ -66,7 +68,7 @@ function ShellLayout() {
   );
 }
 
-/** Full-window web UI (WEB-00.3): app bar over the command view. */
+/** Full-window web UI (WEB-00.3): top bar over the command view (WEB-01.1). */
 export function Shell() {
   return (
     <ToastProvider>

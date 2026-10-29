@@ -1,3 +1,4 @@
+import { topBar } from "../command/testdata";
 import { registerOverlayToggler } from "../maplayers/layerToggle";
 import { OVERLAYS } from "../maplayers/overlays";
 import { MenuAction } from "../ui";
@@ -100,9 +101,15 @@ describe("app bar", () => {
   });
 
   it("passes the turn with the API command", async () => {
-    const calls = recordFetch(200, { turn: 2, campaign_state: "continue" });
+    const calls = recordFetch(
+      200,
+      { turn: 2, campaign_state: "continue" },
+      { "/game/top-bar": topBar() },
+    );
     renderShell();
-    await userEvent.click(screen.getByRole("button", { name: "Pass turn" }));
+    await userEvent.click(
+      await screen.findByRole("button", { name: "End turn" }),
+    );
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0].path).toBe("/game/turn/pass");
   });

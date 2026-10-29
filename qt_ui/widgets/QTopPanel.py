@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import List, Optional
 
 from PySide6.QtWidgets import (
@@ -11,15 +10,18 @@ from PySide6.QtWidgets import (
 )
 
 import qt_ui.uiconstants as CONST
-from game import Game, persistency
-from game.ato.flightstate import Uninitialized
+from game import Game
 from game.ato.package import Package
-from game.ato.traveltime import TotEstimator
-from game.commands import skip_turn
+from game.commands import (
+    CommandError,
+    fix_tots,
+    flights_missing_pilots,
+    generate_mission,
+    packages_starting_in_the_past,
+    skip_turn,
+)
 from game.game import TurnState
 from game.gamelock import game_lock
-from game.profiling import logged_duration
-from game.settings.settings import FastForwardStopCondition
 from game.utils import meters
 from qt_ui.models import GameModel
 from qt_ui.simcontroller import SimController
@@ -38,6 +40,13 @@ from qt_ui.windows.QWaitingForMissionResultWindow import QWaitingForMissionResul
 
 
 class QTopPanel(QFrame):
+    """Top panel of the Qt main window, only without the web UI (WEB-01.1).
+
+    The web top bar replaces it. It stays for the Qt UI until the web UI is on by
+    default (WEB-05.2), then goes with its widgets (WEB-09). The take-off rules live
+    in `game.commands.mission`, shared with the web UI.
+    """
+
     def __init__(
         self, game_model: GameModel, sim_controller: SimController, ui_flags: UiFlags
     ) -> None:
@@ -183,27 +192,6 @@ class QTopPanel(QFrame):
         GameUpdateSignal.get_instance().gameStateChanged(state)
         self.proceedButton.setEnabled(True)
 
-    def negative_start_packages(self, now: datetime) -> List[Package]:
-        packages = []
-        for package in self.game_model.ato_model.ato.packages:
-            if not package.flights:
-                continue
-            for flight in package.flights:
-                if isinstance(flight.state, Uninitialized):
-                    flight.state.reinitialize(now)
-                if flight.state.is_waiting_for_start:
-                    startup = flight.flight_plan.startup_time()
-                    if startup < now:
-                        packages.append(package)
-                        break
-        return packages
-
-    @staticmethod
-    def fix_tots(packages: List[Package]) -> None:
-        for package in packages:
-            estimator = TotEstimator(package)
-            package.time_over_target = estimator.earliest_tot()
-
     def confirm_no_client_launch(self) -> bool:
         result = QMessageBox.question(
             self,
@@ -262,19 +250,15 @@ class QTopPanel(QFrame):
         mbox.exec()
         clicked = mbox.clickedButton()
         if clicked == auto:
-            self.fix_tots(negative_starts)
+            with game_lock():
+                fix_tots(negative_starts, self.sim_controller.current_time_in_sim)
             return True
         elif clicked == ignore:
             return True
         return False
 
     def check_no_missing_pilots(self) -> bool:
-        missing_pilots = []
-        for package in self.game.blue.ato.packages:
-            for flight in package.flights:
-                if flight.missing_pilots > 0:
-                    missing_pilots.append((package, flight))
-
+        missing_pilots = flights_missing_pilots(self.game)
         if not missing_pilots:
             return False
 
@@ -306,22 +290,19 @@ class QTopPanel(QFrame):
         if self.check_no_missing_pilots():
             return
 
-        negative_starts = self.negative_start_packages(
-            self.sim_controller.current_time_in_sim
+        negative_starts = packages_starting_in_the_past(
+            self.game, self.sim_controller.current_time_in_sim
         )
         if negative_starts:
             if not self.confirm_negative_start_time(negative_starts):
                 return
 
-        if self.game.settings.fast_forward_stop_condition not in [
-            FastForwardStopCondition.DISABLED,
-            FastForwardStopCondition.MANUAL,
-        ]:
-            with logged_duration("Simulating to first contact"):
-                self.sim_controller.run_to_first_contact()
-        self.sim_controller.generate_miz(
-            persistency.mission_path_for("retribution_nextturn.miz")
-        )
+        try:
+            with game_lock():
+                generate_mission(self.game, self.sim_controller)
+        except CommandError as error:
+            QMessageBox.critical(self, "Cannot take off", error.message)
+            return
 
         waiting = QWaitingForMissionResultWindow(self.game, self.sim_controller, self)
         waiting.exec()

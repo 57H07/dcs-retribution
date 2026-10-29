@@ -42,6 +42,7 @@ class GameUpdateEvents:
     reset_on_map_center: LatLng | None = None
     game_unloaded: bool = False
     new_turn: bool = False
+    budget_updated: bool = False
     shutting_down: bool = False
 
     @property
@@ -155,6 +156,11 @@ class GameUpdateEvents:
 
     def begin_new_turn(self) -> GameUpdateEvents:
         self.new_turn = True
+        return self
+
+    def update_budget(self) -> GameUpdateEvents:
+        """A coalition budget changed outside a new turn (purchases, repairs...)."""
+        self.budget_updated = True
         return self
 
     def shut_down(self) -> GameUpdateEvents:

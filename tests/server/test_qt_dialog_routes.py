@@ -124,14 +124,23 @@ def test_menu_actions_without_a_campaign() -> None:
     assert QtDialog.AIR_WING.needs_game
 
 
-def test_take_off_is_refused_before_the_campaign_begins(
+def test_take_off_left_the_qt_dialogs(
     qt: _Recorder, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    _set_game(monkeypatch, SimpleNamespace(turn=0))
-    status, body = _post("/qt/dialogs/take-off")
-    assert status == 409
-    assert "Begin the campaign" in body["detail"]
+    """WEB-01.1: take off is the POST /game/mission command, not a Qt dialog."""
+    _set_game(monkeypatch, SimpleNamespace(turn=3))
+    status, _ = _post("/qt/dialogs/take-off")
+    assert status == 422
     assert qt.dialogs == []
+
+
+def test_finances_and_intel_open_from_the_top_bar(
+    qt: _Recorder, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _set_game(monkeypatch, SimpleNamespace(turn=3))
+    assert _post("/qt/dialogs/finances") == (204, None)
+    assert _post("/qt/dialogs/intel") == (204, None)
+    assert qt.dialogs == [QtDialog.FINANCES, QtDialog.INTEL]
 
 
 def test_unknown_dialog_is_rejected(

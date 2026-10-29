@@ -22,8 +22,9 @@ class QtDialog(str, Enum):
     TRANSFERS = "transfers"
     AIR_TASKING_ORDER = "air-tasking-order"
     REPORTS = "reports"
+    FINANCES = "finances"
+    INTEL = "intel"
     DEBRIEFING = "debriefing"
-    TAKE_OFF = "take-off"
 
     @property
     def needs_game(self) -> bool:

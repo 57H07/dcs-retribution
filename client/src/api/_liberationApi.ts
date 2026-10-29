@@ -104,8 +104,33 @@ const injectedRtkApi = api.injectEndpoints({
     getGameState: build.query<GetGameStateApiResponse, GetGameStateApiArg>({
       query: () => ({ url: `/game/` }),
     }),
+    getTopBar: build.query<GetTopBarApiResponse, GetTopBarApiArg>({
+      query: () => ({ url: `/game/top-bar` }),
+    }),
     passTurn: build.mutation<PassTurnApiResponse, PassTurnApiArg>({
       query: () => ({ url: `/game/turn/pass`, method: "POST" }),
+    }),
+    getMissionChecks: build.query<
+      GetMissionChecksApiResponse,
+      GetMissionChecksApiArg
+    >({
+      query: () => ({ url: `/game/mission/checks` }),
+    }),
+    fixTots: build.mutation<FixTotsApiResponse, FixTotsApiArg>({
+      query: () => ({ url: `/game/mission/fix-tots`, method: "POST" }),
+    }),
+    generateMission: build.mutation<
+      GenerateMissionApiResponse,
+      GenerateMissionApiArg
+    >({
+      query: () => ({ url: `/game/mission`, method: "POST" }),
+    }),
+    setSimSpeed: build.mutation<SetSimSpeedApiResponse, SetSimSpeedApiArg>({
+      query: (queryArg) => ({
+        url: `/game/sim/speed`,
+        method: "PUT",
+        body: queryArg.simSpeedChangeJs,
+      }),
     }),
     getSettings: build.query<GetSettingsApiResponse, GetSettingsApiArg>({
       query: () => ({ url: `/settings/` }),
@@ -421,8 +446,24 @@ export type GetFrontLineByIdApiArg = {
 export type GetGameStateApiResponse =
   /** status 200 Successful Response */ Game;
 export type GetGameStateApiArg = void;
+export type GetTopBarApiResponse =
+  /** status 200 Successful Response */ TopBar | null;
+export type GetTopBarApiArg = void;
 export type PassTurnApiResponse = /** status 200 Successful Response */ Turn;
 export type PassTurnApiArg = void;
+export type GetMissionChecksApiResponse =
+  /** status 200 Successful Response */ MissionChecks;
+export type GetMissionChecksApiArg = void;
+export type FixTotsApiResponse =
+  /** status 200 Successful Response */ FixedTots;
+export type FixTotsApiArg = void;
+export type GenerateMissionApiResponse =
+  /** status 200 Successful Response */ Mission;
+export type GenerateMissionApiArg = void;
+export type SetSimSpeedApiResponse = /** status 200 Successful Response */ Sim;
+export type SetSimSpeedApiArg = {
+  simSpeedChangeJs: SimSpeedChange;
+};
 export type GetSettingsApiResponse =
   /** status 200 Successful Response */ Settings;
 export type GetSettingsApiArg = void;
@@ -728,6 +769,55 @@ export type Game = {
   unculled_zones: UnculledZone[];
   map_zones: MapZones;
 };
+export type Wind = {
+  altitude: string;
+  direction: number;
+  speed_kt: number;
+};
+export type Weather = {
+  clouds: string;
+  precipitation: string;
+  fog: string;
+  cloud_base_m?: number;
+  cloud_base_ft?: number;
+  winds: Wind[];
+};
+export type ForceBalance = {
+  friendly: number;
+  enemy: number;
+  assessment: string;
+};
+export type SimSpeedJs =
+  | "paused"
+  | "1x"
+  | "2x"
+  | "5x"
+  | "10x"
+  | "100x"
+  | "1000x";
+export type Sim = {
+  speed: SimSpeedJs;
+  time?: string;
+};
+export type TopBar = {
+  campaign_name?: string;
+  theater: string;
+  player_faction: string;
+  enemy_faction: string;
+  turn: number;
+  mission_start_date: string;
+  mission_start_time: string;
+  time_of_day: string;
+  weather: Weather;
+  budget: number;
+  income: number;
+  air: ForceBalance;
+  ground: ForceBalance;
+  economy: string;
+  max_player_count: number;
+  sim: Sim;
+  show_sim_speed_controls: boolean;
+};
 export type CampaignStateJs = "continue" | "win" | "loss";
 export type Turn = {
   turn: number;
@@ -735,6 +825,21 @@ export type Turn = {
 };
 export type CommandError = {
   detail: string;
+};
+export type MissionChecks = {
+  has_player_pilots: boolean;
+  flights_missing_pilots: string[];
+  packages_starting_in_the_past: string[];
+  max_player_count: number;
+};
+export type FixedTots = {
+  packages: string[];
+};
+export type Mission = {
+  path: string;
+};
+export type SimSpeedChange = {
+  speed: SimSpeedJs;
 };
 export type SettingKindJs = "bool" | "choice" | "int" | "float" | "minutes";
 export type Setting = {
@@ -795,8 +900,9 @@ export type QtDialog =
   | "transfers"
   | "air-tasking-order"
   | "reports"
-  | "debriefing"
-  | "take-off";
+  | "finances"
+  | "intel"
+  | "debriefing";
 export const {
   useListControlPointsQuery,
   useGetControlPointByIdQuery,
@@ -813,7 +919,12 @@ export const {
   useListFrontLinesQuery,
   useGetFrontLineByIdQuery,
   useGetGameStateQuery,
+  useGetTopBarQuery,
   usePassTurnMutation,
+  useGetMissionChecksQuery,
+  useFixTotsMutation,
+  useGenerateMissionMutation,
+  useSetSimSpeedMutation,
   useGetSettingsQuery,
   useSetSettingMutation,
   useResetSettingsPageMutation,

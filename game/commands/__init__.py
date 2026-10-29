@@ -9,6 +9,28 @@ Callers hold the global game lock (`game.gamelock`) while running a command.
 """
 
 from .errors import CommandError
+from .mission import (
+    MissionSim,
+    fix_past_tots,
+    fix_tots,
+    flights_missing_pilots,
+    generate_mission,
+    max_player_count,
+    packages_starting_in_the_past,
+)
+from .sim import SpeedControlledSim, set_sim_speed
 from .turn import skip_turn
 
-__all__ = ["CommandError", "skip_turn"]
+__all__ = [
+    "CommandError",
+    "MissionSim",
+    "SpeedControlledSim",
+    "fix_past_tots",
+    "fix_tots",
+    "flights_missing_pilots",
+    "generate_mission",
+    "max_player_count",
+    "packages_starting_in_the_past",
+    "set_sim_speed",
+    "skip_turn",
+]
