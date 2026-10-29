@@ -117,6 +117,7 @@
 * **[Engine]** Fixed a bug where squadrons could transfer to enemy owned control points
 * **[Mission Generation]** Air assault drop-off zones are kept on land, so coastal objectives no longer drop the troops into the sea.
 * **[Mission Generation]** Relocate ground units that spawn on inland water (ponds, rivers, lakes) to the nearest land at mission start, fixing armor and SAM sites spawning underwater (#59).
+* **[Loadouts]** Su-17M4, Su-24M and MiG-25PD default payloads now use the R-60M CLSIDs their pylons accept, removing the "Pylon N cannot equip R-60M" errors logged for their flights when weapons are not restricted by date.
 * **[Mission Generation]** Relocate ships that spawn on land (e.g. carrier escorts when the carrier hugs the shore) to the nearest deep water at mission start (#59).
 
 # Retribution v1.5.0
