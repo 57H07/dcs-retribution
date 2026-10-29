@@ -1,0 +1,16 @@
+/* Fragments composed by the component modules. */
+.focusRing:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-shadow-focus);
+}
+
+.display {
+  font-family: var(--ui-font-display);
+  text-transform: uppercase;
+  letter-spacing: var(--ui-letter-spacing-display);
+}
+
+.mono {
+  font-family: var(--ui-font-mono);
+  font-variant-numeric: tabular-nums;
+}

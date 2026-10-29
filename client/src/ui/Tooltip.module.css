@@ -1,0 +1,17 @@
+.content {
+  z-index: var(--ui-z-index-tooltip);
+  max-width: 280px;
+  padding: var(--ui-space-sm) var(--ui-space-md);
+  background: var(--ui-color-bg-raised);
+  border: 1px solid var(--ui-color-line-strong);
+  border-radius: var(--ui-radius-md);
+  box-shadow: var(--ui-shadow-overlay);
+  color: var(--ui-color-text-primary);
+  font-family: var(--ui-font-body);
+  font-size: var(--ui-font-size-sm);
+  line-height: 1.4;
+}
+
+.arrow {
+  fill: var(--ui-color-line-strong);
+}

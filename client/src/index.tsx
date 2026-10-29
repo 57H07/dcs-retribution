@@ -7,11 +7,17 @@ import "./theme/fonts.css";
 import "./theme/map.css";
 import "./theme/tokens.css";
 import { applyTheme, themeFromQuery } from "./theme/theme";
+import "./ui/base.css";
+import "./ui/fonts";
+import { installTokens } from "./ui/tokens";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
 
 applyTheme(themeFromQuery(window.location.search));
+// Design system tokens (--ui-*) for the web screens; the map keeps the
+// Qt-shared theme tokens until the shell (WEB-00.3).
+installTokens();
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement

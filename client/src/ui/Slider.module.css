@@ -1,0 +1,65 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-xs);
+  min-width: 160px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ui-space-md);
+}
+
+.label {
+  composes: display from "./shared.module.css";
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-xs);
+  font-weight: var(--ui-font-weight-semibold);
+}
+
+.value {
+  composes: mono from "./shared.module.css";
+  color: var(--ui-color-text-primary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.root {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 24px;
+  touch-action: none;
+  user-select: none;
+}
+
+.root[data-disabled] {
+  opacity: 0.45;
+}
+
+.track {
+  position: relative;
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--ui-color-line-strong);
+}
+
+.range {
+  position: absolute;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--ui-color-accent);
+}
+
+.thumb {
+  composes: focusRing from "./shared.module.css";
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--ui-color-text-primary);
+  border: 2px solid var(--ui-color-accent);
+  box-sizing: border-box;
+  cursor: grab;
+}

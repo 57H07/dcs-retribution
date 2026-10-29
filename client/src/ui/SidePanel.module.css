@@ -1,0 +1,64 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  width: var(--ui-size-panel);
+  max-width: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  background: var(--ui-color-bg-panel);
+  color: var(--ui-color-text-primary);
+  font-family: var(--ui-font-body);
+  font-size: var(--ui-font-size-md);
+}
+
+.left {
+  border-right: 1px solid var(--ui-color-line);
+}
+
+.right {
+  border-left: 1px solid var(--ui-color-line);
+}
+
+/* Collapsed: a rail with the toggle only (W15, 1366x768). */
+.panel[data-state="closed"] {
+  width: var(--ui-size-rail);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-md);
+  min-height: var(--ui-size-control-lg);
+  padding-left: var(--ui-space-lg);
+  border-bottom: 1px solid var(--ui-color-line);
+}
+
+.panel[data-state="closed"] .header {
+  padding-left: 0;
+  justify-content: center;
+}
+
+.right .header {
+  flex-direction: row-reverse;
+  padding-left: 0;
+  padding-right: var(--ui-space-lg);
+}
+
+.right[data-state="closed"] .header {
+  padding-right: 0;
+}
+
+.title {
+  composes: display from "./shared.module.css";
+  flex: 1;
+  margin: 0;
+  font-size: var(--ui-font-size-lg);
+  font-weight: var(--ui-font-weight-semibold);
+}
+
+.content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
