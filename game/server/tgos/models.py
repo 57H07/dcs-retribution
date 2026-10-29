@@ -26,7 +26,9 @@ class TgoJs(BaseModel):
     detection_ranges: list[float]  # TODO: Event stream
     dead: bool  # TODO: Event stream
     sidc: str  # TODO: Event stream
-    task: Optional[GroupTask]
+    # [description, role] of the GroupTask. Built by hand: a GroupTask value is a
+    # (str, GroupRole) tuple, whose OpenAPI enum (a list of arrays) breaks codegen.
+    task: Optional[list[str]]
     mobile: bool
     destination: Optional[LeafletPoint]
 
@@ -61,10 +63,16 @@ class TgoJs(BaseModel):
             detection_ranges=detection_ranges,
             dead=tgo.is_dead,
             sidc=str(tgo.sidc()),
-            task=tgo.groups[0].ground_object.task if tgo.groups else None,
+            task=TgoJs._task(tgo.groups[0].ground_object.task) if tgo.groups else None,
             mobile=mobile,
             destination=destination,
         )
+
+    @staticmethod
+    def _task(task: Optional[GroupTask]) -> Optional[list[str]]:
+        if task is None:
+            return None
+        return [task.description, task.role.value]
 
     @staticmethod
     def all_in_game(game: Game) -> list[TgoJs]:

@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from game.commands import CommandError
+
 from . import (
     controlpoints,
     debuggeometries,
@@ -17,9 +19,11 @@ from . import (
     waypoints,
     iadsnetwork,
 )
+from .commanderrors import command_error_handler
 from .settings import ServerSettings
 
 app = FastAPI()
+app.add_exception_handler(CommandError, command_error_handler)
 app.include_router(controlpoints.router)
 app.include_router(debuggeometries.router)
 app.include_router(downedpilots.router)

@@ -7,6 +7,7 @@ from game.theater import ControlPoint, MissionTarget, TheaterGroundObject
 if TYPE_CHECKING:
     from game import Game
     from game.ato import Flight
+    from game.game import TurnState
     from qt_ui.models import GameModel
 
 
@@ -39,15 +40,20 @@ class QtCallbacks:
         show_tgo_info: Callable[[TheaterGroundObject], None],
         show_control_point_info: Callable[[ControlPoint], None],
         select_flight: Callable[[Flight], None],
+        turn_passed: Callable[[TurnState], None] | None = None,
     ) -> None:
         self.create_new_package = create_new_package
         self.show_tgo_info = show_tgo_info
         self.show_control_point_info = show_control_point_info
         self.select_flight = select_flight
+        # Refreshes the Qt widgets after an API command passed the turn. Called from
+        # an API worker thread with the game lock held: it must only queue work onto
+        # the Qt main thread (emit a signal), never block on it.
+        self.turn_passed = turn_passed
 
 
 class QtContext:
-    _callbacks: QtCallbacks
+    _callbacks: QtCallbacks | None = None
 
     @classmethod
     def set_callbacks(cls, callbacks: QtCallbacks) -> None:
@@ -57,4 +63,9 @@ class QtContext:
     def get(cls) -> QtCallbacks:
         if cls._callbacks is None:
             raise RuntimeError("QtContext has no callbacks set")
+        return cls._callbacks
+
+    @classmethod
+    def get_optional(cls) -> QtCallbacks | None:
+        """The Qt callbacks, or None when no Qt window is running (tests)."""
         return cls._callbacks

@@ -1,7 +1,8 @@
 import { ConfigFile } from "@rtk-query/codegen-openapi";
 
 const config: ConfigFile = {
-  schemaFile: "http://[::1]:16880/openapi.json",
+  // Written by `python -m game.server.openapischema` (no server needed).
+  schemaFile: "./openapi.json",
   apiFile: "./src/api/baseApi.ts",
   apiImport: "baseApi",
   outputFile: "./src/api/_liberationApi.ts",

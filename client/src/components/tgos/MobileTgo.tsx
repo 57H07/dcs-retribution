@@ -196,7 +196,7 @@ function PrimaryMarker(props: PrimaryMarkerProps) {
             try {
               await putDestination({
                 tgoId: props.tgo.id,
-                body: { lat: dest.lat, lng: dest.lng },
+                leafletPoint: { lat: dest.lat, lng: dest.lng },
               }).unwrap();
             } catch (error) {
               console.error("setTgoDestination failed", error);

@@ -60,6 +60,8 @@ class QLiberationWindow(QMainWindow):
     tgo_info_signal = Signal(TheaterGroundObject)
     control_point_info_signal = Signal(ControlPoint)
     select_flight_signal = Signal(Flight)
+    # Emitted from an API worker thread: queued onto the Qt main thread.
+    turn_passed_signal = Signal(TurnState)
 
     def __init__(self, game: Game | None, ui_flags: UiFlags) -> None:
         super().__init__()
@@ -83,6 +85,7 @@ class QLiberationWindow(QMainWindow):
                 lambda tgo: self.tgo_info_signal.emit(tgo),
                 lambda cp: self.control_point_info_signal.emit(cp),
                 lambda flight: self.select_flight_signal.emit(flight),
+                turn_passed=lambda state: self.turn_passed_signal.emit(state),
             )
         )
         Dialog.set_game(self.game_model)
@@ -150,6 +153,7 @@ class QLiberationWindow(QMainWindow):
 
     def connectSignals(self):
         GameUpdateSignal.get_instance().gameupdated.connect(self.setGame)
+        self.turn_passed_signal.connect(self.top_panel.on_turn_passed)
         GameUpdateSignal.get_instance().debriefingReceived.connect(self.onDebriefing)
         GameUpdateSignal.get_instance().game_state_changed.connect(self.onEndGame)
         theme_signals().theme_changed.connect(self.refresh_theme_icons)

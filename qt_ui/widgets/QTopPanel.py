@@ -15,6 +15,8 @@ from game import Game, persistency
 from game.ato.flightstate import Uninitialized
 from game.ato.package import Package
 from game.ato.traveltime import TotEstimator
+from game.commands import skip_turn
+from game.game import TurnState
 from game.gamelock import game_lock
 from game.profiling import logged_duration
 from game.settings.settings import FastForwardStopCondition
@@ -171,14 +173,15 @@ class QTopPanel(QFrame):
         self.dialog.show()
 
     def passTurn(self):
-        with logged_duration("Skipping turn"):
-            with game_lock():
-                self.game.pass_turn(no_action=True)
-            GameUpdateSignal.get_instance().updateGame(self.game)
-            with game_lock():
-                state = self.game_model.game.check_win_loss()
-            GameUpdateSignal.get_instance().gameStateChanged(state)
-            self.proceedButton.setEnabled(True)
+        with game_lock():
+            state = skip_turn(self.game)
+        self.on_turn_passed(state)
+
+    def on_turn_passed(self, state: TurnState) -> None:
+        """Refresh the Qt widgets once a turn was skipped, here or by the web UI."""
+        GameUpdateSignal.get_instance().updateGame(self.game)
+        GameUpdateSignal.get_instance().gameStateChanged(state)
+        self.proceedButton.setEnabled(True)
 
     def negative_start_packages(self, now: datetime) -> List[Package]:
         packages = []
