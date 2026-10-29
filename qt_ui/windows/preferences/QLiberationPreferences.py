@@ -58,6 +58,9 @@ class QLiberationPreferences(QFrame):
         self.port = liberation_install.server_port()
         self.port_input = QSpinBox()
 
+        self.web_ui_cb = QCheckBox()
+        self.web_ui_cb.setChecked(liberation_install.web_ui_preference())
+
         self.initUi()
 
     def initUi(self):
@@ -119,6 +122,14 @@ class QLiberationPreferences(QFrame):
         self.port_input.setRange(1, 2**16 - 1)
         self.port_input.setValue(self.port)
         self.port_input.setStyleSheet("QSpinBox{ width: 50 }")
+
+        layout.addWidget(
+            QLabel("<strong>Web interface, experimental (restart required):</strong>"),
+            8,
+            0,
+            alignment=Qt.AlignmentFlag.AlignLeft,
+        )
+        layout.addWidget(self.web_ui_cb, 8, 1, alignment=Qt.AlignmentFlag.AlignRight)
 
         main_layout.addLayout(layout)
         main_layout.addStretch()
@@ -208,6 +219,7 @@ class QLiberationPreferences(QFrame):
             self.setup_preferences_on_every_start,
             self.port,
         )
+        liberation_install.set_web_ui_preference(self.web_ui_cb.isChecked())
         liberation_install.save_config()
         switch_theme(self.themeSelect.currentIndex())
         return True

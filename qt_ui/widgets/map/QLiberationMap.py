@@ -34,7 +34,9 @@ class LoggingWebPage(QWebEnginePage):
 
 
 class QLiberationMap(QWebEngineView):
-    def __init__(self, game_model: GameModel, dev: bool, parent) -> None:
+    def __init__(
+        self, game_model: GameModel, dev: bool, parent, web_shell: bool = False
+    ) -> None:
         super().__init__(parent)
         self.game_model = game_model
         self.setMinimumSize(800, 600)
@@ -57,9 +59,7 @@ class QLiberationMap(QWebEngineView):
             host = f"[{host}]"
         port = server_settings.server_port
         api_key = quote(ApiKeyManager.key(), safe="")
-        url.setQuery(
-            f"server={host}:{port}&apiKey={api_key}&theme={get_token_variant()}"
-        )
+        url.setQuery(page_query(f"{host}:{port}", api_key, web_shell))
         self.page.load(url)
         self.setPage(self.page)
         theme_signals().theme_changed.connect(self.apply_theme)
@@ -71,6 +71,18 @@ class QLiberationMap(QWebEngineView):
         follows the data-theme attribute of the document element.
         """
         self.page.runJavaScript(theme_script(variant))
+
+
+def page_query(server: str, api_key: str, web_shell: bool) -> str:
+    """Query string of the client page.
+
+    `shell=web` asks the client for the full web shell (app bar, routes, shortcuts)
+    instead of the bare map embedded in the Qt window (WEB-00.3).
+    """
+    query = f"server={server}&apiKey={api_key}&theme={get_token_variant()}"
+    if web_shell:
+        query += "&shell=web"
+    return query
 
 
 def theme_script(variant: str) -> str:

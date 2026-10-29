@@ -14,6 +14,7 @@ describe("Catalog", () => {
       "List cards",
       "Table",
       "Modal · Toast · Tooltip",
+      "Menu",
       "Military symbols (APP-6)",
       "Side panel (right)",
     ]) {

@@ -117,3 +117,14 @@ that codegen cannot handle (send a string or a list of strings instead).
   the app without a server or httpx): status, JSON body, error `detail`, events.
 - Client: stub `fetch`, dispatch `_liberationApi.endpoints.<name>.initiate()` on
   `setupStore()` and check the request and result (see `commands.test.ts`).
+
+## 8. Screens not migrated yet: `/qt/*` (WEB-00.3)
+
+Until a screen has its web version, its client route opens the Qt dialog:
+`POST /qt/dialogs/{dialog}` (`QtDialog` in `game/server/qt/models.py`), `POST
+/qt/links/{link}` for the Help pages, and the older target routes
+(`/qt/create-package/...`, `/qt/info/...`). The route only calls a `QtCallbacks`
+callback that emits a `QLiberationWindow` signal, so the dialog opens on the Qt
+main thread after the lock is released. A migrated screen removes its `QtDialog`
+value, its Qt slot and the dialog itself (W9), and replaces its `QtScreen`
+element in `client/src/shell/routes.tsx`.

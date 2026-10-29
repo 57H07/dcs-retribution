@@ -15,8 +15,8 @@ import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
 
 applyTheme(themeFromQuery(window.location.search));
-// Design system tokens (--ui-*) for the web screens; the map keeps the
-// Qt-shared theme tokens until the shell (WEB-00.3).
+// Design system tokens (--ui-*) for the web shell and screens; the map layers
+// keep the Qt-shared theme tokens until the command view (WEB-01).
 installTokens();
 
 const root = ReactDOM.createRoot(

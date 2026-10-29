@@ -205,6 +205,30 @@ const injectedRtkApi = api.injectEndpoints({
         method: "POST",
       }),
     }),
+    openQtDialog: build.mutation<OpenQtDialogApiResponse, OpenQtDialogApiArg>({
+      query: (queryArg) => ({
+        url: `/qt/dialogs/${queryArg.dialog}`,
+        method: "POST",
+      }),
+    }),
+    openExternalLink: build.mutation<
+      OpenExternalLinkApiResponse,
+      OpenExternalLinkApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/qt/links/${queryArg.link}`,
+        method: "POST",
+      }),
+    }),
+    openEditPackageDialog: build.mutation<
+      OpenEditPackageDialogApiResponse,
+      OpenEditPackageDialogApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/qt/edit-package/flight/${queryArg.flightId}`,
+        method: "POST",
+      }),
+    }),
     listSupplyRoutes: build.query<
       ListSupplyRoutesApiResponse,
       ListSupplyRoutesApiArg
@@ -405,6 +429,21 @@ export type OpenControlPointInfoDialogApiResponse =
   /** status 200 Successful Response */ any;
 export type OpenControlPointInfoDialogApiArg = {
   cpId: string;
+};
+export type OpenQtDialogApiResponse =
+  /** status 204 Successful Response */ void;
+export type OpenQtDialogApiArg = {
+  dialog: QtDialog;
+};
+export type OpenExternalLinkApiResponse =
+  /** status 204 Successful Response */ void;
+export type OpenExternalLinkApiArg = {
+  link: QtLink;
+};
+export type OpenEditPackageDialogApiResponse =
+  /** status 204 Successful Response */ void;
+export type OpenEditPackageDialogApiArg = {
+  flightId: string;
 };
 export type ListSupplyRoutesApiResponse =
   /** status 200 Successful Response */ SupplyRoute[];
@@ -617,6 +656,35 @@ export type CommandError = {
   detail: string;
 };
 export type Player = "Neutral" | "Blue" | "Red";
+export type QtDialog =
+  | "new-game"
+  | "open-game"
+  | "save-game"
+  | "save-game-as"
+  | "preferences"
+  | "settings"
+  | "stats"
+  | "notes"
+  | "logs"
+  | "about"
+  | "import-layouts"
+  | "pretense-campaign"
+  | "air-wing"
+  | "transfers"
+  | "air-tasking-order"
+  | "reports"
+  | "debriefing"
+  | "take-off"
+  | "quit";
+export type QtLink =
+  | "discord"
+  | "github"
+  | "ukraine"
+  | "pretense-discord"
+  | "releases"
+  | "manual"
+  | "forum-thread"
+  | "issues";
 export const {
   useListControlPointsQuery,
   useGetControlPointByIdQuery,
@@ -646,6 +714,9 @@ export const {
   useOpenNewDownedPilotPackageDialogMutation,
   useSelectFlightMutation,
   useOpenControlPointInfoDialogMutation,
+  useOpenQtDialogMutation,
+  useOpenExternalLinkMutation,
+  useOpenEditPackageDialogMutation,
   useListSupplyRoutesQuery,
   useListTgosQuery,
   useGetTgoByIdQuery,
