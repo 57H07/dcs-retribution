@@ -2,6 +2,7 @@ from uuid import UUID
 
 from dcs import Point
 from dcs.mapping import LatLng
+from game.gamelock import locked
 from fastapi import APIRouter, Body, Depends, HTTPException, status
 from starlette.responses import Response
 
@@ -17,6 +18,7 @@ router: APIRouter = APIRouter(prefix="/control-points")
 @router.get(
     "/", operation_id="list_control_points", response_model=list[ControlPointJs]
 )
+@locked
 def list_control_points(
     game: Game = Depends(GameContext.require),
 ) -> list[ControlPointJs]:
@@ -26,6 +28,7 @@ def list_control_points(
 @router.get(
     "/{cp_id}", operation_id="get_control_point_by_id", response_model=ControlPointJs
 )
+@locked
 def get_control_point(
     cp_id: UUID, game: Game = Depends(GameContext.require)
 ) -> ControlPointJs:
@@ -43,6 +46,7 @@ def get_control_point(
     operation_id="control_point_destination_in_range",
     response_model=bool,
 )
+@locked
 def destination_in_range(
     cp_id: UUID, lat: float, lng: float, game: Game = Depends(GameContext.require)
 ) -> bool:
@@ -63,6 +67,7 @@ def destination_in_range(
     status_code=status.HTTP_204_NO_CONTENT,
     response_class=Response,
 )
+@locked
 def set_destination(
     cp_id: UUID,
     destination: LeafletPoint = Body(..., title="destination"),
@@ -112,6 +117,7 @@ def set_destination(
     status_code=status.HTTP_204_NO_CONTENT,
     response_class=Response,
 )
+@locked
 def cancel_travel(cp_id: UUID, game: Game = Depends(GameContext.require)) -> None:
     cp = game.theater.find_control_point_by_id(cp_id)
     if cp is None:

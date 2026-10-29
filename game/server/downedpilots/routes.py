@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from game.gamelock import locked
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from game import Game
@@ -10,6 +11,7 @@ router: APIRouter = APIRouter(prefix="/downed-pilots")
 
 
 @router.get("/", operation_id="list_downed_pilots", response_model=list[DownedPilotJs])
+@locked
 def list_downed_pilots(
     game: Game = Depends(GameContext.require),
 ) -> list[DownedPilotJs]:
@@ -21,6 +23,7 @@ def list_downed_pilots(
     operation_id="get_downed_pilot_by_id",
     response_model=DownedPilotJs,
 )
+@locked
 def get_downed_pilot(
     pilot_id: UUID, game: Game = Depends(GameContext.require)
 ) -> DownedPilotJs:

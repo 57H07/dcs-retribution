@@ -25,6 +25,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from game import Game
 from game.ato.flightstate import Uninitialized
 from game.debriefing import Debriefing
+from game.gamelock import game_lock
 from game.theater import Player
 from game.profiling import logged_duration
 from game.server import EventStream
@@ -225,8 +226,11 @@ class QWaitingForMissionResultWindow(QDialog):
         QApplication.processEvents()
         try:
             with logged_duration("Turn processing"):
-                self.sim_controller.process_results(self.debriefing)
-                self.game.pass_turn()
+                # Not across the signals below: they refresh Qt widgets that may
+                # open dialogs, and the lock is never held while waiting on Qt.
+                with game_lock():
+                    self.sim_controller.process_results(self.debriefing)
+                    self.game.pass_turn()
 
                 GameUpdateSignal.get_instance().sendDebriefing(self.debriefing)
                 GameUpdateSignal.get_instance().updateGame(self.game)
@@ -256,13 +260,14 @@ class QWaitingForMissionResultWindow(QDialog):
         super().reject()
 
     def reset_game_state(self):
-        self.sim_controller.set_game(self.game)
-        events = GameUpdateEvents()
-        for _, f in self.game.db.flights.objects.items():
-            f.state = Uninitialized(f, self.game.settings)
-            events.update_flight(f)
-        for cp in self.game.theater.controlpoints:
-            cp.release_parking_slots()
+        with game_lock():
+            self.sim_controller.set_game(self.game)
+            events = GameUpdateEvents()
+            for _, f in self.game.db.flights.objects.items():
+                f.state = Uninitialized(f, self.game.settings)
+                events.update_flight(f)
+            for cp in self.game.theater.controlpoints:
+                cp.release_parking_slots()
         GameUpdateSignal.get_instance().updateGame(self.game)
         EventStream().put_nowait(events)
         self.close()

@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from game.gamelock import locked
 from fastapi import APIRouter, Depends
 from shapely.geometry import LineString, Point as ShapelyPoint
 
@@ -13,6 +14,7 @@ router: APIRouter = APIRouter(prefix="/flights")
 
 
 @router.get("/", operation_id="list_flights", response_model=list[FlightJs])
+@locked
 def list_flights(
     with_waypoints: bool = False, game: Game = Depends(GameContext.require)
 ) -> list[FlightJs]:
@@ -20,6 +22,7 @@ def list_flights(
 
 
 @router.get("/{flight_id}", operation_id="get_flight_by_id", response_model=FlightJs)
+@locked
 def get_flight(
     flight_id: UUID,
     with_waypoints: bool = False,
@@ -34,6 +37,7 @@ def get_flight(
     operation_id="get_commit_boundary_for_flight",
     response_model=LeafletPoly,
 )
+@locked
 def commit_boundary(
     flight_id: UUID, game: Game = Depends(GameContext.require)
 ) -> LeafletPoly:

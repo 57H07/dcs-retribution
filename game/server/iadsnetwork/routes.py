@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from game.gamelock import locked
 from fastapi import APIRouter, Depends
 
 from game import Game
@@ -10,6 +11,7 @@ router: APIRouter = APIRouter(prefix="/iads-network")
 
 
 @router.get("/", operation_id="get_iads_network", response_model=IadsNetworkJs)
+@locked
 def get_iads_network(
     game: Game = Depends(GameContext.require),
 ) -> IadsNetworkJs:
@@ -21,6 +23,7 @@ def get_iads_network(
     operation_id="get_iads_connections_for_tgo",
     response_model=list[IadsConnectionJs],
 )
+@locked
 def get_iads_connections_for_tgo(
     tgo_id: UUID, game: Game = Depends(GameContext.require)
 ) -> list[IadsConnectionJs]:

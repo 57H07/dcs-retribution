@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from game.gamelock import locked
 from fastapi import APIRouter, Depends
 
 from game import Game
@@ -10,6 +11,7 @@ router: APIRouter = APIRouter(prefix="/front-lines")
 
 
 @router.get("/", operation_id="list_front_lines", response_model=list[FrontLineJs])
+@locked
 def list_front_lines(game: Game = Depends(GameContext.require)) -> list[FrontLineJs]:
     return FrontLineJs.all_in_game(game)
 
@@ -17,6 +19,7 @@ def list_front_lines(game: Game = Depends(GameContext.require)) -> list[FrontLin
 @router.get(
     "/{front_line_id}", operation_id="get_front_line_by_id", response_model=FrontLineJs
 )
+@locked
 def get_front_line(
     front_line_id: UUID, game: Game = Depends(GameContext.require)
 ) -> FrontLineJs:

@@ -1,3 +1,4 @@
+from game.gamelock import locked
 from fastapi import APIRouter, Depends
 
 from game import Game
@@ -8,6 +9,7 @@ router: APIRouter = APIRouter(prefix="/supply-routes")
 
 
 @router.get("/", operation_id="list_supply_routes", response_model=list[SupplyRouteJs])
+@locked
 def list_supply_routes(
     game: Game = Depends(GameContext.require),
 ) -> list[SupplyRouteJs]:

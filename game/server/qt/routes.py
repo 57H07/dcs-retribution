@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from game.gamelock import locked
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from game import Game
@@ -14,6 +15,7 @@ router: APIRouter = APIRouter(prefix="/qt")
     operation_id="open_new_front_line_package_dialog",
     status_code=status.HTTP_200_OK,
 )
+@locked
 def new_front_line_package(
     front_line_id: UUID,
     game: Game = Depends(GameContext.require),
@@ -27,6 +29,7 @@ def new_front_line_package(
     operation_id="open_new_tgo_package_dialog",
     status_code=status.HTTP_200_OK,
 )
+@locked
 def new_tgo_package(
     tgo_id: UUID,
     game: Game = Depends(GameContext.require),
@@ -40,6 +43,7 @@ def new_tgo_package(
     operation_id="open_tgo_info_dialog",
     status_code=status.HTTP_200_OK,
 )
+@locked
 def show_tgo_info(
     tgo_id: UUID,
     game: Game = Depends(GameContext.require),
@@ -53,6 +57,7 @@ def show_tgo_info(
     operation_id="open_new_control_point_package_dialog",
     status_code=status.HTTP_200_OK,
 )
+@locked
 def new_cp_package(
     cp_id: UUID,
     game: Game = Depends(GameContext.require),
@@ -72,6 +77,7 @@ def new_cp_package(
     operation_id="open_new_downed_pilot_package_dialog",
     status_code=status.HTTP_200_OK,
 )
+@locked
 def new_downed_pilot_package(
     pilot_id: UUID,
     game: Game = Depends(GameContext.require),
@@ -99,6 +105,7 @@ def new_downed_pilot_package(
     operation_id="select_flight",
     status_code=status.HTTP_200_OK,
 )
+@locked
 def select_flight(
     flight_id: UUID,
     game: Game = Depends(GameContext.require),
@@ -118,6 +125,7 @@ def select_flight(
     operation_id="open_control_point_info_dialog",
     status_code=status.HTTP_200_OK,
 )
+@locked
 def show_control_point_info(
     cp_id: UUID,
     game: Game = Depends(GameContext.require),

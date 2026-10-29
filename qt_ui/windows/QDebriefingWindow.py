@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from game.debriefing import DamagedUnitReport, Debriefing
+from game.gamelock import game_lock
 from game.theater import Player
 from qt_ui.windows.GameUpdateSignal import GameUpdateSignal
 
@@ -224,5 +225,6 @@ class QDebriefingWindow(QDialog):
 
     def closeEvent(self, event: QCloseEvent) -> None:
         super().closeEvent(event)
-        state = self.debriefing.game.check_win_loss()
+        with game_lock():
+            state = self.debriefing.game.check_win_loss()
         GameUpdateSignal.get_instance().gameStateChanged(state)
