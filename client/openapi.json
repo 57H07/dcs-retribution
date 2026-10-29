@@ -593,6 +593,33 @@
         }
       }
     },
+    "/game/timeline": {
+      "get": {
+        "summary": "Timeline",
+        "description": "Friendly packages on the mission time axis (startup, TOT, landing); null\nwithout a campaign.",
+        "operationId": "get_timeline",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/TimelineJs"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Timeline"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/game/turn/pass": {
       "post": {
         "summary": "Pass Turn",
@@ -3575,6 +3602,73 @@
           "radar_sams"
         ],
         "title": "ThreatZones"
+      },
+      "TimelineJs": {
+        "properties": {
+          "start_time": {
+            "type": "string",
+            "title": "Start Time"
+          },
+          "packages": {
+            "items": {
+              "$ref": "#/components/schemas/TimelinePackageJs"
+            },
+            "type": "array",
+            "title": "Packages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_time",
+          "packages"
+        ],
+        "title": "Timeline"
+      },
+      "TimelinePackageJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "task": {
+            "type": "string",
+            "title": "Task"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "startup": {
+            "type": "integer",
+            "title": "Startup"
+          },
+          "tot": {
+            "type": "integer",
+            "title": "Tot"
+          },
+          "landing": {
+            "type": "integer",
+            "title": "Landing"
+          },
+          "flight_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Flight Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "task",
+          "target",
+          "startup",
+          "tot",
+          "landing",
+          "flight_ids"
+        ],
+        "title": "TimelinePackage"
       },
       "TopBarJs": {
         "properties": {

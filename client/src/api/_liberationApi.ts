@@ -107,6 +107,9 @@ const injectedRtkApi = api.injectEndpoints({
     getTopBar: build.query<GetTopBarApiResponse, GetTopBarApiArg>({
       query: () => ({ url: `/game/top-bar` }),
     }),
+    getTimeline: build.query<GetTimelineApiResponse, GetTimelineApiArg>({
+      query: () => ({ url: `/game/timeline` }),
+    }),
     passTurn: build.mutation<PassTurnApiResponse, PassTurnApiArg>({
       query: () => ({ url: `/game/turn/pass`, method: "POST" }),
     }),
@@ -472,6 +475,9 @@ export type GetGameStateApiArg = void;
 export type GetTopBarApiResponse =
   /** status 200 Successful Response */ TopBar | null;
 export type GetTopBarApiArg = void;
+export type GetTimelineApiResponse =
+  /** status 200 Successful Response */ Timeline | null;
+export type GetTimelineApiArg = void;
 export type PassTurnApiResponse = /** status 200 Successful Response */ Turn;
 export type PassTurnApiArg = void;
 export type GetMissionChecksApiResponse =
@@ -854,6 +860,19 @@ export type TopBar = {
   sim: Sim;
   show_sim_speed_controls: boolean;
 };
+export type TimelinePackage = {
+  id: string;
+  task: string;
+  target: string;
+  startup: number;
+  tot: number;
+  landing: number;
+  flight_ids: string[];
+};
+export type Timeline = {
+  start_time: string;
+  packages: TimelinePackage[];
+};
 export type CampaignStateJs = "continue" | "win" | "loss";
 export type Turn = {
   turn: number;
@@ -987,6 +1006,7 @@ export const {
   useGetFrontLineByIdQuery,
   useGetGameStateQuery,
   useGetTopBarQuery,
+  useGetTimelineQuery,
   usePassTurnMutation,
   useGetMissionChecksQuery,
   useFixTotsMutation,
