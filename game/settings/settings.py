@@ -1103,6 +1103,32 @@ class Settings:
             "The number of units that will be bought as reserves for applicable control points."
         ),
     )
+    ai_surplus_spending: bool = boolean_option(
+        "AI spends its surplus budget filling squadrons",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=HQ_AUTOMATION_SECTION,
+        default=True,
+        detail=(
+            "When the AI procurement (the enemy, and your side when aircraft "
+            "purchases are automated) has money left over the reserve below "
+            "after its normal purchases, it spends the surplus on the repairs it "
+            "is allowed to make, then on aircraft for squadrons below their "
+            "maximum size, as long as parking and pilots allow. Uncheck to let "
+            "the AI keep its surplus, as in earlier versions."
+        ),
+    )
+    ai_surplus_reserve: int = bounded_int_option(
+        "AI surplus spending reserve ($M)",
+        CAMPAIGN_MANAGEMENT_PAGE,
+        HQ_AUTOMATION_SECTION,
+        min=0,
+        max=100000,
+        default=300,
+        detail=(
+            "Budget the AI keeps unspent when it spends its surplus budget "
+            "filling squadrons."
+        ),
+    )
 
     # Flight Planner Automation
     #: The weight used for 2-ships.
