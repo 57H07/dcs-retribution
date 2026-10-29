@@ -122,6 +122,7 @@
 * **[Loadouts]** Su-17M4, Su-24M and MiG-25PD default payloads now use the R-60M CLSIDs their pylons accept, removing the "Pylon N cannot equip R-60M" errors logged for their flights when weapons are not restricted by date.
 * **[Loadouts]** Default payloads of 37 more aircraft (MiG-29A, A-4E, A-6A, SA342L/M, Mirage F1, J-11A, AJS37, OH-6A, MQ-9, Tornado, Mosquito, IDF F-16D, ...) now use CLSIDs their pylons accept, so they no longer log "Pylon N cannot equip" errors or get skipped as incompatible; the new MiG-29A rail CLSIDs are dated so weapon restriction by date applies to them.
 * **[Mission Generation]** Relocate ships that spawn on land (e.g. carrier escorts when the carrier hugs the shore) to the nearest deep water at mission start (#59).
+* **[Commander]** Fix a KeyError crash on Begin Campaign / Pass Turn (e.g. Slava Ukraini) when the AI weighs a breakthrough against a front line base outside its air assault reach.
 
 # Retribution v1.5.0
 
