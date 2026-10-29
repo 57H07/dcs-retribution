@@ -77,16 +77,16 @@ local unitPayloads = {
 			["name"] = "ANTISHIP",
 			["pylons"] = {
 				[1] = {
-					["CLSID"] = "{LAU_SNEB68G}",
+					["CLSID"] = "{TELSON8_SNEBT253}",
 					["num"] = 2,
 				},
 				[2] = {
 					["CLSID"] = "{IR_Deflector}",
-					["num"] = 6,
+					["num"] = 4,
 				},
 				[3] = {
 					["CLSID"] = "{FAS}",
-					["num"] = 5,
+					["num"] = 3,
 				},
 			},
 			["tasks"] = {

@@ -61,7 +61,7 @@ local unitPayloads = {
 					["num"] = 9,
 				},
 				[3] = {
-					["CLSID"] = "{TWIN_S25}",
+					["CLSID"] = "{S25_DUAL_R}",
 					["num"] = 8,
 				},
 				[4] = {
@@ -81,7 +81,7 @@ local unitPayloads = {
 					["num"] = 4,
 				},
 				[8] = {
-					["CLSID"] = "{TWIN_S25}",
+					["CLSID"] = "{S25_DUAL_L}",
 					["num"] = 3,
 				},
 				[9] = {
@@ -208,7 +208,7 @@ local unitPayloads = {
 					["num"] = 9,
 				},
 				[3] = {
-					["CLSID"] = "{TWIN_B13L_5OF}",
+					["CLSID"] = "{B13_5_S13OF_DUAL_R}",
 					["num"] = 8,
 				},
 				[4] = {
@@ -228,7 +228,7 @@ local unitPayloads = {
 					["num"] = 4,
 				},
 				[8] = {
-					["CLSID"] = "{TWIN_B13L_5OF}",
+					["CLSID"] = "{B13_5_S13OF_DUAL_L}",
 					["num"] = 3,
 				},
 				[9] = {

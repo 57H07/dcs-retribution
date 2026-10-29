@@ -100,7 +100,7 @@ local unitPayloads = {
 			["name"] = "Retribution CAS",
 			["pylons"] = {
 				[1] = {
-					["CLSID"] = "{OH-6 M60 Door}",
+					["CLSID"] = "{OH-6_M60_Door}",
 					["num"] = 11,
 				},
 				[2] = {
@@ -112,7 +112,7 @@ local unitPayloads = {
 					["num"] = 7,
 				},
 				[4] = {
-					["CLSID"] = "{OH-6 M134 Minigun}",
+					["CLSID"] = "{OH-6_M134_Minigun}",
 					["num"] = 8,
 				},
 				[5] = {

@@ -136,11 +136,11 @@ local unitPayloads = {
 			["name"] = "SEAD",
 			["pylons"] = {
 				[1] = {
-					["CLSID"] = "{B06DD79A-F21E-4EB9-BD9D-AB3844618C93}",
+					["CLSID"] = "{B06DD79A-F21E-4EB9-BD9D-AB3844618C9C}",
 					["num"] = 1,
 				},
 				[2] = {
-					["CLSID"] = "{B06DD79A-F21E-4EB9-BD9D-AB3844618C93}",
+					["CLSID"] = "{B06DD79A-F21E-4EB9-BD9D-AB3844618C9C}",
 					["num"] = 2,
 				},
 				[3] = {
@@ -148,11 +148,11 @@ local unitPayloads = {
 					["num"] = 3,
 				},
 				[4] = {
-					["CLSID"] = "{B06DD79A-F21E-4EB9-BD9D-AB3844618C93}",
+					["CLSID"] = "{B06DD79A-F21E-4EB9-BD9D-AB3844618C9C}",
 					["num"] = 4,
 				},
 				[5] = {
-					["CLSID"] = "{B06DD79A-F21E-4EB9-BD9D-AB3844618C93}",
+					["CLSID"] = "{B06DD79A-F21E-4EB9-BD9D-AB3844618C9C}",
 					["num"] = 5,
 				},
 			},

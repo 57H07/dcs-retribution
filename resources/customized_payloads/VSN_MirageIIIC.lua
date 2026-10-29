@@ -9,11 +9,11 @@ local unitPayloads = {
 					["num"] = 1,
 				},
 				[2] = {
-					["CLSID"] = "{FD21B13E-57F3-4C2A-9F78-C522D0B5BCE1}",
+					["CLSID"] = "{Matra_S530D}",
 					["num"] = 2,
 				},
 				[3] = {
-					["CLSID"] = "{FD21B13E-57F3-4C2A-9F78-C522D0B5BCE1}",
+					["CLSID"] = "{Matra_S530D}",
 					["num"] = 3,
 				},
 				[4] = {
@@ -29,11 +29,11 @@ local unitPayloads = {
 					["num"] = 7,
 				},
 				[7] = {
-					["CLSID"] = "{FD21B13E-57F3-4C2A-9F78-C522D0B5BCE1}",
+					["CLSID"] = "{Matra_S530D}",
 					["num"] = 9,
 				},
 				[8] = {
-					["CLSID"] = "{FD21B13E-57F3-4C2A-9F78-C522D0B5BCE1}",
+					["CLSID"] = "{Matra_S530D}",
 					["num"] = 10,
 				},
 				[9] = {

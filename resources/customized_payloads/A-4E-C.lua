@@ -104,19 +104,19 @@ local unitPayloads = {
 			["name"] = "SEAD",
 			["pylons"] = {
 				[1] = {
-					["CLSID"] = "{LAU_34_AGM_45B}",
+					["CLSID"] = "{C_A4E_AGM-45B_LAU34}",
 					["num"] = 4,
 				},
 				[2] = {
-					["CLSID"] = "{LAU_34_AGM_45B}",
+					["CLSID"] = "{C_A4E_AGM-45B_LAU34}",
 					["num"] = 5,
 				},
 				[3] = {
-					["CLSID"] = "{LAU_34_AGM_45B}",
+					["CLSID"] = "{C_A4E_AGM-45B_LAU34}",
 					["num"] = 2,
 				},
 				[4] = {
-					["CLSID"] = "{LAU_34_AGM_45B}",
+					["CLSID"] = "{C_A4E_AGM-45B_LAU34}",
 					["num"] = 1,
 				},
 				[5] = {
@@ -132,19 +132,19 @@ local unitPayloads = {
 			["name"] = "ANTISHIP",
 			["pylons"] = {
 				[1] = {
-					["CLSID"] = "{LAU_34_AGM_45B}",
+					["CLSID"] = "{C_A4E_AGM-45B_LAU34}",
 					["num"] = 5,
 				},
 				[2] = {
-					["CLSID"] = "{LAU_34_AGM_45B}",
+					["CLSID"] = "{C_A4E_AGM-45B_LAU34}",
 					["num"] = 4,
 				},
 				[3] = {
-					["CLSID"] = "{LAU_34_AGM_45B}",
+					["CLSID"] = "{C_A4E_AGM-45B_LAU34}",
 					["num"] = 2,
 				},
 				[4] = {
-					["CLSID"] = "{LAU_34_AGM_45B}",
+					["CLSID"] = "{C_A4E_AGM-45B_LAU34}",
 					["num"] = 1,
 				},
 				[5] = {

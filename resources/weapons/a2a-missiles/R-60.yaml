@@ -3,3 +3,4 @@ year: 1973
 fallback: R-55 - AAM, IR guided
 clsids:
   - "{R-60}"
+  - "{MISSILE_R-60_APU-60}"

@@ -7,6 +7,7 @@ clsids:
   - "{AGM_45B}"
   - "{LAU_34_AGM_45B}"
   - "{LAU_34_AGM_45B_SWA}"
+  - "{C_A4E_AGM-45B_LAU34}"
 target_overrides:
   - unit_ids:
       - "snr s-125 tr" # SA-3 S-125 Low Blow TR

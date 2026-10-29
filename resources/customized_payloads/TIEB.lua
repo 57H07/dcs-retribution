@@ -57,31 +57,31 @@ local unitPayloads = {
 			["name"] = "Liberation CAS",
 			["pylons"] = {
 				[1] = {
-					["CLSID"] = "{X-29T}",
+					["CLSID"] = "{601C99F7-9AF3-4ed7-A565-F8B8EC0D7AAC}",
 					["num"] = 9,
 				},
 				[2] = {
-					["CLSID"] = "{X-29T}",
+					["CLSID"] = "{601C99F7-9AF3-4ed7-A565-F8B8EC0D7AAC}",
 					["num"] = 8,
 				},
 				[3] = {
-					["CLSID"] = "{X-29T}",
+					["CLSID"] = "{601C99F7-9AF3-4ed7-A565-F8B8EC0D7AAC}",
 					["num"] = 7,
 				},
 				[4] = {
-					["CLSID"] = "{X-29T}",
+					["CLSID"] = "{601C99F7-9AF3-4ed7-A565-F8B8EC0D7AAC}",
 					["num"] = 5,
 				},
 				[5] = {
-					["CLSID"] = "{X-29T}",
+					["CLSID"] = "{601C99F7-9AF3-4ed7-A565-F8B8EC0D7AAC}",
 					["num"] = 4,
 				},
 				[6] = {
-					["CLSID"] = "{X-29T}",
+					["CLSID"] = "{601C99F7-9AF3-4ed7-A565-F8B8EC0D7AAC}",
 					["num"] = 3,
 				},
 				[7] = {
-					["CLSID"] = "{X-29T}",
+					["CLSID"] = "{601C99F7-9AF3-4ed7-A565-F8B8EC0D7AAC}",
 					["num"] = 1,
 				},
 			},

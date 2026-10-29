@@ -14,11 +14,11 @@ local unitPayloads = {
 					["num"] = 5,
 				},
 				[3] = {
-					["CLSID"] = "<CLEAN-200.5>",
+					["CLSID"] = "<CLEAN>",
 					["num"] = 4,
 				},
 				[4] = {
-					["CLSID"] = "<CLEAN-200.5>",
+					["CLSID"] = "<CLEAN>",
 					["num"] = 3,
 				},
 				[5] = {

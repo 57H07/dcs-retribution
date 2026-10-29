@@ -21,7 +21,7 @@ local unitPayloads = {
 					["num"] = 8,
 				},
 				[5] = {
-					["CLSID"] = "{A111396E-D3E8-4b9c-8AC9-2432489304D5}",
+					["CLSID"] = "{AAQ-28_LEFT}",
 					["num"] = 11,
 				},
 				[6] = {
@@ -41,7 +41,7 @@ local unitPayloads = {
 					["num"] = 7,
 				},
 				[10] = {
-					["CLSID"] = "{IDF Mods Project 300gal}",
+					["CLSID"] = "{8A0BE8AE-58D4-4572-9263-3144C0D06364}",
 					["num"] = 5,
 				},
 				[11] = {
@@ -73,7 +73,7 @@ local unitPayloads = {
 					["num"] = 4,
 				},
 				[5] = {
-					["CLSID"] = "{IDF Mods Project 300gal}",
+					["CLSID"] = "{8A0BE8AE-58D4-4572-9263-3144C0D06364}",
 					["num"] = 5,
 				},
 				[6] = {
@@ -93,7 +93,7 @@ local unitPayloads = {
 					["num"] = 9,
 				},
 				[10] = {
-					["CLSID"] = "{A111396E-D3E8-4b9c-8AC9-2432489304D5}",
+					["CLSID"] = "{AAQ-28_LEFT}",
 					["num"] = 11,
 				},
 				[11] = {
@@ -137,7 +137,7 @@ local unitPayloads = {
 					["num"] = 4,
 				},
 				[7] = {
-					["CLSID"] = "{IDF Mods Project 300gal}",
+					["CLSID"] = "{8A0BE8AE-58D4-4572-9263-3144C0D06364}",
 					["num"] = 5,
 				},
 				[8] = {
@@ -176,7 +176,7 @@ local unitPayloads = {
 					["num"] = 8,
 				},
 				[5] = {
-					["CLSID"] = "{A111396E-D3E8-4b9c-8AC9-2432489304D5}",
+					["CLSID"] = "{AAQ-28_LEFT}",
 					["num"] = 11,
 				},
 				[6] = {
@@ -196,7 +196,7 @@ local unitPayloads = {
 					["num"] = 7,
 				},
 				[10] = {
-					["CLSID"] = "{IDF Mods Project 300gal}",
+					["CLSID"] = "{8A0BE8AE-58D4-4572-9263-3144C0D06364}",
 					["num"] = 5,
 				},
 				[11] = {
@@ -228,7 +228,7 @@ local unitPayloads = {
 					["num"] = 6,
 				},
 				[5] = {
-					["CLSID"] = "{A111396E-D3E8-4b9c-8AC9-2432489304D5}",
+					["CLSID"] = "{AAQ-28_LEFT}",
 					["num"] = 11,
 				},
 				[6] = {
@@ -279,7 +279,7 @@ local unitPayloads = {
 					["num"] = 4,
 				},
 				[5] = {
-					["CLSID"] = "{IDF Mods Project 300gal}",
+					["CLSID"] = "{8A0BE8AE-58D4-4572-9263-3144C0D06364}",
 					["num"] = 5,
 				},
 				[6] = {
@@ -299,7 +299,7 @@ local unitPayloads = {
 					["num"] = 9,
 				},
 				[10] = {
-					["CLSID"] = "{A111396E-D3E8-4b9c-8AC9-2432489304D5}",
+					["CLSID"] = "{AAQ-28_LEFT}",
 					["num"] = 11,
 				},
 				[11] = {
@@ -382,7 +382,7 @@ local unitPayloads = {
 					["num"] = 4,
 				},
 				[5] = {
-					["CLSID"] = "{IDF Mods Project 300gal}",
+					["CLSID"] = "{8A0BE8AE-58D4-4572-9263-3144C0D06364}",
 					["num"] = 5,
 				},
 				[6] = {
@@ -402,7 +402,7 @@ local unitPayloads = {
 					["num"] = 9,
 				},
 				[10] = {
-					["CLSID"] = "{A111396E-D3E8-4b9c-8AC9-2432489304D5}",
+					["CLSID"] = "{AAQ-28_LEFT}",
 					["num"] = 11,
 				},
 				[11] = {
@@ -450,11 +450,11 @@ local unitPayloads = {
 					["num"] = 4,
 				},
 				[9] = {
-					["CLSID"] = "{A111396E-D3E8-4b9c-8AC9-2432489304D5}",
+					["CLSID"] = "{AAQ-28_LEFT}",
 					["num"] = 11,
 				},
 				[10] = {
-					["CLSID"] = "{IDF Mods Project 300gal}",
+					["CLSID"] = "{8A0BE8AE-58D4-4572-9263-3144C0D06364}",
 					["num"] = 5,
 				},
 				[11] = {
