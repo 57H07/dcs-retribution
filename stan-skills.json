@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "generatedBy": "stan-skills@0.1.5",
+  "generatedAt": "2026-10-25T13:12:39.347Z",
+  "scope": "project",
+  "preset": null,
+  "detected": [
+    "no-claude-md",
+    "any-code"
+  ],
+  "plugins": [
+    "commit-message@stan",
+    "code-simplifier@claude-plugins-official",
+    "claude-md-management@claude-plugins-official",
+    "mattpocock-skills@claude-plugins-official"
+  ],
+  "marketplacesAdded": [
+    "stan"
+  ],
+  "postInstall": [
+    {
+      "plugin": "claude-md-management@claude-plugins-official",
+      "action": "create CLAUDE.md",
+      "note": "No CLAUDE.md found at the repo root.",
+      "done": false
+    },
+    {
+      "plugin": "mattpocock-skills@claude-plugins-official",
+      "action": "/setup-matt-pocock-skills",
+      "note": "One-time per repo: issue tracker, triage labels, documentation locations.",
+      "done": false
+    }
+  ]
+}
