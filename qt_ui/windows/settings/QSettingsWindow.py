@@ -26,9 +26,9 @@ from PySide6.QtWidgets import (
 )
 
 import qt_ui.uiconstants as CONST
+from game.commands.settings import apply_mod_settings, refresh_after_settings_change
 from game.game import Game
 from game.persistency import settings_dir
-from game.server import EventStream
 from game.settings import (
     BooleanOption,
     BoundedFloatOption,
@@ -39,8 +39,6 @@ from game.settings import (
     Settings,
 )
 from game.settings.ISettingsContainer import SettingsContainer
-from game.sim import GameUpdateEvents
-from pydcs_extensions import BanditClouds
 from qt_ui.widgets.QLabeledWidget import QLabeledWidget
 from qt_ui.widgets.spinsliders import FloatSpinSlider, TimeInputs
 from qt_ui.windows.GameUpdateSignal import GameUpdateSignal
@@ -360,10 +358,7 @@ class QSettingsWindow(QDialog):
         super().closeEvent(event)
 
     def _handle_mod_settings(self) -> None:
-        if self.game.settings.use_bandit_clouds:
-            BanditClouds.activate()
-        else:
-            BanditClouds.deactivate()
+        apply_mod_settings(self.game.settings)
 
 
 class QSettingsWidget(QtWidgets.QWizardPage, SettingsContainer):
@@ -510,9 +505,7 @@ class QSettingsWidget(QtWidgets.QWizardPage, SettingsContainer):
         self.settings.enable_enemy_buy_sell = self.cheat_options.enable_redfor_buysell
 
         if self.game:
-            events = GameUpdateEvents()
-            self.game.compute_unculled_zones(events)
-            EventStream.put_nowait(events)
+            refresh_after_settings_change(self.game)
             GameUpdateSignal.get_instance().updateGame(self.game)
 
     def onSelectionChanged(self) -> None:

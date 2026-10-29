@@ -15,7 +15,6 @@ class QtDialog(str, Enum):
     SAVE_GAME = "save-game"
     SAVE_GAME_AS = "save-game-as"
     PREFERENCES = "preferences"
-    SETTINGS = "settings"
     STATS = "stats"
     NOTES = "notes"
     LOGS = "logs"

@@ -16,6 +16,8 @@
 .map {
   position: absolute;
   inset: 0;
+  /* Keeps Leaflet's z-indexes (panes 400, controls 1000) under the screens. */
+  isolation: isolate;
 }
 
 /* The bare map fills the viewport; in the shell it fills the area under the bar. */

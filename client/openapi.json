@@ -595,6 +595,144 @@
         }
       }
     },
+    "/settings/": {
+      "get": {
+        "summary": "Get Settings",
+        "description": "Every settings page of the campaign: sections, controls, values, defaults.\n\nGenerated from the metadata of `game/settings/settings.py`, plus the cheats and\nthe Lua plugins, so a new setting needs no client code.",
+        "operationId": "get_settings",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/settings/values/{key}": {
+      "put": {
+        "summary": "Set Setting",
+        "description": "Changes one setting, with the side effects of the Qt settings window.",
+        "operationId": "set_setting",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingValueUpdateJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown setting."
+          },
+          "422": {
+            "description": "The value has the wrong type or is out of bounds."
+          }
+        }
+      }
+    },
+    "/settings/pages/{page_id}/reset": {
+      "post": {
+        "summary": "Reset Page",
+        "description": "Puts every setting of a page back to its default value.",
+        "operationId": "reset_settings_page",
+        "parameters": [
+          {
+            "name": "page_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Page Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsPageJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown settings page."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/map-zones/terrain": {
       "get": {
         "summary": "Get Terrain",
@@ -2232,7 +2370,6 @@
           "save-game",
           "save-game-as",
           "preferences",
-          "settings",
           "stats",
           "notes",
           "logs",
@@ -2263,6 +2400,200 @@
         ],
         "title": "QtLink",
         "description": "External pages of the Help menu, opened in the system browser by Qt."
+      },
+      "SettingJs": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "tooltip": {
+            "title": "Tooltip",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SettingKindJs"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Value"
+          },
+          "default": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Default"
+          },
+          "modified": {
+            "type": "boolean",
+            "title": "Modified"
+          },
+          "min": {
+            "title": "Min",
+            "type": "number"
+          },
+          "max": {
+            "title": "Max",
+            "type": "number"
+          },
+          "step": {
+            "title": "Step",
+            "type": "number"
+          },
+          "choices": {
+            "title": "Choices",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "kind",
+          "value",
+          "default",
+          "modified"
+        ],
+        "title": "Setting"
+      },
+      "SettingKindJs": {
+        "type": "string",
+        "enum": [
+          "bool",
+          "choice",
+          "int",
+          "float",
+          "minutes"
+        ],
+        "title": "SettingKindJs"
+      },
+      "SettingValueUpdateJs": {
+        "properties": {
+          "value": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value"
+        ],
+        "title": "SettingValueUpdate"
+      },
+      "SettingsJs": {
+        "properties": {
+          "pages": {
+            "items": {
+              "$ref": "#/components/schemas/SettingsPageJs"
+            },
+            "type": "array",
+            "title": "Pages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pages"
+        ],
+        "title": "Settings"
+      },
+      "SettingsPageJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/SettingsSectionJs"
+            },
+            "type": "array",
+            "title": "Sections"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "sections"
+        ],
+        "title": "SettingsPage"
+      },
+      "SettingsSectionJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "settings": {
+            "items": {
+              "$ref": "#/components/schemas/SettingJs"
+            },
+            "type": "array",
+            "title": "Settings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "settings"
+        ],
+        "title": "SettingsSection"
       },
       "SupplyRouteJs": {
         "properties": {

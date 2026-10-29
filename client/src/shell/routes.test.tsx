@@ -15,7 +15,6 @@ describe("web shell routes", () => {
   it.each([
     ["/air-wing", "/qt/dialogs/air-wing"],
     ["/new-game", "/qt/dialogs/new-game"],
-    ["/settings", "/qt/dialogs/settings"],
     ["/debrief", "/qt/dialogs/debriefing"],
     ["/reports", "/qt/dialogs/reports"],
     ["/bases/cp-1", "/qt/info/control-point/cp-1"],
@@ -30,6 +29,16 @@ describe("web shell routes", () => {
       expect(router.state.location.pathname).toBe("/");
     },
   );
+
+  it("shows the web settings screen on /settings, without opening Qt", async () => {
+    const calls = recordFetch(200, { pages: [] });
+    const { router, findByRole } = renderShell("/settings");
+    expect(
+      await findByRole("heading", { level: 1, name: "Settings" }),
+    ).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/settings");
+    expect(calls.some((call) => call.path.startsWith("/qt/"))).toBe(false);
+  });
 
   it("sends unknown paths back to the command view", async () => {
     const calls = recordFetch();

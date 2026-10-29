@@ -85,6 +85,8 @@ class QLiberationWindow(QMainWindow):
     open_dialog_signal = Signal(object)
     open_link_signal = Signal(object)
     edit_package_signal = Signal(object)
+    # WEB-07.1: a web command changed the game in depth (cheats, settings).
+    game_changed_signal = Signal()
 
     def __init__(self, game: Game | None, ui_flags: UiFlags) -> None:
         super().__init__()
@@ -107,6 +109,9 @@ class QLiberationWindow(QMainWindow):
         self.open_dialog_signal.connect(self.open_dialog)
         self.open_link_signal.connect(self.open_link)
         self.edit_package_signal.connect(self.open_edit_package_dialog)
+        self.game_changed_signal.connect(
+            lambda: GameUpdateSignal.get_instance().updateGame(self.game)
+        )
         QtContext.set_callbacks(
             QtCallbacks(
                 lambda target: self.new_package_signal.emit(target),
@@ -117,6 +122,7 @@ class QLiberationWindow(QMainWindow):
                 open_dialog=lambda dialog: self.open_dialog_signal.emit(dialog),
                 open_link=lambda link: self.open_link_signal.emit(link),
                 edit_package=lambda package: self.edit_package_signal.emit(package),
+                game_changed=lambda: self.game_changed_signal.emit(),
             )
         )
         Dialog.set_game(self.game_model)
@@ -718,7 +724,6 @@ class QLiberationWindow(QMainWindow):
             QtDialog.SAVE_GAME: self.saveGame,
             QtDialog.SAVE_GAME_AS: self.saveGameAs,
             QtDialog.PREFERENCES: self.showLiberationDialog,
-            QtDialog.SETTINGS: self.showSettingsDialog,
             QtDialog.STATS: self.showStatsDialog,
             QtDialog.NOTES: self.showNotesDialog,
             QtDialog.LOGS: self.showLogsDialog,

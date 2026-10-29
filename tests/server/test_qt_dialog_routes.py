@@ -117,7 +117,7 @@ def test_dialogs_needing_a_campaign_are_refused_without_one(
     qt: _Recorder, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _set_game(monkeypatch, None)
-    assert _post("/qt/dialogs/settings") == (409, {"detail": "No campaign is loaded."})
+    assert _post("/qt/dialogs/stats") == (409, {"detail": "No campaign is loaded."})
     assert _post("/qt/dialogs/new-game") == (204, None)
     assert qt.dialogs == [QtDialog.NEW_GAME]
 
