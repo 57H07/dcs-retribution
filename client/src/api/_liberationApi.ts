@@ -132,6 +132,25 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.simSpeedChangeJs,
       }),
     }),
+    getSettings: build.query<GetSettingsApiResponse, GetSettingsApiArg>({
+      query: () => ({ url: `/settings/` }),
+    }),
+    setSetting: build.mutation<SetSettingApiResponse, SetSettingApiArg>({
+      query: (queryArg) => ({
+        url: `/settings/values/${queryArg.key}`,
+        method: "PUT",
+        body: queryArg.settingValueUpdateJs,
+      }),
+    }),
+    resetSettingsPage: build.mutation<
+      ResetSettingsPageApiResponse,
+      ResetSettingsPageApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/settings/pages/${queryArg.pageId}/reset`,
+        method: "POST",
+      }),
+    }),
     getTerrainZones: build.query<
       GetTerrainZonesApiResponse,
       GetTerrainZonesApiArg
@@ -444,6 +463,20 @@ export type GenerateMissionApiArg = void;
 export type SetSimSpeedApiResponse = /** status 200 Successful Response */ Sim;
 export type SetSimSpeedApiArg = {
   simSpeedChangeJs: SimSpeedChange;
+};
+export type GetSettingsApiResponse =
+  /** status 200 Successful Response */ Settings;
+export type GetSettingsApiArg = void;
+export type SetSettingApiResponse =
+  /** status 200 Successful Response */ Setting;
+export type SetSettingApiArg = {
+  key: string;
+  settingValueUpdateJs: SettingValueUpdate;
+};
+export type ResetSettingsPageApiResponse =
+  /** status 200 Successful Response */ SettingsPage;
+export type ResetSettingsPageApiArg = {
+  pageId: string;
 };
 export type GetTerrainZonesApiResponse =
   /** status 200 Successful Response */ MapZones;
@@ -808,6 +841,37 @@ export type Mission = {
 export type SimSpeedChange = {
   speed: SimSpeedJs;
 };
+export type SettingKindJs = "bool" | "choice" | "int" | "float" | "minutes";
+export type Setting = {
+  key: string;
+  label: string;
+  detail?: string;
+  tooltip?: string;
+  kind: SettingKindJs;
+  value: boolean | number | number | string;
+  default: boolean | number | number | string;
+  modified: boolean;
+  min?: number;
+  max?: number;
+  step?: number;
+  choices?: string[];
+};
+export type SettingsSection = {
+  name: string;
+  description?: string;
+  settings: Setting[];
+};
+export type SettingsPage = {
+  id: string;
+  name: string;
+  sections: SettingsSection[];
+};
+export type Settings = {
+  pages: SettingsPage[];
+};
+export type SettingValueUpdate = {
+  value: boolean | number | number | string;
+};
 export type FileOutcome = "saved" | "opened" | "cancelled";
 export type FileActionResult = {
   outcome: FileOutcome;
@@ -826,7 +890,6 @@ export type ExternalLink =
 export type Player = "Neutral" | "Blue" | "Red";
 export type QtDialog =
   | "preferences"
-  | "settings"
   | "stats"
   | "notes"
   | "logs"
@@ -862,6 +925,9 @@ export const {
   useFixTotsMutation,
   useGenerateMissionMutation,
   useSetSimSpeedMutation,
+  useGetSettingsQuery,
+  useSetSettingMutation,
+  useResetSettingsPageMutation,
   useGetTerrainZonesQuery,
   useGetOfflineBasemapImageQuery,
   useListUnculledZonesQuery,

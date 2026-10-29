@@ -12,7 +12,6 @@ from enum import Enum
 
 class QtDialog(str, Enum):
     PREFERENCES = "preferences"
-    SETTINGS = "settings"
     STATS = "stats"
     NOTES = "notes"
     LOGS = "logs"

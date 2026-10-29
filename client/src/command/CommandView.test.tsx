@@ -100,10 +100,11 @@ describe("top bar", () => {
       "/qt/dialogs/transfers",
     ]);
     await userEvent.click(screen.getByRole("button", { name: "Settings" }));
+    // Settings is a web screen (WEB-07.1).
     await waitFor(() =>
-      expect(calls.at(-1)?.path).toBe("/qt/dialogs/settings"),
+      expect(router.state.location.pathname).toBe("/settings"),
     );
-    expect(router.state.location.pathname).toBe("/");
+    expect(calls).toHaveLength(3);
   });
 });
 

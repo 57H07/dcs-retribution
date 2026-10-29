@@ -1,0 +1,290 @@
+/* Settings screen (WEB-07.1), after mockups/Settings.dc.html. */
+.screen {
+  position: absolute;
+  inset: 0;
+  z-index: var(--ui-z-index-panel);
+  display: flex;
+  flex-direction: column;
+  background: var(--ui-color-bg-canvas);
+  color: var(--ui-color-text-primary);
+  font-size: var(--ui-font-size-md);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-xl);
+  min-height: 56px;
+  padding: 0 var(--ui-space-xl);
+  background: var(--ui-color-bg-panel);
+  border-bottom: 1px solid var(--ui-color-line);
+}
+
+.back {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-md);
+  min-height: var(--ui-size-control-lg);
+  color: var(--ui-color-text-strong);
+  font-family: var(--ui-font-display);
+  font-size: var(--ui-font-size-md);
+  font-weight: var(--ui-font-weight-semibold);
+  letter-spacing: var(--ui-letter-spacing-display);
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.back:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-shadow-focus);
+}
+
+.divider {
+  width: 1px;
+  height: 28px;
+  background: var(--ui-color-line);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--ui-font-display);
+  font-size: var(--ui-font-size-xxl);
+  font-weight: var(--ui-font-weight-bold);
+  letter-spacing: var(--ui-letter-spacing-display);
+  text-transform: uppercase;
+}
+
+.search {
+  flex: 1;
+  max-width: 420px;
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-md);
+  height: var(--ui-size-control);
+  padding: 0 10px;
+  background: var(--ui-color-bg-canvas);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-color-text-secondary);
+}
+
+.search:focus-within {
+  box-shadow: var(--ui-shadow-focus);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: var(--ui-color-text-primary);
+  font: inherit;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.changes {
+  color: var(--ui-color-text-secondary);
+}
+
+.columns {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.nav {
+  flex: 0 0 260px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-xxs);
+  padding: var(--ui-space-lg);
+  overflow-y: auto;
+  background: var(--ui-color-bg-panel);
+  border-right: 1px solid var(--ui-color-line);
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-md);
+  min-height: 40px;
+  padding: 0 var(--ui-space-lg);
+  background: transparent;
+  border: 0;
+  border-left: 3px solid transparent;
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-color-text-strong);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.navItem:hover {
+  background: var(--ui-color-bg-hover);
+}
+
+.navItem:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-shadow-focus);
+}
+
+.navItem[aria-current="page"] {
+  background: var(--ui-color-bg-raised);
+  border-left-color: var(--ui-color-accent);
+  color: var(--ui-color-text-primary);
+  font-weight: var(--ui-font-weight-semibold);
+}
+
+.navCount {
+  min-width: 18px;
+  padding: 0 var(--ui-space-xs);
+  border-radius: var(--ui-radius-pill);
+  background: var(--ui-color-accent-soft);
+  color: var(--ui-color-accent);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-font-size-xs);
+  text-align: center;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 20px 28px;
+  overflow-y: auto;
+}
+
+.main > * {
+  max-width: 920px;
+}
+
+.state {
+  margin: 0;
+  color: var(--ui-color-text-secondary);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+}
+
+.sectionTitle {
+  margin: 0 0 var(--ui-space-md);
+  color: var(--ui-color-text-secondary);
+  font-family: var(--ui-font-display);
+  font-size: var(--ui-font-size-lg);
+  font-weight: var(--ui-font-weight-bold);
+  letter-spacing: var(--ui-letter-spacing-display);
+  text-transform: uppercase;
+}
+
+.sectionHelp {
+  margin: 0 0 var(--ui-space-md);
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+  font-style: italic;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-md);
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-xl);
+  padding: var(--ui-space-lg) 14px;
+  background: var(--ui-color-bg-panel);
+}
+
+.row + .row {
+  border-top: 1px solid var(--ui-color-line);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-xxs);
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-xs);
+  font-weight: var(--ui-font-weight-semibold);
+}
+
+.help {
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.info {
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+  min-height: 20px;
+  padding: 0;
+  font-size: var(--ui-font-size-xs);
+  color: var(--ui-color-text-secondary);
+}
+
+.modified {
+  padding: var(--ui-space-xxs) var(--ui-space-sm);
+  border: 1px solid var(--ui-color-line-strong);
+  border-radius: var(--ui-radius-sm);
+  color: var(--ui-color-text-secondary);
+  font-family: var(--ui-font-display);
+  font-size: var(--ui-font-size-xs);
+  letter-spacing: var(--ui-letter-spacing-display);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.select {
+  max-width: 280px;
+  height: var(--ui-size-control);
+  padding: 0 var(--ui-space-md);
+  background: var(--ui-color-bg-canvas);
+  border: 1px solid var(--ui-color-line-strong);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-color-text-primary);
+  font: inherit;
+}
+
+.select:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-shadow-focus);
+}
+
+.slider {
+  width: 220px;
+}
+
+/* The row shows the label already: keep the slider's for screen readers only. */
+.slider > :first-child > :first-child {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.slider > :first-child {
+  justify-content: flex-end;
+}

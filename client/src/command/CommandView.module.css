@@ -1,4 +1,6 @@
 .view {
+  /* Keeps Leaflet's z-indexes (panes 400, controls 1000) under the screens. */
+  isolation: isolate;
   display: flex;
   height: 100%;
   min-height: 0;
