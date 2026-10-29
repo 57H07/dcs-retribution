@@ -3,7 +3,7 @@ from __future__ import annotations
 import dataclasses
 import itertools
 import math
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, TYPE_CHECKING, Union, Dict
@@ -188,15 +188,14 @@ class TheaterState(WorldState["TheaterState"]):
         barcap_duration = game.settings.desired_barcap_mission_duration.total_seconds()
         barcap_rounds = math.ceil(mission_duration / barcap_duration)
 
-        battle_postitions: Dict[ControlPoint, BattlePositions] = {
-            cp: BattlePositions.for_control_point(cp)
-            for cp in air_assault_capturable_points
-        }
+        battle_postitions = battle_positions_for(
+            ordered_capturable_points, air_assault_capturable_points
+        )
 
         vulnerable_control_points = [
             cp
-            for cp, bp in battle_postitions.items()
-            if not bp.blocking_capture or cp.is_fleet
+            for cp in air_assault_capturable_points
+            if not battle_postitions[cp].blocking_capture or cp.is_fleet
         ]
 
         aewc_targets = [cp for cp in finder.friendly_control_points() if cp.is_carrier]
@@ -238,3 +237,18 @@ class TheaterState(WorldState["TheaterState"]):
                 ordered_capturable_points[0] if ordered_capturable_points else None
             ),
         )
+
+
+def battle_positions_for(
+    capturable_points: Iterable[ControlPoint],
+    air_assault_points: Iterable[ControlPoint],
+) -> Dict[ControlPoint, BattlePositions]:
+    """Battle positions of every point the commander may attack.
+
+    Front line tasks look up the enemy point of each front line, which may be out
+    of air assault reach, so both lists are covered.
+    """
+    return {
+        cp: BattlePositions.for_control_point(cp)
+        for cp in itertools.chain(capturable_points, air_assault_points)
+    }
