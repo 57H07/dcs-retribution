@@ -23,7 +23,7 @@ local unitPayloads = {
 			["name"] = "Liberation TARCAP",
 			["pylons"] = {
 				[1] = {
-					"CLSID"] = "{PROTONM1}",
+					["CLSID"] = "{PROTONM1}",
 					["num"] = 1,
 				},
 				[2] = {

@@ -6,7 +6,7 @@ local unitPayloads = {
 			["name"] = "Retribution BARCAP",
 			["pylons"] = {
 				[1] = {
-					["CLSID"] = "{R-98MR_Yak_28}",
+					["CLSID"] = "{R-98MR}",
 					["num"] = 5,
 				},
 				[2] = {
@@ -14,7 +14,7 @@ local unitPayloads = {
 					["num"] = 1,
 				},
 				[3] = {
-					["CLSID"] = "{R-98MT_Yak_28}",
+					["CLSID"] = "{R-98MT}",
 					["num"] = 2,
 				},
 				[4] = {
@@ -31,7 +31,7 @@ local unitPayloads = {
 			["name"] = "Retribution Escort",
 			["pylons"] = {
 				[1] = {
-					["CLSID"] = "{R-98MR_Yak_28}",
+					["CLSID"] = "{R-98MR}",
 					["num"] = 5,
 				},
 				[2] = {
@@ -39,7 +39,7 @@ local unitPayloads = {
 					["num"] = 1,
 				},
 				[3] = {
-					["CLSID"] = "{R-98MT_Yak_28}",
+					["CLSID"] = "{R-98MT}",
 					["num"] = 2,
 				},
 				[4] = {
@@ -56,7 +56,7 @@ local unitPayloads = {
 			["name"] = "Retribution Fighter sweep",
 			["pylons"] = {
 				[1] = {
-					["CLSID"] = "{R-98MR_Yak_28}",
+					["CLSID"] = "{R-98MR}",
 					["num"] = 5,
 				},
 				[2] = {
@@ -64,7 +64,7 @@ local unitPayloads = {
 					["num"] = 1,
 				},
 				[3] = {
-					["CLSID"] = "{R-98MT_Yak_28}",
+					["CLSID"] = "{R-98MT}",
 					["num"] = 2,
 				},
 				[4] = {
@@ -81,7 +81,7 @@ local unitPayloads = {
 			["name"] = "Retribution Intercept",
 			["pylons"] = {
 				[1] = {
-					["CLSID"] = "{R-98MR_Yak_28}",
+					["CLSID"] = "{R-98MR}",
 					["num"] = 5,
 				},
 				[2] = {
@@ -89,7 +89,7 @@ local unitPayloads = {
 					["num"] = 1,
 				},
 				[3] = {
-					["CLSID"] = "{R-98MT_Yak_28}",
+					["CLSID"] = "{R-98MT}",
 					["num"] = 2,
 				},
 				[4] = {
@@ -106,7 +106,7 @@ local unitPayloads = {
 			["name"] = "Retribution TARCAP",
 			["pylons"] = {
 				[1] = {
-					["CLSID"] = "{R-98MR_Yak_28}",
+					["CLSID"] = "{R-98MR}",
 					["num"] = 5,
 				},
 				[2] = {
@@ -114,7 +114,7 @@ local unitPayloads = {
 					["num"] = 1,
 				},
 				[3] = {
-					["CLSID"] = "{R-98MT_Yak_28}",
+					["CLSID"] = "{R-98MT}",
 					["num"] = 2,
 				},
 				[4] = {

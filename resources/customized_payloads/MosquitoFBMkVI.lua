@@ -51,14 +51,6 @@ local unitPayloads = {
 			["displayName"] = "Retribution OCA/Aircraft",
 			["name"] = "Retribution OCA/Aircraft",
 			["pylons"] = {
-				[1] = {
-					["CLSID"] = "",
-					["num"] = 2,
-				},
-				[2] = {
-					["CLSID"] = "",
-					["num"] = 1,
-				},
 				[3] = {
 					["CLSID"] = "{British_MC_500LB_Bomb_Mk1_Short_on_Handley_Page_Type_B_Cut_Bar}",
 					["num"] = 4,
@@ -84,14 +76,6 @@ local unitPayloads = {
 			["displayName"] = "Retribution Anti-ship",
 			["name"] = "Retribution Anti-ship",
 			["pylons"] = {
-				[1] = {
-					["CLSID"] = "",
-					["num"] = 2,
-				},
-				[2] = {
-					["CLSID"] = "",
-					["num"] = 1,
-				},
 				[3] = {
 					["CLSID"] = "{British_SAP_250LB_Bomb_Mk5_on_Handley_Page_Type_B_Cut_Bar}",
 					["num"] = 4,
@@ -126,14 +110,6 @@ local unitPayloads = {
 			["displayName"] = "Retribution CAS",
 			["name"] = "Retribution CAS",
 			["pylons"] = {
-				[1] = {
-					["CLSID"] = "",
-					["num"] = 2,
-				},
-				[2] = {
-					["CLSID"] = "",
-					["num"] = 1,
-				},
 				[3] = {
 					["CLSID"] = "{British_MC_500LB_Bomb_Mk1_Short_on_Handley_Page_Type_B_Cut_Bar}",
 					["num"] = 4,
@@ -183,14 +159,6 @@ local unitPayloads = {
 			["displayName"] = "Retribution BAI",
 			["name"] = "Retribution BAI",
 			["pylons"] = {
-				[1] = {
-					["CLSID"] = "",
-					["num"] = 2,
-				},
-				[2] = {
-					["CLSID"] = "",
-					["num"] = 1,
-				},
 				[3] = {
 					["CLSID"] = "{British_MC_500LB_Bomb_Mk1_Short_on_Handley_Page_Type_B_Cut_Bar}",
 					["num"] = 4,
@@ -216,14 +184,6 @@ local unitPayloads = {
 			["displayName"] = "Retribution DEAD",
 			["name"] = "Retribution DEAD",
 			["pylons"] = {
-				[1] = {
-					["CLSID"] = "",
-					["num"] = 2,
-				},
-				[2] = {
-					["CLSID"] = "",
-					["num"] = 1,
-				},
 				[3] = {
 					["CLSID"] = "{British_MC_500LB_Bomb_Mk1_Short_on_Handley_Page_Type_B_Cut_Bar}",
 					["num"] = 4,
