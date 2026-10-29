@@ -80,6 +80,8 @@ class QLiberationWindow(QMainWindow):
     # WEB-00.3: Qt screens opened by the web shell, from API worker threads too.
     open_dialog_signal = Signal(object)
     edit_package_signal = Signal(object)
+    # WEB-07.1: a web command changed the game in depth (cheats, settings).
+    game_changed_signal = Signal()
 
     def __init__(self, game: Game | None, ui_flags: UiFlags) -> None:
         super().__init__()
@@ -101,6 +103,9 @@ class QLiberationWindow(QMainWindow):
         self.select_flight_signal.connect(self.on_select_flight)
         self.open_dialog_signal.connect(self.open_dialog)
         self.edit_package_signal.connect(self.open_edit_package_dialog)
+        self.game_changed_signal.connect(
+            lambda: GameUpdateSignal.get_instance().updateGame(self.game)
+        )
         QtContext.set_callbacks(
             QtCallbacks(
                 lambda target: self.new_package_signal.emit(target),
@@ -110,6 +115,7 @@ class QLiberationWindow(QMainWindow):
                 turn_passed=lambda state: self.turn_passed_signal.emit(state),
                 open_dialog=lambda dialog: self.open_dialog_signal.emit(dialog),
                 edit_package=lambda package: self.edit_package_signal.emit(package),
+                game_changed=lambda: self.game_changed_signal.emit(),
             )
         )
         # WEB-00.7: file dialogs, folders, links and quit for the web UI.
@@ -711,7 +717,6 @@ class QLiberationWindow(QMainWindow):
         """Opens a Qt screen for the web shell (WEB-00.3), on the Qt main thread."""
         handlers: dict[QtDialog, Callable[[], object]] = {
             QtDialog.PREFERENCES: self.showLiberationDialog,
-            QtDialog.SETTINGS: self.showSettingsDialog,
             QtDialog.STATS: self.showStatsDialog,
             QtDialog.NOTES: self.showNotesDialog,
             QtDialog.LOGS: self.showLogsDialog,

@@ -11,6 +11,7 @@ from . import (
     flights,
     frontlines,
     game,
+    gamesettings,
     mapzones,
     native,
     navmesh,
@@ -33,6 +34,7 @@ app.include_router(eventstream.router)
 app.include_router(flights.router)
 app.include_router(frontlines.router)
 app.include_router(game.router)
+app.include_router(gamesettings.router)
 app.include_router(mapzones.router)
 app.include_router(native.router)
 app.include_router(navmesh.router)

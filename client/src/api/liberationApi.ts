@@ -5,13 +5,14 @@ import { _liberationApi } from "./_liberationApi";
 
 export enum Tags {
   FLIGHT_PLAN = "FlightPlan",
+  SETTINGS = "Settings",
 }
 
 const LIST_ID = "LIST";
 
 function providesList<R extends { id: string | number }[], T extends string>(
   resultsWithIds: R | undefined,
-  tagType: T
+  tagType: T,
 ) {
   return resultsWithIds
     ? [
@@ -49,6 +50,10 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     listFlights: {
       providesTags: (result) => providesList(result, Tags.FLIGHT_PLAN),
     },
+    // /settings/ (WEB-07.1): a change reloads the whole schema (values, markers).
+    getSettings: { providesTags: [Tags.SETTINGS] },
+    setSetting: { invalidatesTags: [Tags.SETTINGS] },
+    resetSettingsPage: { invalidatesTags: [Tags.SETTINGS] },
     // /waypoints/
     listAllWaypointsForFlight: {
       providesTags: (result, error, arg) => [
