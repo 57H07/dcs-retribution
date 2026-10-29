@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import math
 import random
 from dataclasses import dataclass
@@ -18,6 +19,7 @@ from game.theater import (
     Player,
     TheaterUnit,
 )
+from game.theater.grounddamage import accelerated_repair_cost, is_damage_tracked
 from game.theater.repairs import begin_repair
 from game.theater.theatergroundobject import (
     BuildingGroundObject,
@@ -143,7 +145,165 @@ class ProcurementAi:
             if self.game.settings.expedited_aircraft_repair:
                 budget = self.repair_aircraft(budget)
             budget = self.purchase_aircraft(budget)
+        if self.game.settings.ai_surplus_spending:
+            budget = self.spend_surplus(budget)
         return budget
+
+    def spend_surplus(self, budget: float) -> float:
+        """Spends what the normal procurement left over the reserve.
+
+        The normal procurement only buys aircraft for missions it could not staff
+        and caps its repairs to a share of the budget, so the AI used to sit on an
+        ever-growing budget. The surplus first pays for the repairs this procurement
+        is allowed to make, then fills squadrons up to their maximum size.
+        """
+        reserve = float(self.game.settings.ai_surplus_reserve)
+        surplus = budget - reserve
+        if surplus <= 0:
+            return budget
+
+        settings = self.game.settings
+        if self.manage_buildings:
+            surplus -= self.start_repairs(self.building_repair_candidates(), surplus)
+        if self.manage_ground_objects:
+            surplus -= self.start_repairs(
+                self.ground_object_repair_candidates(), surplus
+            )
+            if settings.persistent_damage_paid_ground_repair:
+                surplus = self.repair_inoperative_ground_units(surplus)
+        if self.manage_aircraft:
+            if settings.expedited_aircraft_repair:
+                surplus = self.repair_aircraft(surplus)
+            surplus = self.stockpile_aircraft(surplus)
+        return reserve + surplus
+
+    def repair_inoperative_ground_units(self, budget: float) -> float:
+        """Pays to end the countdown of inoperative ground units (PER-01.3).
+
+        Units with the longest wait come first, then the cheapest.
+        """
+        # Imported here to avoid a circular import through game.sim.
+        from game.sim.gameupdateevents import GameUpdateEvents
+
+        candidates: list[tuple[int, int, TheaterUnit]] = []
+        for control_point in self.owned_points:
+            for ground_object in control_point.ground_objects:
+                if not ground_object.is_friendly(self.is_player):
+                    continue
+                for unit in ground_object.units:
+                    if not unit.inoperative or not is_damage_tracked(unit):
+                        continue
+                    cost = accelerated_repair_cost(unit)
+                    if cost <= 0:
+                        continue
+                    turns = unit.inoperative_turns_remaining(self.game.turn)
+                    candidates.append((turns, cost, unit))
+        candidates.sort(key=lambda entry: (-entry[0], entry[1]))
+
+        events = GameUpdateEvents()
+        for _, cost, unit in candidates:
+            if cost > budget:
+                continue
+            unit.end_inoperative(events)
+            budget -= cost
+        return budget
+
+    def stockpile_aircraft(self, budget: float) -> float:
+        """Buys aircraft for squadrons below their maximum size.
+
+        Aircraft are bought one at a time, each for the squadron that needs it most,
+        so the purchases spread over the air wing: squadrons away from enemy threats
+        first, then squadrons able to fly the missions requested this turn, then the
+        emptiest squadron, then the one closest to the enemy.
+        """
+        squadrons = [s for s in self.air_wing.iter_squadrons() if s.aircraft.price > 0]
+        if not squadrons:
+            return budget
+        demand = self.requested_aircraft_by_squadron(squadrons)
+        threatened = {
+            s: self.threat_zones.threatened(s.location.position) for s in squadrons
+        }
+        enemy_distance = {
+            s: self.distance_to_nearest_enemy_control_point_from(s.location)
+            for s in squadrons
+        }
+
+        bought: dict[Squadron, int] = {}
+        while True:
+            candidates = [
+                s
+                for s in squadrons
+                if s.aircraft.price <= budget and self.can_stockpile(s)
+            ]
+            if not candidates:
+                break
+            squadron = min(
+                candidates,
+                key=lambda s: (
+                    threatened[s],
+                    demand[s] == 0,
+                    s.expected_size_next_turn / s.max_size,
+                    -demand[s],
+                    enemy_distance[s],
+                ),
+            )
+            squadron.pending_deliveries += 1
+            budget -= squadron.aircraft.price
+            bought[squadron] = bought.get(squadron, 0) + 1
+
+        for squadron, count in bought.items():
+            logging.info(
+                f"Surplus procurement: ordered {count} aircraft for {squadron}"
+            )
+        if bought and self.is_player.is_blue:
+            total = sum(bought.values())
+            self.game.message(
+                f"We have ordered {total} aircraft to bring our squadrons up to "
+                "strength"
+            )
+        return budget
+
+    @staticmethod
+    def can_stockpile(squadron: Squadron) -> bool:
+        """True if the squadron can take one more aircraft next turn."""
+        if squadron.destination is not None:
+            # Deliveries are made at the current location, which the squadron is
+            # leaving.
+            return False
+        if squadron.max_size <= 0:
+            return False
+        if squadron.expected_size_next_turn + 1 > squadron.max_size:
+            return False
+        if (
+            squadron.pilot_limits_enabled
+            and squadron.expected_size_next_turn + 1
+            > squadron.expected_pilots_next_turn
+        ):
+            return False
+        parking_type = ParkingType().from_squadron(squadron)
+        return squadron.location.unclaimed_parking(parking_type) >= 1
+
+    def requested_aircraft_by_squadron(
+        self, squadrons: list[Squadron]
+    ) -> dict[Squadron, int]:
+        """Aircraft requested this turn for the missions each squadron can fly."""
+        requests = self.game.coalition_for(self.is_player).procurement_requests
+        return {
+            s: sum(r.number for r in requests if s.can_auto_assign(r.task_capability))
+            for s in squadrons
+        }
+
+    def distance_to_nearest_enemy_control_point_from(
+        self, control_point: ControlPoint
+    ) -> float:
+        enemy_points = list(
+            self.game.theater.control_points_for(self.is_player.opponent)
+        )
+        if not enemy_points:
+            return math.inf
+        return min(
+            control_point.position.distance_to_point(cp.position) for cp in enemy_points
+        )
 
     def repair_aircraft(self, budget: float) -> float:
         """Pays to finish aircraft maintenance at once (PER-01.2), cheapest first."""
@@ -174,7 +334,12 @@ class ProcurementAi:
         )
         if repair_budget <= 0:
             return budget
+        return budget - self.start_repairs(
+            self.building_repair_candidates(), repair_budget
+        )
 
+    def building_repair_candidates(self) -> list[tuple[float, float, TheaterUnit]]:
+        """Destroyed buildings not yet under repair, in repair order."""
         repair_candidates: list[tuple[float, float, TheaterUnit]] = []
         for control_point in self.owned_points:
             for ground_object in control_point.ground_objects:
@@ -192,7 +357,7 @@ class ProcurementAi:
                     repair_candidates.append((priority, cost, unit))
 
         repair_candidates.sort(key=lambda entry: (-entry[0], entry[1]))
-        return budget - self.start_repairs(repair_candidates, repair_budget)
+        return repair_candidates
 
     def start_repairs(
         self,
@@ -289,7 +454,14 @@ class ProcurementAi:
         repair_budget = budget * self.game.settings.sam_repair_budget_fraction
         if repair_budget <= 0:
             return budget
+        return budget - self.start_repairs(
+            self.ground_object_repair_candidates(), repair_budget
+        )
 
+    def ground_object_repair_candidates(
+        self,
+    ) -> list[tuple[float, float, TheaterUnit]]:
+        """Dead units of SAM and EWR sites not yet under repair, in repair order."""
         # (site priority, repair order inside the site, price, unit)
         repair_candidates: list[tuple[float, int, float, TheaterUnit]] = []
         for control_point in self.owned_points:
@@ -329,8 +501,7 @@ class ProcurementAi:
 
         # Highest site priority first, then repair order, then cheapest.
         repair_candidates.sort(key=lambda entry: (-entry[0], entry[1], entry[2]))
-        ordered = [(p, price, unit) for p, _, price, unit in repair_candidates]
-        return budget - self.start_repairs(ordered, repair_budget)
+        return [(p, price, unit) for p, _, price, unit in repair_candidates]
 
     def ground_object_repair_priority(
         self, ground_object: TheaterGroundObject

@@ -68,6 +68,7 @@
 * **[Map]** The map legend follows the light and dark themes and uses the Inter font. (UI-01.2)
 * **[UX]** Changing the theme in the preferences now applies immediately, without restarting: every open window, the themed icons and the campaign map follow. (GFX-01.2)
 * **[UX]** Widget colours that were hard-coded (frequency/TACAN/ICLS warnings, logs and notes boxes, calendar, stats charts, links) now come from the design tokens and follow the theme; a test rejects new hard-coded colours in the UI code, and the unused `style.css` stylesheet was removed. (GFX-01.3)
+* **[Campaign]** The AI procurement (the enemy, and your side when aircraft purchases are automated) now spends the budget it has left over a reserve after its normal purchases: first on the repairs it is allowed to make (building and SAM/EWR repairs, paid ground unit and aircraft repairs, when those options are on), then on aircraft for squadrons below their maximum size, spread over the air wing and within parking and pilot limits. On by default, also in existing saves; "AI spends its surplus budget filling squadrons" and "AI surplus spending reserve ($M)" (default 300) in the HQ Automation settings.
 
 ## Fixes
 * **[CSAR]** Helicopters that DCS does not allow to fly Transport (SA342 Gazelles, AH-64, AH-1W, Ka-50) are no longer CSAR-capable; assigning one used to abort mission generation.
