@@ -71,6 +71,7 @@
 
 ## Fixes
 * **[UI]** The main window no longer crashes when a game is loaded (`QTopPanel.game` had lost its `@property`).
+* **[Engine]** Loading a save no longer deletes aircraft. Fixed wing aircraft could take the parking that helicopters and VTOL aircraft count on (turn 0 fill, deliveries, purchases), overfilling bases such as Incirlik, and every load then silently trimmed the helicopter/VTOL squadrons (e.g. AV-8B 8 -> 0). Fixed wing room now also respects the base's total parking; an existing overfilled base keeps its aircraft and is reported in the log.
 * **[Engine]** The `new-game` command line no longer crashes on a missing `squadrons_start_full` generator setting; it gains a `--squadrons-start-full` flag.
 * **[CSAR]** Right-clicking an enemy downed pilot no longer opens an empty package dialog: only friendly pilots offer a CSAR mission.
 * **[Campaign]** CSAR: a downed pilot whose survival countdown runs out is now dead instead of missing in action forever. New setting "Unrescued pilots can be taken prisoner" (off by default) keeps the capture flow, with a distinct "Prisoner of war" status; prisoners in existing saves stay prisoners, other missing pilots load as dead. (#64)

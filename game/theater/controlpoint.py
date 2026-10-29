@@ -1069,6 +1069,20 @@ class ControlPoint(MissionTarget, SidcDescribable, ABC):
     def can_operate(self, aircraft: AircraftType) -> bool: ...
 
     def unclaimed_parking(self, parking_type: ParkingType) -> int:
+        """Free parking for aircraft that need ``parking_type``.
+
+        Parking pools are nested: helicopters and VTOL aircraft may park on any
+        slot, fixed wing aircraft only on fixed wing (and STOL) slots. Counting
+        the fixed wing pool alone would let fixed wing aircraft take slots that
+        helicopters already rely on, overfilling the base as a whole. So the
+        room is also capped by what is left of the all-types pool.
+        """
+        room = self._unclaimed_parking_in(parking_type)
+        if not parking_type.include_rotary_wing:
+            room = min(room, self._unclaimed_parking_in(ParkingType(True, True, True)))
+        return room
+
+    def _unclaimed_parking_in(self, parking_type: ParkingType) -> int:
         return (
             self.total_aircraft_parking(parking_type)
             - self.allocated_aircraft(parking_type).total
