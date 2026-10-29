@@ -29,6 +29,28 @@ FRONT_LINE_DANGER = nautical_miles(30)
 #: Fallback scatter radius (metres) when a loss has no DCS-reported position.
 _FALLBACK_SCATTER_METERS = 5000.0
 
+#: Scatter radius (metres) around where the aircraft simulation shot a flight
+#: down: the parachute drift and the walk away from the wreck.
+_KNOWN_POSITION_SCATTER_METERS = 2000.0
+
+#: How far from the target, back along the leg to the flight's home base, a
+#: pilot lost with no known position may come down.
+_EGRESS_EJECTION_RANGE = nautical_miles(40)
+
+#: How far a flight the aircraft simulation shot down may limp toward home from
+#: where it was hit before the pilot ejects.
+_SIMULATED_EGRESS_RANGE = nautical_miles(20)
+
+
+def _toward(start: Point, home: Point, max_range: Distance) -> Point:
+    """A random point on the way from ``start`` to ``home``, at most
+    ``max_range`` from ``start`` and never past ``home``."""
+    leg = start.distance_to_point(home)
+    if leg <= 0:
+        return start
+    along = random.uniform(0, min(leg, max_range.meters))
+    return start.lerp(home, along / leg)
+
 
 def near_a_front_line(
     front_lines: Iterable[FrontLine], position: Point, distance: Distance
@@ -264,10 +286,37 @@ class CsarService:
         return not near_a_front_line(theater.conflicts(), position, min_front)
 
     def fallback_position_for(self, flight: Flight) -> Point:
-        """A scattered position near the flight's target for losses with no
-        DCS-reported position (AI kills, skipped/simulated turns)."""
-        target = flight.package.target
-        return target.position.random_point_within(_FALLBACK_SCATTER_METERS)
+        """Where the pilot of a loss with no DCS-reported ejection came down.
+
+        Used for AI kills and every loss of a skipped/simulated turn. A pilot
+        whose aircraft survives the hit long enough to eject turns it for home
+        first, so they come down somewhere on the way back to the flight's
+        arrival base from where the flight was hit:
+
+        * when the aircraft simulation shot the flight down it knows where (its
+          ``Killed`` state keeps the last position), and the pilot comes down
+          within ``_SIMULATED_EGRESS_RANGE`` of that;
+        * otherwise all we know is the plan. The target alone is the worst
+          guess -- usually inside an enemy base's control point radius, which
+          made almost every such pilot an immediate prisoner of war -- so the
+          pilot comes down within ``_EGRESS_EJECTION_RANGE`` of the target.
+
+        Whether they are then captured, recovered or wait for a rescue is up to
+        ``down_pilot``, exactly as for a real ejection at that position.
+        """
+        # Runtime import: the flight state package imports far more of the game
+        # than this module may at import time.
+        from game.ato.flightstate.killed import Killed
+
+        home = flight.arrival.position
+        state = flight.state
+        if isinstance(state, Killed):
+            hit = _toward(state.last_position, home, _SIMULATED_EGRESS_RANGE)
+            return hit.random_point_within(_KNOWN_POSITION_SCATTER_METERS)
+
+        target = flight.package.target.position
+        hit = _toward(target, home, _EGRESS_EJECTION_RANGE)
+        return hit.random_point_within(_FALLBACK_SCATTER_METERS)
 
     def _survival_turns(self, position: Point, player: Player) -> int:
         settings = self.game.settings

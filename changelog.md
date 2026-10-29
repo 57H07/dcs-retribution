@@ -72,6 +72,7 @@
 ## Fixes
 * **[UI]** The main window no longer crashes when a game is loaded (`QTopPanel.game` had lost its `@property`).
 * **[Engine]** The `new-game` command line no longer crashes on a missing `squadrons_start_full` generator setting; it gains a `--squadrons-start-full` flag.
+* **[Campaign]** CSAR: auto-resolved/simulated turns no longer turn almost every surviving pilot into a prisoner of war. A loss with no DCS-reported ejection used to put the pilot near the flight's target, usually inside an enemy base's capture radius; the pilot now comes down on the way home from where the simulation shot the flight down, or from the target when that is unknown. Real in-mission ejections keep their DCS position.
 * **[CSAR]** Right-clicking an enemy downed pilot no longer opens an empty package dialog: only friendly pilots offer a CSAR mission.
 * **[Campaign]** CSAR: a downed pilot whose survival countdown runs out is now dead instead of missing in action forever. New setting "Unrescued pilots can be taken prisoner" (off by default) keeps the capture flow, with a distinct "Prisoner of war" status; prisoners in existing saves stay prisoners, other missing pilots load as dead. (#64)
 * **[Campaign]** CSAR: a prisoner of war keeps their squadron slot, so no replacement is recruited while they are held. A freed prisoner who finds the squadron full (pilot limit lowered meanwhile) goes on leave instead of overfilling it. (#63)
