@@ -1,0 +1,85 @@
+.button {
+  composes: focusRing display from "./shared.module.css";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ui-space-md);
+  min-height: var(--ui-size-control);
+  padding: 0 var(--ui-space-lg);
+  border: 1px solid transparent;
+  border-radius: var(--ui-radius-md);
+  font-size: var(--ui-font-size-sm);
+  font-weight: var(--ui-font-weight-semibold);
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.button:disabled,
+.button[aria-disabled="true"] {
+  cursor: not-allowed;
+  background: var(--ui-color-bg-control);
+  border-color: var(--ui-color-line);
+  color: var(--ui-color-text-disabled);
+}
+
+.lg {
+  min-height: var(--ui-size-control-lg);
+  padding: 0 var(--ui-space-xxl);
+  font-size: var(--ui-font-size-lg);
+  font-weight: var(--ui-font-weight-bold);
+}
+
+.primary {
+  background: var(--ui-color-accent);
+  color: var(--ui-color-on-accent);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--ui-color-accent-hover);
+}
+
+.secondary {
+  background: var(--ui-color-bg-control);
+  border-color: var(--ui-color-line-strong);
+  color: var(--ui-color-text-primary);
+}
+
+.secondary:hover:not(:disabled) {
+  background: var(--ui-color-bg-hover);
+}
+
+.danger {
+  background: var(--ui-color-bg-control);
+  border-color: var(--ui-color-danger-line);
+  color: var(--ui-color-danger);
+}
+
+.danger:hover:not(:disabled) {
+  background: var(--ui-color-hostile-soft);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--ui-color-text-strong);
+}
+
+.ghost:hover:not(:disabled) {
+  background: var(--ui-color-bg-hover);
+  color: var(--ui-color-text-primary);
+}
+
+.icon {
+  width: var(--ui-size-control);
+  padding: 0;
+}
+
+.icon.lg {
+  width: var(--ui-size-control-lg);
+}
+
+.icon svg {
+  width: 18px;
+  height: 18px;
+}

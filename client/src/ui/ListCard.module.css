@@ -1,0 +1,72 @@
+.card {
+  composes: focusRing from "./shared.module.css";
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ui-space-md);
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px var(--ui-space-lg);
+  background: var(--ui-color-bg-card);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-color-text-primary);
+  font: inherit;
+  font-family: var(--ui-font-body);
+  font-size: var(--ui-font-size-md);
+  text-align: left;
+}
+
+button.card {
+  cursor: pointer;
+}
+
+button.card:hover:not(:disabled) {
+  background: var(--ui-color-bg-raised);
+}
+
+.card[data-selected] {
+  background: var(--ui-color-bg-raised);
+  border-color: var(--ui-color-accent);
+}
+
+.card:disabled {
+  cursor: not-allowed;
+  color: var(--ui-color-text-disabled);
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--ui-space-sm);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-md);
+  min-width: 0;
+}
+
+.title {
+  overflow: hidden;
+  font-weight: var(--ui-font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  composes: mono from "./shared.module.css";
+  margin-left: auto;
+  flex: none;
+  color: var(--ui-color-text-secondary);
+}
+
+.subtitle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}

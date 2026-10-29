@@ -1,0 +1,20 @@
+/* Global helpers of the design system (class names are not hashed). */
+.ui-root {
+  background: var(--ui-color-bg-canvas);
+  color: var(--ui-color-text-primary);
+  font-family: var(--ui-font-body);
+  font-size: var(--ui-font-size-md);
+  line-height: 1.4;
+}
+
+.ui-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

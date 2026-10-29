@@ -38,6 +38,8 @@ The client is built with [Vite](https://vite.dev/) and tested with
 [Vitest](https://vitest.dev/) and Testing Library.
 
 - `npm start`: development server on http://localhost:3000 with hot reload.
+  The design system catalog (`src/ui/`, every component in its states) is at
+  http://localhost:3000/catalog.html; it is not part of the build.
 - `npm test`: runs the test suite once (`npm run test:watch` for watch mode,
   `npm test -- --coverage` for a coverage report).
 - `npm run build`: type-checks, then builds the app to `build/` with relative
