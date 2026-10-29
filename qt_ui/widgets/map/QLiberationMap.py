@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import logging
+from urllib.parse import quote
 from pathlib import Path
 
 from PySide6.QtCore import QUrl
 from PySide6.QtWebEngineCore import QWebEnginePage, QWebEngineSettings
 from PySide6.QtWebEngineWidgets import QWebEngineView
 
+from game.server.security import ApiKeyManager
 from game.server.settings import ServerSettings
 from qt_ui.liberation_install import server_port
 from qt_ui.liberation_theme import get_token_variant
@@ -54,7 +56,10 @@ class QLiberationMap(QWebEngineView):
         if host.startswith("::"):
             host = f"[{host}]"
         port = server_settings.server_port
-        url.setQuery(f"server={host}:{port}&theme={get_token_variant()}")
+        api_key = quote(ApiKeyManager.key(), safe="")
+        url.setQuery(
+            f"server={host}:{port}&apiKey={api_key}&theme={get_token_variant()}"
+        )
         self.page.load(url)
         self.setPage(self.page)
         theme_signals().theme_changed.connect(self.apply_theme)

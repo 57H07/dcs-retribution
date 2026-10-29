@@ -37,6 +37,32 @@ Decorate every route with `@locked` (from `game.gamelock`), under the router
 decorator. `tests/server/test_game_lock.py` fails on any route without it. While
 holding the lock never wait on another thread (no modal dialog, no blocking signal).
 
+## 3b. The API key (WEB-00.6)
+
+Nothing to do per route: `require_api_key` (`game/server/security.py`) is an
+app-wide dependency of `game/server/app.py`.
+
+- Every `POST`, `PUT`, `PATCH` and `DELETE` request must carry the key of this
+  launch in the `X-API-Key` header, or gets `401 {"detail": "Missing or invalid
+  API key."}`. The `/eventstream` websocket needs it as the `apiKey` query
+  parameter (browsers cannot set websocket headers), or is closed with 1008.
+- `GET` routes stay open: they change nothing, CORS keeps other origins from
+  reading them, and the map loads some of them by URL (basemap tiles), where no
+  header can be set. A read that changes the game is therefore a bug: make it a
+  command.
+- The key is random per launch (`ApiKeyManager.key()`). `QLiberationMap` passes
+  it to the page as `?apiKey=`; `client/src/api/backend.ts` reads it once and
+  adds the header to commands of the generated hooks (`baseApi.ts`) and of the
+  `backend` axios instance, and appends it to `WEBSOCKET_URL`. Use those, never a
+  bare `fetch`/`axios`.
+- A client started on its own (Vite dev server in a browser, `npm run electron`)
+  has no `?apiKey=`: set `SERVER_API_KEY=<anything>` in `serverconfig.env` (with
+  `CORS_ALLOW_DEBUG_SERVER=true`) and the same value as `VITE_API_KEY` in
+  `client/.env.local`. The Qt `--dev` mode needs neither: it passes the key.
+- The server keeps listening on loopback only (`server_bind_address`).
+- Route tests through the ASGI app send the key: see `_post` in
+  `tests/server/test_pass_turn_command.py`, and `tests/server/test_api_key.py`.
+
 ## 4. Events: refresh every open screen
 
 A command publishes what it changed on the event stream so that every open screen

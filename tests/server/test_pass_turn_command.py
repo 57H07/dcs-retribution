@@ -17,6 +17,7 @@ from game.server import GameContext
 from game.server.app import app
 from game.server.dependencies import QtCallbacks, QtContext
 from game.server.eventstream import EventStream
+from game.server.security import ApiKeyManager
 from game.server.openapischema import DEFAULT_OUTPUT, openapi_schema, render
 from game.sim import GameUpdateEvents
 
@@ -76,7 +77,10 @@ def _post(path: str) -> tuple[int, Any]:
         "raw_path": path.encode(),
         "root_path": "",
         "query_string": b"",
-        "headers": [(b"host", b"testserver")],
+        "headers": [
+            (b"host", b"testserver"),
+            (b"x-api-key", ApiKeyManager.key().encode()),
+        ],
         "client": ("testclient", 50000),
         "server": ("testserver", 80),
     }

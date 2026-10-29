@@ -16,6 +16,12 @@ Then, run `npm start` to start the development server. Launch the Qt UI with
 `--new-map --dev` to connect the webview to the development server, or navigate
 to http://localhost:3000 in your browser.
 
+Commands and the event stream need the server's API key, which the Qt UI passes
+in the page URL (`?apiKey=`). To use the dev server from a browser or Electron
+instead, fix the key: add `SERVER_API_KEY=<any value>` to `serverconfig.env`
+(next to the Qt UI) and `VITE_API_KEY=<the same value>` to `client/.env.local`.
+See `docs/dev/api-commands.md`.
+
 ## Regenerating the API stubs
 
 The backend uses FastAPI which exposes `/openapi.json`. This is consumed by

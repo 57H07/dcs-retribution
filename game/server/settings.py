@@ -23,6 +23,11 @@ class ServerSettings(BaseSettings):
     # This (and the address) will be passed the the front end as a query parameter.
     server_port: int = 16880
 
+    # Key required by commands and the event stream (WEB-00.6). Leave unset to get
+    # a random key per launch, handed to the map in its URL. Set it only to run the
+    # client on its own (Vite dev server, Electron) with the same VITE_API_KEY.
+    server_api_key: Optional[str] = None
+
     # Enable to allow cross-origin requests from http://localhost:3000.
     cors_allow_debug_server: bool = False
 

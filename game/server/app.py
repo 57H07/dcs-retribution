@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from game.commands import CommandError
@@ -20,9 +20,10 @@ from . import (
     iadsnetwork,
 )
 from .commanderrors import command_error_handler
+from .security import require_api_key
 from .settings import ServerSettings
 
-app = FastAPI()
+app = FastAPI(dependencies=[Depends(require_api_key)])
 app.add_exception_handler(CommandError, command_error_handler)
 app.include_router(controlpoints.router)
 app.include_router(debuggeometries.router)
