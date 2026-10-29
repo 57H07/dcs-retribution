@@ -1,0 +1,53 @@
+.field {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--ui-space-xs);
+}
+
+.label {
+  composes: display from "./shared.module.css";
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-xs);
+  font-weight: var(--ui-font-weight-semibold);
+}
+
+.row {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-xs);
+}
+
+.input {
+  composes: focusRing mono from "./shared.module.css";
+  width: 72px;
+  height: var(--ui-size-control);
+  padding: 0 var(--ui-space-md);
+  box-sizing: border-box;
+  background: var(--ui-color-bg-canvas);
+  border: 1px solid var(--ui-color-line-strong);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-color-text-primary);
+  font-size: var(--ui-font-size-md);
+  text-align: right;
+}
+
+.input:disabled {
+  color: var(--ui-color-text-disabled);
+  border-color: var(--ui-color-line);
+}
+
+.input[aria-invalid="true"] {
+  border-color: var(--ui-color-hostile);
+}
+
+.step {
+  border-color: var(--ui-color-line-strong);
+  background: var(--ui-color-bg-control);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-font-size-lg);
+}
+
+.unit {
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}

@@ -1,0 +1,41 @@
+.list {
+  display: flex;
+  border-bottom: 1px solid var(--ui-color-line);
+  overflow-x: auto;
+}
+
+.trigger {
+  composes: focusRing display from "./shared.module.css";
+  min-height: var(--ui-size-control-lg);
+  padding: 0 var(--ui-space-lg);
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-md);
+  font-weight: var(--ui-font-weight-semibold);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.stretch .trigger {
+  flex: 1;
+}
+
+.trigger:hover:not(:disabled) {
+  color: var(--ui-color-text-primary);
+}
+
+.trigger[data-state="active"] {
+  border-bottom-color: var(--ui-color-accent);
+  color: var(--ui-color-text-primary);
+}
+
+.trigger:disabled {
+  color: var(--ui-color-text-disabled);
+  cursor: not-allowed;
+}
+
+.content {
+  composes: focusRing from "./shared.module.css";
+}

@@ -1,0 +1,39 @@
+.gauge {
+  display: grid;
+  /* A minimum label width keeps stacked gauges aligned. */
+  grid-template-columns: minmax(96px, auto) 1fr auto;
+  align-items: center;
+  gap: var(--ui-space-md);
+}
+
+/* The hidden label is out of the flow: the bar takes the first column. */
+.noLabel {
+  grid-template-columns: 1fr auto;
+}
+
+.label {
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.track {
+  position: relative;
+  overflow: hidden;
+  height: 6px;
+  min-width: 48px;
+  border-radius: 3px;
+  background: var(--ui-color-line);
+}
+
+.indicator {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 200ms ease-out;
+}
+
+.value {
+  composes: mono from "./shared.module.css";
+  color: var(--ui-color-text-primary);
+  font-size: var(--ui-font-size-sm);
+  text-align: right;
+}
