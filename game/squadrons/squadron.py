@@ -309,8 +309,9 @@ class Squadron:
         self._recruit_pilots(self.settings.squadron_pilot_limit)
         if squadrons_start_full:
             parking_type = ParkingType().from_squadron(self)
-            self.owned_aircraft = min(
-                self.max_size, self.location.unclaimed_parking(parking_type)
+            self.owned_aircraft = max(
+                0,
+                min(self.max_size, self.location.unclaimed_parking(parking_type)),
             )
         self.initial_aircraft = self.owned_aircraft
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import typing
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
@@ -19,6 +20,7 @@ from game.theater.theatergroundobject import ShipGroundObject
 if TYPE_CHECKING:
     from game import Game
     from game.ato import Flight
+    from game.theater import ControlPoint
 
 
 def try_set_attr(obj: Any, attr_name: str, val: Any = None) -> None:
@@ -185,15 +187,12 @@ class Migrator:
                     c = country_dict.get(s.country, s.country)
                     s.country = countries_by_name[c]()
 
-                # code below is used to fix corruptions wrt overpopulation
-                parking_type = ParkingType().from_squadron(s)
-                if (
-                    s.owned_aircraft < 0
-                    or s.location.unclaimed_parking(parking_type) < 0
-                ):
-                    s.owned_aircraft = max(
-                        0, s.location.unclaimed_parking(parking_type) + s.owned_aircraft
+                # A negative aircraft count is a corrupted save: reset it.
+                if s.owned_aircraft < 0:
+                    logging.warning(
+                        f"{s} at {cp} had {s.owned_aircraft} aircraft, reset to 0"
                     )
+                    s.owned_aircraft = 0
 
                 if self.is_liberation:
                     s.set_auto_assignable_mission_types(s.auto_assignable_mission_types)
@@ -205,11 +204,31 @@ class Migrator:
                 if not s.csar_auto_assign_seeded:
                     s.enable_csar_if_capable()
                     s.csar_auto_assign_seeded = True
+            self._warn_if_overfilled(cp)
         # SquadronDefs
         for coa in self.game.coalitions:
             for ac, sdefs in coa.air_wing.squadron_defs.items():
                 for sdef in sdefs:
                     try_set_attr(sdef, "radio_presets", {})
+
+    @staticmethod
+    def _warn_if_overfilled(cp: ControlPoint) -> None:
+        """Report a base holding more aircraft than it has parking for.
+
+        Older saves can be overfilled: turn 0 fill and deliveries used to count
+        fixed wing parking without the slots taken by helicopters and VTOL
+        aircraft. Loading used to trim the squadrons that happened to be checked
+        first, silently destroying owned aircraft. The aircraft are kept: no
+        more are delivered or bought there until the base has room again.
+        """
+        if not cp.squadrons:
+            return
+        overflow = -cp.unclaimed_parking(ParkingType(True, True, True))
+        if overflow > 0:
+            logging.warning(
+                f"{cp} holds {overflow} more aircraft than it has parking for; "
+                "keeping them"
+            )
 
     def _update_transfers(self) -> None:
         for coalition in self.game.coalitions:
