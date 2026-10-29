@@ -1,6 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
+from game.gamelock import game_lock, locked
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 
 from game import Game
@@ -12,6 +13,7 @@ router: APIRouter = APIRouter(prefix="/map-zones")
 
 
 @router.get("/terrain", operation_id="get_terrain_zones", response_model=MapZonesJs)
+@locked
 def get_terrain(game: Game = Depends(GameContext.require)) -> MapZonesJs:
     if game.theater.landmap is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
@@ -45,7 +47,11 @@ def get_offline_basemap_image(
     Colours are hex RGB without the leading '#'. 404 when the theatre has no
     precomputed basemap: the client then draws the landmap polygons.
     """
-    basemap = OfflineBasemap.for_landmap(game.theater.landmap_path)
+    # Only the theatre path is read under the game lock: recolouring the image is
+    # slow and must not stall the simulation or other commands.
+    with game_lock():
+        landmap_path = game.theater.landmap_path
+    basemap = OfflineBasemap.for_landmap(landmap_path)
     if basemap is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     colors = (
@@ -65,6 +71,7 @@ def get_offline_basemap_image(
 @router.get(
     "/unculled", operation_id="list_unculled_zones", response_model=list[UnculledZoneJs]
 )
+@locked
 def get_unculled_zones(
     game: Game = Depends(GameContext.require),
 ) -> list[UnculledZoneJs]:
@@ -74,6 +81,7 @@ def get_unculled_zones(
 @router.get(
     "/threats", operation_id="get_threat_zones", response_model=ThreatZoneContainerJs
 )
+@locked
 def get_threat_zones(
     game: Game = Depends(GameContext.require),
 ) -> ThreatZoneContainerJs:

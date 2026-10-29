@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from dcs.mapping import LatLng, Point
+from game.gamelock import locked
 from fastapi import APIRouter, Depends, HTTPException, status
 from starlette.responses import Response
 
@@ -40,6 +41,7 @@ def waypoints_for_flight(flight: Flight) -> list[FlightWaypointJs]:
     operation_id="list_all_waypoints_for_flight",
     response_model=list[FlightWaypointJs],
 )
+@locked
 def all_waypoints_for_flight(
     flight_id: UUID, game: Game = Depends(GameContext.require)
 ) -> list[FlightWaypointJs]:
@@ -52,6 +54,7 @@ def all_waypoints_for_flight(
     status_code=status.HTTP_204_NO_CONTENT,
     response_class=Response,
 )
+@locked
 def set_position(
     flight_id: UUID,
     waypoint_idx: int,

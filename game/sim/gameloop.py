@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Iterator, TYPE_CHECKING
 
+from game.gamelock import game_lock
 from .gamelooptimer import GameLoopTimer
 from .gameupdatecallbacks import GameUpdateCallbacks
 from .gameupdateevents import GameUpdateEvents
@@ -55,32 +56,39 @@ class GameLoop:
 
     @contextmanager
     def paused_sim(self) -> Iterator[None]:
-        with self.timer.locked_pause():
+        # Game lock first, then the timer lock (see game.gamelock for the order).
+        with game_lock(), self.timer.locked_pause():
             yield
 
     def run_to_first_contact(self) -> None:
-        self.pause()
-        if not self.started:
-            self.start()
-        logging.info("Running sim to first contact")
-        while not self.completed:
-            self.tick(suppress_events=False)
+        # The whole fast forward holds the game lock: no command may run between
+        # two of its ticks (WEB-00.4).
+        with game_lock():
+            self.pause()
+            if not self.started:
+                self.start()
+            logging.info("Running sim to first contact")
+            while not self.completed:
+                self.tick(suppress_events=False)
 
     def pause_and_generate_miz(self, output: Path) -> None:
-        self.pause()
-        if not self.started:
-            self.start()
-        self.sim.generate_miz(output)
+        with game_lock():
+            self.pause()
+            if not self.started:
+                self.start()
+            self.sim.generate_miz(output)
 
     def pause_and_debrief(self, state_path: Path, force_end: bool) -> Debriefing:
-        self.pause()
-        return self.sim.debrief_current_state(state_path, force_end)
+        with game_lock():
+            self.pause()
+            return self.sim.debrief_current_state(state_path, force_end)
 
     def complete_with_results(self, debriefing: Debriefing) -> None:
-        self.pause()
-        self.sim.process_results(debriefing, self.events)
-        self.completed = True
-        self.send_update(rate_limit=False)
+        with game_lock():
+            self.pause()
+            self.sim.process_results(debriefing, self.events)
+            self.completed = True
+            self.send_update(rate_limit=False)
 
     def send_update(self, rate_limit: bool) -> None:
         # We don't skip empty events because we still want the tick in the Qt part of
@@ -96,6 +104,10 @@ class GameLoop:
             self.last_update_time = now
 
     def tick(self, suppress_events: bool = False) -> None:
+        with game_lock():
+            self._tick(suppress_events)
+
+    def _tick(self, suppress_events: bool) -> None:
         if not self.started:
             raise RuntimeError("Attempted to tick game loop before initialization")
         try:

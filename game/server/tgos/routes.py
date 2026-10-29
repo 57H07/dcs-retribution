@@ -2,6 +2,7 @@ from uuid import UUID
 
 from dcs import Point
 from dcs.mapping import LatLng
+from game.gamelock import locked
 from fastapi import APIRouter, Body, Depends, HTTPException, status
 from starlette.responses import Response
 
@@ -15,11 +16,13 @@ router: APIRouter = APIRouter(prefix="/tgos")
 
 
 @router.get("/", operation_id="list_tgos", response_model=list[TgoJs])
+@locked
 def list_tgos(game: Game = Depends(GameContext.require)) -> list[TgoJs]:
     return TgoJs.all_in_game(game)
 
 
 @router.get("/{tgo_id}", operation_id="get_tgo_by_id", response_model=TgoJs)
+@locked
 def get_tgo(tgo_id: UUID, game: Game = Depends(GameContext.require)) -> TgoJs:
     return TgoJs.for_tgo(game.db.tgos.get(tgo_id))
 
@@ -29,6 +32,7 @@ def get_tgo(tgo_id: UUID, game: Game = Depends(GameContext.require)) -> TgoJs:
     operation_id="tgo_destination_in_range",
     response_model=bool,
 )
+@locked
 def tgo_destination_in_range(
     tgo_id: UUID, lat: float, lng: float, game: Game = Depends(GameContext.require)
 ) -> bool:
@@ -51,6 +55,7 @@ def tgo_destination_in_range(
     status_code=status.HTTP_204_NO_CONTENT,
     response_class=Response,
 )
+@locked
 def set_tgo_destination(
     tgo_id: UUID,
     destination: LeafletPoint = Body(..., title="destination"),
@@ -98,6 +103,7 @@ def set_tgo_destination(
     status_code=status.HTTP_204_NO_CONTENT,
     response_class=Response,
 )
+@locked
 def clear_tgo_destination(
     tgo_id: UUID, game: Game = Depends(GameContext.require)
 ) -> None:

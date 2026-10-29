@@ -8,6 +8,8 @@ from pathlib import Path
 from threading import Event, Thread
 from typing import Callable, TYPE_CHECKING
 
+from game.gamelock import game_lock
+
 if TYPE_CHECKING:
     from game.debriefing import Debriefing
     from game.sim import MissionSimulation
@@ -54,9 +56,10 @@ class PollDebriefingFileThread(Thread):
                     os.path.isfile("state.json")
                     and os.path.getmtime("state.json") > last_modified
                 ):
-                    debriefing = self.mission_sim.debrief_current_state(
-                        Path("state.json")
-                    )
+                    with game_lock():
+                        debriefing = self.mission_sim.debrief_current_state(
+                            Path("state.json")
+                        )
                     self.callback(debriefing)
                     last_modified = os.path.getmtime("state.json")
                     if debriefing.state_data.mission_ended:

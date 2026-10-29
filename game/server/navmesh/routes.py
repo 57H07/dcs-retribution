@@ -1,3 +1,4 @@
+from game.gamelock import locked
 from fastapi import APIRouter, Depends
 
 from game import Game
@@ -9,6 +10,7 @@ router: APIRouter = APIRouter(prefix="/navmesh")
 
 
 @router.get("/", operation_id="get_navmesh", response_model=NavMeshJs)
+@locked
 def get(for_player: Player, game: Game = Depends(GameContext.require)) -> NavMeshJs:
     mesh = game.coalition_for(for_player).nav_mesh
     return NavMeshJs.from_navmesh(mesh, game)

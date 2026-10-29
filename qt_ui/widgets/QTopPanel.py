@@ -15,6 +15,7 @@ from game import Game, persistency
 from game.ato.flightstate import Uninitialized
 from game.ato.package import Package
 from game.ato.traveltime import TotEstimator
+from game.gamelock import game_lock
 from game.profiling import logged_duration
 from game.settings.settings import FastForwardStopCondition
 from game.utils import meters
@@ -171,9 +172,11 @@ class QTopPanel(QFrame):
 
     def passTurn(self):
         with logged_duration("Skipping turn"):
-            self.game.pass_turn(no_action=True)
+            with game_lock():
+                self.game.pass_turn(no_action=True)
             GameUpdateSignal.get_instance().updateGame(self.game)
-            state = self.game_model.game.check_win_loss()
+            with game_lock():
+                state = self.game_model.game.check_win_loss()
             GameUpdateSignal.get_instance().gameStateChanged(state)
             self.proceedButton.setEnabled(True)
 

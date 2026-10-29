@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from game.gamelock import locked
 from fastapi import APIRouter, Depends
 
 from game import Game
@@ -12,6 +13,7 @@ router: APIRouter = APIRouter(prefix="/debug/waypoint-geometries")
 @router.get(
     "/hold/{flight_id}", operation_id="get_debug_hold_zones", response_model=HoldZonesJs
 )
+@locked
 def hold_zones(
     flight_id: UUID, game: Game = Depends(GameContext.require)
 ) -> HoldZonesJs:
@@ -21,6 +23,7 @@ def hold_zones(
 @router.get(
     "/join/{flight_id}", operation_id="get_debug_join_zones", response_model=JoinZonesJs
 )
+@locked
 def join_zones(
     flight_id: UUID, game: Game = Depends(GameContext.require)
 ) -> JoinZonesJs:

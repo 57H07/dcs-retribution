@@ -2,6 +2,10 @@ from asyncio import wait, tasks
 
 from fastapi import APIRouter, WebSocket
 from fastapi.encoders import jsonable_encoder
+from starlette.concurrency import run_in_threadpool
+
+from game.gamelock import locked
+from game.sim import GameUpdateEvents
 
 from .eventstream import EventStream
 from .models import GameUpdateEventsJs
@@ -39,6 +43,13 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
+@locked
+def _events_to_js(events: GameUpdateEvents) -> GameUpdateEventsJs:
+    # Reads Game, so it runs under the game lock, in a worker thread to keep the
+    # event loop responsive while the sim or a command holds the lock.
+    return GameUpdateEventsJs.from_events(events, GameContext.get())
+
+
 @router.websocket("/eventstream")
 async def event_stream(websocket: WebSocket) -> None:
     await manager.connect(websocket)
@@ -48,6 +59,4 @@ async def event_stream(websocket: WebSocket) -> None:
                 await manager.shutdown()
                 return
 
-            await manager.broadcast(
-                GameUpdateEventsJs.from_events(events, GameContext.get())
-            )
+            await manager.broadcast(await run_in_threadpool(_events_to_js, events))

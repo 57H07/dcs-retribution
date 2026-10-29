@@ -1,3 +1,4 @@
+from game.gamelock import locked
 from fastapi import APIRouter, Depends
 
 from game import Game
@@ -8,6 +9,7 @@ router: APIRouter = APIRouter(prefix="/game")
 
 
 @router.get("/", operation_id="get_game_state", response_model=GameJs)
+@locked
 def game_state(game: Game | None = Depends(GameContext.get)) -> GameJs | None:
     if game is None:
         return None
