@@ -140,3 +140,24 @@ def _load(path: str) -> Game:
         logging.exception("Could not migrate save file %s", path)
         raise incompatible
     return game
+
+
+class FolderPurpose(str, Enum):
+    """Folders the preferences ask for (WEB-07.2)."""
+
+    SAVED_GAMES = "saved-games"
+    DCS_INSTALL = "dcs-install"
+
+    @property
+    def dialog_title(self) -> str:
+        if self is FolderPurpose.SAVED_GAMES:
+            return "Select DCS Saved Game Directory"
+        return "Select DCS Installation Directory"
+
+
+def choose_folder(
+    bridge: NativeBridge, purpose: FolderPurpose, start: str
+) -> str | None:
+    """Ask for a folder; None when the player cancels. Never touches the game."""
+    with _one_dialog():
+        return bridge.choose_folder(purpose.dialog_title, start)

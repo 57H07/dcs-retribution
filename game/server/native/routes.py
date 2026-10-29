@@ -1,4 +1,5 @@
-"""Native bridge over HTTP (WEB-00.7, W7): file dialogs, folders, links, quit.
+"""Native bridge over HTTP (WEB-00.7, W7): file and folder dialogs, folders, links,
+quit.
 
 The file routes answer once the player has closed the dialog: the request itself
 carries the result back (saved path, or cancelled). They run on a worker thread and
@@ -14,11 +15,12 @@ from game.native import (
     NativeBridge,
     NativeContext,
     NativeFolder,
+    choose_folder,
     open_game,
     save_game,
     save_game_as,
 )
-from .models import FileActionResultJs
+from .models import FileActionResultJs, FolderPickRequestJs, FolderPickResultJs
 from ..commanderrors import CommandErrorJs, command_error_responses
 from ..dependencies import GameContext
 
@@ -76,6 +78,25 @@ def save_as(bridge: NativeBridge = Depends(require_bridge)) -> FileActionResultJ
 def open_save(bridge: NativeBridge = Depends(require_bridge)) -> FileActionResultJs:
     """Asks for a save file and loads it; the new campaign arrives as events."""
     return FileActionResultJs.from_result(open_game(bridge, GameContext.get))
+
+
+@router.post(
+    "/pick-folder",
+    operation_id="pick_folder",
+    response_model=FolderPickResultJs,
+    responses=command_error_responses("when another file dialog is open"),
+)
+@locks_game_itself
+def pick_folder(
+    request: FolderPickRequestJs, bridge: NativeBridge = Depends(require_bridge)
+) -> FolderPickResultJs:
+    """Asks for a folder and answers once the player closed the dialog.
+
+    Does not touch the campaign, so it never takes the game lock.
+    """
+    return FolderPickResultJs(
+        path=choose_folder(bridge, request.purpose, request.start)
+    )
 
 
 @router.post(

@@ -1,0 +1,77 @@
+/* Preferences and first start (WEB-07.2), in the style of the settings screen. */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.folder {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-md);
+  flex: 0 1 520px;
+  min-width: 0;
+}
+
+.path {
+  flex: 1;
+  min-width: 0;
+  height: var(--ui-size-control);
+  padding: 0 var(--ui-space-md);
+  background: var(--ui-color-bg-canvas);
+  border: 1px solid var(--ui-color-line-strong);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-color-text-primary);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-font-size-sm);
+}
+
+.path:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-shadow-focus);
+}
+
+.problem {
+  color: var(--ui-color-danger);
+  font-size: var(--ui-font-size-sm);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--ui-space-xl);
+}
+
+.note {
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.warning {
+  display: flex;
+  flex-direction: column;
+  padding: var(--ui-space-lg) 14px;
+  background: var(--ui-color-bg-panel);
+  border: 1px solid var(--ui-color-line);
+  border-left: 3px solid var(--ui-color-accent);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-color-text-strong);
+}
+
+.warning p {
+  margin: 0 0 var(--ui-space-md);
+}
+
+.warning code {
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-font-size-sm);
+  color: var(--ui-color-text-primary);
+  word-break: break-all;
+}
+
+/* Above every screen and the app bar: nothing else is usable until it is done. */
+.firstStart {
+  position: fixed;
+  z-index: var(--ui-z-index-overlay);
+}

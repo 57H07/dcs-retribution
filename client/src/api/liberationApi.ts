@@ -8,6 +8,7 @@ export enum Tags {
   TOP_BAR = "TopBar",
   SETTINGS = "Settings",
   TIMELINE = "Timeline",
+  PREFERENCES = "Preferences",
 }
 
 const LIST_ID = "LIST";
@@ -65,6 +66,9 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     // A setting (cheats, fast forward...) may change what the top bar shows.
     setSetting: { invalidatesTags: [Tags.SETTINGS, Tags.TOP_BAR] },
     resetSettingsPage: { invalidatesTags: [Tags.SETTINGS, Tags.TOP_BAR] },
+    // /preferences/ (WEB-07.2): saving reloads the state (problems, first start).
+    getInstallPreferences: { providesTags: [Tags.PREFERENCES] },
+    setInstallPreferences: { invalidatesTags: [Tags.PREFERENCES] },
     // /waypoints/
     listAllWaypointsForFlight: {
       providesTags: (result, error, arg) => [

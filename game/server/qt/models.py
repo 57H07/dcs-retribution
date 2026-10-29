@@ -11,7 +11,6 @@ from enum import Enum
 
 
 class QtDialog(str, Enum):
-    PREFERENCES = "preferences"
     STATS = "stats"
     NOTES = "notes"
     LOGS = "logs"
@@ -33,7 +32,6 @@ class QtDialog(str, Enum):
 
 
 _WITHOUT_GAME = {
-    QtDialog.PREFERENCES,
     QtDialog.LOGS,
     QtDialog.ABOUT,
     QtDialog.IMPORT_LAYOUTS,

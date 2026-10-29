@@ -195,6 +195,13 @@ const injectedRtkApi = api.injectEndpoints({
     openGame: build.mutation<OpenGameApiResponse, OpenGameApiArg>({
       query: () => ({ url: `/native/open`, method: "POST" }),
     }),
+    pickFolder: build.mutation<PickFolderApiResponse, PickFolderApiArg>({
+      query: (queryArg) => ({
+        url: `/native/pick-folder`,
+        method: "POST",
+        body: queryArg.folderPickRequestJs,
+      }),
+    }),
     openNewGameWizard: build.mutation<
       OpenNewGameWizardApiResponse,
       OpenNewGameWizardApiArg
@@ -229,6 +236,22 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/navmesh/`,
         params: { for_player: queryArg.forPlayer },
+      }),
+    }),
+    getInstallPreferences: build.query<
+      GetInstallPreferencesApiResponse,
+      GetInstallPreferencesApiArg
+    >({
+      query: () => ({ url: `/preferences/` }),
+    }),
+    setInstallPreferences: build.mutation<
+      SetInstallPreferencesApiResponse,
+      SetInstallPreferencesApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/preferences/`,
+        method: "PUT",
+        body: queryArg.installPreferencesUpdateJs,
       }),
     }),
     openNewFrontLinePackageDialog: build.mutation<
@@ -510,6 +533,11 @@ export type SaveGameAsApiArg = void;
 export type OpenGameApiResponse =
   /** status 200 Successful Response */ FileActionResult;
 export type OpenGameApiArg = void;
+export type PickFolderApiResponse =
+  /** status 200 Successful Response */ FolderPickResult;
+export type PickFolderApiArg = {
+  folderPickRequestJs: FolderPickRequest;
+};
 export type OpenNewGameWizardApiResponse = unknown;
 export type OpenNewGameWizardApiArg = void;
 export type OpenNativeFolderApiResponse =
@@ -528,6 +556,14 @@ export type GetNavmeshApiResponse =
   /** status 200 Successful Response */ NavMesh;
 export type GetNavmeshApiArg = {
   forPlayer: Player;
+};
+export type GetInstallPreferencesApiResponse =
+  /** status 200 Successful Response */ InstallPreferencesState;
+export type GetInstallPreferencesApiArg = void;
+export type SetInstallPreferencesApiResponse =
+  /** status 200 Successful Response */ InstallPreferencesState;
+export type SetInstallPreferencesApiArg = {
+  installPreferencesUpdateJs: InstallPreferencesUpdate;
 };
 export type OpenNewFrontLinePackageDialogApiResponse =
   /** status 200 Successful Response */ any;
@@ -896,6 +932,14 @@ export type FileActionResult = {
   outcome: FileOutcome;
   path?: string;
 };
+export type FolderPickResult = {
+  path?: string;
+};
+export type FolderPurpose = "saved-games" | "dcs-install";
+export type FolderPickRequest = {
+  purpose: FolderPurpose;
+  start?: string;
+};
 export type NativeFolder = "saves" | "missions";
 export type ExternalLink =
   | "discord"
@@ -907,8 +951,31 @@ export type ExternalLink =
   | "forum-thread"
   | "issues";
 export type Player = "Neutral" | "Blue" | "Red";
+export type InstallPreferences = {
+  saved_game_dir: string;
+  dcs_install_dir: string;
+  prefer_liberation_payloads: boolean;
+  setup_preferences_on_every_start: boolean;
+  server_port: number;
+  web_ui: boolean;
+};
+export type InstallPreferencesState = {
+  preferences: InstallPreferences;
+  first_start: boolean;
+  saved_game_dir_problem?: string;
+  dcs_install_dir_problem?: string;
+  warning?: string | null;
+};
+export type InstallPreferencesUpdate = {
+  saved_game_dir: string;
+  dcs_install_dir: string;
+  prefer_liberation_payloads: boolean;
+  setup_preferences_on_every_start: boolean;
+  server_port: number;
+  web_ui: boolean;
+  allow_empty_install_dir?: boolean;
+};
 export type QtDialog =
-  | "preferences"
   | "stats"
   | "notes"
   | "logs"
@@ -955,11 +1022,14 @@ export const {
   useSaveGameMutation,
   useSaveGameAsMutation,
   useOpenGameMutation,
+  usePickFolderMutation,
   useOpenNewGameWizardMutation,
   useOpenNativeFolderMutation,
   useOpenExternalLinkMutation,
   useQuitApplicationMutation,
   useGetNavmeshQuery,
+  useGetInstallPreferencesQuery,
+  useSetInstallPreferencesMutation,
   useOpenNewFrontLinePackageDialogMutation,
   useOpenNewTgoPackageDialogMutation,
   useOpenTgoInfoDialogMutation,
