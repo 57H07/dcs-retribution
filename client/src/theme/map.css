@@ -70,13 +70,13 @@ body .leaflet-ruler::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: url("~leaflet-ruler/dist/icon.png") no-repeat center;
+  background: url("leaflet-ruler/dist/icon.png") no-repeat center;
   filter: var(--map-icon-filter);
 }
 
 body .leaflet-ruler:hover::before,
 body .leaflet-ruler-clicked::before {
-  background-image: url("~leaflet-ruler/dist/icon-colored.png");
+  background-image: url("leaflet-ruler/dist/icon-colored.png");
   filter: none;
 }
 

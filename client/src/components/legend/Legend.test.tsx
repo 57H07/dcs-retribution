@@ -14,8 +14,8 @@ import { LEGEND_OPEN_STORAGE_KEY, LegendControl, LegendPanel } from "./Legend";
 import { LEGEND_SECTIONS, visibleSections } from "./legendEntries";
 import { fireEvent, render, screen } from "@testing-library/react";
 
-jest.mock("react-leaflet", () => ({
-  useMapEvents: jest.fn(),
+vi.mock("react-leaflet", () => ({
+  useMapEvents: vi.fn(),
 }));
 
 const allEntries = LEGEND_SECTIONS.flatMap((section) => section.entries);

@@ -2,9 +2,9 @@ import { renderWithProviders } from "../../testutils";
 import Combat from "./Combat";
 import { LatLng } from "leaflet";
 
-const mockPolyline = jest.fn();
-const mockPolygon = jest.fn();
-jest.mock("react-leaflet", () => ({
+const mockPolyline = vi.fn();
+const mockPolygon = vi.fn();
+vi.mock("react-leaflet", () => ({
   Polyline: (props: any) => {
     mockPolyline(props);
   },

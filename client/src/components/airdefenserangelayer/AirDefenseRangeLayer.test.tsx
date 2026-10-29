@@ -2,9 +2,9 @@ import { renderWithProviders } from "../../testutils";
 import AirDefenseRangeLayer, { colorFor } from "./AirDefenseRangeLayer";
 import { PropsWithChildren } from "react";
 
-const mockLayerGroup = jest.fn();
-const mockCircle = jest.fn();
-jest.mock("react-leaflet", () => ({
+const mockLayerGroup = vi.fn();
+const mockCircle = vi.fn();
+vi.mock("react-leaflet", () => ({
   LayerGroup: (props: PropsWithChildren<any>) => {
     mockLayerGroup(props);
     return <>{props.children}</>;

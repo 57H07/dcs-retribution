@@ -2,8 +2,8 @@ import { renderWithProviders } from "../../testutils";
 import FrontLine from "./FrontLine";
 import { PolylineProps } from "react-leaflet";
 
-const mockPolyline = jest.fn();
-jest.mock("react-leaflet", () => ({
+const mockPolyline = vi.fn();
+vi.mock("react-leaflet", () => ({
   Polyline: (props: PolylineProps) => {
     mockPolyline(props);
   },
