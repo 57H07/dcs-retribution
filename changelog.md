@@ -70,6 +70,7 @@
 * **[UX]** Widget colours that were hard-coded (frequency/TACAN/ICLS warnings, logs and notes boxes, calendar, stats charts, links) now come from the design tokens and follow the theme; a test rejects new hard-coded colours in the UI code, and the unused `style.css` stylesheet was removed. (GFX-01.3)
 
 ## Fixes
+* **[CSAR]** Helicopters that DCS does not allow to fly Transport (SA342 Gazelles, AH-64, AH-1W, Ka-50) are no longer CSAR-capable; assigning one used to abort mission generation.
 * **[UI]** The main window no longer crashes when a game is loaded (`QTopPanel.game` had lost its `@property`).
 * **[Engine]** Loading a save no longer deletes aircraft. Fixed wing aircraft could take the parking that helicopters and VTOL aircraft count on (turn 0 fill, deliveries, purchases), overfilling bases such as Incirlik, and every load then silently trimmed the helicopter/VTOL squadrons (e.g. AV-8B 8 -> 0). Fixed wing room now also respects the base's total parking; an existing overfilled base keeps its aircraft and is reported in the log.
 * **[Engine]** The `new-game` command line no longer crashes on a missing `squadrons_start_full` generator setting; it gains a `--squadrons-start-full` flag.

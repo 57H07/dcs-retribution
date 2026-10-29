@@ -20,6 +20,7 @@ from typing import (
 import yaml
 from dcs.helicopters import helicopter_map
 from dcs.planes import plane_map
+from dcs.task import Transport
 from dcs.unitpropertydescription import UnitPropertyDescription
 from dcs.unittype import FlyingType
 from dcs.weapons_data import weapon_ids
@@ -688,10 +689,16 @@ class AircraftType(UnitType[Type[FlyingType]]):
         # C-130/Hercules mod included) cannot -- the DCS AI Land task is
         # helicopter-only, so they just orbit the pilot indefinitely. A positive
         # cabin size is also required, which skips zero-cabin attack/scout helos
-        # like the OH-58D. An explicit per-aircraft `CSAR:` task entry always wins
-        # over this derivation.
+        # like the OH-58D. The DCS type must also accept the Transport task, which
+        # mission generation uses for CSAR flights (SA342s and attack helicopters
+        # do not, and would abort mission generation). An explicit per-aircraft
+        # `CSAR:` task entry always wins over this derivation.
         if FlightType.CSAR not in task_priorities and cabin_size > 0:
-            if aircraft is not None and aircraft.helicopter:
+            if (
+                aircraft is not None
+                and aircraft.helicopter
+                and Transport in aircraft.tasks
+            ):
                 if FlightType.AIR_ASSAULT in task_priorities:
                     task_priorities[FlightType.CSAR] = task_priorities[
                         FlightType.AIR_ASSAULT
