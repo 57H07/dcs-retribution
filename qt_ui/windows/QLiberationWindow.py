@@ -3,10 +3,17 @@ import traceback
 import webbrowser
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 from PySide6.QtCore import QSettings, Qt, QTimer, Signal
-from PySide6.QtGui import QCloseEvent, QIcon, QAction, QGuiApplication, QActionGroup
+from PySide6.QtGui import (
+    QAction,
+    QActionGroup,
+    QCloseEvent,
+    QGuiApplication,
+    QIcon,
+    QKeySequence,
+)
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -19,7 +26,7 @@ from PySide6.QtWidgets import (
 
 import qt_ui.uiconstants as CONST
 from game import Game, VERSION, persistency, Migrator
-from game.ato import Flight
+from game.ato import Flight, Package
 from game.debriefing import Debriefing
 from game.game import TurnState
 from game.layout import LAYOUTS
@@ -27,6 +34,7 @@ from game.persistency import pre_pretense_backups_dir
 from game.pretense.pretensemissiongenerator import PretenseMissionGenerator
 from game.server import EventStream, GameContext
 from game.server.dependencies import QtCallbacks, QtContext
+from game.server.qt.models import QtDialog, QtLink
 from game.theater import ControlPoint, MissionTarget, TheaterGroundObject
 from game.theater.controlpoint import motorpools_inside_capture_zone
 from qt_ui import liberation_install
@@ -54,6 +62,17 @@ from qt_ui.windows.preferences.QLiberationPreferencesWindow import (
 from qt_ui.windows.settings.QSettingsWindow import QSettingsWindow
 from qt_ui.windows.stats.QStatsWindow import QStatsWindow
 
+EXTERNAL_LINKS: dict[QtLink, str] = {
+    QtLink.DISCORD: "https://" + "discord.gg" + "/" + "b4x34Bg" + "4We",
+    QtLink.GITHUB: URLS["Repository"],
+    QtLink.UKRAINE: "https://shdwp.github.io/ukraine/",
+    QtLink.PRETENSE_DISCORD: "https://" + "discord.gg" + "/" + "PtPsb9Mpk6",
+    QtLink.RELEASES: URLS["Releases"],
+    QtLink.MANUAL: URLS["Manual"],
+    QtLink.FORUM_THREAD: URLS["ForumThread"],
+    QtLink.ISSUES: URLS["Issues"],
+}
+
 
 class QLiberationWindow(QMainWindow):
     new_package_signal = Signal(MissionTarget)
@@ -62,11 +81,17 @@ class QLiberationWindow(QMainWindow):
     select_flight_signal = Signal(Flight)
     # Emitted from an API worker thread: queued onto the Qt main thread.
     turn_passed_signal = Signal(TurnState)
+    # WEB-00.3: Qt screens opened by the web shell, from API worker threads too.
+    open_dialog_signal = Signal(object)
+    open_link_signal = Signal(object)
+    edit_package_signal = Signal(object)
 
     def __init__(self, game: Game | None, ui_flags: UiFlags) -> None:
         super().__init__()
 
         self._uncaught_exception_handler = UncaughtExceptionHandler(self)
+        # WEB-00.3: the web view fills the window and replaces the Qt chrome.
+        self.web_ui = liberation_install.web_ui_enabled()
 
         self.game = game
         self.sim_controller = SimController(self.game)
@@ -79,6 +104,9 @@ class QLiberationWindow(QMainWindow):
         self.tgo_info_signal.connect(self.open_tgo_info_dialog)
         self.control_point_info_signal.connect(self.open_control_point_info_dialog)
         self.select_flight_signal.connect(self.on_select_flight)
+        self.open_dialog_signal.connect(self.open_dialog)
+        self.open_link_signal.connect(self.open_link)
+        self.edit_package_signal.connect(self.open_edit_package_dialog)
         QtContext.set_callbacks(
             QtCallbacks(
                 lambda target: self.new_package_signal.emit(target),
@@ -86,13 +114,16 @@ class QLiberationWindow(QMainWindow):
                 lambda cp: self.control_point_info_signal.emit(cp),
                 lambda flight: self.select_flight_signal.emit(flight),
                 turn_passed=lambda state: self.turn_passed_signal.emit(state),
+                open_dialog=lambda dialog: self.open_dialog_signal.emit(dialog),
+                open_link=lambda link: self.open_link_signal.emit(link),
+                edit_package=lambda package: self.edit_package_signal.emit(package),
             )
         )
         Dialog.set_game(self.game_model)
         self.ato_panel = QAirTaskingOrderPanel(self.game_model)
         self.info_panel = QInfoPanel(self.game)
         self.liberation_map = QLiberationMap(
-            self.game_model, ui_flags.dev_ui_webserver, self
+            self.game_model, ui_flags.dev_ui_webserver, self, web_shell=self.web_ui
         )
 
         self.setGeometry(300, 100, 270, 100)
@@ -114,6 +145,9 @@ class QLiberationWindow(QMainWindow):
 
         # But override it with the saved configuration if it exists.
         self._restore_window_geometry()
+        if self.web_ui:
+            # After restoreState(), which would show the toolbars again.
+            self._hide_qt_chrome()
 
         if self.game is None:
             last_save_file = liberation_install.get_last_save_file()
@@ -129,6 +163,9 @@ class QLiberationWindow(QMainWindow):
             self.onGameGenerated(self.game)
 
     def initUi(self, ui_flags: UiFlags) -> None:
+        if self.web_ui:
+            self._init_web_ui(ui_flags)
+            return
         hbox = QSplitter(Qt.Orientation.Horizontal)
         vbox = QSplitter(Qt.Orientation.Vertical)
         hbox.addWidget(self.ato_panel)
@@ -150,6 +187,42 @@ class QLiberationWindow(QMainWindow):
         central_widget = QWidget()
         central_widget.setLayout(vbox)
         self.setCentralWidget(central_widget)
+
+    def _init_web_ui(self, ui_flags: UiFlags) -> None:
+        """The map fills the window; the Qt panels move to windows opened on demand.
+
+        The top panel stays alive but hidden: it still refreshes after a turn passed
+        through the API and runs the take-off checks for the web shell.
+        """
+        self.top_panel = QTopPanel(self.game_model, self.sim_controller, ui_flags)
+        self.top_panel.setParent(self)
+        self.top_panel.hide()
+        self.ato_window = self._panel_window("Air Tasking Order", self.ato_panel)
+        self.reports_window = self._panel_window("Reports", self.info_panel)
+        self.setCentralWidget(self.liberation_map)
+
+    def _panel_window(self, title: str, panel: QWidget) -> QWidget:
+        window = QWidget(self, Qt.WindowType.Window)
+        window.setWindowTitle(title)
+        layout = QVBoxLayout(window)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(panel)
+        window.resize(500, 700)
+        return window
+
+    def _hide_qt_chrome(self) -> None:
+        self.menuBar().hide()
+        for bar in (self.tool_bar, self.links_bar, self.actions_bar):
+            bar.hide()
+        self.statusBar().hide()
+        # The web shell owns the keyboard (Ctrl+S...): no double trigger.
+        for action in (
+            self.newGameAction,
+            self.openAction,
+            self.saveGameAction,
+            self.saveAsAction,
+        ):
+            action.setShortcut(QKeySequence())
 
     def connectSignals(self):
         GameUpdateSignal.get_instance().gameupdated.connect(self.setGame)
@@ -184,29 +257,19 @@ class QLiberationWindow(QMainWindow):
         self.showLiberationPrefDialogAction.triggered.connect(self.showLiberationDialog)
 
         self.openDiscordAction = QAction("&Discord Server", self)
-        self.openDiscordAction.triggered.connect(
-            lambda: webbrowser.open_new_tab(
-                "https://" + "discord.gg" + "/" + "b4x34Bg" + "4We"
-            )
-        )
+        self.openDiscordAction.triggered.connect(lambda: self.open_link(QtLink.DISCORD))
 
         self.openGithubAction = QAction("&Github Repo", self)
-        self.openGithubAction.triggered.connect(
-            lambda: webbrowser.open_new_tab(URLS["Repository"])
-        )
+        self.openGithubAction.triggered.connect(lambda: self.open_link(QtLink.GITHUB))
 
         self.ukraineAction = QAction("&Ukraine", self)
         self.ukraineAction.setIcon(CONST.ICONS["Ukraine"])
-        self.ukraineAction.triggered.connect(
-            lambda: webbrowser.open_new_tab("https://shdwp.github.io/ukraine/")
-        )
+        self.ukraineAction.triggered.connect(lambda: self.open_link(QtLink.UKRAINE))
 
         self.pretenseLinkAction = QAction("&DCS: Pretense", self)
         self.pretenseLinkAction.setIcon(QIcon(CONST.ICONS["Pretense_discord"]))
         self.pretenseLinkAction.triggered.connect(
-            lambda: webbrowser.open_new_tab(
-                "https://" + "discord.gg" + "/" + "PtPsb9Mpk6"
-            )
+            lambda: self.open_link(QtLink.PRETENSE_DISCORD)
         )
 
         self.newPretenseAction = QAction(
@@ -298,18 +361,12 @@ class QLiberationWindow(QMainWindow):
         help_menu.addAction(self.openDiscordAction)
         help_menu.addAction(self.openGithubAction)
         help_menu.addAction(self.ukraineAction)
+        help_menu.addAction("&Releases", lambda: self.open_link(QtLink.RELEASES))
+        help_menu.addAction("&Online Manual", lambda: self.open_link(QtLink.MANUAL))
         help_menu.addAction(
-            "&Releases", lambda: webbrowser.open_new_tab(URLS["Releases"])
+            "&ED Forum Thread", lambda: self.open_link(QtLink.FORUM_THREAD)
         )
-        help_menu.addAction(
-            "&Online Manual", lambda: webbrowser.open_new_tab(URLS["Manual"])
-        )
-        help_menu.addAction(
-            "&ED Forum Thread", lambda: webbrowser.open_new_tab(URLS["ForumThread"])
-        )
-        help_menu.addAction(
-            "Report an &issue", lambda: webbrowser.open_new_tab(URLS["Issues"])
-        )
+        help_menu.addAction("Report an &issue", lambda: self.open_link(QtLink.ISSUES))
         help_menu.addAction(self.openLogsAction)
 
         help_menu.addSeparator()
@@ -653,6 +710,64 @@ class QLiberationWindow(QMainWindow):
         self.debriefing.show()
         self.game_model.init_comms_registry()
 
+    def open_dialog(self, dialog: QtDialog) -> None:
+        """Opens a Qt screen for the web shell (WEB-00.3), on the Qt main thread."""
+        handlers: dict[QtDialog, Callable[[], object]] = {
+            QtDialog.NEW_GAME: self.newGame,
+            QtDialog.OPEN_GAME: self.openFile,
+            QtDialog.SAVE_GAME: self.saveGame,
+            QtDialog.SAVE_GAME_AS: self.saveGameAs,
+            QtDialog.PREFERENCES: self.showLiberationDialog,
+            QtDialog.SETTINGS: self.showSettingsDialog,
+            QtDialog.STATS: self.showStatsDialog,
+            QtDialog.NOTES: self.showNotesDialog,
+            QtDialog.LOGS: self.showLogsDialog,
+            QtDialog.ABOUT: self.showAboutDialog,
+            QtDialog.IMPORT_LAYOUTS: self.import_templates,
+            QtDialog.PRETENSE_CAMPAIGN: self.newPretenseCampaign,
+            QtDialog.AIR_WING: self.top_panel.open_air_wing,
+            QtDialog.TRANSFERS: self.top_panel.open_transfers,
+            QtDialog.AIR_TASKING_ORDER: lambda: self._show_panel("ato_window"),
+            QtDialog.REPORTS: lambda: self._show_panel("reports_window"),
+            QtDialog.DEBRIEFING: self.show_last_debriefing,
+            QtDialog.TAKE_OFF: self.top_panel.launch_mission,
+            QtDialog.QUIT: self.close,
+        }
+        # The game may have been unloaded between the request and this slot.
+        if dialog.needs_game and self.game is None:
+            return
+        handlers[dialog]()
+
+    def _show_panel(self, name: str) -> None:
+        # Without the web shell the panel is already part of the main window.
+        window: QWidget | None = getattr(self, name, None)
+        if window is None:
+            return
+        window.show()
+        window.raise_()
+        window.activateWindow()
+
+    def show_last_debriefing(self) -> None:
+        debriefing = getattr(self, "debriefing", None)
+        if debriefing is None:
+            QMessageBox.information(
+                self, "Debriefing", "No mission result has been received yet."
+            )
+            return
+        debriefing.show()
+        debriefing.raise_()
+
+    @staticmethod
+    def open_link(link: QtLink) -> None:
+        webbrowser.open_new_tab(EXTERNAL_LINKS[link])
+
+    def open_edit_package_dialog(self, package: Package) -> None:
+        model = self.game_model.ato_model.find_matching_package_model(package)
+        if model is None:
+            logging.warning("Cannot edit package %s: not in the player ATO", package)
+            return
+        Dialog.open_edit_package_dialog(model)
+
     def open_tgo_info_dialog(self, tgo: TheaterGroundObject) -> None:
         QGroundObjectMenu(self, tgo, tgo.control_point, self.game_model).show()
 
@@ -674,7 +789,9 @@ class QLiberationWindow(QMainWindow):
     def _save_window_geometry(self) -> None:
         settings = self._qsettings()
         settings.setValue("geometry", self.saveGeometry())
-        settings.setValue("windowState", self.saveState())
+        if not self.web_ui:
+            # The web shell hides the toolbars: keep the Qt layout for the Qt UI.
+            settings.setValue("windowState", self.saveState())
 
     def closeEvent(self, event: QCloseEvent) -> None:
         result = QMessageBox.question(

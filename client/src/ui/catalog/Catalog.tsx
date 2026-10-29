@@ -4,6 +4,7 @@ import {
   Gauge,
   IconButton,
   ListCard,
+  Menu,
   MilSymbol,
   Modal,
   ModalClose,
@@ -550,6 +551,17 @@ export function Catalog() {
           </Section>
           <Section title="Modal · Toast · Tooltip">
             <Overlays />
+          </Section>
+          <Section title="Menu">
+            <Menu
+              label="File"
+              items={[
+                { label: "New game", onSelect: () => {} },
+                { label: "Save", shortcut: "Ctrl+S", onSelect: () => {} },
+                "separator",
+                { label: "Disabled entry", disabled: true, onSelect: () => {} },
+              ]}
+            />
           </Section>
           <Section title="Military symbols (APP-6)">
             <Symbols />

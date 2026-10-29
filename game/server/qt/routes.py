@@ -1,11 +1,17 @@
+from typing import Callable, TypeVar
 from uuid import UUID
 
-from game.gamelock import locked
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 
 from game import Game
+from game.commands import CommandError
+from game.gamelock import locked
 from game.theater.player import Player
+from .models import QtDialog, QtLink
+from ..commanderrors import command_error_responses
 from ..dependencies import GameContext, QtCallbacks, QtContext
+
+T = TypeVar("T")
 
 router: APIRouter = APIRouter(prefix="/qt")
 
@@ -138,3 +144,77 @@ def show_control_point_info(
             detail=f"Game has no control point with ID {cp_id}",
         )
     qt.show_control_point_info(cp)
+
+
+def _require_callback(callback: Callable[[T], None] | None) -> Callable[[T], None]:
+    if callback is None:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="The Qt window is not available.",
+        )
+    return callback
+
+
+@router.post(
+    "/dialogs/{dialog}",
+    operation_id="open_qt_dialog",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+    responses=command_error_responses("when the dialog needs a campaign and none is"),
+)
+@locked
+def open_qt_dialog(
+    dialog: QtDialog,
+    game: Game | None = Depends(GameContext.get),
+    qt: QtCallbacks = Depends(QtContext.get),
+) -> None:
+    """Opens a Qt screen that the web UI does not have yet (WEB-00.3).
+
+    Only queues the dialog onto the Qt main thread: never waits for it.
+    """
+    open_dialog = _require_callback(qt.open_dialog)
+    if dialog.needs_game and game is None:
+        raise CommandError("No campaign is loaded.")
+    if dialog is QtDialog.TAKE_OFF and game is not None and game.turn == 0:
+        raise CommandError("Begin the campaign before taking off.")
+    open_dialog(dialog)
+
+
+@router.post(
+    "/links/{link}",
+    operation_id="open_external_link",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+)
+@locked
+def open_external_link(link: QtLink, qt: QtCallbacks = Depends(QtContext.get)) -> None:
+    """Opens a Help page in the system browser (the web view cannot)."""
+    _require_callback(qt.open_link)(link)
+
+
+@router.post(
+    "/edit-package/flight/{flight_id}",
+    operation_id="open_edit_package_dialog",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+)
+@locked
+def edit_package_of_flight(
+    flight_id: UUID,
+    game: Game = Depends(GameContext.require),
+    qt: QtCallbacks = Depends(QtContext.get),
+) -> None:
+    """Opens the Qt package editor of the package flying this flight.
+
+    Packages have no ID in the API yet (WEB-03 adds them): a flight stands for its
+    package.
+    """
+    edit_package = _require_callback(qt.edit_package)
+    try:
+        flight = game.db.flights.get(flight_id)
+    except KeyError:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            detail=f"Game has no flight with ID {flight_id}",
+        )
+    edit_package(flight.package)

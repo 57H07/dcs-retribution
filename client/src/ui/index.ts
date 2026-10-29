@@ -28,3 +28,5 @@ export { Tooltip } from "./Tooltip";
 export type { TooltipProps } from "./Tooltip";
 export { MilSymbol, sidcFor } from "./MilSymbol";
 export type { Affiliation, MilSymbolProps } from "./MilSymbol";
+export { Menu } from "./Menu";
+export type { MenuAction, MenuEntry, MenuProps } from "./Menu";

@@ -1,0 +1,36 @@
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-md);
+  padding: var(--ui-space-xs) var(--ui-space-md);
+  background: var(--ui-color-bg-panel);
+  border-bottom: 1px solid var(--ui-color-line);
+}
+
+.brand {
+  color: var(--ui-color-accent);
+  font-family: var(--ui-font-display);
+  font-size: var(--ui-font-size-lg);
+  font-weight: var(--ui-font-weight-bold);
+  letter-spacing: var(--ui-letter-spacing-display);
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.menus,
+.quick,
+.turn {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-xs);
+}
+
+.quick {
+  padding-left: var(--ui-space-md);
+  border-left: 1px solid var(--ui-color-line);
+}
+
+.turn {
+  margin-left: auto;
+  gap: var(--ui-space-sm);
+}

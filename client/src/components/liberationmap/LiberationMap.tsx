@@ -16,18 +16,24 @@ import LeafletRuler from "../ruler/Ruler";
 import SupplyRoutesLayer from "../supplyrouteslayer";
 import TerrainZonesLayers from "../terrainzones/TerrainZonesLayers";
 import TgosLayer from "../tgoslayer/TgosLayer";
+import {
+  registerOverlayToggler,
+  toggleOverlayInControls,
+} from "../../maplayers/layerToggle";
 import { overlayProps } from "../../maplayers/overlays";
 import { MapZoomProvider } from "../../maplayers/zoom";
 import Legend from "../legend";
 import { CoalitionThreatZones } from "../threatzones";
 import { WaypointDebugZonesControls } from "../waypointdebugzones/WaypointDebugZonesControls";
 import "./LiberationMap.css";
-import { Map } from "leaflet";
+import { Control, Map } from "leaflet";
 import { useEffect, useRef } from "react";
 import { LayersControl, MapContainer, ScaleControl } from "react-leaflet";
 
 export default function LiberationMap() {
   const map = useRef<Map>(null);
+  const overlayControl = useRef<Control.Layers>(null);
+  const debugControl = useRef<Control.Layers>(null);
   const mapCenter = useAppSelector(selectMapCenter);
   useEffect(() => {
     map.current?.setView(mapCenter, map.current?.getZoom() ?? 8, {
@@ -35,6 +41,20 @@ export default function LiberationMap() {
       duration: 1,
     });
   });
+  // Lets the shortcuts (and WEB-01.3's layer buttons) toggle the overlays.
+  useEffect(
+    () =>
+      registerOverlayToggler(
+        (name) =>
+          map.current !== null &&
+          toggleOverlayInControls(
+            map.current,
+            [overlayControl.current, debugControl.current],
+            name,
+          ),
+      ),
+    [],
+  );
   return (
     <MapContainer
       zoom={map.current?.getZoom() ?? 8}
@@ -44,7 +64,7 @@ export default function LiberationMap() {
       <MapZoomProvider>
         <ScaleControl />
         <LeafletRuler />
-        <LayersControl collapsed={false}>
+        <LayersControl collapsed={false} ref={overlayControl}>
           <Basemaps />
           <LayersControl.Overlay {...overlayProps("controlPoints")}>
             <ControlPointsLayer />
@@ -122,7 +142,7 @@ export default function LiberationMap() {
             <FlightPlansLayer blue={false} />
           </LayersControl.Overlay>
         </LayersControl>
-        <LayersControl position="topleft">
+        <LayersControl position="topleft" ref={debugControl}>
           <CoalitionThreatZones blue={true} />
           <CoalitionThreatZones blue={false} />
           <LayersControl.Overlay name="Blue navmesh">

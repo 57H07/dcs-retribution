@@ -14,6 +14,7 @@ global __last_save_file
 global __prefer_liberation_payloads
 global __setup_preferences_on_every_start
 global __server_port
+global __web_ui
 
 
 def _user_data_path() -> Path:
@@ -33,6 +34,11 @@ USER_PATH = _user_data_path()
 
 PREFERENCES_PATH = USER_PATH / "retribution_preferences.json"
 
+# Overrides the "web_ui" preference for one launch: 1/true/yes/on or 0/false/no/off.
+WEB_UI_ENV_VAR = "RETRIBUTION_WEB_UI"
+
+__web_ui = False
+
 
 def init():
     global __dcs_saved_game_directory
@@ -42,7 +48,9 @@ def init():
     global __prefer_liberation_payloads
     global __setup_preferences_on_every_start
     global __server_port
+    global __web_ui
 
+    __web_ui = False
     if PREFERENCES_PATH.exists():
         try:
             logging.debug("Loading Retribution preferences from %s", PREFERENCES_PATH)
@@ -61,6 +69,7 @@ def init():
                 "setup_preferences_on_every_start", False
             )
             __server_port = pref_data.get("server_port", 16880)
+            __web_ui = bool(pref_data.get("web_ui", False))
             is_first_start = __setup_preferences_on_every_start
         except (KeyError, json.JSONDecodeError):
             __dcs_saved_game_directory = ""
@@ -130,6 +139,7 @@ def save_config():
     global __last_save_file
     global __ignore_empty_install_directory
     global __server_port
+    global __web_ui
     pref_data = {
         "saved_game_dir": __dcs_saved_game_directory,
         "dcs_install_dir": __dcs_installation_directory,
@@ -138,6 +148,7 @@ def save_config():
         "prefer_liberation_payloads": __prefer_liberation_payloads,
         "setup_preferences_on_every_start": __setup_preferences_on_every_start,
         "server_port": __server_port,
+        "web_ui": __web_ui,
     }
     PREFERENCES_PATH.parent.mkdir(exist_ok=True, parents=True)
     with PREFERENCES_PATH.open("w") as prefs:
@@ -167,6 +178,31 @@ def setup_preferences_on_every_start():
 def server_port():
     global __server_port
     return __server_port
+
+
+def web_ui_preference() -> bool:
+    """The saved "web_ui" preference, ignoring the environment override."""
+    global __web_ui
+    return __web_ui
+
+
+def set_web_ui_preference(value: bool) -> None:
+    global __web_ui
+    __web_ui = value
+
+
+def web_ui_enabled() -> bool:
+    """True when the web UI fills the main window (WEB-00.3, off by default: W10).
+
+    The RETRIBUTION_WEB_UI environment variable, when set to a known value, wins
+    over the saved preference. Read at startup: changing it needs a restart.
+    """
+    override = os.environ.get(WEB_UI_ENV_VAR, "").strip().lower()
+    if override in ("1", "true", "yes", "on"):
+        return True
+    if override in ("0", "false", "no", "off"):
+        return False
+    return web_ui_preference()
 
 
 def ignore_empty_install_directory():

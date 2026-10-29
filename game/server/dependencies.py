@@ -6,8 +6,9 @@ from game.theater import ControlPoint, MissionTarget, TheaterGroundObject
 
 if TYPE_CHECKING:
     from game import Game
-    from game.ato import Flight
+    from game.ato import Flight, Package
     from game.game import TurnState
+    from game.server.qt.models import QtDialog, QtLink
     from qt_ui.models import GameModel
 
 
@@ -41,6 +42,9 @@ class QtCallbacks:
         show_control_point_info: Callable[[ControlPoint], None],
         select_flight: Callable[[Flight], None],
         turn_passed: Callable[[TurnState], None] | None = None,
+        open_dialog: Callable[[QtDialog], None] | None = None,
+        open_link: Callable[[QtLink], None] | None = None,
+        edit_package: Callable[[Package], None] | None = None,
     ) -> None:
         self.create_new_package = create_new_package
         self.show_tgo_info = show_tgo_info
@@ -50,6 +54,11 @@ class QtCallbacks:
         # an API worker thread with the game lock held: it must only queue work onto
         # the Qt main thread (emit a signal), never block on it.
         self.turn_passed = turn_passed
+        # Open a not-yet-migrated Qt screen, an external link or the package editor
+        # for the web UI (WEB-00.3). Same contract as turn_passed: emit a signal.
+        self.open_dialog = open_dialog
+        self.open_link = open_link
+        self.edit_package = edit_package
 
 
 class QtContext:

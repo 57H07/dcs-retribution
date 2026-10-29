@@ -1028,6 +1028,114 @@
         }
       }
     },
+    "/qt/dialogs/{dialog}": {
+      "post": {
+        "summary": "Open Qt Dialog",
+        "description": "Opens a Qt screen that the web UI does not have yet (WEB-00.3).\n\nOnly queues the dialog onto the Qt main thread: never waits for it.",
+        "operationId": "open_qt_dialog",
+        "parameters": [
+          {
+            "name": "dialog",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/QtDialog"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "when the dialog needs a campaign and none is",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/qt/links/{link}": {
+      "post": {
+        "summary": "Open External Link",
+        "description": "Opens a Help page in the system browser (the web view cannot).",
+        "operationId": "open_external_link",
+        "parameters": [
+          {
+            "name": "link",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/QtLink"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/qt/edit-package/flight/{flight_id}": {
+      "post": {
+        "summary": "Edit Package Of Flight",
+        "description": "Opens the Qt package editor of the package flying this flight.\n\nPackages have no ID in the API yet (WEB-03 adds them): a flight stands for its\npackage.",
+        "operationId": "open_edit_package_dialog",
+        "parameters": [
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/supply-routes/": {
       "get": {
         "summary": "List Supply Routes",
@@ -2115,6 +2223,46 @@
           "Red"
         ],
         "title": "Player"
+      },
+      "QtDialog": {
+        "type": "string",
+        "enum": [
+          "new-game",
+          "open-game",
+          "save-game",
+          "save-game-as",
+          "preferences",
+          "settings",
+          "stats",
+          "notes",
+          "logs",
+          "about",
+          "import-layouts",
+          "pretense-campaign",
+          "air-wing",
+          "transfers",
+          "air-tasking-order",
+          "reports",
+          "debriefing",
+          "take-off",
+          "quit"
+        ],
+        "title": "QtDialog"
+      },
+      "QtLink": {
+        "type": "string",
+        "enum": [
+          "discord",
+          "github",
+          "ukraine",
+          "pretense-discord",
+          "releases",
+          "manual",
+          "forum-thread",
+          "issues"
+        ],
+        "title": "QtLink",
+        "description": "External pages of the Help menu, opened in the system browser by Qt."
       },
       "SupplyRouteJs": {
         "properties": {
