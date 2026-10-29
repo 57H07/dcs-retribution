@@ -61,6 +61,9 @@ class FakeBridge(NativeBridge):
     def choose_save_path(self, start: str) -> str | None:
         return self._ask("save", start)
 
+    def choose_file(self, title: str, start: str, file_filter: str) -> str | None:
+        return self._ask("file", start)
+
     def game_loaded(self, game: Any, path: str) -> None:
         self.loaded.append((game, path))
 

@@ -183,6 +183,27 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: () => ({ url: `/map-zones/threats` }),
     }),
+    getMissionResult: build.query<
+      GetMissionResultApiResponse,
+      GetMissionResultApiArg
+    >({
+      query: () => ({ url: `/game/mission/result` }),
+    }),
+    loadMissionResultFile: build.mutation<
+      LoadMissionResultFileApiResponse,
+      LoadMissionResultFileApiArg
+    >({
+      query: () => ({ url: `/game/mission/result/file`, method: "POST" }),
+    }),
+    abortMission: build.mutation<AbortMissionApiResponse, AbortMissionApiArg>({
+      query: () => ({ url: `/game/mission/result/cancel`, method: "POST" }),
+    }),
+    acceptMissionResult: build.mutation<
+      AcceptMissionResultApiResponse,
+      AcceptMissionResultApiArg
+    >({
+      query: () => ({ url: `/game/mission/result/accept`, method: "POST" }),
+    }),
     saveGame: build.mutation<SaveGameApiResponse, SaveGameApiArg>({
       query: () => ({ url: `/native/save`, method: "POST" }),
     }),
@@ -495,6 +516,18 @@ export type ListUnculledZonesApiArg = void;
 export type GetThreatZonesApiResponse =
   /** status 200 Successful Response */ ThreatZoneContainer;
 export type GetThreatZonesApiArg = void;
+export type GetMissionResultApiResponse =
+  /** status 200 Successful Response */ MissionResult;
+export type GetMissionResultApiArg = void;
+export type LoadMissionResultFileApiResponse =
+  /** status 200 Successful Response */ MissionResult;
+export type LoadMissionResultFileApiArg = void;
+export type AbortMissionApiResponse =
+  /** status 204 Successful Response */ void;
+export type AbortMissionApiArg = void;
+export type AcceptMissionResultApiResponse =
+  /** status 200 Successful Response */ Turn;
+export type AcceptMissionResultApiArg = void;
 export type SaveGameApiResponse =
   /** status 200 Successful Response */ FileActionResult;
 export type SaveGameApiArg = void;
@@ -872,6 +905,22 @@ export type Settings = {
 export type SettingValueUpdate = {
   value: boolean | number | number | string;
 };
+export type MissionResultStatusJs = "idle" | "waiting" | "detected" | "error";
+export type LossRow = {
+  label: string;
+  blue: number;
+  red: number;
+};
+export type MissionResult = {
+  status: MissionResultStatusJs;
+  miz_path?: string;
+  state_path: string;
+  mission_ended: boolean;
+  error?: string;
+  player_country?: string;
+  enemy_country?: string;
+  losses: LossRow[];
+};
 export type FileOutcome = "saved" | "opened" | "cancelled";
 export type FileActionResult = {
   outcome: FileOutcome;
@@ -932,6 +981,10 @@ export const {
   useGetOfflineBasemapImageQuery,
   useListUnculledZonesQuery,
   useGetThreatZonesQuery,
+  useGetMissionResultQuery,
+  useLoadMissionResultFileMutation,
+  useAbortMissionMutation,
+  useAcceptMissionResultMutation,
   useSaveGameMutation,
   useSaveGameAsMutation,
   useOpenGameMutation,

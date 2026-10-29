@@ -683,7 +683,7 @@
     "/game/mission": {
       "post": {
         "summary": "Take Off",
-        "description": "\"Take off\": fast forwards to first contact if the settings ask for it, writes\nthe mission for DCS, then opens the window waiting for its result.\n\nThe client runs the confirmations of `GET /game/mission/checks` first.",
+        "description": "\"Take off\": fast forwards to first contact if the settings ask for it, writes\nthe mission for DCS, then watches state.json for its result (WEB-05.1: see\n`GET /game/mission/result`).\n\nThe client runs the confirmations of `GET /game/mission/checks` first.",
         "operationId": "generate_mission",
         "responses": {
           "200": {
@@ -1018,6 +1018,105 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ThreatZoneContainerJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/game/mission/result": {
+      "get": {
+        "summary": "Mission Result",
+        "description": "The mission waiting for its result: detection of state.json, losses so far.",
+        "operationId": "get_mission_result",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionResultJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/game/mission/result/file": {
+      "post": {
+        "summary": "Load File",
+        "description": "\"Load state.json\": asks for a state.json and takes it as the final result.\n\nAnswers once the dialog is closed; a cancelled dialog changes nothing.",
+        "operationId": "load_mission_result_file",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionResultJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded, no mission is waiting, another file dialog is open or the file cannot be read.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/game/mission/result/cancel": {
+      "post": {
+        "summary": "Cancel",
+        "description": "\"Abort mission\": stops waiting and goes back to planning, as in Qt.",
+        "operationId": "abort_mission",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "No campaign is loaded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/game/mission/result/accept": {
+      "post": {
+        "summary": "Accept",
+        "description": "\"Accept results\": applies the mission result and starts the next turn.\n\nThe Qt debriefing window then shows the report (until WEB-05.2).",
+        "operationId": "accept_mission_result",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TurnJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded, no result was received or the mission is not over.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
                 }
               }
             }
@@ -2635,6 +2734,30 @@
         ],
         "title": "LatLng"
       },
+      "LossRowJs": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "blue": {
+            "type": "integer",
+            "title": "Blue"
+          },
+          "red": {
+            "type": "integer",
+            "title": "Red"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "blue",
+          "red"
+        ],
+        "title": "LossRow",
+        "description": "One line of the mission status: losses of each side so far."
+      },
       "MapZonesJs": {
         "properties": {
           "inclusion": {
@@ -2743,6 +2866,63 @@
         ],
         "title": "Mission",
         "description": "The mission written for DCS."
+      },
+      "MissionResultJs": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/MissionResultStatusJs"
+          },
+          "miz_path": {
+            "title": "Miz Path",
+            "type": "string"
+          },
+          "state_path": {
+            "type": "string",
+            "title": "State Path"
+          },
+          "mission_ended": {
+            "type": "boolean",
+            "title": "Mission Ended"
+          },
+          "error": {
+            "title": "Error",
+            "type": "string"
+          },
+          "player_country": {
+            "title": "Player Country",
+            "type": "string"
+          },
+          "enemy_country": {
+            "title": "Enemy Country",
+            "type": "string"
+          },
+          "losses": {
+            "items": {
+              "$ref": "#/components/schemas/LossRowJs"
+            },
+            "type": "array",
+            "title": "Losses"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "state_path",
+          "mission_ended",
+          "losses"
+        ],
+        "title": "MissionResult",
+        "description": "What the waiting screen shows (Qt: QWaitingForMissionResultWindow)."
+      },
+      "MissionResultStatusJs": {
+        "type": "string",
+        "enum": [
+          "idle",
+          "waiting",
+          "detected",
+          "error"
+        ],
+        "title": "MissionResultStatusJs"
       },
       "NativeFolder": {
         "type": "string",

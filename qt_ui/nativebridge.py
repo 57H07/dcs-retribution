@@ -111,6 +111,15 @@ class QtNativeBridge(NativeBridge):
 
         return self._wait_for(ask)
 
+    def choose_file(self, title: str, start: str, file_filter: str) -> str | None:
+        def ask() -> str | None:
+            path, _ = QFileDialog.getOpenFileName(
+                self._shell.window, title, dir=start, filter=file_filter
+            )
+            return path or None
+
+        return self._wait_for(ask)
+
     def game_loaded(self, game: Game, path: str) -> None:
         self._queue(lambda: self._shell.on_game_loaded(game, path))
 
