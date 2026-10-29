@@ -9,15 +9,17 @@ import userEvent from "@testing-library/user-event";
 afterEach(restoreFetch);
 
 describe("shortcuts in the shell", () => {
-  it("Ctrl+S saves through the Qt save action", async () => {
-    const calls = recordFetch();
+  it("Ctrl+S saves through the native bridge", async () => {
+    const calls = recordFetch(200, {
+      outcome: "saved",
+      path: "C:/saves/a.retribution",
+    });
     renderShell();
     fireEvent.keyDown(window, { key: "s", ctrlKey: true });
     await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0]).toMatchObject({
-      method: "POST",
-      path: "/qt/dialogs/save-game",
-    });
+    expect(calls[0]).toMatchObject({ method: "POST", path: "/native/save" });
+    expect(await screen.findByText("Campaign saved")).toBeInTheDocument();
+    expect(screen.getByText("C:/saves/a.retribution")).toBeInTheDocument();
   });
 
   it("N opens the packages and explains how to plan one", async () => {
@@ -79,10 +81,22 @@ describe("app bar", () => {
     renderShell();
     await userEvent.click(screen.getByRole("button", { name: "File" }));
     await userEvent.click(
+      await screen.findByRole("menuitem", { name: "Preferences" }),
+    );
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0].path).toBe("/qt/dialogs/preferences");
+  });
+
+  it("saves as through the native bridge from the File menu", async () => {
+    const calls = recordFetch(200, { outcome: "cancelled" });
+    renderShell();
+    await userEvent.click(screen.getByRole("button", { name: "File" }));
+    await userEvent.click(
       await screen.findByRole("menuitem", { name: "Save as…" }),
     );
     await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0].path).toBe("/qt/dialogs/save-game-as");
+    expect(calls[0].path).toBe("/native/save-as");
+    expect(await screen.findByText("Save cancelled")).toBeInTheDocument();
   });
 
   it("passes the turn with the API command", async () => {
@@ -103,6 +117,7 @@ describe("app bar", () => {
       qt: {
         openDialog: (d) => dialogs.push(d),
         openLink: (l) => links.push(l),
+        openFolder: () => {},
         openBase: () => {},
         editPackageOfFlight: () => {},
       },

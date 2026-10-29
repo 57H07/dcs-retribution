@@ -14,7 +14,7 @@ describe("web shell routes", () => {
 
   it.each([
     ["/air-wing", "/qt/dialogs/air-wing"],
-    ["/new-game", "/qt/dialogs/new-game"],
+    ["/new-game", "/native/new-game"],
     ["/settings", "/qt/dialogs/settings"],
     ["/debrief", "/qt/dialogs/debriefing"],
     ["/reports", "/qt/dialogs/reports"],
