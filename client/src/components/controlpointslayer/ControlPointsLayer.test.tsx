@@ -3,10 +3,10 @@ import ControlPointsLayer from "./ControlPointsLayer";
 import { LatLng } from "leaflet";
 import { PropsWithChildren } from "react";
 
-const mockMarker = jest.fn();
-const mockLayerGroup = jest.fn();
-const mockCircleMarker = jest.fn();
-jest.mock("react-leaflet", () => ({
+const mockMarker = vi.fn();
+const mockLayerGroup = vi.fn();
+const mockCircleMarker = vi.fn();
+vi.mock("react-leaflet", () => ({
   LayerGroup: (props: PropsWithChildren<any>) => {
     mockLayerGroup(props);
     return <>{props.children}</>;
@@ -17,6 +17,8 @@ jest.mock("react-leaflet", () => ({
   CircleMarker: (props: any) => {
     mockCircleMarker(props);
   },
+  // Vitest mocks throw on missing exports where Jest returned undefined.
+  Tooltip: () => null,
 }));
 
 describe("ControlPointsLayer", () => {

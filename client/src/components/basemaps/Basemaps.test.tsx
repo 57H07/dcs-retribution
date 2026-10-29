@@ -92,7 +92,7 @@ describe("TileHealth", () => {
 
 describe("Basemaps", () => {
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it("starts on the first online basemap", () => {
@@ -136,14 +136,14 @@ describe("Basemaps", () => {
   });
 
   it("starts on the offline basemap without network", () => {
-    jest.spyOn(window.navigator, "onLine", "get").mockReturnValue(false);
+    vi.spyOn(window.navigator, "onLine", "get").mockReturnValue(false);
     const map = renderMap();
     expect(tileLayersOn(map)).toHaveLength(0);
     expect(screen.getByRole("status")).toBeTruthy();
   });
 
   it("draws the precomputed image of a heavy theatre", () => {
-    jest.spyOn(window.navigator, "onLine", "get").mockReturnValue(false);
+    vi.spyOn(window.navigator, "onLine", "get").mockReturnValue(false);
     const map = renderMap(IMAGE_ZONES);
 
     const pane = map.getPane("offlineBasemap");

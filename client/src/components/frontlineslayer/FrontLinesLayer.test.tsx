@@ -2,10 +2,10 @@ import { renderWithProviders } from "../../testutils";
 import FrontLinesLayer from "./FrontLinesLayer";
 import { PropsWithChildren } from "react";
 
-const mockPolyline = jest.fn();
-const mockLayerGroup = jest.fn();
-const mockPane = jest.fn();
-jest.mock("react-leaflet", () => ({
+const mockPolyline = vi.fn();
+const mockLayerGroup = vi.fn();
+const mockPane = vi.fn();
+vi.mock("react-leaflet", () => ({
   Pane: (props: PropsWithChildren<any>) => {
     mockPane(props);
     return <>{props.children}</>;
