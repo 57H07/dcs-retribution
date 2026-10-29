@@ -1,5 +1,4 @@
 import { baseApi as api } from "./baseApi";
-
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     listControlPoints: build.query<
@@ -30,7 +29,7 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/control-points/${queryArg.cpId}/destination`,
         method: "PUT",
-        body: queryArg.body,
+        body: queryArg.leafletPoint,
       }),
     }),
     clearControlPointDestination: build.mutation<
@@ -57,6 +56,18 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/debug/waypoint-geometries/join/${queryArg.flightId}`,
       }),
+    }),
+    listDownedPilots: build.query<
+      ListDownedPilotsApiResponse,
+      ListDownedPilotsApiArg
+    >({
+      query: () => ({ url: `/downed-pilots/` }),
+    }),
+    getDownedPilotById: build.query<
+      GetDownedPilotByIdApiResponse,
+      GetDownedPilotByIdApiArg
+    >({
+      query: (queryArg) => ({ url: `/downed-pilots/${queryArg.pilotId}` }),
     }),
     listFlights: build.query<ListFlightsApiResponse, ListFlightsApiArg>({
       query: (queryArg) => ({
@@ -92,6 +103,9 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     getGameState: build.query<GetGameStateApiResponse, GetGameStateApiArg>({
       query: () => ({ url: `/game/` }),
+    }),
+    passTurn: build.mutation<PassTurnApiResponse, PassTurnApiArg>({
+      query: () => ({ url: `/game/turn/pass`, method: "POST" }),
     }),
     getTerrainZones: build.query<
       GetTerrainZonesApiResponse,
@@ -149,15 +163,6 @@ const injectedRtkApi = api.injectEndpoints({
         method: "POST",
       }),
     }),
-    openNewDownedPilotPackageDialog: build.mutation<
-      OpenNewDownedPilotPackageDialogApiResponse,
-      OpenNewDownedPilotPackageDialogApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/qt/create-package/downed-pilot/${queryArg.pilotId}`,
-        method: "POST",
-      }),
-    }),
     openTgoInfoDialog: build.mutation<
       OpenTgoInfoDialogApiResponse,
       OpenTgoInfoDialogApiArg
@@ -176,6 +181,21 @@ const injectedRtkApi = api.injectEndpoints({
         method: "POST",
       }),
     }),
+    openNewDownedPilotPackageDialog: build.mutation<
+      OpenNewDownedPilotPackageDialogApiResponse,
+      OpenNewDownedPilotPackageDialogApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/qt/create-package/downed-pilot/${queryArg.pilotId}`,
+        method: "POST",
+      }),
+    }),
+    selectFlight: build.mutation<SelectFlightApiResponse, SelectFlightApiArg>({
+      query: (queryArg) => ({
+        url: `/qt/select-flight/${queryArg.flightId}`,
+        method: "POST",
+      }),
+    }),
     openControlPointInfoDialog: build.mutation<
       OpenControlPointInfoDialogApiResponse,
       OpenControlPointInfoDialogApiArg
@@ -185,32 +205,11 @@ const injectedRtkApi = api.injectEndpoints({
         method: "POST",
       }),
     }),
-    selectFlight: build.mutation<
-      SelectFlightApiResponse,
-      SelectFlightApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/qt/select-flight/${queryArg.flightId}`,
-        method: "POST",
-      }),
-    }),
     listSupplyRoutes: build.query<
       ListSupplyRoutesApiResponse,
       ListSupplyRoutesApiArg
     >({
       query: () => ({ url: `/supply-routes/` }),
-    }),
-    listDownedPilots: build.query<
-      ListDownedPilotsApiResponse,
-      ListDownedPilotsApiArg
-    >({
-      query: () => ({ url: `/downed-pilots/` }),
-    }),
-    getDownedPilotById: build.query<
-      GetDownedPilotByIdApiResponse,
-      GetDownedPilotByIdApiArg
-    >({
-      query: (queryArg) => ({ url: `/downed-pilots/${queryArg.pilotId}` }),
     }),
     listTgos: build.query<ListTgosApiResponse, ListTgosApiArg>({
       query: () => ({ url: `/tgos/` }),
@@ -234,7 +233,7 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/tgos/${queryArg.tgoId}/destination`,
         method: "PUT",
-        body: queryArg.body,
+        body: queryArg.leafletPoint,
       }),
     }),
     clearTgoDestination: build.mutation<
@@ -294,13 +293,13 @@ export type ControlPointDestinationInRangeApiArg = {
   lng: number;
 };
 export type SetControlPointDestinationApiResponse =
-  /** status 204 Successful Response */ undefined;
+  /** status 204 Successful Response */ void;
 export type SetControlPointDestinationApiArg = {
   cpId: string;
-  body: LatLng;
+  leafletPoint: LatLng;
 };
 export type ClearControlPointDestinationApiResponse =
-  /** status 204 Successful Response */ undefined;
+  /** status 204 Successful Response */ void;
 export type ClearControlPointDestinationApiArg = {
   cpId: string;
 };
@@ -313,6 +312,14 @@ export type GetDebugJoinZonesApiResponse =
   /** status 200 Successful Response */ JoinZones;
 export type GetDebugJoinZonesApiArg = {
   flightId: string;
+};
+export type ListDownedPilotsApiResponse =
+  /** status 200 Successful Response */ DownedPilot[];
+export type ListDownedPilotsApiArg = void;
+export type GetDownedPilotByIdApiResponse =
+  /** status 200 Successful Response */ DownedPilot;
+export type GetDownedPilotByIdApiArg = {
+  pilotId: string;
 };
 export type ListFlightsApiResponse =
   /** status 200 Successful Response */ Flight[];
@@ -341,11 +348,13 @@ export type GetFrontLineByIdApiArg = {
 export type GetGameStateApiResponse =
   /** status 200 Successful Response */ Game;
 export type GetGameStateApiArg = void;
+export type PassTurnApiResponse = /** status 200 Successful Response */ Turn;
+export type PassTurnApiArg = void;
 export type GetTerrainZonesApiResponse =
   /** status 200 Successful Response */ MapZones;
 export type GetTerrainZonesApiArg = void;
 export type GetOfflineBasemapImageApiResponse =
-  /** status 200 Successful Response */ any;
+  /** status 200 Successful Response */ Blob;
 export type GetOfflineBasemapImageApiArg = {
   sea?: string;
   land?: string;
@@ -361,7 +370,7 @@ export type GetThreatZonesApiArg = void;
 export type GetNavmeshApiResponse =
   /** status 200 Successful Response */ NavMesh;
 export type GetNavmeshApiArg = {
-  forPlayer: boolean;
+  forPlayer: Player;
 };
 export type OpenNewFrontLinePackageDialogApiResponse =
   /** status 200 Successful Response */ any;
@@ -373,11 +382,6 @@ export type OpenNewTgoPackageDialogApiResponse =
 export type OpenNewTgoPackageDialogApiArg = {
   tgoId: string;
 };
-export type OpenNewDownedPilotPackageDialogApiResponse =
-  /** status 200 Successful Response */ any;
-export type OpenNewDownedPilotPackageDialogApiArg = {
-  pilotId: string;
-};
 export type OpenTgoInfoDialogApiResponse =
   /** status 200 Successful Response */ any;
 export type OpenTgoInfoDialogApiArg = {
@@ -388,27 +392,23 @@ export type OpenNewControlPointPackageDialogApiResponse =
 export type OpenNewControlPointPackageDialogApiArg = {
   cpId: string;
 };
+export type OpenNewDownedPilotPackageDialogApiResponse =
+  /** status 200 Successful Response */ any;
+export type OpenNewDownedPilotPackageDialogApiArg = {
+  pilotId: string;
+};
+export type SelectFlightApiResponse = /** status 200 Successful Response */ any;
+export type SelectFlightApiArg = {
+  flightId: string;
+};
 export type OpenControlPointInfoDialogApiResponse =
   /** status 200 Successful Response */ any;
 export type OpenControlPointInfoDialogApiArg = {
   cpId: string;
 };
-export type SelectFlightApiResponse =
-  /** status 200 Successful Response */ any;
-export type SelectFlightApiArg = {
-  flightId: string;
-};
 export type ListSupplyRoutesApiResponse =
   /** status 200 Successful Response */ SupplyRoute[];
 export type ListSupplyRoutesApiArg = void;
-export type ListDownedPilotsApiResponse =
-  /** status 200 Successful Response */ DownedPilot[];
-export type ListDownedPilotsApiArg = void;
-export type GetDownedPilotByIdApiResponse =
-  /** status 200 Successful Response */ DownedPilot;
-export type GetDownedPilotByIdApiArg = {
-  pilotId: string;
-};
 export type ListTgosApiResponse = /** status 200 Successful Response */ Tgo[];
 export type ListTgosApiArg = void;
 export type GetTgoByIdApiResponse = /** status 200 Successful Response */ Tgo;
@@ -423,13 +423,13 @@ export type TgoDestinationInRangeApiArg = {
   lng: number;
 };
 export type SetTgoDestinationApiResponse =
-  /** status 204 Successful Response */ undefined;
+  /** status 204 Successful Response */ void;
 export type SetTgoDestinationApiArg = {
   tgoId: string;
-  body: LatLng;
+  leafletPoint: LatLng;
 };
 export type ClearTgoDestinationApiResponse =
-  /** status 204 Successful Response */ undefined;
+  /** status 204 Successful Response */ void;
 export type ClearTgoDestinationApiArg = {
   tgoId: string;
 };
@@ -439,7 +439,7 @@ export type ListAllWaypointsForFlightApiArg = {
   flightId: string;
 };
 export type SetWaypointPositionApiResponse =
-  /** status 204 Successful Response */ undefined;
+  /** status 204 Successful Response */ void;
 export type SetWaypointPositionApiArg = {
   flightId: string;
   waypointIdx: number;
@@ -491,6 +491,16 @@ export type JoinZones = {
   permissibleZones: LatLng[][][];
   preferredLines: LatLng[][];
 };
+export type DownedPilot = {
+  id: string;
+  name: string;
+  squadron: string;
+  aircraft: string;
+  blue: boolean;
+  position: LatLng;
+  turns_remaining: number;
+  sidc: string;
+};
 export type Waypoint = {
   name: string;
   position: LatLng;
@@ -511,16 +521,6 @@ export type Flight = {
 export type FrontLine = {
   id: string;
   extents: LatLng[];
-};
-export type DownedPilot = {
-  id: string;
-  name: string;
-  squadron: string;
-  aircraft: string;
-  blue: boolean;
-  position: LatLng;
-  turns_remaining: number;
-  sidc: string;
 };
 export type Tgo = {
   id: string;
@@ -584,6 +584,16 @@ export type UnculledZone = {
   position: LatLng;
   radius: number;
 };
+export type OfflineBasemapImage = {
+  south_west: LatLng;
+  north_east: LatLng;
+};
+export type MapZones = {
+  inclusion: LatLng[][][];
+  exclusion: LatLng[][][];
+  sea: LatLng[][][];
+  offline_image?: OfflineBasemapImage | null;
+};
 export type Game = {
   control_points: ControlPoint[];
   tgos: Tgo[];
@@ -598,16 +608,15 @@ export type Game = {
   unculled_zones: UnculledZone[];
   map_zones: MapZones;
 };
-export type OfflineBasemapImage = {
-  south_west: LatLng;
-  north_east: LatLng;
+export type CampaignStateJs = "continue" | "win" | "loss";
+export type Turn = {
+  turn: number;
+  campaign_state: CampaignStateJs;
 };
-export type MapZones = {
-  inclusion: LatLng[][][];
-  exclusion: LatLng[][][];
-  sea: LatLng[][][];
-  offline_image?: OfflineBasemapImage | null;
+export type CommandError = {
+  detail: string;
 };
+export type Player = "Neutral" | "Blue" | "Red";
 export const {
   useListControlPointsQuery,
   useGetControlPointByIdQuery,
@@ -616,12 +625,15 @@ export const {
   useClearControlPointDestinationMutation,
   useGetDebugHoldZonesQuery,
   useGetDebugJoinZonesQuery,
+  useListDownedPilotsQuery,
+  useGetDownedPilotByIdQuery,
   useListFlightsQuery,
   useGetFlightByIdQuery,
   useGetCommitBoundaryForFlightQuery,
   useListFrontLinesQuery,
   useGetFrontLineByIdQuery,
   useGetGameStateQuery,
+  usePassTurnMutation,
   useGetTerrainZonesQuery,
   useGetOfflineBasemapImageQuery,
   useListUnculledZonesQuery,
@@ -629,14 +641,12 @@ export const {
   useGetNavmeshQuery,
   useOpenNewFrontLinePackageDialogMutation,
   useOpenNewTgoPackageDialogMutation,
-  useOpenNewDownedPilotPackageDialogMutation,
   useOpenTgoInfoDialogMutation,
   useOpenNewControlPointPackageDialogMutation,
-  useOpenControlPointInfoDialogMutation,
+  useOpenNewDownedPilotPackageDialogMutation,
   useSelectFlightMutation,
+  useOpenControlPointInfoDialogMutation,
   useListSupplyRoutesQuery,
-  useListDownedPilotsQuery,
-  useGetDownedPilotByIdQuery,
   useListTgosQuery,
   useGetTgoByIdQuery,
   useTgoDestinationInRangeQuery,

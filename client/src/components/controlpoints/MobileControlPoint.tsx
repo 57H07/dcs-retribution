@@ -168,7 +168,7 @@ function PrimaryMarker(props: PrimaryMarkerProps) {
             try {
               await putDestination({
                 cpId: props.controlPoint.id,
-                body: { lat: destination.lat, lng: destination.lng },
+                leafletPoint: { lat: destination.lat, lng: destination.lng },
               }).unwrap();
             } catch (error) {
               console.error("setDestination failed", error);

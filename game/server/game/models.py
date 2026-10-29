@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from enum import Enum
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
@@ -21,6 +22,7 @@ from game.server.tgos.models import TgoJs
 
 if TYPE_CHECKING:
     from game import Game
+    from game.game import TurnState
 
 
 class GameJs(BaseModel):
@@ -58,3 +60,25 @@ class GameJs(BaseModel):
             unculled_zones=UnculledZoneJs.from_game(game),
             map_zones=MapZonesJs.from_game(game),
         )
+
+
+class CampaignStateJs(str, Enum):
+    """Campaign state after a turn, mirror of `game.game.TurnState`."""
+
+    CONTINUE = "continue"
+    WIN = "win"
+    LOSS = "loss"
+
+    @staticmethod
+    def from_turn_state(state: TurnState) -> CampaignStateJs:
+        return CampaignStateJs[state.name]
+
+
+class TurnJs(BaseModel):
+    """The turn the game is in once a turn command has run."""
+
+    turn: int
+    campaign_state: CampaignStateJs
+
+    class Config:
+        title = "Turn"

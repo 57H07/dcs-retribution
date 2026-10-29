@@ -1,0 +1,2400 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "FastAPI",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/control-points/": {
+      "get": {
+        "summary": "List Control Points",
+        "operationId": "list_control_points",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ControlPointJs"
+                  },
+                  "type": "array",
+                  "title": "Response List Control Points"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control-points/{cp_id}": {
+      "get": {
+        "summary": "Get Control Point",
+        "operationId": "get_control_point_by_id",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlPointJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control-points/{cp_id}/destination-in-range": {
+      "get": {
+        "summary": "Destination In Range",
+        "operationId": "control_point_destination_in_range",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          },
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lat"
+            }
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lng"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean",
+                  "title": "Response Control Point Destination In Range"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control-points/{cp_id}/destination": {
+      "put": {
+        "summary": "Set Destination",
+        "operationId": "set_control_point_destination",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeafletPoint",
+                "title": "destination"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control-points/{cp_id}/cancel-travel": {
+      "put": {
+        "summary": "Cancel Travel",
+        "operationId": "clear_control_point_destination",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/debug/waypoint-geometries/hold/{flight_id}": {
+      "get": {
+        "summary": "Hold Zones",
+        "operationId": "get_debug_hold_zones",
+        "parameters": [
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HoldZonesJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/debug/waypoint-geometries/join/{flight_id}": {
+      "get": {
+        "summary": "Join Zones",
+        "operationId": "get_debug_join_zones",
+        "parameters": [
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinZonesJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/downed-pilots/": {
+      "get": {
+        "summary": "List Downed Pilots",
+        "operationId": "list_downed_pilots",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DownedPilotJs"
+                  },
+                  "type": "array",
+                  "title": "Response List Downed Pilots"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/downed-pilots/{pilot_id}": {
+      "get": {
+        "summary": "Get Downed Pilot",
+        "operationId": "get_downed_pilot_by_id",
+        "parameters": [
+          {
+            "name": "pilot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Pilot Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DownedPilotJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/flights/": {
+      "get": {
+        "summary": "List Flights",
+        "operationId": "list_flights",
+        "parameters": [
+          {
+            "name": "with_waypoints",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "With Waypoints"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FlightJs"
+                  },
+                  "title": "Response List Flights"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/flights/{flight_id}": {
+      "get": {
+        "summary": "Get Flight",
+        "operationId": "get_flight_by_id",
+        "parameters": [
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          },
+          {
+            "name": "with_waypoints",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "With Waypoints"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/flights/{flight_id}/commit-boundary": {
+      "get": {
+        "summary": "Commit Boundary",
+        "operationId": "get_commit_boundary_for_flight",
+        "parameters": [
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/LeafletPoint"
+                    }
+                  },
+                  "title": "Response Get Commit Boundary For Flight"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/front-lines/": {
+      "get": {
+        "summary": "List Front Lines",
+        "operationId": "list_front_lines",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/FrontLineJs"
+                  },
+                  "type": "array",
+                  "title": "Response List Front Lines"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/front-lines/{front_line_id}": {
+      "get": {
+        "summary": "Get Front Line",
+        "operationId": "get_front_line_by_id",
+        "parameters": [
+          {
+            "name": "front_line_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Front Line Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FrontLineJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/game/": {
+      "get": {
+        "summary": "Game State",
+        "operationId": "get_game_state",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/game/turn/pass": {
+      "post": {
+        "summary": "Pass Turn",
+        "description": "Skip the current turn without flying it (\"Pass Turn\" / \"Begin Campaign\").\n\nThe new turn is published on the event stream (`new_turn`), so every open screen\nreloads its state.",
+        "operationId": "pass_turn",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TurnJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded, or it is over.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/map-zones/terrain": {
+      "get": {
+        "summary": "Get Terrain",
+        "operationId": "get_terrain_zones",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapZonesJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/map-zones/offline-basemap": {
+      "get": {
+        "summary": "Get Offline Basemap Image",
+        "description": "Precomputed offline basemap of the theatre (GFX-04.2), in these colours.\n\nColours are hex RGB without the leading '#'. 404 when the theatre has no\nprecomputed basemap: the client then draws the landmap polygons.",
+        "operationId": "get_offline_basemap_image",
+        "parameters": [
+          {
+            "name": "sea",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{6}$",
+              "default": "9db4c8",
+              "title": "Sea"
+            }
+          },
+          {
+            "name": "land",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{6}$",
+              "default": "e4dfd1",
+              "title": "Land"
+            }
+          },
+          {
+            "name": "land_excluded",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{6}$",
+              "default": "cdc5ae",
+              "title": "Land Excluded"
+            }
+          },
+          {
+            "name": "coastline",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{6}$",
+              "default": "6f8496",
+              "title": "Coastline"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "image/png": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/map-zones/unculled": {
+      "get": {
+        "summary": "Get Unculled Zones",
+        "operationId": "list_unculled_zones",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/UnculledZoneJs"
+                  },
+                  "type": "array",
+                  "title": "Response List Unculled Zones"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/map-zones/threats": {
+      "get": {
+        "summary": "Get Threat Zones",
+        "operationId": "get_threat_zones",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThreatZoneContainerJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/navmesh/": {
+      "get": {
+        "summary": "Get",
+        "operationId": "get_navmesh",
+        "parameters": [
+          {
+            "name": "for_player",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Player"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NavMeshJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/qt/create-package/front-line/{front_line_id}": {
+      "post": {
+        "summary": "New Front Line Package",
+        "operationId": "open_new_front_line_package_dialog",
+        "parameters": [
+          {
+            "name": "front_line_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Front Line Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/qt/create-package/tgo/{tgo_id}": {
+      "post": {
+        "summary": "New Tgo Package",
+        "operationId": "open_new_tgo_package_dialog",
+        "parameters": [
+          {
+            "name": "tgo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Tgo Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/qt/info/tgo/{tgo_id}": {
+      "post": {
+        "summary": "Show Tgo Info",
+        "operationId": "open_tgo_info_dialog",
+        "parameters": [
+          {
+            "name": "tgo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Tgo Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/qt/create-package/control-point/{cp_id}": {
+      "post": {
+        "summary": "New Cp Package",
+        "operationId": "open_new_control_point_package_dialog",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/qt/create-package/downed-pilot/{pilot_id}": {
+      "post": {
+        "summary": "New Downed Pilot Package",
+        "operationId": "open_new_downed_pilot_package_dialog",
+        "parameters": [
+          {
+            "name": "pilot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Pilot Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/qt/select-flight/{flight_id}": {
+      "post": {
+        "summary": "Select Flight",
+        "operationId": "select_flight",
+        "parameters": [
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/qt/info/control-point/{cp_id}": {
+      "post": {
+        "summary": "Show Control Point Info",
+        "operationId": "open_control_point_info_dialog",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/supply-routes/": {
+      "get": {
+        "summary": "List Supply Routes",
+        "operationId": "list_supply_routes",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SupplyRouteJs"
+                  },
+                  "type": "array",
+                  "title": "Response List Supply Routes"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tgos/": {
+      "get": {
+        "summary": "List Tgos",
+        "operationId": "list_tgos",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TgoJs"
+                  },
+                  "type": "array",
+                  "title": "Response List Tgos"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tgos/{tgo_id}": {
+      "get": {
+        "summary": "Get Tgo",
+        "operationId": "get_tgo_by_id",
+        "parameters": [
+          {
+            "name": "tgo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Tgo Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgoJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tgos/{tgo_id}/destination-in-range": {
+      "get": {
+        "summary": "Tgo Destination In Range",
+        "operationId": "tgo_destination_in_range",
+        "parameters": [
+          {
+            "name": "tgo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Tgo Id"
+            }
+          },
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lat"
+            }
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lng"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean",
+                  "title": "Response Tgo Destination In Range"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tgos/{tgo_id}/destination": {
+      "put": {
+        "summary": "Set Tgo Destination",
+        "operationId": "set_tgo_destination",
+        "parameters": [
+          {
+            "name": "tgo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Tgo Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeafletPoint",
+                "title": "destination"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tgos/{tgo_id}/cancel-travel": {
+      "put": {
+        "summary": "Clear Tgo Destination",
+        "operationId": "clear_tgo_destination",
+        "parameters": [
+          {
+            "name": "tgo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Tgo Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/waypoints/{flight_id}": {
+      "get": {
+        "summary": "All Waypoints For Flight",
+        "operationId": "list_all_waypoints_for_flight",
+        "parameters": [
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FlightWaypointJs"
+                  },
+                  "title": "Response List All Waypoints For Flight"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/waypoints/{flight_id}/{waypoint_idx}/position": {
+      "post": {
+        "summary": "Set Position",
+        "operationId": "set_waypoint_position",
+        "parameters": [
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          },
+          {
+            "name": "waypoint_idx",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Waypoint Idx"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeafletPoint"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/iads-network/": {
+      "get": {
+        "summary": "Get Iads Network",
+        "operationId": "get_iads_network",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IadsNetworkJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/iads-network/for-tgo/{tgo_id}": {
+      "get": {
+        "summary": "Get Iads Connections For Tgo",
+        "operationId": "get_iads_connections_for_tgo",
+        "parameters": [
+          {
+            "name": "tgo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Tgo Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IadsConnectionJs"
+                  },
+                  "title": "Response Get Iads Connections For Tgo"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CampaignStateJs": {
+        "type": "string",
+        "enum": [
+          "continue",
+          "win",
+          "loss"
+        ],
+        "title": "CampaignStateJs",
+        "description": "Campaign state after a turn, mirror of `game.game.TurnState`."
+      },
+      "CommandErrorJs": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "CommandError",
+        "description": "Body of a refused command: a message the client can show as is."
+      },
+      "ControlPointJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "blue": {
+            "type": "boolean",
+            "title": "Blue"
+          },
+          "position": {
+            "$ref": "#/components/schemas/LeafletPoint"
+          },
+          "mobile": {
+            "type": "boolean",
+            "title": "Mobile"
+          },
+          "destination": {
+            "$ref": "#/components/schemas/LeafletPoint"
+          },
+          "sidc": {
+            "type": "string",
+            "title": "Sidc"
+          },
+          "cut_off": {
+            "type": "boolean",
+            "title": "Cut Off",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "blue",
+          "position",
+          "mobile",
+          "sidc"
+        ],
+        "title": "ControlPoint"
+      },
+      "DownedPilotJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "squadron": {
+            "type": "string",
+            "title": "Squadron"
+          },
+          "aircraft": {
+            "type": "string",
+            "title": "Aircraft"
+          },
+          "blue": {
+            "type": "boolean",
+            "title": "Blue"
+          },
+          "position": {
+            "$ref": "#/components/schemas/LeafletPoint"
+          },
+          "turns_remaining": {
+            "type": "integer",
+            "title": "Turns Remaining"
+          },
+          "sidc": {
+            "type": "string",
+            "title": "Sidc"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "squadron",
+          "aircraft",
+          "blue",
+          "position",
+          "turns_remaining",
+          "sidc"
+        ],
+        "title": "DownedPilot"
+      },
+      "FlightJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "blue": {
+            "type": "boolean",
+            "title": "Blue"
+          },
+          "position": {
+            "$ref": "#/components/schemas/LeafletPoint"
+          },
+          "sidc": {
+            "type": "string",
+            "title": "Sidc"
+          },
+          "waypoints": {
+            "title": "Waypoints",
+            "items": {
+              "$ref": "#/components/schemas/FlightWaypointJs"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "blue",
+          "sidc"
+        ],
+        "title": "Flight"
+      },
+      "FlightWaypointJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "position": {
+            "$ref": "#/components/schemas/LeafletPoint"
+          },
+          "altitude_ft": {
+            "type": "number",
+            "title": "Altitude Ft"
+          },
+          "altitude_reference": {
+            "type": "string",
+            "title": "Altitude Reference"
+          },
+          "is_movable": {
+            "type": "boolean",
+            "title": "Is Movable"
+          },
+          "should_mark": {
+            "type": "boolean",
+            "title": "Should Mark"
+          },
+          "include_in_path": {
+            "type": "boolean",
+            "title": "Include In Path"
+          },
+          "timing": {
+            "type": "string",
+            "title": "Timing"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "position",
+          "altitude_ft",
+          "altitude_reference",
+          "is_movable",
+          "should_mark",
+          "include_in_path",
+          "timing"
+        ],
+        "title": "Waypoint"
+      },
+      "FrontLineJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "extents": {
+            "items": {
+              "$ref": "#/components/schemas/LeafletPoint"
+            },
+            "type": "array",
+            "title": "Extents"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "extents"
+        ],
+        "title": "FrontLine"
+      },
+      "GameJs": {
+        "properties": {
+          "control_points": {
+            "items": {
+              "$ref": "#/components/schemas/ControlPointJs"
+            },
+            "type": "array",
+            "title": "Control Points"
+          },
+          "tgos": {
+            "items": {
+              "$ref": "#/components/schemas/TgoJs"
+            },
+            "type": "array",
+            "title": "Tgos"
+          },
+          "downed_pilots": {
+            "items": {
+              "$ref": "#/components/schemas/DownedPilotJs"
+            },
+            "type": "array",
+            "title": "Downed Pilots"
+          },
+          "supply_routes": {
+            "items": {
+              "$ref": "#/components/schemas/SupplyRouteJs"
+            },
+            "type": "array",
+            "title": "Supply Routes"
+          },
+          "front_lines": {
+            "items": {
+              "$ref": "#/components/schemas/FrontLineJs"
+            },
+            "type": "array",
+            "title": "Front Lines"
+          },
+          "flights": {
+            "items": {
+              "$ref": "#/components/schemas/FlightJs"
+            },
+            "type": "array",
+            "title": "Flights"
+          },
+          "iads_network": {
+            "$ref": "#/components/schemas/IadsNetworkJs"
+          },
+          "threat_zones": {
+            "$ref": "#/components/schemas/ThreatZoneContainerJs"
+          },
+          "navmeshes": {
+            "$ref": "#/components/schemas/NavMeshesJs"
+          },
+          "map_center": {
+            "$ref": "#/components/schemas/LeafletPoint"
+          },
+          "unculled_zones": {
+            "items": {
+              "$ref": "#/components/schemas/UnculledZoneJs"
+            },
+            "type": "array",
+            "title": "Unculled Zones"
+          },
+          "map_zones": {
+            "$ref": "#/components/schemas/MapZonesJs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "control_points",
+          "tgos",
+          "downed_pilots",
+          "supply_routes",
+          "front_lines",
+          "flights",
+          "iads_network",
+          "threat_zones",
+          "navmeshes",
+          "unculled_zones",
+          "map_zones"
+        ],
+        "title": "Game"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HoldZonesJs": {
+        "properties": {
+          "homeBubble": {
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/LeafletPoint"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Homebubble"
+          },
+          "targetBubble": {
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/LeafletPoint"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Targetbubble"
+          },
+          "joinBubble": {
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/LeafletPoint"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Joinbubble"
+          },
+          "excludedZones": {
+            "items": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/LeafletPoint"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Excludedzones"
+          },
+          "permissibleZones": {
+            "items": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/LeafletPoint"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Permissiblezones"
+          },
+          "preferredLines": {
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/LeafletPoint"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Preferredlines"
+          }
+        },
+        "type": "object",
+        "required": [
+          "homeBubble",
+          "targetBubble",
+          "joinBubble",
+          "excludedZones",
+          "permissibleZones",
+          "preferredLines"
+        ],
+        "title": "HoldZones"
+      },
+      "IadsConnectionJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/LeafletPoint"
+            },
+            "type": "array",
+            "title": "Points"
+          },
+          "node": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Node"
+          },
+          "connected": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Connected"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          },
+          "blue": {
+            "type": "boolean",
+            "title": "Blue"
+          },
+          "is_power": {
+            "type": "boolean",
+            "title": "Is Power"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "points",
+          "node",
+          "connected",
+          "active",
+          "blue",
+          "is_power"
+        ],
+        "title": "IadsConnection"
+      },
+      "IadsNetworkJs": {
+        "properties": {
+          "advanced": {
+            "type": "boolean",
+            "title": "Advanced"
+          },
+          "connections": {
+            "items": {
+              "$ref": "#/components/schemas/IadsConnectionJs"
+            },
+            "type": "array",
+            "title": "Connections"
+          }
+        },
+        "type": "object",
+        "required": [
+          "advanced",
+          "connections"
+        ],
+        "title": "IadsNetwork"
+      },
+      "JoinZonesJs": {
+        "properties": {
+          "homeBubble": {
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/LeafletPoint"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Homebubble"
+          },
+          "targetBubble": {
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/LeafletPoint"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Targetbubble"
+          },
+          "ipBubble": {
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/LeafletPoint"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Ipbubble"
+          },
+          "excludedZones": {
+            "items": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/LeafletPoint"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Excludedzones"
+          },
+          "permissibleZones": {
+            "items": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/LeafletPoint"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Permissiblezones"
+          },
+          "preferredLines": {
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/LeafletPoint"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Preferredlines"
+          }
+        },
+        "type": "object",
+        "required": [
+          "homeBubble",
+          "targetBubble",
+          "ipBubble",
+          "excludedZones",
+          "permissibleZones",
+          "preferredLines"
+        ],
+        "title": "JoinZones"
+      },
+      "LeafletPoint": {
+        "properties": {
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lng": {
+            "type": "number",
+            "title": "Lng"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lat",
+          "lng"
+        ],
+        "title": "LatLng"
+      },
+      "MapZonesJs": {
+        "properties": {
+          "inclusion": {
+            "items": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/LeafletPoint"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Inclusion"
+          },
+          "exclusion": {
+            "items": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/LeafletPoint"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Exclusion"
+          },
+          "sea": {
+            "items": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/LeafletPoint"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Sea"
+          },
+          "offline_image": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OfflineBasemapImageJs"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "inclusion",
+          "exclusion",
+          "sea"
+        ],
+        "title": "MapZones"
+      },
+      "NavMeshJs": {
+        "properties": {
+          "polys": {
+            "items": {
+              "$ref": "#/components/schemas/NavMeshPolyJs"
+            },
+            "type": "array",
+            "title": "Polys"
+          }
+        },
+        "type": "object",
+        "required": [
+          "polys"
+        ],
+        "title": "NavMesh"
+      },
+      "NavMeshPolyJs": {
+        "properties": {
+          "poly": {
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/LeafletPoint"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Poly"
+          },
+          "threatened": {
+            "type": "boolean",
+            "title": "Threatened"
+          }
+        },
+        "type": "object",
+        "required": [
+          "poly",
+          "threatened"
+        ],
+        "title": "NavMeshPoly"
+      },
+      "NavMeshesJs": {
+        "properties": {
+          "blue": {
+            "$ref": "#/components/schemas/NavMeshJs"
+          },
+          "red": {
+            "$ref": "#/components/schemas/NavMeshJs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "blue",
+          "red"
+        ],
+        "title": "NavMeshes"
+      },
+      "OfflineBasemapImageJs": {
+        "properties": {
+          "south_west": {
+            "$ref": "#/components/schemas/LeafletPoint"
+          },
+          "north_east": {
+            "$ref": "#/components/schemas/LeafletPoint"
+          }
+        },
+        "type": "object",
+        "required": [
+          "south_west",
+          "north_east"
+        ],
+        "title": "OfflineBasemapImage",
+        "description": "Precomputed offline basemap image of a heavy theatre (GFX-04.2).\n\nServed by GET /map-zones/offline-basemap, drawn between these corners."
+      },
+      "Player": {
+        "type": "string",
+        "enum": [
+          "Neutral",
+          "Blue",
+          "Red"
+        ],
+        "title": "Player"
+      },
+      "SupplyRouteJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/LeafletPoint"
+            },
+            "type": "array",
+            "title": "Points"
+          },
+          "front_active": {
+            "type": "boolean",
+            "title": "Front Active"
+          },
+          "is_sea": {
+            "type": "boolean",
+            "title": "Is Sea"
+          },
+          "blue": {
+            "type": "boolean",
+            "title": "Blue"
+          },
+          "active_transports": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Active Transports"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "points",
+          "front_active",
+          "is_sea",
+          "blue",
+          "active_transports"
+        ],
+        "title": "SupplyRoute"
+      },
+      "TgoJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "control_point_name": {
+            "type": "string",
+            "title": "Control Point Name"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "blue": {
+            "type": "boolean",
+            "title": "Blue"
+          },
+          "position": {
+            "$ref": "#/components/schemas/LeafletPoint"
+          },
+          "units": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Units"
+          },
+          "threat_ranges": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Threat Ranges"
+          },
+          "detection_ranges": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Detection Ranges"
+          },
+          "dead": {
+            "type": "boolean",
+            "title": "Dead"
+          },
+          "sidc": {
+            "type": "string",
+            "title": "Sidc"
+          },
+          "task": {
+            "title": "Task",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "mobile": {
+            "type": "boolean",
+            "title": "Mobile"
+          },
+          "destination": {
+            "$ref": "#/components/schemas/LeafletPoint"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "control_point_name",
+          "category",
+          "blue",
+          "position",
+          "units",
+          "threat_ranges",
+          "detection_ranges",
+          "dead",
+          "sidc",
+          "mobile"
+        ],
+        "title": "Tgo"
+      },
+      "ThreatZoneContainerJs": {
+        "properties": {
+          "blue": {
+            "$ref": "#/components/schemas/ThreatZonesJs"
+          },
+          "red": {
+            "$ref": "#/components/schemas/ThreatZonesJs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "blue",
+          "red"
+        ],
+        "title": "ThreatZoneContainer"
+      },
+      "ThreatZonesJs": {
+        "properties": {
+          "full": {
+            "items": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/LeafletPoint"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Full"
+          },
+          "aircraft": {
+            "items": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/LeafletPoint"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Aircraft"
+          },
+          "air_defenses": {
+            "items": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/LeafletPoint"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Air Defenses"
+          },
+          "radar_sams": {
+            "items": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/LeafletPoint"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Radar Sams"
+          }
+        },
+        "type": "object",
+        "required": [
+          "full",
+          "aircraft",
+          "air_defenses",
+          "radar_sams"
+        ],
+        "title": "ThreatZones"
+      },
+      "TurnJs": {
+        "properties": {
+          "turn": {
+            "type": "integer",
+            "title": "Turn"
+          },
+          "campaign_state": {
+            "$ref": "#/components/schemas/CampaignStateJs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "turn",
+          "campaign_state"
+        ],
+        "title": "Turn",
+        "description": "The turn the game is in once a turn command has run."
+      },
+      "UnculledZoneJs": {
+        "properties": {
+          "position": {
+            "$ref": "#/components/schemas/LeafletPoint"
+          },
+          "radius": {
+            "type": "number",
+            "title": "Radius"
+          }
+        },
+        "type": "object",
+        "required": [
+          "position",
+          "radius"
+        ],
+        "title": "UnculledZone"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
