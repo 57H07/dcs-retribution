@@ -28,11 +28,16 @@ export default function DownedPilot(props: DownedPilotProps) {
       icon={iconForDownedPilot(pilot)}
       // Keep downed pilots above other markers; they are time-critical.
       zIndexOffset={2000}
-      eventHandlers={{
-        contextmenu: () => {
-          openNewPackageDialog({ pilotId: pilot.id });
-        },
-      }}
+      // Only friendly pilots can be rescued: an enemy pilot has no CSAR action.
+      eventHandlers={
+        pilot.blue
+          ? {
+              contextmenu: () => {
+                openNewPackageDialog({ pilotId: pilot.id });
+              },
+            }
+          : {}
+      }
     >
       <Tooltip>
         <b>{`Downed pilot: ${pilot.name}`}</b>
@@ -42,8 +47,12 @@ export default function DownedPilot(props: DownedPilotProps) {
         {turns === 1
           ? "Last turn to rescue!"
           : `${turns} turns remaining to rescue`}
-        <br />
-        <i>Right click to plan a CSAR mission</i>
+        {pilot.blue && (
+          <>
+            <br />
+            <i>Right click to plan a CSAR mission</i>
+          </>
+        )}
       </Tooltip>
     </Marker>
   );

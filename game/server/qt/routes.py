@@ -3,6 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from game import Game
+from game.theater.player import Player
 from ..dependencies import GameContext, QtCallbacks, QtContext
 
 router: APIRouter = APIRouter(prefix="/qt")
@@ -82,6 +83,13 @@ def new_downed_pilot_package(
         raise HTTPException(
             status.HTTP_404_NOT_FOUND,
             detail=f"Game has no downed pilot with ID {pilot_id}",
+        )
+    if not downed.is_friendly(Player.BLUE):
+        # Only the owning coalition can rescue its pilots, so an enemy downed pilot
+        # offers no mission type and would open an empty package dialog.
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail=f"Downed pilot {pilot_id} is not a friendly pilot",
         )
     qt.create_new_package(downed)
 
