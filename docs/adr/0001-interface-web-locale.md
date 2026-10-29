@@ -1,6 +1,6 @@
 # ADR 0001 — L'interface devient une application web locale
 
-- **Statut :** proposé (à valider en revue)
+- **Statut :** accepté (revue du 2026-10-29, décisions W1 à W19 de la spécification)
 - **Date :** 2026-10-29
 - **Spécification liée :** [`docs/dev/design/specification-interface-web.md`](../dev/design/specification-interface-web.md)
 - **Maquettes :** canevas « Retribution UI Concepts », direction A « Command view »

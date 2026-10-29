@@ -1,5 +1,7 @@
 # Plan de test en jeu (DCS) — branche `dev`
 
+> **Suspendu (2026-10-29).** Ce plan reprendra quand l'interface web sera active par défaut, et sera alors complété avec ses écrans (décisions W10 et W19 de [la spécification de l'interface web](design/specification-interface-web.md)). Les cases qui citent des boutons ou fenêtres Qt devront être réécrites pour l'interface web.
+
 Ce plan couvre tout ce que les tests automatiques ne peuvent pas vérifier : le rendu réel de l'application, et le comportement dans DCS. Chaque case renvoie à la PR qui a introduit le changement (`#NN` sur `57H07/dcs-retribution`). Si une case échoue, notez la PR, la campagne, le tour, et joignez `logs/retribution.log`, la sauvegarde et le `state.json`.
 
 ---

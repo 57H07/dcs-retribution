@@ -1,6 +1,6 @@
 # Spécification — Migration de l'interface vers le web (direction « Command view »)
 
-- **Version :** brouillon 1, 2026-10-29
+- **Version :** 1.0, revue le 2026-10-29 (décisions W1 à W19, §6)
 - **Décision d'architecture :** [ADR 0001](../../adr/0001-interface-web-locale.md)
 - **Maquettes de référence :** canevas « Retribution UI Concepts », direction A (Command view, Air Wing, Base, Package, New campaign, Settings, After-action report). La direction B est écartée.
 - **Branche cible :** `dev` du fork `57H07/dcs-retribution`.
@@ -38,7 +38,7 @@ Cette spécification découpe le passage de l'interface Qt Widgets (`qt_ui/`, ~2
 - **Sources :** GFX-05 de la spécification fonctionnelle (absorbé ici).
 - **Constat :** CRA n'est plus maintenu ; TS 4.8 limite les bibliothèques récentes.
 - **Exigences :**
-  1. Remplacer `react-scripts` par Vite ; TypeScript ≥ 5 ; Jest remplacé par Vitest (ou Jest conservé si la migration coûte trop, à trancher en revue, Q3).
+  1. Remplacer `react-scripts` par Vite ; TypeScript ≥ 5 ; Jest remplacé par Vitest (W4).
   2. `npm run build` produit toujours `client/build/` chargé par `QLiberationMap` ; le mode dev reste `localhost:3000` (ou le port Vite, avec la même logique de bascule dans Qt).
   3. `regenerate-api` continue de fonctionner.
 - **Critères d'acceptation :** build, tests et carte identiques à aujourd'hui ; temps de build mesuré avant/après dans la PR.
@@ -50,8 +50,10 @@ Cette spécification découpe le passage de l'interface Qt Widgets (`qt_ui/`, ~2
   1. Jetons (couleurs, typographie, espacements, rayons) dans un fichier unique : fond `#0B0F12`, panneaux `#12181D`/`#1A2229`, filets `#263039`, texte `#E6EAED`/`#9AA6B0`, accent `#E8A33D`, ami `#7FB8EE`, hostile `#F08A5D`, succès `#6FCB8F`. Couleurs par tâche de mission (DEAD, BARCAP, CAS, CSAR, STRIKE, AEW&C…).
   2. Polices embarquées (pas de dépendance réseau au lancement) : Barlow Condensed (titres, libellés en capitales), Inter (texte), JetBrains Mono (chiffres, heures, coordonnées).
   3. Composants de base : bouton (primaire/secondaire/danger), onglets, interrupteur, champ numérique, curseur, étiquette de tâche, jauge, carte de liste, tableau, panneau latéral, fenêtre modale, notification, info-bulle.
-  4. Symboles ami/hostile distincts par la forme (rectangle / losange, convention APP-6) et pas seulement par la couleur.
-  5. Thème clair : hors périmètre de la v1 (Q4).
+  4. Symboles ami/hostile distincts par la forme et pas seulement par la couleur, produits par `milsymbol` (APP-6) partout (W14).
+  5. Composants construits sur les primitives Radix UI (W6).
+  6. Thème sombre uniquement (W5).
+  7. Mise en page valable de 1366×768 à 1920×1080 et au-delà (W15).
 - **Critères d'acceptation :** une page « catalogue » de développement montre chaque composant dans ses états ; tests de rendu.
 
 ### WEB-00.3 — Coquille plein écran et navigation · P1
@@ -61,14 +63,15 @@ Cette spécification découpe le passage de l'interface Qt Widgets (`qt_ui/`, ~2
   1. Derrière une option (préférence ou variable d'environnement), la vue web occupe toute la fenêtre Qt ; barre de menus et barres d'outils Qt masquées.
   2. Le client gère la navigation entre écrans (routeur) : `/` vue de commandement, `/air-wing`, `/bases/:id`, `/packages/:id`, `/new-game`, `/settings`, `/debrief`.
   3. Tant qu'un écran n'est pas migré, son entrée ouvre le dialogue Qt existant via une route `/qt/*` (généralisation de l'existant).
-  4. L'option est désactivée par défaut jusqu'à WEB-01 inclus, puis activée par défaut.
+  4. L'option est désactivée par défaut jusqu'à la livraison de WEB-01 et WEB-05, puis activée par défaut (W10).
+  5. Raccourcis clavier minimaux et page d'aide `?` (W13).
 - **Critères d'acceptation :** basculer l'option ne casse ni la carte ni les dialogues Qt ; tous les menus actuels restent atteignables.
 
 ### WEB-00.4 — Accès sérialisé à `Game` · P1
 
 - **Constat :** voir §1 « Concurrence ».
 - **Exigences :**
-  1. Un point d'entrée unique exécute toute lecture-écriture de `Game` venant de l'API sur un seul fil (verrou global ou exécution sur le thread propriétaire, Q1).
+  1. Un verrou global réentrant protège toute lecture-écriture de `Game` venant de l'API, de la simulation et des actions Qt restantes (W2).
   2. Les événements vers `/eventstream` sont publiés de façon sûre entre threads (`loop.call_soon_threadsafe` ou équivalent).
   3. La simulation (avance rapide) et les commandes ne s'exécutent pas en même temps.
 - **Critères d'acceptation :** test de charge pytest (commandes concurrentes pendant un tick de simulation) sans exception ni état incohérent.
@@ -76,7 +79,7 @@ Cette spécification découpe le passage de l'interface Qt Widgets (`qt_ui/`, ~2
 ### WEB-00.5 — Conventions de l'API de commandes · P1
 
 - **Exigences :**
-  1. Lectures en `GET` renvoyant des DTO ; commandes en `POST /commands/<domaine>/<action>` (ou REST par ressource, Q2) renvoyant le résultat ou une erreur métier `4xx` avec message lisible.
+  1. Lectures en `GET` renvoyant des DTO ; commandes REST par ressource (W3) renvoyant le résultat ou une erreur métier `4xx` avec message lisible.
   2. Chaque commande publie les événements nécessaires pour que tous les écrans ouverts se mettent à jour (budget, ATO, base…), sans rechargement complet.
   3. Les commandes passent par la même logique métier que les dialogues Qt actuels (extraction de cette logique hors de `qt_ui/` quand elle y vit, par exemple les modèles de `qt_ui/models.py`).
   4. Le client généré est régénéré dans chaque PR qui change l'API.
@@ -89,7 +92,7 @@ Cette spécification découpe le passage de l'interface Qt Widgets (`qt_ui/`, ~2
 
 ### WEB-00.7 — Pont natif · P2
 
-- **Exigences :** les actions qui demandent le système (choisir un fichier de sauvegarde, ouvrir un dossier, ouvrir un lien externe, quitter) passent par un pont unique (`QWebChannel` ou routes dédiées, Q5), remplaçable plus tard par Electron.
+- **Exigences :** les actions qui demandent le système (choisir un fichier de sauvegarde, ouvrir un dossier, ouvrir un lien externe, quitter) passent par des routes HTTP dédiées du serveur Python (W7), réutilisables avec Electron ou un navigateur.
 - **Critères d'acceptation :** Nouvelle partie, Ouvrir, Enregistrer, Enregistrer sous fonctionnent depuis l'interface web.
 
 ## 3. Écrans
@@ -100,7 +103,7 @@ Cette spécification découpe le passage de l'interface Qt Widgets (`qt_ui/`, ~2
 - **Exigences :**
   1. **Barre supérieure :** nom de campagne et théâtre, factions, tour, heure de début de mission, météo (infobulle base des nuages), budget et revenu par tour, équilibre des forces air/sol (ami/ennemi), accès Air Wing, Transfers, Intel, Settings, menu fichier.
   2. **Panneau Packages (gauche) :** onglets « Packages » et « Enemy ATO » ; filtre ; création ; cartes de package (tâche, cible, TOT, vols, alerte pilote manquant) ; sélection synchronisée avec la carte.
-  3. **Carte :** la carte actuelle, avec boutons de calques en surimpression (lignes de front, menaces, plans de vol, routes de ravitaillement, portées).
+  3. **Carte :** la carte actuelle, avec fond sombre par défaut (W8) et boutons de calques en surimpression (lignes de front, menaces, plans de vol, routes de ravitaillement, portées).
   4. **Inspecteur contextuel :** clic sur une base → fiche flottante (état piste, parking, dépôts, actions Acheter / Unités au sol / Réparer) menant à WEB-02 ; clic sur un TGO → fiche équivalente.
   5. **Frise temporelle :** packages sur l'axe du temps de mission, TOT visibles, curseur d'heure de simulation.
   6. **Actions de tour :** « Begin Campaign » / « End turn » et « Take off » en bas à droite, avec les mêmes confirmations qu'aujourd'hui (pas de pilote joueur, pilotes manquants, TOT dans le passé avec correction automatique) ; contrôles de vitesse de simulation si activés.
@@ -132,7 +135,7 @@ Cette spécification découpe le passage de l'interface Qt Widgets (`qt_ui/`, ~2
   - **WEB-04.3 Emport :** choix de l'emport par défaut ou personnalisé, pylône par pylône, filtrage par date si l'option est active.
   - **WEB-04.4 Route :** carte et tableau des points (altitude, heure, carburant), ajout/suppression/déplacement, recréation, alerte de point dans une zone de menace.
   - **WEB-04.5 Radios, TACAN, ICLS, Link 16 :** les dialogues actuels deviennent des sections du vol.
-- **Critères d'acceptation :** les plans de vol générés sont identiques (même mission `.miz`) pour une même saisie avant et après migration, vérifié par un test de comparaison sur une campagne de référence.
+- **Critères d'acceptation :** pour une même saisie, les plans de vol générés sont identiques avant et après migration, vérifié par le test automatisé de W16 (empreinte des points, heures et emports à graine fixe).
 - **Dépend de :** WEB-01.
 
 ### WEB-05 — Attente de résultat et rapport de fin de mission · P1
@@ -159,7 +162,7 @@ Cette spécification découpe le passage de l'interface Qt Widgets (`qt_ui/`, ~2
 ### WEB-08 — Écrans secondaires · P3
 
 - **Sources :** `PendingTransfersDialog.py`, `windows/intel.py`, `windows/finances`, `windows/stats`, `windows/notes`, `windows/logs`, `windows/infos`, `QUnitInfoWindow.py`, `CareerDialog.py`, `windows/groundobject/` (infos, achat et remplacement de TGO), à propos, liens externes, import de gabarits, Pretense.
-- **Exigences :** un écran ou panneau web par fonction, même style ; regroupement possible (Intel + Stats + Finances dans un écran « Rapports », Q6).
+- **Exigences :** un écran ou panneau web par fonction, même style ; Intel, Stats et Finances regroupés dans un écran « Rapports » à onglets (W11).
 - **Dépend de :** WEB-01.
 
 ### WEB-09 — Retrait de Qt Widgets · P3
@@ -185,16 +188,30 @@ Cette spécification découpe le passage de l'interface Qt Widgets (`qt_ui/`, ~2
 4. WEB-03, WEB-07, WEB-00.6, WEB-00.7, puis WEB-06.
 5. WEB-08, puis WEB-09.
 
-## 6. Questions ouvertes (à trancher en revue)
+Toutes les PR sont fusionnées dans `dev` (W18). Le plan de test en jeu reprend quand l'interface web est active par défaut (W19).
 
-| # | Question | Proposition |
+## 6. Décisions de la revue du 2026-10-29
+
+Ces décisions priment sur le reste du document en cas de contradiction.
+
+| # | Sujet | Décision |
 |---|---|---|
-| Q1 | Sérialisation de `Game` : verrou global réentrant, ou exécution de toutes les commandes sur le thread Qt ? | Verrou global réentrant, simple et indépendant de la coquille (utile pour WEB-09). |
-| Q2 | Forme de l'API de commandes : `POST /commands/...` ou REST par ressource ? | REST par ressource, cohérent avec les routes existantes. |
-| Q3 | Vitest ou garder Jest après Vite ? | Vitest. |
-| Q4 | Thème clair en v1 ? | Non, sombre seulement. |
-| Q5 | Pont natif : `QWebChannel` ou routes HTTP ? | Routes HTTP, réutilisables avec Electron. |
-| Q6 | Regrouper Intel, Stats et Finances dans un écran « Rapports » ? | Oui. |
-| Q7 | Bibliothèque de composants (Radix/Headless UI) ou composants maison ? | Primitives Radix (accessibilité gratuite) habillées par nos jetons. |
-| Q8 | Option « interface web » : quand l'activer par défaut ? | Après WEB-01 et WEB-05 (boucle de tour complète). |
-| Q9 | Faut-il garder l'interface Qt en secours pendant toute la migration ? | Non : chaque lot retire son écran Qt (règle 3). |
+| W1 | Ambition | Migration complète jusqu'à WEB-09 (suppression de Qt Widgets) ; WEB-06 à 08 restent P2/P3. |
+| W2 | Concurrence | Verrou global réentrant (`RLock`) pris par chaque commande de l'API, le tick de simulation et les actions Qt restantes (WEB-00.4). |
+| W3 | Forme de l'API | REST par ressource, dans le style des routes existantes (`POST /packages`, `DELETE /packages/{id}`, `POST /control-points/{id}/purchases`, `POST /turn/pass`…). |
+| W4 | Tests client | Vitest, introduit avec Vite (WEB-00.1). |
+| W5 | Thème | Sombre uniquement en v1 ; le thème clair pourra revenir par les jetons. |
+| W6 | Composants | Primitives Radix UI sans style, habillées par nos jetons. |
+| W7 | Pont natif | Routes HTTP du serveur Python qui ouvrent les dialogues natifs (pas de `QWebChannel`). |
+| W8 | Fond de carte | Fond sombre par défaut dans WEB-01, les fonds existants restant sélectionnables. |
+| W9 | Écrans Qt | Chaque lot supprime son écran Qt dès livraison ; pas d'interface Qt de secours. |
+| W10 | Activation | L'interface web devient active par défaut quand WEB-01 et WEB-05 sont livrés ; avant, derrière une option. |
+| W11 | Rapports | Intel, Stats et Finances regroupés dans un écran « Rapports » à onglets (WEB-08). |
+| W12 | Nouveautés | Frise temporelle et fiche contextuelle sur la carte font partie de WEB-01. |
+| W13 | Raccourcis | Jeu minimal porté par WEB-00.3 : `Échap` fermer, `1`–`5` calques, `N` nouveau package, `Ctrl+S` enregistrer, `?` aide. Aucun raccourci pour passer le tour ou décoller. |
+| W14 | Symbologie | `milsymbol` (APP-6) partout : carte, fiches, listes, frise. |
+| W15 | Résolution | Référence 1920×1080, minimum garanti 1366×768 (panneaux repliables, pas de défilement horizontal) ; téléphone hors périmètre. |
+| W16 | Non-régression WEB-04 | Test automatisé : partie de référence dans `tests/`, planification rejouée par l'API à graine fixe, comparaison d'une empreinte des plans de vol (points, heures, emports), pas du `.miz` octet par octet. |
+| W17 | Exécution | Spécification fusionnée dans `dev` ; une epic par `WEB-NN`, une issue par sous-lot avec `blocked_by` ; sous-agents en worktree, une PR chacun, fusion par l'orchestrateur. |
+| W18 | Branches | Une seule branche d'intégration, `dev` : les PR WEB y sont fusionnées directement, pas de branche longue. Les branches de travail sont supprimées à la fusion. |
+| W19 | Tests manuels | Le plan de test en jeu (`docs/dev/plan-de-test.md`) est suspendu ; il sera repris et complété avec les écrans web quand l'interface sera active par défaut (W10). Les lots WEB démarrent sans attendre. |
