@@ -252,6 +252,12 @@ def parse_args() -> argparse.Namespace:
         "--advanced-iads", action="store_true", help="Enable advanced IADS."
     )
 
+    new_game.add_argument(
+        "--squadrons-start-full",
+        action="store_true",
+        help="Fill every squadron to its aircraft limit on turn 0.",
+    )
+
     lint_weapons = subparsers.add_parser("lint-weapons")
     lint_weapons.add_argument("aircraft", help="Name of the aircraft variant to lint.")
 
@@ -272,6 +278,7 @@ def create_game(
     restrict_weapons_by_date: bool,
     advanced_iads: bool,
     use_new_squadron_rules: bool,
+    squadrons_start_full: bool,
 ) -> Game:
     first_start = liberation_install.init()
     if first_start:
@@ -321,6 +328,7 @@ def create_game(
             no_enemy_navy=False,
             tgo_config=campaign.load_ground_forces_config(),
             carrier_config=campaign.load_carrier_config(),
+            squadrons_start_full=squadrons_start_full,
         ),
         ModSettings(
             a4_skyhawk=False,
@@ -353,7 +361,7 @@ def create_game(
         ),
     )
     game = generator.generate()
-    game.begin_turn_0(squadrons_start_full=use_new_squadron_rules)
+    game.begin_turn_0(squadrons_start_full=squadrons_start_full)
     return game
 
 
@@ -487,6 +495,7 @@ def main():
                 args.restrict_weapons_by_date,
                 args.advanced_iads,
                 args.use_new_squadron_rules,
+                args.squadrons_start_full,
             )
     if args.subcommand == "lint-weapons":
         lint_weapon_data_for_aircraft(AircraftType.named(args.aircraft))

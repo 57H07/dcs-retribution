@@ -70,6 +70,8 @@
 * **[UX]** Widget colours that were hard-coded (frequency/TACAN/ICLS warnings, logs and notes boxes, calendar, stats charts, links) now come from the design tokens and follow the theme; a test rejects new hard-coded colours in the UI code, and the unused `style.css` stylesheet was removed. (GFX-01.3)
 
 ## Fixes
+* **[Engine]** The `new-game` command line no longer crashes on a missing `squadrons_start_full` generator setting; it gains a `--squadrons-start-full` flag.
+* **[CSAR]** Right-clicking an enemy downed pilot no longer opens an empty package dialog: only friendly pilots offer a CSAR mission.
 * **[Campaign]** CSAR: a downed pilot whose survival countdown runs out is now dead instead of missing in action forever. New setting "Unrescued pilots can be taken prisoner" (off by default) keeps the capture flow, with a distinct "Prisoner of war" status; prisoners in existing saves stay prisoners, other missing pilots load as dead. (#64)
 * **[Campaign]** CSAR: a prisoner of war keeps their squadron slot, so no replacement is recruited while they are held. A freed prisoner who finds the squadron full (pilot limit lowered meanwhile) goes on leave instead of overfilling it. (#63)
 * **[Campaign]** CSAR: the "CSAR rescues AI-controlled downed pilots" setting now has an effect. Unchecked, an AI pilot who ejects is lost with the aircraft and only player pilots go down on the map. (#69)

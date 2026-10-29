@@ -767,7 +767,7 @@ class Settings:
         max=100,
         detail=(
             "Chance of pilot survival and becoming a downed pilot for aircraft losses "
-            "where DCS did not report an ejection (AI kills and all losses on skipped/simulated turns)."
+            "where DCS did not report an ejection (AI kills and all losses on skipped/simulated turns). "
             "Real in-mission ejections always produce a downed pilot."
         ),
     )
