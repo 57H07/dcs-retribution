@@ -7,6 +7,7 @@ export enum Tags {
   FLIGHT_PLAN = "FlightPlan",
   TOP_BAR = "TopBar",
   SETTINGS = "Settings",
+  TIMELINE = "Timeline",
   PREFERENCES = "Preferences",
   PACKAGES = "Packages",
 }
@@ -30,8 +31,10 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
   endpoints: {
     // /game/ (WEB-01.1): the top bar refreshes after each turn action.
     getTopBar: { providesTags: [Tags.TOP_BAR] },
-    passTurn: { invalidatesTags: [Tags.TOP_BAR] },
-    fixTots: { invalidatesTags: [Tags.TOP_BAR] },
+    passTurn: { invalidatesTags: [Tags.TOP_BAR, Tags.TIMELINE] },
+    fixTots: { invalidatesTags: [Tags.TOP_BAR, Tags.TIMELINE] },
+    // /game/timeline (WEB-01.4): refetched with the top bar on flight events.
+    getTimeline: { providesTags: [Tags.TIMELINE] },
     generateMission: { invalidatesTags: [Tags.TOP_BAR] },
     setSimSpeed: { invalidatesTags: [Tags.TOP_BAR] },
     // /packages/ (WEB-01.2): also refetched on flight events (eventstream.tsx).

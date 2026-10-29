@@ -4,6 +4,7 @@
 // WEB-01.4 the timeline. Both side panels collapse to a rail (W15, 1366x768).
 import { Button, SidePanel } from "../ui";
 import styles from "./CommandView.module.css";
+import { MissionTimeline } from "./MissionTimeline";
 import { TurnActions } from "./TurnActions";
 import { PackagesPanel } from "./packages/PackagesPanel";
 import { ReactNode, useId, useState } from "react";
@@ -56,9 +57,7 @@ export function CommandView({
             </Button>
           </div>
           <div id={timelineId} hidden={!timelineOpen}>
-            {timeline ?? (
-              <p className={styles.empty}>No package scheduled yet.</p>
-            )}
+            {timeline ?? <MissionTimeline />}
           </div>
         </section>
       </div>

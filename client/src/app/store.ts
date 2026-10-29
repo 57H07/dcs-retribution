@@ -7,6 +7,7 @@ import frontLinesReducer from "../api/frontLinesSlice";
 import iadsNetworkReducer from "../api/iadsNetworkSlice";
 import mapReducer from "../api/mapSlice";
 import navMeshReducer from "../api/navMeshSlice";
+import selectionReducer from "../api/selectionSlice";
 import supplyRoutesReducer from "../api/supplyRoutesSlice";
 import tgosReducer from "../api/tgosSlice";
 import threatZonesReducer from "../api/threatZonesSlice";
@@ -28,6 +29,7 @@ const rootReducer = combineReducers({
   frontLines: frontLinesReducer,
   map: mapReducer,
   navmeshes: navMeshReducer,
+  selection: selectionReducer,
   supplyRoutes: supplyRoutesReducer,
   iadsNetwork: iadsNetworkReducer,
   tgos: tgosReducer,

@@ -158,7 +158,8 @@ export const handleStreamedEvents = (
   }
 
   if (topBarChanged(events)) {
-    dispatch(liberationApi.util.invalidateTags([Tags.TOP_BAR]));
+    // The timeline (WEB-01.4) shows the same flights and turn.
+    dispatch(liberationApi.util.invalidateTags([Tags.TOP_BAR, Tags.TIMELINE]));
   }
   if (packagesChanged(events)) {
     dispatch(liberationApi.util.invalidateTags([Tags.PACKAGES]));
