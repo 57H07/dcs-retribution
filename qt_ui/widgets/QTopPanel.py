@@ -122,11 +122,11 @@ class QTopPanel(QFrame):
         GameUpdateSignal.get_instance().gameupdated.connect(self.setGame)
         GameUpdateSignal.get_instance().budgetupdated.connect(self.budget_update)
 
-    @property
     def refresh_theme_icons(self, _variant: str = "") -> None:
         self.passTurnButton.setIcon(CONST.ICONS["PassTurn"])
         self.proceedButton.setIcon(CONST.ICONS["Proceed"])
 
+    @property
     def game(self) -> Optional[Game]:
         return self.game_model.game
 
