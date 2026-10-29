@@ -179,10 +179,18 @@ def test_concurrent_commands_during_sim_ticks() -> None:
                 state.log.append("qt")
             time.sleep(0.0005)
 
+    def wait_for_ticks() -> None:
+        # On a loaded machine the commands can all finish before the timer
+        # first fires; keep the sim running until it has ticked a few times.
+        deadline = time.monotonic() + 10
+        while sim.ticks < 3 and time.monotonic() < deadline:
+            time.sleep(0.001)
+
     loop.set_simulation_speed(SimSpeedSetting.X1000)
     try:
         errors = _run_threads(
-            [_command_worker(state, cp) for _ in range(COMMAND_THREADS)] + [qt_action]
+            [_command_worker(state, cp) for _ in range(COMMAND_THREADS)]
+            + [qt_action, wait_for_ticks]
         )
     finally:
         loop.pause()
