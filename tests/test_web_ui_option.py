@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from qt_ui import liberation_install
+from game import liberation_install
 
 
 @pytest.fixture

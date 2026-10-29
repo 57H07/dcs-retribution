@@ -15,6 +15,7 @@ from . import (
     mapzones,
     native,
     navmesh,
+    preferences,
     qt,
     supplyroutes,
     tgos,
@@ -38,6 +39,7 @@ app.include_router(gamesettings.router)
 app.include_router(mapzones.router)
 app.include_router(native.router)
 app.include_router(navmesh.router)
+app.include_router(preferences.router)
 app.include_router(qt.router)
 app.include_router(supplyroutes.router)
 app.include_router(tgos.router)

@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from game.campaignloader import Campaign
-from qt_ui.liberation_install import get_dcs_install_directory
+from game.liberation_install import get_dcs_install_directory
 from qt_ui.widgets.QLiberationCalendar import QLiberationCalendar
 from qt_ui.windows.newgame.WizardPages.QFactionSelection import FactionSelection
 from qt_ui.windows.newgame.jinja_env import jinja_env

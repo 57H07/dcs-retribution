@@ -83,7 +83,7 @@ def init(preferences_path: Optional[Path] = None):
     global __theme_index
 
     if preferences_path is None:
-        from qt_ui.liberation_install import PREFERENCES_PATH
+        from game.liberation_install import PREFERENCES_PATH
 
         preferences_path = PREFERENCES_PATH
 

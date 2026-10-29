@@ -8,16 +8,26 @@ later. The file actions themselves (`files.py`) know nothing about Qt or HTTP: t
 """
 
 from .bridge import NativeBridge, NativeContext
-from .files import FileActionResult, FileOutcome, open_game, save_game, save_game_as
+from .files import (
+    FileActionResult,
+    FileOutcome,
+    FolderPurpose,
+    choose_folder,
+    open_game,
+    save_game,
+    save_game_as,
+)
 from .places import ExternalLink, NativeFolder
 
 __all__ = [
     "ExternalLink",
     "FileActionResult",
     "FileOutcome",
+    "FolderPurpose",
     "NativeBridge",
     "NativeContext",
     "NativeFolder",
+    "choose_folder",
     "open_game",
     "save_game",
     "save_game_as",

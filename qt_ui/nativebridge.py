@@ -111,6 +111,15 @@ class QtNativeBridge(NativeBridge):
 
         return self._wait_for(ask)
 
+    def choose_folder(self, title: str, start: str) -> str | None:
+        def ask() -> str | None:
+            path = QFileDialog.getExistingDirectory(
+                self._shell.window, title, dir=start
+            )
+            return path or None
+
+        return self._wait_for(ask)
+
     def game_loaded(self, game: Game, path: str) -> None:
         self._queue(lambda: self._shell.on_game_loaded(game, path))
 
