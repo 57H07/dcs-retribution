@@ -216,9 +216,8 @@ def test_simulated_loss_survived_counts_as_an_ejection() -> None:
     game = _game(csar_ejection_chance=100)
     pilot = Pilot("AI")
     flight = _flight([pilot])
-    flight.package.target.position.random_point_within.return_value = Point(
-        1, 2, _TERRAIN
-    )
+    flight.package.target.position = Point(1, 2, _TERRAIN)
+    flight.arrival.position = Point(1000, 2, _TERRAIN)
 
     _fly(game, flight, lost=(pilot, flight), ejected=False)
 
