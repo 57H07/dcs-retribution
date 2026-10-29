@@ -531,15 +531,17 @@ class Squadron:
 
     @property
     def _number_of_unfilled_pilot_slots(self) -> int:
-        # Downed, recovering and captive pilots still hold their roster slot: a
-        # downed pilot may be rescued, a recovering one will return and a prisoner
-        # is freed when their base is retaken, so we must not recruit a fresh pilot
-        # into a slot that may be reclaimed (CSAR-01 requirement 3, #63).
-        reserved = (
-            len(self.downed_pilots)
-            + len(self.recovering_pilots)
-            + len(self.prisoners_of_war)
-        )
+        # Downed and recovering pilots still hold their roster slot: a downed pilot
+        # may be rescued and a recovering one will return, both within a few turns,
+        # so we must not recruit a fresh pilot into a slot that will be reclaimed
+        # (CSAR-01 requirement 3).
+        #
+        # Prisoners of war do not: they are only freed if the base holding them is
+        # retaken, which for most of them never happens. Holding their slot froze
+        # the squadron for good -- no replacement pilots, so procurement could buy
+        # no aircraft either and the AI sat on an ever-growing budget. A prisoner
+        # freed into a full squadron goes on leave (see release_prisoner).
+        reserved = len(self.downed_pilots) + len(self.recovering_pilots)
         return self.pilot_limit - len(self.active_pilots) - reserved
 
     @property

@@ -140,33 +140,48 @@ def _prisoner() -> Pilot:
     return pilot
 
 
-def test_prisoner_keeps_their_slot_at_turn_end() -> None:
-    """#63: a full squadron with a prisoner does not recruit a replacement."""
+def test_prisoner_does_not_hold_their_slot() -> None:
+    """A prisoner is only freed if their base is retaken, so holding their slot
+    would freeze the squadron for good: a replacement is recruited instead."""
     prisoner = _prisoner()
     sqn = _make_squadron([Pilot(f"A{i}") for i in range(9)] + [prisoner])
-    sqn.pilot_pool = []
-    sqn.available_pilots = []
-
-    assert sqn._number_of_unfilled_pilot_slots == 0
-    sqn.replenish_lost_pilots()
-    assert len(sqn.current_roster) == 10
+    assert sqn._number_of_unfilled_pilot_slots == 1
+    assert sqn.replenish_count == 1
+    assert sqn.expected_pilots_next_turn == 10
 
 
-def test_freed_prisoner_reclaims_their_slot() -> None:
+def test_squadron_of_prisoners_recruits_and_can_buy_aircraft_again() -> None:
+    """Regression: a squadron whose pilots were all captured never recruited
+    again, so procurement (capped by expected pilots) bought it no aircraft and
+    the AI budget grew turn after turn."""
+    from game.procurement import ProcurementAi
+
+    sqn = _make_squadron([_prisoner() for _ in range(10)])
+    sqn.owned_aircraft = 0
+    sqn.pending_deliveries = 0
+    sqn.aircraft = SimpleNamespace(price=10)
+
+    assert sqn.expected_pilots_next_turn == 4  # replenishment rate
+    budget, fulfilled = ProcurementAi.fulfill_aircraft_request([sqn], 2, 100)
+    assert fulfilled
+    assert budget == 80
+    assert sqn.pending_deliveries == 2
+
+
+def test_freed_prisoner_returns_to_a_squadron_with_room() -> None:
     prisoner = _prisoner()
-    sqn = _make_squadron([Pilot(f"A{i}") for i in range(9)] + [prisoner])
+    sqn = _make_squadron([Pilot(f"A{i}") for i in range(8)] + [prisoner])
 
     assert sqn.release_prisoner(prisoner, 2)
     assert prisoner.recovering
-    assert sqn._number_of_unfilled_pilot_slots == 0
+    assert sqn._number_of_unfilled_pilot_slots == 1
 
 
 def test_freed_prisoner_goes_on_leave_when_the_squadron_is_full() -> None:
-    """The documented rule for #63: if the limit was lowered while they were held,
-    the freed pilot goes on leave (outside the limit) rather than overfilling."""
+    """The documented rule for #63: a prisoner whose slot was refilled while they
+    were held goes on leave (outside the limit) rather than overfilling."""
     prisoner = _prisoner()
-    sqn = _make_squadron([Pilot(f"A{i}") for i in range(9)] + [prisoner])
-    sqn.settings.squadron_pilot_limit = 9
+    sqn = _make_squadron([Pilot(f"A{i}") for i in range(10)] + [prisoner])
 
     assert not sqn.release_prisoner(prisoner, 2)
     assert prisoner.on_leave
