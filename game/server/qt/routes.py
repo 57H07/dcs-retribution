@@ -7,7 +7,7 @@ from game import Game
 from game.commands import CommandError
 from game.gamelock import locked
 from game.theater.player import Player
-from .models import QtDialog, QtLink
+from .models import QtDialog
 from ..commanderrors import command_error_responses
 from ..dependencies import GameContext, QtCallbacks, QtContext
 
@@ -176,18 +176,6 @@ def open_qt_dialog(
     if dialog.needs_game and game is None:
         raise CommandError("No campaign is loaded.")
     open_dialog(dialog)
-
-
-@router.post(
-    "/links/{link}",
-    operation_id="open_external_link",
-    status_code=status.HTTP_204_NO_CONTENT,
-    response_class=Response,
-)
-@locked
-def open_external_link(link: QtLink, qt: QtCallbacks = Depends(QtContext.get)) -> None:
-    """Opens a Help page in the system browser (the web view cannot)."""
-    _require_callback(qt.open_link)(link)
 
 
 @router.post(

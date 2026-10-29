@@ -164,6 +164,45 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: () => ({ url: `/map-zones/threats` }),
     }),
+    saveGame: build.mutation<SaveGameApiResponse, SaveGameApiArg>({
+      query: () => ({ url: `/native/save`, method: "POST" }),
+    }),
+    saveGameAs: build.mutation<SaveGameAsApiResponse, SaveGameAsApiArg>({
+      query: () => ({ url: `/native/save-as`, method: "POST" }),
+    }),
+    openGame: build.mutation<OpenGameApiResponse, OpenGameApiArg>({
+      query: () => ({ url: `/native/open`, method: "POST" }),
+    }),
+    openNewGameWizard: build.mutation<
+      OpenNewGameWizardApiResponse,
+      OpenNewGameWizardApiArg
+    >({
+      query: () => ({ url: `/native/new-game`, method: "POST" }),
+    }),
+    openNativeFolder: build.mutation<
+      OpenNativeFolderApiResponse,
+      OpenNativeFolderApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/native/open-folder/${queryArg.folder}`,
+        method: "POST",
+      }),
+    }),
+    openExternalLink: build.mutation<
+      OpenExternalLinkApiResponse,
+      OpenExternalLinkApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/native/open-link/${queryArg.link}`,
+        method: "POST",
+      }),
+    }),
+    quitApplication: build.mutation<
+      QuitApplicationApiResponse,
+      QuitApplicationApiArg
+    >({
+      query: () => ({ url: `/native/quit`, method: "POST" }),
+    }),
     getNavmesh: build.query<GetNavmeshApiResponse, GetNavmeshApiArg>({
       query: (queryArg) => ({
         url: `/navmesh/`,
@@ -233,15 +272,6 @@ const injectedRtkApi = api.injectEndpoints({
     openQtDialog: build.mutation<OpenQtDialogApiResponse, OpenQtDialogApiArg>({
       query: (queryArg) => ({
         url: `/qt/dialogs/${queryArg.dialog}`,
-        method: "POST",
-      }),
-    }),
-    openExternalLink: build.mutation<
-      OpenExternalLinkApiResponse,
-      OpenExternalLinkApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/qt/links/${queryArg.link}`,
         method: "POST",
       }),
     }),
@@ -432,6 +462,29 @@ export type ListUnculledZonesApiArg = void;
 export type GetThreatZonesApiResponse =
   /** status 200 Successful Response */ ThreatZoneContainer;
 export type GetThreatZonesApiArg = void;
+export type SaveGameApiResponse =
+  /** status 200 Successful Response */ FileActionResult;
+export type SaveGameApiArg = void;
+export type SaveGameAsApiResponse =
+  /** status 200 Successful Response */ FileActionResult;
+export type SaveGameAsApiArg = void;
+export type OpenGameApiResponse =
+  /** status 200 Successful Response */ FileActionResult;
+export type OpenGameApiArg = void;
+export type OpenNewGameWizardApiResponse = unknown;
+export type OpenNewGameWizardApiArg = void;
+export type OpenNativeFolderApiResponse =
+  /** status 204 Successful Response */ void;
+export type OpenNativeFolderApiArg = {
+  folder: NativeFolder;
+};
+export type OpenExternalLinkApiResponse =
+  /** status 204 Successful Response */ void;
+export type OpenExternalLinkApiArg = {
+  link: ExternalLink;
+};
+export type QuitApplicationApiResponse = unknown;
+export type QuitApplicationApiArg = void;
 export type GetNavmeshApiResponse =
   /** status 200 Successful Response */ NavMesh;
 export type GetNavmeshApiArg = {
@@ -475,11 +528,6 @@ export type OpenQtDialogApiResponse =
   /** status 204 Successful Response */ void;
 export type OpenQtDialogApiArg = {
   dialog: QtDialog;
-};
-export type OpenExternalLinkApiResponse =
-  /** status 204 Successful Response */ void;
-export type OpenExternalLinkApiArg = {
-  link: QtLink;
 };
 export type OpenEditPackageDialogApiResponse =
   /** status 204 Successful Response */ void;
@@ -760,12 +808,23 @@ export type Mission = {
 export type SimSpeedChange = {
   speed: SimSpeedJs;
 };
+export type FileOutcome = "saved" | "opened" | "cancelled";
+export type FileActionResult = {
+  outcome: FileOutcome;
+  path?: string;
+};
+export type NativeFolder = "saves" | "missions";
+export type ExternalLink =
+  | "discord"
+  | "github"
+  | "ukraine"
+  | "pretense-discord"
+  | "releases"
+  | "manual"
+  | "forum-thread"
+  | "issues";
 export type Player = "Neutral" | "Blue" | "Red";
 export type QtDialog =
-  | "new-game"
-  | "open-game"
-  | "save-game"
-  | "save-game-as"
   | "preferences"
   | "settings"
   | "stats"
@@ -780,17 +839,7 @@ export type QtDialog =
   | "reports"
   | "finances"
   | "intel"
-  | "debriefing"
-  | "quit";
-export type QtLink =
-  | "discord"
-  | "github"
-  | "ukraine"
-  | "pretense-discord"
-  | "releases"
-  | "manual"
-  | "forum-thread"
-  | "issues";
+  | "debriefing";
 export const {
   useListControlPointsQuery,
   useGetControlPointByIdQuery,
@@ -817,6 +866,13 @@ export const {
   useGetOfflineBasemapImageQuery,
   useListUnculledZonesQuery,
   useGetThreatZonesQuery,
+  useSaveGameMutation,
+  useSaveGameAsMutation,
+  useOpenGameMutation,
+  useOpenNewGameWizardMutation,
+  useOpenNativeFolderMutation,
+  useOpenExternalLinkMutation,
+  useQuitApplicationMutation,
   useGetNavmeshQuery,
   useOpenNewFrontLinePackageDialogMutation,
   useOpenNewTgoPackageDialogMutation,
@@ -826,7 +882,6 @@ export const {
   useSelectFlightMutation,
   useOpenControlPointInfoDialogMutation,
   useOpenQtDialogMutation,
-  useOpenExternalLinkMutation,
   useOpenEditPackageDialogMutation,
   useListSupplyRoutesQuery,
   useListTgosQuery,

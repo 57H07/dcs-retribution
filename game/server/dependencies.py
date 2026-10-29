@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from game import Game
     from game.ato import Flight, Package
     from game.game import TurnState
-    from game.server.qt.models import QtDialog, QtLink
+    from game.server.qt.models import QtDialog
     from qt_ui.models import GameModel
     from qt_ui.simcontroller import SimController
 
@@ -59,7 +59,6 @@ class QtCallbacks:
         select_flight: Callable[[Flight], None],
         turn_passed: Callable[[TurnState], None] | None = None,
         open_dialog: Callable[[QtDialog], None] | None = None,
-        open_link: Callable[[QtLink], None] | None = None,
         edit_package: Callable[[Package], None] | None = None,
         mission_generated: Callable[[], None] | None = None,
     ) -> None:
@@ -71,10 +70,9 @@ class QtCallbacks:
         # an API worker thread with the game lock held: it must only queue work onto
         # the Qt main thread (emit a signal), never block on it.
         self.turn_passed = turn_passed
-        # Open a not-yet-migrated Qt screen, an external link or the package editor
+        # Open a not-yet-migrated Qt screen or the package editor
         # for the web UI (WEB-00.3). Same contract as turn_passed: emit a signal.
         self.open_dialog = open_dialog
-        self.open_link = open_link
         self.edit_package = edit_package
         # Opens the Qt window waiting for the mission result once the web UI took
         # off (WEB-01.1), until WEB-05.1 migrates it. Same contract: emit a signal.
