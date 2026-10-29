@@ -724,6 +724,209 @@
         }
       }
     },
+    "/native/save": {
+      "post": {
+        "summary": "Save",
+        "description": "Saves to the current save file, or asks for one when the campaign has none.",
+        "operationId": "save_game",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileActionResultJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "when no campaign is loaded, another file dialog is open, the campaign changed during the dialog or the save file is incompatible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "when the file cannot be written",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/native/save-as": {
+      "post": {
+        "summary": "Save As",
+        "operationId": "save_game_as",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileActionResultJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "when no campaign is loaded, another file dialog is open, the campaign changed during the dialog or the save file is incompatible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "when the file cannot be written",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/native/open": {
+      "post": {
+        "summary": "Open Save",
+        "description": "Asks for a save file and loads it; the new campaign arrives as events.",
+        "operationId": "open_game",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileActionResultJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "when no campaign is loaded, another file dialog is open, the campaign changed during the dialog or the save file is incompatible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "when the file cannot be written",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/native/new-game": {
+      "post": {
+        "summary": "New Game",
+        "description": "Opens the new campaign wizard without waiting for it.",
+        "operationId": "open_new_game_wizard",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        }
+      }
+    },
+    "/native/open-folder/{folder}": {
+      "post": {
+        "summary": "Open Folder",
+        "operationId": "open_native_folder",
+        "parameters": [
+          {
+            "name": "folder",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/NativeFolder"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/native/open-link/{link}": {
+      "post": {
+        "summary": "Open Link",
+        "description": "Opens a Help page in the system browser (the web view cannot).",
+        "operationId": "open_external_link",
+        "parameters": [
+          {
+            "name": "link",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExternalLink"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/native/quit": {
+      "post": {
+        "summary": "Quit Application",
+        "description": "Closes the application; the shell asks whether to save first.",
+        "operationId": "quit_application",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        }
+      }
+    },
     "/navmesh/": {
       "get": {
         "summary": "Get",
@@ -1056,38 +1259,6 @@
                 }
               }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/qt/links/{link}": {
-      "post": {
-        "summary": "Open External Link",
-        "description": "Opens a Help page in the system browser (the web view cannot).",
-        "operationId": "open_external_link",
-        "parameters": [
-          {
-            "name": "link",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/QtLink"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -1635,6 +1806,47 @@
         ],
         "title": "DownedPilot"
       },
+      "ExternalLink": {
+        "type": "string",
+        "enum": [
+          "discord",
+          "github",
+          "ukraine",
+          "pretense-discord",
+          "releases",
+          "manual",
+          "forum-thread",
+          "issues"
+        ],
+        "title": "ExternalLink",
+        "description": "Pages of the Help menu, opened in the system browser."
+      },
+      "FileActionResultJs": {
+        "properties": {
+          "outcome": {
+            "$ref": "#/components/schemas/FileOutcome"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "outcome"
+        ],
+        "title": "FileActionResult",
+        "description": "Outcome of a file action once the player closed the dialog (WEB-00.7)."
+      },
+      "FileOutcome": {
+        "type": "string",
+        "enum": [
+          "saved",
+          "opened",
+          "cancelled"
+        ],
+        "title": "FileOutcome"
+      },
       "FlightJs": {
         "properties": {
           "id": {
@@ -2142,6 +2354,15 @@
         ],
         "title": "MapZones"
       },
+      "NativeFolder": {
+        "type": "string",
+        "enum": [
+          "saves",
+          "missions"
+        ],
+        "title": "NativeFolder",
+        "description": "Retribution folders the player may want to browse."
+      },
       "NavMeshJs": {
         "properties": {
           "polys": {
@@ -2227,10 +2448,6 @@
       "QtDialog": {
         "type": "string",
         "enum": [
-          "new-game",
-          "open-game",
-          "save-game",
-          "save-game-as",
           "preferences",
           "settings",
           "stats",
@@ -2244,25 +2461,9 @@
           "air-tasking-order",
           "reports",
           "debriefing",
-          "take-off",
-          "quit"
+          "take-off"
         ],
         "title": "QtDialog"
-      },
-      "QtLink": {
-        "type": "string",
-        "enum": [
-          "discord",
-          "github",
-          "ukraine",
-          "pretense-discord",
-          "releases",
-          "manual",
-          "forum-thread",
-          "issues"
-        ],
-        "title": "QtLink",
-        "description": "External pages of the Help menu, opened in the system browser by Qt."
       },
       "SupplyRouteJs": {
         "properties": {
