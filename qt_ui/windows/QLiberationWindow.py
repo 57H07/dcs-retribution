@@ -1,6 +1,5 @@
 import logging
 import traceback
-import webbrowser
 from datetime import datetime
 from pathlib import Path
 from typing import Callable, Optional
@@ -16,7 +15,6 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import (
     QApplication,
-    QFileDialog,
     QMainWindow,
     QMessageBox,
     QSplitter,
@@ -34,15 +32,24 @@ from game.persistency import pre_pretense_backups_dir
 from game.pretense.pretensemissiongenerator import PretenseMissionGenerator
 from game.server import EventStream, GameContext
 from game.server.dependencies import QtCallbacks, QtContext
-from game.server.qt.models import QtDialog, QtLink
+from game.server.qt.models import QtDialog
+from game.commands import CommandError
+from game.native import (
+    ExternalLink,
+    FileActionResult,
+    NativeContext,
+    open_game,
+    save_game,
+    save_game_as,
+)
 from game.theater import ControlPoint, MissionTarget, TheaterGroundObject
 from game.theater.controlpoint import motorpools_inside_capture_zone
 from qt_ui import liberation_install
 from qt_ui.dialogs import Dialog
 from qt_ui.models import GameModel
+from qt_ui.nativebridge import QtNativeBridge, QtShell
 from qt_ui.simcontroller import SimController
 from qt_ui.theme_manager import theme_signals
-from qt_ui.uiconstants import URLS
 from qt_ui.uiflags import UiFlags
 from qt_ui.uncaughtexceptionhandler import UncaughtExceptionHandler
 from qt_ui.widgets.QTopPanel import QTopPanel
@@ -62,17 +69,6 @@ from qt_ui.windows.preferences.QLiberationPreferencesWindow import (
 from qt_ui.windows.settings.QSettingsWindow import QSettingsWindow
 from qt_ui.windows.stats.QStatsWindow import QStatsWindow
 
-EXTERNAL_LINKS: dict[QtLink, str] = {
-    QtLink.DISCORD: "https://" + "discord.gg" + "/" + "b4x34Bg" + "4We",
-    QtLink.GITHUB: URLS["Repository"],
-    QtLink.UKRAINE: "https://shdwp.github.io/ukraine/",
-    QtLink.PRETENSE_DISCORD: "https://" + "discord.gg" + "/" + "PtPsb9Mpk6",
-    QtLink.RELEASES: URLS["Releases"],
-    QtLink.MANUAL: URLS["Manual"],
-    QtLink.FORUM_THREAD: URLS["ForumThread"],
-    QtLink.ISSUES: URLS["Issues"],
-}
-
 
 class QLiberationWindow(QMainWindow):
     new_package_signal = Signal(MissionTarget)
@@ -83,7 +79,6 @@ class QLiberationWindow(QMainWindow):
     turn_passed_signal = Signal(TurnState)
     # WEB-00.3: Qt screens opened by the web shell, from API worker threads too.
     open_dialog_signal = Signal(object)
-    open_link_signal = Signal(object)
     edit_package_signal = Signal(object)
     # WEB-07.1: a web command changed the game in depth (cheats, settings).
     game_changed_signal = Signal()
@@ -107,7 +102,6 @@ class QLiberationWindow(QMainWindow):
         self.control_point_info_signal.connect(self.open_control_point_info_dialog)
         self.select_flight_signal.connect(self.on_select_flight)
         self.open_dialog_signal.connect(self.open_dialog)
-        self.open_link_signal.connect(self.open_link)
         self.edit_package_signal.connect(self.open_edit_package_dialog)
         self.game_changed_signal.connect(
             lambda: GameUpdateSignal.get_instance().updateGame(self.game)
@@ -120,11 +114,21 @@ class QLiberationWindow(QMainWindow):
                 lambda flight: self.select_flight_signal.emit(flight),
                 turn_passed=lambda state: self.turn_passed_signal.emit(state),
                 open_dialog=lambda dialog: self.open_dialog_signal.emit(dialog),
-                open_link=lambda link: self.open_link_signal.emit(link),
                 edit_package=lambda package: self.edit_package_signal.emit(package),
                 game_changed=lambda: self.game_changed_signal.emit(),
             )
         )
+        # WEB-00.7: file dialogs, folders, links and quit for the web UI.
+        self.native_bridge = QtNativeBridge(
+            QtShell(
+                self,
+                on_game_loaded=self._on_game_opened,
+                on_game_saved=self._on_game_saved,
+                open_new_game=self.newGame,
+                quit=self.close,
+            )
+        )
+        NativeContext.set_bridge(self.native_bridge)
         Dialog.set_game(self.game_model)
         self.ato_panel = QAirTaskingOrderPanel(self.game_model)
         self.info_panel = QInfoPanel(self.game)
@@ -263,19 +267,25 @@ class QLiberationWindow(QMainWindow):
         self.showLiberationPrefDialogAction.triggered.connect(self.showLiberationDialog)
 
         self.openDiscordAction = QAction("&Discord Server", self)
-        self.openDiscordAction.triggered.connect(lambda: self.open_link(QtLink.DISCORD))
+        self.openDiscordAction.triggered.connect(
+            lambda: self.open_link(ExternalLink.DISCORD)
+        )
 
         self.openGithubAction = QAction("&Github Repo", self)
-        self.openGithubAction.triggered.connect(lambda: self.open_link(QtLink.GITHUB))
+        self.openGithubAction.triggered.connect(
+            lambda: self.open_link(ExternalLink.GITHUB)
+        )
 
         self.ukraineAction = QAction("&Ukraine", self)
         self.ukraineAction.setIcon(CONST.ICONS["Ukraine"])
-        self.ukraineAction.triggered.connect(lambda: self.open_link(QtLink.UKRAINE))
+        self.ukraineAction.triggered.connect(
+            lambda: self.open_link(ExternalLink.UKRAINE)
+        )
 
         self.pretenseLinkAction = QAction("&DCS: Pretense", self)
         self.pretenseLinkAction.setIcon(QIcon(CONST.ICONS["Pretense_discord"]))
         self.pretenseLinkAction.triggered.connect(
-            lambda: self.open_link(QtLink.PRETENSE_DISCORD)
+            lambda: self.open_link(ExternalLink.PRETENSE_DISCORD)
         )
 
         self.newPretenseAction = QAction(
@@ -367,12 +377,16 @@ class QLiberationWindow(QMainWindow):
         help_menu.addAction(self.openDiscordAction)
         help_menu.addAction(self.openGithubAction)
         help_menu.addAction(self.ukraineAction)
-        help_menu.addAction("&Releases", lambda: self.open_link(QtLink.RELEASES))
-        help_menu.addAction("&Online Manual", lambda: self.open_link(QtLink.MANUAL))
+        help_menu.addAction("&Releases", lambda: self.open_link(ExternalLink.RELEASES))
         help_menu.addAction(
-            "&ED Forum Thread", lambda: self.open_link(QtLink.FORUM_THREAD)
+            "&Online Manual", lambda: self.open_link(ExternalLink.MANUAL)
         )
-        help_menu.addAction("Report an &issue", lambda: self.open_link(QtLink.ISSUES))
+        help_menu.addAction(
+            "&ED Forum Thread", lambda: self.open_link(ExternalLink.FORUM_THREAD)
+        )
+        help_menu.addAction(
+            "Report an &issue", lambda: self.open_link(ExternalLink.ISSUES)
+        )
         help_menu.addAction(self.openLogsAction)
 
         help_menu.addSeparator()
@@ -425,24 +439,14 @@ class QLiberationWindow(QMainWindow):
         msg = f"A Pretense campaign mission has been successfully generated in {output}"
         QMessageBox.information(QApplication.focusWidget(), title, msg, QMessageBox.Ok)
 
-    def openFile(self):
-        if self.game is not None and self.game.savepath:
-            save_dir = self.game.savepath
-        else:
-            save_dir = str(persistency.save_dir())
-        file = QFileDialog.getOpenFileName(
-            self,
-            "Select game file to open",
-            dir=save_dir,
-            filter="*.retribution;;*.liberation",
-        )
-        if file is not None and file[0] != "":
-            game = persistency.load_game(file[0])
-            game = self.migrate_game(game, file[0])
-            self._warn_motorpool_capture_zone(game)
-            GameUpdateSignal.get_instance().game_loaded.emit(game)
+    def openFile(self) -> None:
+        self._run_file_action(open_game)
 
-            self.updateWindowTitle(file[0])
+    def _on_game_opened(self, game: Game, path: str) -> None:
+        """A save file was read and migrated (`game.native.open_game`)."""
+        self._warn_motorpool_capture_zone(game)
+        GameUpdateSignal.get_instance().game_loaded.emit(game)
+        self.updateWindowTitle(path)
 
     def migrate_game(self, game, path):
         if game:
@@ -466,34 +470,27 @@ class QLiberationWindow(QMainWindow):
             f"Make sure to include the campaign that fails to load, i.e.:\n\n{relative_path}",
         )
 
-    def saveGame(self):
+    def saveGame(self) -> None:
         logging.info("Saving game")
+        self._run_file_action(save_game)
 
-        if self.game.savepath:
-            persistency.save_game(self.game)
-            liberation_install.setup_last_save_file(self.game.savepath)
-            liberation_install.save_config()
-        else:
-            self.saveGameAs()
+    def saveGameAs(self) -> None:
+        self._run_file_action(save_game_as)
 
-    def saveGameAs(self):
-        if self.game is not None and self.game.savepath:
-            save_dir = self.game.savepath
-        else:
-            save_dir = str(persistency.save_dir())
-        file = QFileDialog.getSaveFileName(
-            self,
-            "Save As",
-            dir=save_dir,
-            filter="*.retribution;;*.liberation",
-        )
-        if file is not None:
-            self.game.savepath = file[0]
-            persistency.save_game(self.game)
-            liberation_install.setup_last_save_file(self.game.savepath)
-            liberation_install.save_config()
+    def _run_file_action(
+        self, action: Callable[..., FileActionResult]
+    ) -> FileActionResult | None:
+        """Runs a shared file action from a Qt menu, on the Qt main thread."""
+        try:
+            return action(self.native_bridge, lambda: self.game)
+        except CommandError as error:
+            QMessageBox.critical(self, "DCS Retribution", error.message)
+            return None
 
-            self.updateWindowTitle(file[0])
+    def _on_game_saved(self, path: str) -> None:
+        liberation_install.setup_last_save_file(path)
+        liberation_install.save_config()
+        self.updateWindowTitle(path)
 
     def updateWindowTitle(self, save_path: Optional[str] = None) -> None:
         """
@@ -719,10 +716,6 @@ class QLiberationWindow(QMainWindow):
     def open_dialog(self, dialog: QtDialog) -> None:
         """Opens a Qt screen for the web shell (WEB-00.3), on the Qt main thread."""
         handlers: dict[QtDialog, Callable[[], object]] = {
-            QtDialog.NEW_GAME: self.newGame,
-            QtDialog.OPEN_GAME: self.openFile,
-            QtDialog.SAVE_GAME: self.saveGame,
-            QtDialog.SAVE_GAME_AS: self.saveGameAs,
             QtDialog.PREFERENCES: self.showLiberationDialog,
             QtDialog.STATS: self.showStatsDialog,
             QtDialog.NOTES: self.showNotesDialog,
@@ -736,7 +729,6 @@ class QLiberationWindow(QMainWindow):
             QtDialog.REPORTS: lambda: self._show_panel("reports_window"),
             QtDialog.DEBRIEFING: self.show_last_debriefing,
             QtDialog.TAKE_OFF: self.top_panel.launch_mission,
-            QtDialog.QUIT: self.close,
         }
         # The game may have been unloaded between the request and this slot.
         if dialog.needs_game and self.game is None:
@@ -762,9 +754,8 @@ class QLiberationWindow(QMainWindow):
         debriefing.show()
         debriefing.raise_()
 
-    @staticmethod
-    def open_link(link: QtLink) -> None:
-        webbrowser.open_new_tab(EXTERNAL_LINKS[link])
+    def open_link(self, link: ExternalLink) -> None:
+        self.native_bridge.open_url(link.url)
 
     def open_edit_package_dialog(self, package: Package) -> None:
         model = self.game_model.ato_model.find_matching_package_model(package)
@@ -809,7 +800,7 @@ class QLiberationWindow(QMainWindow):
             QMessageBox.StandardButton.Cancel,
         )
         if result in [QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No]:
-            if result == QMessageBox.StandardButton.Yes:
+            if result == QMessageBox.StandardButton.Yes and self.game is not None:
                 self.saveGame()
             self._save_window_geometry()
             super().closeEvent(event)

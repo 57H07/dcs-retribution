@@ -248,6 +248,7 @@ def test_every_api_route_takes_the_game_lock() -> None:
         if isinstance(route, APIRoute)
         and route.name not in partially_locked
         and not getattr(route.endpoint, "takes_game_lock", False)
+        and not getattr(route.endpoint, "locks_game_itself", False)
     ]
     assert unlocked == []
 

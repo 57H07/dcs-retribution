@@ -121,10 +121,32 @@ that codegen cannot handle (send a string or a list of strings instead).
 ## 8. Screens not migrated yet: `/qt/*` (WEB-00.3)
 
 Until a screen has its web version, its client route opens the Qt dialog:
-`POST /qt/dialogs/{dialog}` (`QtDialog` in `game/server/qt/models.py`), `POST
-/qt/links/{link}` for the Help pages, and the older target routes
+`POST /qt/dialogs/{dialog}` (`QtDialog` in `game/server/qt/models.py`) and the
+older target routes
 (`/qt/create-package/...`, `/qt/info/...`). The route only calls a `QtCallbacks`
 callback that emits a `QLiberationWindow` signal, so the dialog opens on the Qt
 main thread after the lock is released. A migrated screen removes its `QtDialog`
 value, its Qt slot and the dialog itself (W9), and replaces its `QtScreen`
 element in `client/src/shell/routes.tsx`.
+
+## 9. System actions: the native bridge `/native/*` (WEB-00.7, W7)
+
+What a web page cannot do goes through `NativeBridge` (`game/native/bridge.py`),
+which the shell implements (`qt_ui/nativebridge.py` today, Electron or a browser
+later): `POST /native/save`, `/native/save-as`, `/native/open`, `/native/new-game`,
+`/native/quit`, `/native/open-folder/{saves|missions}`,
+`/native/open-link/{link}` (`ExternalLink` in `game/native/places.py`).
+
+- The file routes answer **when the player closes the dialog**, with
+  `FileActionResult` (`{"outcome": "saved"|"opened"|"cancelled", "path"}`), or a
+  `CommandError` (409: no campaign, a dialog already open, campaign changed during
+  the dialog, incompatible save; 500: the file cannot be written). The request
+  itself carries the result back: no correlation id, and the client simply awaits
+  the mutation to show a toast. A loaded campaign then reaches every screen through
+  the usual `game_loaded` event.
+- They hold the game lock only to read and write the campaign, never while the
+  dialog waits (`game/native/files.py`), so they are marked `@locks_game_itself`
+  instead of `@locked`. The other `/native/*` routes only queue work and use
+  `@locked`.
+- `game/native/files.py` holds the save/open rules (last save file, migration,
+  cancel); the Qt menus call the same functions.

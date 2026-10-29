@@ -55,3 +55,14 @@ def locked(func: Callable[P, T]) -> Callable[P, T]:
     # Lets tests check that every API route is serialized.
     setattr(wrapper, "takes_game_lock", True)
     return wrapper
+
+
+def locks_game_itself(func: Callable[P, T]) -> Callable[P, T]:
+    """Mark a route that takes the lock only around its `Game` accesses.
+
+    For routes that wait for the player in between (a native file dialog, WEB-00.7),
+    which must not hold the lock while waiting. The function itself must use
+    `game_lock()` around every access to `Game`.
+    """
+    setattr(func, "locks_game_itself", True)
+    return func
