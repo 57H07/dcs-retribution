@@ -44,7 +44,7 @@ from game.native import (
 )
 from game.theater import ControlPoint, MissionTarget, TheaterGroundObject
 from game.theater.controlpoint import motorpools_inside_capture_zone
-from qt_ui import liberation_install
+from game import liberation_install
 from qt_ui.dialogs import Dialog
 from qt_ui.models import GameModel
 from qt_ui.nativebridge import QtNativeBridge, QtShell
@@ -726,7 +726,6 @@ class QLiberationWindow(QMainWindow):
     def open_dialog(self, dialog: QtDialog) -> None:
         """Opens a Qt screen for the web shell (WEB-00.3), on the Qt main thread."""
         handlers: dict[QtDialog, Callable[[], object]] = {
-            QtDialog.PREFERENCES: self.showLiberationDialog,
             QtDialog.STATS: self.showStatsDialog,
             QtDialog.NOTES: self.showNotesDialog,
             QtDialog.LOGS: self.showLogsDialog,

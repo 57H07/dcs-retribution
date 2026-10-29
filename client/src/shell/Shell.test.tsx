@@ -80,12 +80,23 @@ describe("app bar", () => {
   it("opens a Qt dialog from a menu", async () => {
     const calls = recordFetch();
     renderShell();
+    await userEvent.click(screen.getByRole("button", { name: "Campaign" }));
+    await userEvent.click(
+      await screen.findByRole("menuitem", { name: "Stats" }),
+    );
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0].path).toBe("/qt/dialogs/stats");
+  });
+
+  it("opens the web Preferences screen from the File menu", async () => {
+    const calls = recordFetch();
+    const { router } = renderShell();
     await userEvent.click(screen.getByRole("button", { name: "File" }));
     await userEvent.click(
       await screen.findByRole("menuitem", { name: "Preferences" }),
     );
-    await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0].path).toBe("/qt/dialogs/preferences");
+    expect(router.state.location.pathname).toBe("/preferences");
+    expect(calls).toHaveLength(0);
   });
 
   it("saves as through the native bridge from the File menu", async () => {
@@ -145,7 +156,6 @@ describe("app bar", () => {
         "open-game",
         "save-game",
         "save-game-as",
-        "preferences",
         "quit",
         "transfers",
         "air-tasking-order",
@@ -174,6 +184,7 @@ describe("app bar", () => {
         "/new-game",
         "/air-wing",
         "/settings",
+        "/preferences",
         "/reports",
         "/debrief",
       ]),

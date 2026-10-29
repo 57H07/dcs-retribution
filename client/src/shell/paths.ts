@@ -7,6 +7,7 @@ export const PATHS = {
   package: (flightId: string) => `/packages/${flightId}`,
   newGame: "/new-game",
   settings: "/settings",
+  preferences: "/preferences",
   debrief: "/debrief",
   reports: "/reports",
 };

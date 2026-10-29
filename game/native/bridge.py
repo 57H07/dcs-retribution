@@ -15,8 +15,8 @@ class NativeBridge(ABC):
 
     Threading contract (see `game.gamelock`):
 
-    * `choose_open_path` and `choose_save_path` block until the player answers the
-      dialog. They are called *without* the game lock, from an API worker thread or
+    * `choose_open_path`, `choose_save_path` and `choose_folder` block until the
+      player answers the dialog. They are called *without* the game lock, from an API worker thread or
       from the shell's own UI thread, and must work from both.
     * Every other method may be called with the game lock held: it must only queue
       the work onto the shell's UI thread (or do something that never waits on
@@ -30,6 +30,10 @@ class NativeBridge(ABC):
     @abstractmethod
     def choose_save_path(self, start: str) -> str | None:
         """Ask where to save the campaign. None when the player cancels."""
+
+    @abstractmethod
+    def choose_folder(self, title: str, start: str) -> str | None:
+        """Ask for a folder (DCS folders of the preferences). None when cancelled."""
 
     @abstractmethod
     def game_loaded(self, game: Game, path: str) -> None:

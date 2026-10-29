@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
     QSpinBox,
 )
 
-from qt_ui import liberation_install
+from game import liberation_install
 from qt_ui.liberation_theme import THEMES, get_theme_index
 from qt_ui.theme_manager import switch_theme
 

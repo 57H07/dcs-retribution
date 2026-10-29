@@ -10,7 +10,7 @@ from PySide6.QtWebEngineWidgets import QWebEngineView
 
 from game.server.security import ApiKeyManager
 from game.server.settings import ServerSettings
-from qt_ui.liberation_install import server_port
+from game.liberation_install import server_port
 from qt_ui.liberation_theme import get_token_variant
 from qt_ui.models import GameModel
 from qt_ui.theme_manager import theme_signals

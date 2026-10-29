@@ -16,7 +16,7 @@ from game.ato.loadouts import Loadout
 from game.dcs.aircrafttype import AircraftType
 
 # TODO: Move this logic out of the UI.
-from qt_ui import liberation_install
+from game import liberation_install
 from qt_ui.main import inject_custom_payloads
 
 
