@@ -4,7 +4,7 @@ import {
   useClearControlPointDestinationMutation,
   useSetControlPointDestinationMutation,
 } from "../../api/liberationApi";
-import { makeLocationMarkerEventHandlers } from "./EventHandlers";
+import { useLocationMarkerEventHandlers } from "./EventHandlers";
 import { useControlPointIcon } from "./Icons";
 import LocationTooltipText from "./LocationTooltipText";
 import { MovementPath, MovementPathHandle } from "./MovementPath";
@@ -29,11 +29,11 @@ function formatLatLng(latLng: LatLng) {
 function destinationTooltipText(
   cp: ControlPoint,
   destinationish: LatLngLiteral,
-  inRange: boolean
+  inRange: boolean,
 ) {
   const destination = new LatLng(destinationish.lat, destinationish.lng);
   const distance = metersToNauticalMiles(
-    destination.distanceTo(cp.position)
+    destination.distanceTo(cp.position),
   ).toFixed(1);
   if (!inRange) {
     return `Out of range (${distance}nm away)`;
@@ -71,12 +71,12 @@ function PrimaryMarker(props: PrimaryMarkerProps) {
   const pathRef = useRef<MovementPathHandle | null>(null);
 
   const [hasDestination, setHasDestination] = useState<boolean>(
-    props.controlPoint.destination != null
+    props.controlPoint.destination != null,
   );
   const [position, setPosition] = useState<LatLngLiteral>(
     props.controlPoint.destination
       ? props.controlPoint.destination
-      : props.controlPoint.position
+      : props.controlPoint.position,
   );
 
   const setDestination = useCallback((destination: LatLng) => {
@@ -99,17 +99,17 @@ function PrimaryMarker(props: PrimaryMarkerProps) {
         ? destinationTooltipText(
             props.controlPoint,
             props.controlPoint.destination,
-            true
+            true,
           )
         : ReactDOMServer.renderToString(
-            <LocationTooltipText name={props.controlPoint.name} />
-          )
+            <LocationTooltipText name={props.controlPoint.name} />,
+          ),
     );
   });
 
   const icon = useControlPointIcon(props.controlPoint);
-  const locationClickHandlers = makeLocationMarkerEventHandlers(
-    props.controlPoint
+  const locationClickHandlers = useLocationMarkerEventHandlers(
+    props.controlPoint,
   );
 
   return (
@@ -148,15 +148,15 @@ function PrimaryMarker(props: PrimaryMarkerProps) {
             const destination = event.target.getLatLng();
             backend
               .get(
-                `/control-points/${props.controlPoint.id}/destination-in-range?lat=${destination.lat}&lng=${destination.lng}`
+                `/control-points/${props.controlPoint.id}/destination-in-range?lat=${destination.lat}&lng=${destination.lng}`,
               )
               .then((inRange) => {
                 markerRef.current?.setTooltipContent(
                   destinationTooltipText(
                     props.controlPoint,
                     destination,
-                    inRange.data
-                  )
+                    inRange.data,
+                  ),
                 );
               });
             pathRef.current?.setDestination(destination);

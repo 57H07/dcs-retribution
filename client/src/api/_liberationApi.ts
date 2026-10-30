@@ -13,6 +13,14 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({ url: `/control-points/${queryArg.cpId}` }),
     }),
+    getControlPointSummary: build.query<
+      GetControlPointSummaryApiResponse,
+      GetControlPointSummaryApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/control-points/${queryArg.cpId}/summary`,
+      }),
+    }),
     controlPointDestinationInRange: build.query<
       ControlPointDestinationInRangeApiResponse,
       ControlPointDestinationInRangeApiArg
@@ -384,6 +392,9 @@ const injectedRtkApi = api.injectEndpoints({
     getTgoById: build.query<GetTgoByIdApiResponse, GetTgoByIdApiArg>({
       query: (queryArg) => ({ url: `/tgos/${queryArg.tgoId}` }),
     }),
+    getTgoSummary: build.query<GetTgoSummaryApiResponse, GetTgoSummaryApiArg>({
+      query: (queryArg) => ({ url: `/tgos/${queryArg.tgoId}/summary` }),
+    }),
     tgoDestinationInRange: build.query<
       TgoDestinationInRangeApiResponse,
       TgoDestinationInRangeApiArg
@@ -450,6 +461,11 @@ export type ListControlPointsApiArg = void;
 export type GetControlPointByIdApiResponse =
   /** status 200 Successful Response */ ControlPoint;
 export type GetControlPointByIdApiArg = {
+  cpId: string;
+};
+export type GetControlPointSummaryApiResponse =
+  /** status 200 Successful Response */ ControlPointSummary;
+export type GetControlPointSummaryApiArg = {
   cpId: string;
 };
 export type ControlPointDestinationInRangeApiResponse =
@@ -686,6 +702,11 @@ export type GetTgoByIdApiResponse = /** status 200 Successful Response */ Tgo;
 export type GetTgoByIdApiArg = {
   tgoId: string;
 };
+export type GetTgoSummaryApiResponse =
+  /** status 200 Successful Response */ TgoSummary;
+export type GetTgoSummaryApiArg = {
+  tgoId: string;
+};
 export type TgoDestinationInRangeApiResponse =
   /** status 200 Successful Response */ boolean;
 export type TgoDestinationInRangeApiArg = {
@@ -745,6 +766,32 @@ export type ValidationError = {
 };
 export type HttpValidationError = {
   detail?: ValidationError[];
+};
+export type Runway = {
+  state: "operational" | "damaged" | "repairing";
+  repair_turns_remaining?: number;
+};
+export type Count = {
+  current: number;
+  total: number;
+};
+export type ControlPointSummary = {
+  id: string;
+  name: string;
+  blue: boolean;
+  sidc: string;
+  category: string;
+  distance_to_front_nm?: number;
+  runway?: Runway;
+  parking?: Count;
+  ground_units?: Count;
+  ammo_depots: Count;
+  fuel_depots: Count;
+  can_buy_aircraft: boolean;
+  can_buy_ground_units: boolean;
+  can_repair_runway: boolean;
+  can_afford_runway_repair: boolean;
+  runway_repair_cost: number;
 };
 export type HoldZones = {
   homeBubble: LatLng[][];
@@ -1104,9 +1151,22 @@ export type QtDialog =
   | "finances"
   | "intel"
   | "debriefing";
+export type TgoSummary = {
+  id: string;
+  name: string;
+  blue: boolean;
+  sidc: string;
+  category: string;
+  control_point_id: string;
+  control_point_name: string;
+  distance_to_front_nm?: number;
+  units: Count;
+  dead: boolean;
+};
 export const {
   useListControlPointsQuery,
   useGetControlPointByIdQuery,
+  useGetControlPointSummaryQuery,
   useControlPointDestinationInRangeQuery,
   useSetControlPointDestinationMutation,
   useClearControlPointDestinationMutation,
@@ -1164,6 +1224,7 @@ export const {
   useListSupplyRoutesQuery,
   useListTgosQuery,
   useGetTgoByIdQuery,
+  useGetTgoSummaryQuery,
   useTgoDestinationInRangeQuery,
   useSetTgoDestinationMutation,
   useClearTgoDestinationMutation,

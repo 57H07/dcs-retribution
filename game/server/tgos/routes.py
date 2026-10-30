@@ -8,6 +8,7 @@ from starlette.responses import Response
 
 from game import Game
 from .models import TgoJs
+from .summary import TgoSummaryJs
 from ..dependencies import GameContext
 from ..leaflet import LeafletPoint
 from game.theater.theatergroundobject import ShipGroundObject
@@ -25,6 +26,25 @@ def list_tgos(game: Game = Depends(GameContext.require)) -> list[TgoJs]:
 @locked
 def get_tgo(tgo_id: UUID, game: Game = Depends(GameContext.require)) -> TgoJs:
     return TgoJs.for_tgo(game.db.tgos.get(tgo_id))
+
+
+@router.get(
+    "/{tgo_id}/summary",
+    operation_id="get_tgo_summary",
+    response_model=TgoSummaryJs,
+)
+@locked
+def get_tgo_summary(
+    tgo_id: UUID, game: Game = Depends(GameContext.require)
+) -> TgoSummaryJs:
+    """What the map inspector shows about a ground object (WEB-01.3)."""
+    try:
+        tgo = game.db.tgos.get(tgo_id)
+    except KeyError:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, detail=f"Game has no TGO with ID {tgo_id}"
+        )
+    return TgoSummaryJs.for_tgo(game, tgo)
 
 
 @router.get(

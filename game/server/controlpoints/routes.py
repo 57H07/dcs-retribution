@@ -9,6 +9,7 @@ from starlette.responses import Response
 from game import Game
 from game.theater.player import Player
 from .models import ControlPointJs
+from .summary import ControlPointSummaryJs
 from ..dependencies import GameContext
 from ..leaflet import LeafletPoint
 
@@ -39,6 +40,25 @@ def get_control_point(
             detail=f"Game has no control point with ID {cp_id}",
         )
     return ControlPointJs.for_control_point(cp)
+
+
+@router.get(
+    "/{cp_id}/summary",
+    operation_id="get_control_point_summary",
+    response_model=ControlPointSummaryJs,
+)
+@locked
+def get_control_point_summary(
+    cp_id: UUID, game: Game = Depends(GameContext.require)
+) -> ControlPointSummaryJs:
+    """What the map inspector shows about a base (WEB-01.3)."""
+    cp = game.theater.find_control_point_by_id(cp_id)
+    if cp is None:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            detail=f"Game has no control point with ID {cp_id}",
+        )
+    return ControlPointSummaryJs.for_control_point(game, cp)
 
 
 @router.get(

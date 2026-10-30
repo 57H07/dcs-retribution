@@ -22,7 +22,7 @@ export const MovementPath = forwardRef<MovementPathHandle, MovementPathProps>(
           lineRef.current?.setLatLngs([props.source, destination]);
         },
       }),
-      [props]
+      [props],
     );
     return (
       <Polyline
@@ -32,5 +32,5 @@ export const MovementPath = forwardRef<MovementPathHandle, MovementPathProps>(
         ref={lineRef}
       />
     );
-  }
+  },
 );

@@ -1,5 +1,5 @@
 import { ControlPoint } from "../../api/_liberationApi";
-import { makeLocationMarkerEventHandlers } from "./EventHandlers";
+import { useLocationMarkerEventHandlers } from "./EventHandlers";
 import { useControlPointIcon } from "./Icons";
 import LocationTooltipText from "./LocationTooltipText";
 import { CircleMarker, Marker, Tooltip } from "react-leaflet";
@@ -11,6 +11,7 @@ interface StaticControlPointProps {
 export const StaticControlPoint = (props: StaticControlPointProps) => {
   const icon = useControlPointIcon(props.controlPoint);
   const cutOff = props.controlPoint.cut_off === true;
+  const eventHandlers = useLocationMarkerEventHandlers(props.controlPoint);
   return (
     <>
       {cutOff ? (
@@ -35,7 +36,7 @@ export const StaticControlPoint = (props: StaticControlPointProps) => {
         // other markers are helpful so we want to keep them, but make sure the CP
         // is always the clickable thing.
         zIndexOffset={1000}
-        eventHandlers={makeLocationMarkerEventHandlers(props.controlPoint)}
+        eventHandlers={eventHandlers}
       >
         <Tooltip>
           <LocationTooltipText name={props.controlPoint.name} cutOff={cutOff} />

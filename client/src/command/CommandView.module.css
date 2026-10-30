@@ -43,6 +43,23 @@
   max-width: calc(100% - 2 * var(--ui-space-lg));
 }
 
+/* Inspector card (WEB-01.3): top-right of the map, above the turn actions. */
+.inspector {
+  position: absolute;
+  top: var(--ui-space-lg);
+  right: var(--ui-space-lg);
+  bottom: calc(var(--ui-space-xxl) + 120px); /* clears the turn actions */
+  z-index: 1000; /* above the Leaflet panes and controls */
+  display: flex;
+  align-items: flex-start;
+  max-width: calc(100% - 2 * var(--ui-space-lg));
+  pointer-events: none; /* the empty area lets the map be used */
+}
+
+.inspector:empty {
+  display: none;
+}
+
 .timeline {
   display: flex;
   flex-direction: column;

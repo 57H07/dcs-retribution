@@ -11,3 +11,14 @@
   font-size: 13px;
   line-height: 1.35;
 }
+
+/* Web shell (WEB-01.3): the layer toolbar replaces the expanded layer
+   controls, which stay mounted (they hold the layers) but are not shown.
+   The remaining top-left controls (ruler) move below the toolbar. */
+.liberation-map--toolbar .leaflet-control-layers {
+  display: none;
+}
+
+.liberation-map--toolbar .leaflet-top.leaflet-left {
+  top: 48px;
+}

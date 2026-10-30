@@ -1,6 +1,8 @@
 import {
   LAYER_SHORTCUTS,
+  listLayersInControls,
   registerOverlayToggler,
+  selectBaseLayerInControls,
   toggleOverlay,
   toggleOverlayInControls,
 } from "./layerToggle";
@@ -67,6 +69,52 @@ describe("toggleOverlay", () => {
   });
 
   it("binds keys 1 to 5", () => {
-    expect(LAYER_SHORTCUTS.map((s) => s.key)).toEqual(["1", "2", "3", "4", "5"]);
+    expect(LAYER_SHORTCUTS.map((s) => s.key)).toEqual([
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+    ]);
+  });
+});
+
+describe("listLayersInControls", () => {
+  it("lists base layers and overlays with their state and control", () => {
+    const map = fakeMap();
+    const bases = control([
+      { name: "Dark gray", overlay: false },
+      { name: "Front lines", overlay: true },
+    ]);
+    const debug = control([{ name: "Blue navmesh", overlay: true }]);
+    map.addLayer(bases.entries[0].layer);
+
+    expect(listLayersInControls(map, [bases.control, debug.control])).toEqual([
+      { name: "Dark gray", overlay: false, active: true, control: 0 },
+      { name: "Front lines", overlay: true, active: false, control: 0 },
+      { name: "Blue navmesh", overlay: true, active: false, control: 1 },
+    ]);
+  });
+});
+
+describe("selectBaseLayerInControls", () => {
+  it("replaces the shown base layer and leaves overlays alone", () => {
+    const map = fakeMap();
+    const bases = control([
+      { name: "Dark gray", overlay: false },
+      { name: "Topographic", overlay: false },
+      { name: "Front lines", overlay: true },
+    ]);
+    const [dark, topo, front] = bases.entries.map((e) => e.layer);
+    map.addLayer(dark);
+    map.addLayer(front);
+
+    expect(selectBaseLayerInControls(map, [bases.control], "Topographic")).toBe(
+      true,
+    );
+    expect(map.layers.has(dark)).toBe(false);
+    expect(map.layers.has(topo)).toBe(true);
+    expect(map.layers.has(front)).toBe(true);
+    expect(selectBaseLayerInControls(map, [bases.control], "Nope")).toBe(false);
   });
 });
