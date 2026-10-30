@@ -47,6 +47,7 @@ from dcs.unitgroup import ShipGroup, StaticGroup
 from dcs.unittype import ShipType
 
 from game.ato.closestairfields import ObjectiveDistanceCache
+from game.config import RUNWAY_REPAIR_TURNS
 from game.controlpoint_influenceradius import ControlPointInfluenceRadius
 from game.ground_forces.combat_stance import CombatStance
 from game.point_with_heading import PointWithHeading
@@ -328,7 +329,7 @@ class RunwayStatus:
     def begin_repair(self) -> None:
         if self.repair_turns_remaining is not None:
             logging.error("Runway already under repair. Restarting.")
-        self.repair_turns_remaining = 4
+        self.repair_turns_remaining = RUNWAY_REPAIR_TURNS
 
     def process_turn(self) -> None:
         if self.repair_turns_remaining is not None:

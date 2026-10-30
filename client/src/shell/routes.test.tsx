@@ -16,7 +16,6 @@ describe("web shell routes", () => {
     ["/air-wing", "/qt/dialogs/air-wing"],
     ["/new-game", "/native/new-game"],
     ["/debrief", "/qt/dialogs/debriefing"],
-    ["/bases/cp-1", "/qt/info/control-point/cp-1"],
     ["/packages/flight-7", "/qt/edit-package/flight/flight-7"],
   ])(
     "%s opens its Qt screen once and returns to the command view",
@@ -26,6 +25,17 @@ describe("web shell routes", () => {
       await waitFor(() => expect(calls).toHaveLength(1));
       expect(calls[0]).toMatchObject({ method: "POST", path: qtRoute });
       expect(router.state.location.pathname).toBe("/");
+    },
+  );
+
+  it.each(["/bases/cp-1", "/bases/cp-1/intel"])(
+    "shows the web base screen on %s, without opening Qt",
+    async (path) => {
+      const calls = recordFetch();
+      const { router, findByText } = renderShell(path);
+      expect(await findByText("No campaign loaded.")).toBeInTheDocument();
+      expect(router.state.location.pathname).toBe(path);
+      expect(calls).toHaveLength(0);
     },
   );
 

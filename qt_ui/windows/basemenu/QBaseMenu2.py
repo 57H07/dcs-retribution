@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
 
 from game import Game
 from game.ato.flighttype import FlightType
+from game.commands import RUNWAY_REPAIR_ID, CommandError, order_repair
 from game.config import RUNWAY_REPAIR_COST
 from game.radio.ICLSContainer import ICLSContainer
 from game.radio.RadioFrequencyContainer import RadioFrequencyContainer
@@ -249,26 +250,18 @@ class QBaseMenu2(QDialog):
         return self.game_model.game.blue.budget >= RUNWAY_REPAIR_COST
 
     def begin_runway_repair(self) -> None:
-        if not self.can_afford_runway_repair:
+        # Same rules as the web base screen (WEB-02.1).
+        try:
+            with EventStream.event_context() as events:
+                order_repair(self.game_model.game, self.cp, RUNWAY_REPAIR_ID, events)
+        except CommandError as error:
             QMessageBox.critical(
                 self,
                 "Cannot repair runway",
-                f"Runway repair costs ${RUNWAY_REPAIR_COST}M but you have "
-                f"only ${self.game_model.game.blue.budget}M available.",
+                error.message,
                 QMessageBox.StandardButton.Ok,
             )
             return
-        if not self.can_repair_runway:
-            QMessageBox.critical(
-                self,
-                "Cannot repair runway",
-                f"Cannot repair this runway.",
-                QMessageBox.StandardButton.Ok,
-            )
-            return
-
-        self.cp.begin_runway_repair()
-        self.game_model.game.blue.budget -= RUNWAY_REPAIR_COST
         self.update_repair_button()
         self.update_intel_summary()
         GameUpdateSignal.get_instance().updateGame(self.game_model.game)
