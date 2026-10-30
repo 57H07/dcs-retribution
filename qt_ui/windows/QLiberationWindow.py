@@ -60,10 +60,8 @@ from qt_ui.windows.GameUpdateSignal import GameUpdateSignal
 from qt_ui.windows.PendingTransfersDialog import PendingTransfersDialog
 from qt_ui.windows.QDebriefingWindow import QDebriefingWindow
 from qt_ui.windows.basemenu.QBaseMenu2 import QBaseMenu2
-from qt_ui.windows.finances.QFinancesMenu import QFinancesMenu
 from qt_ui.windows.groundobject.QGroundObjectMenu import QGroundObjectMenu
 from qt_ui.windows.infos.QInfoPanel import QInfoPanel
-from qt_ui.windows.intel import IntelWindow
 from qt_ui.windows.logs.QLogsWindow import QLogsWindow
 from qt_ui.windows.newgame.QNewGameWizard import NewGameWizard
 from qt_ui.windows.notes.QNotesWindow import QNotesWindow
@@ -733,7 +731,6 @@ class QLiberationWindow(QMainWindow):
     def open_dialog(self, dialog: QtDialog) -> None:
         """Opens a Qt screen for the web shell (WEB-00.3), on the Qt main thread."""
         handlers: dict[QtDialog, Callable[[], object]] = {
-            QtDialog.STATS: self.showStatsDialog,
             QtDialog.NOTES: self.showNotesDialog,
             QtDialog.LOGS: self.showLogsDialog,
             QtDialog.ABOUT: self.showAboutDialog,
@@ -741,9 +738,7 @@ class QLiberationWindow(QMainWindow):
             QtDialog.PRETENSE_CAMPAIGN: self.newPretenseCampaign,
             QtDialog.AIR_WING: self.open_air_wing,
             QtDialog.TRANSFERS: self.open_transfers,
-            QtDialog.REPORTS: lambda: self._show_panel("reports_window"),
-            QtDialog.FINANCES: self.open_finances,
-            QtDialog.INTEL: self.open_intel,
+            QtDialog.INFO_PANEL: lambda: self._show_panel("reports_window"),
             QtDialog.DEBRIEFING: self.show_last_debriefing,
         }
         # The game may have been unloaded between the request and this slot.
@@ -762,14 +757,6 @@ class QLiberationWindow(QMainWindow):
 
     def open_transfers(self) -> None:
         self.dialog = PendingTransfersDialog(self.game_model)
-        self.dialog.show()
-
-    def open_finances(self) -> None:
-        self.dialog = QFinancesMenu(self.game)
-        self.dialog.show()
-
-    def open_intel(self) -> None:
-        self.dialog = IntelWindow(self.game)
         self.dialog.show()
 
     def on_results_accepted(self, debriefing: Debriefing) -> None:

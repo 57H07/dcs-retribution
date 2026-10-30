@@ -82,14 +82,14 @@ describe("useQtCommands", () => {
     const qt = renderHook(() => useQtCommands(), { wrapper }).result;
     act(() => {
       qt.current.openDialog("open-game");
-      qt.current.openDialog("stats");
+      qt.current.openDialog("notes");
       qt.current.openLink("github");
     });
     await waitFor(() => expect(calls).toHaveLength(3));
     expect(calls.map((c) => c.path).sort()).toEqual([
       "/native/open",
       "/native/open-link/github",
-      "/qt/dialogs/stats",
+      "/qt/dialogs/notes",
     ]);
   });
 });
@@ -97,7 +97,7 @@ describe("useQtCommands", () => {
 describe("helpers", () => {
   it("knows the file actions", () => {
     expect(isFileAction("save-game")).toBe(true);
-    expect(isFileAction("stats")).toBe(false);
+    expect(isFileAction("notes")).toBe(false);
   });
 
   it("words the outcome of a file action", () => {

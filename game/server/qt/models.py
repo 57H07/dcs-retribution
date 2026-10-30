@@ -3,6 +3,7 @@
 Each value is a path segment of `POST /qt/dialogs/{dialog}`. File actions, links and
 quit go through the native bridge instead (`/native/*`, WEB-00.7).
 A screen leaves `QtDialog` once its web version ships and its Qt dialog is deleted (W9).
+Stats, finances and intel left for the web reports screen (WEB-08.1).
 """
 
 from __future__ import annotations
@@ -11,7 +12,6 @@ from enum import Enum
 
 
 class QtDialog(str, Enum):
-    STATS = "stats"
     NOTES = "notes"
     LOGS = "logs"
     ABOUT = "about"
@@ -19,9 +19,7 @@ class QtDialog(str, Enum):
     PRETENSE_CAMPAIGN = "pretense-campaign"
     AIR_WING = "air-wing"
     TRANSFERS = "transfers"
-    REPORTS = "reports"
-    FINANCES = "finances"
-    INTEL = "intel"
+    INFO_PANEL = "info-panel"
     DEBRIEFING = "debriefing"
 
     @property

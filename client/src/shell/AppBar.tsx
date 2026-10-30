@@ -54,9 +54,10 @@ export function appMenus({
         { label: "New package", shortcut: "N", onSelect: onNewPackage },
         "separator",
         { label: "Settings", onSelect: () => navigate(PATHS.settings) },
-        { label: "Stats", onSelect: () => qt.openDialog("stats") },
+        { label: "Stats", onSelect: () => navigate(PATHS.reportTab("stats")) },
         { label: "Notes", onSelect: () => qt.openDialog("notes") },
         { label: "Reports", onSelect: () => navigate(PATHS.reports) },
+        { label: "Info panel", onSelect: () => qt.openDialog("info-panel") },
         { label: "Last debriefing", onSelect: () => navigate(PATHS.debrief) },
       ],
     },
@@ -128,8 +129,8 @@ export function AppBar({ onNewPackage, onShowHelp }: AppBarProps) {
         ))}
       </nav>
       <CampaignStatus
-        onOpenFinances={() => qt.openDialog("finances")}
-        onOpenIntel={() => qt.openDialog("intel")}
+        onOpenFinances={() => navigate(PATHS.reportTab("finances"))}
+        onOpenIntel={() => navigate(PATHS.reportTab("intel"))}
       />
       <nav className={styles.screens} aria-label="Campaign screens">
         <Button variant="ghost" onClick={() => navigate(PATHS.airWing)}>

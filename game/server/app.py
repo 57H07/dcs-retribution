@@ -19,6 +19,7 @@ from . import (
     packages,
     preferences,
     qt,
+    reports,
     supplyroutes,
     tgos,
     waypoints,
@@ -45,6 +46,7 @@ app.include_router(navmesh.router)
 app.include_router(packages.router)
 app.include_router(preferences.router)
 app.include_router(qt.router)
+app.include_router(reports.router)
 app.include_router(supplyroutes.router)
 app.include_router(tgos.router)
 app.include_router(waypoints.router)

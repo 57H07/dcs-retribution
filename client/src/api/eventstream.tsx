@@ -160,8 +160,15 @@ export const handleStreamedEvents = (
   }
 
   if (topBarChanged(events)) {
-    // The timeline (WEB-01.4) shows the same flights and turn.
-    dispatch(liberationApi.util.invalidateTags([Tags.TOP_BAR, Tags.TIMELINE]));
+    // The timeline (WEB-01.4) and the reports (WEB-08.1) show the same
+    // flights, turn, budget and forces.
+    dispatch(
+      liberationApi.util.invalidateTags([
+        Tags.TOP_BAR,
+        Tags.TIMELINE,
+        Tags.REPORTS,
+      ]),
+    );
   }
   if (inspectorChanged(events)) {
     dispatch(liberationApi.util.invalidateTags([Tags.INSPECTOR]));

@@ -11,6 +11,7 @@ export enum Tags {
   MISSION_RESULT = "MissionResult",
   TIMELINE = "Timeline",
   PREFERENCES = "Preferences",
+  REPORTS = "Reports",
   PACKAGES = "Packages",
 }
 
@@ -34,7 +35,12 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     // /game/ (WEB-01.1): the top bar refreshes after each turn action.
     getTopBar: { providesTags: [Tags.TOP_BAR] },
     passTurn: {
-      invalidatesTags: [Tags.TOP_BAR, Tags.TIMELINE, Tags.INSPECTOR],
+      invalidatesTags: [
+        Tags.TOP_BAR,
+        Tags.TIMELINE,
+        Tags.INSPECTOR,
+        Tags.REPORTS,
+      ],
     },
     fixTots: { invalidatesTags: [Tags.TOP_BAR, Tags.TIMELINE] },
     // /game/timeline (WEB-01.4): refetched with the top bar on flight events.
@@ -82,6 +88,10 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     listFlights: {
       providesTags: (result) => providesList(result, Tags.FLIGHT_PLAN),
     },
+    // /reports/ (WEB-08.1): refetched with the top bar (new turn, budget...).
+    getIntelReport: { providesTags: [Tags.REPORTS] },
+    getStatsReport: { providesTags: [Tags.REPORTS] },
+    getFinancesReport: { providesTags: [Tags.REPORTS] },
     // /settings/ (WEB-07.1): a change reloads the whole schema (values, markers).
     getSettings: { providesTags: [Tags.SETTINGS] },
     // A setting (cheats, fast forward...) may change what the top bar shows.
