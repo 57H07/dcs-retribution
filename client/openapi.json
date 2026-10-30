@@ -108,6 +108,158 @@
         }
       }
     },
+    "/control-points/{cp_id}/base": {
+      "get": {
+        "summary": "Get Base",
+        "description": "What the base screen shows (WEB-02.1): status, air defense, repairs.",
+        "operationId": "get_base",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control-points/{cp_id}/repairs/{repair_id}": {
+      "post": {
+        "summary": "Order Base Repair",
+        "description": "Pays for one repair listed by `GET /control-points/{cp_id}/base`.",
+        "operationId": "order_repair",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          },
+          {
+            "name": "repair_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Repair Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "not a player base, nothing to repair, or not enough budget",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control-points/{cp_id}/repair-all": {
+      "post": {
+        "summary": "Order All Base Repairs",
+        "description": "Pays for every orderable repair of the base, or for none.",
+        "operationId": "order_all_repairs",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "not a player base, nothing to repair, or not enough budget for all",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/control-points/{cp_id}/destination-in-range": {
       "get": {
         "summary": "Destination In Range",
@@ -2500,6 +2652,38 @@
   },
   "components": {
     "schemas": {
+      "AirDefenseJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "units": {
+            "$ref": "#/components/schemas/CountJs"
+          },
+          "operational": {
+            "type": "boolean",
+            "title": "Operational"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "category",
+          "units",
+          "operational"
+        ],
+        "title": "AirDefense"
+      },
       "BaseForcesJs": {
         "properties": {
           "id": {
@@ -2554,6 +2738,89 @@
           "income"
         ],
         "title": "BaseIncomeJs"
+      },
+      "BaseJs": {
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/ControlPointSummaryJs"
+          },
+          "budget": {
+            "type": "number",
+            "title": "Budget"
+          },
+          "tabs": {
+            "items": {
+              "$ref": "#/components/schemas/BaseTabJs"
+            },
+            "type": "array",
+            "title": "Tabs"
+          },
+          "air_defenses": {
+            "items": {
+              "$ref": "#/components/schemas/AirDefenseJs"
+            },
+            "type": "array",
+            "title": "Air Defenses"
+          },
+          "repairs": {
+            "items": {
+              "$ref": "#/components/schemas/RepairJs"
+            },
+            "type": "array",
+            "title": "Repairs"
+          },
+          "repair_all_cost": {
+            "type": "number",
+            "title": "Repair All Cost"
+          },
+          "repair_all_affordable": {
+            "type": "boolean",
+            "title": "Repair All Affordable"
+          },
+          "intel": {
+            "items": {
+              "$ref": "#/components/schemas/IntelGroupJs"
+            },
+            "type": "array",
+            "title": "Intel"
+          }
+        },
+        "type": "object",
+        "required": [
+          "summary",
+          "budget",
+          "tabs",
+          "air_defenses",
+          "repairs",
+          "repair_all_cost",
+          "repair_all_affordable",
+          "intel"
+        ],
+        "title": "Base"
+      },
+      "BaseTabJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "airfield",
+              "ground-forces",
+              "intel",
+              "convoys"
+            ],
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label"
+        ],
+        "title": "BaseTab"
       },
       "BuildingIncomeJs": {
         "properties": {
@@ -3499,6 +3766,27 @@
         ],
         "title": "InstallPreferencesUpdate"
       },
+      "IntelGroupJs": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "units": {
+            "items": {
+              "$ref": "#/components/schemas/UnitCountJs"
+            },
+            "type": "array",
+            "title": "Units"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "units"
+        ],
+        "title": "IntelGroup"
+      },
       "IntelJs": {
         "properties": {
           "friendly": {
@@ -4050,6 +4338,54 @@
           "debriefing"
         ],
         "title": "QtDialog"
+      },
+      "RepairJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "runway",
+              "buildings",
+              "aircraft"
+            ],
+            "title": "Kind"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "cost": {
+            "type": "number",
+            "title": "Cost"
+          },
+          "turns": {
+            "type": "integer",
+            "title": "Turns"
+          },
+          "in_progress": {
+            "type": "boolean",
+            "title": "In Progress"
+          },
+          "affordable": {
+            "type": "boolean",
+            "title": "Affordable"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "label",
+          "cost",
+          "turns",
+          "in_progress",
+          "affordable"
+        ],
+        "title": "Repair"
       },
       "RunwayJs": {
         "properties": {
