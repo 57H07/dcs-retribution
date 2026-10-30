@@ -13,6 +13,7 @@ from . import (
     game,
     gamesettings,
     mapzones,
+    missionresult,
     native,
     navmesh,
     packages,
@@ -38,6 +39,7 @@ app.include_router(frontlines.router)
 app.include_router(game.router)
 app.include_router(gamesettings.router)
 app.include_router(mapzones.router)
+app.include_router(missionresult.router)
 app.include_router(native.router)
 app.include_router(navmesh.router)
 app.include_router(packages.router)

@@ -49,7 +49,8 @@ _DIALOG = threading.Lock()
 
 
 @contextmanager
-def _one_dialog() -> Iterator[None]:
+def one_dialog() -> Iterator[None]:
+    """Hold while a native file dialog is open; refuse a second one."""
     if not _DIALOG.acquire(blocking=False):
         raise CommandError("A file dialog is already open.")
     try:
@@ -83,7 +84,7 @@ def save_game_as(bridge: NativeBridge, current_game: CurrentGame) -> FileActionR
     with game_lock():
         game = _require(current_game())
         start = _start_dir(game)
-    with _one_dialog():
+    with one_dialog():
         path = bridge.choose_save_path(start)
     if not path:
         return CANCELLED
@@ -110,7 +111,7 @@ def open_game(bridge: NativeBridge, current_game: CurrentGame) -> FileActionResu
     """Ask for a save file, read and migrate it, then hand it to the shell."""
     with game_lock():
         start = _start_dir(current_game())
-    with _one_dialog():
+    with one_dialog():
         path = bridge.choose_open_path(start)
     if not path:
         return CANCELLED
@@ -159,5 +160,5 @@ def choose_folder(
     bridge: NativeBridge, purpose: FolderPurpose, start: str
 ) -> str | None:
     """Ask for a folder; None when the player cancels. Never touches the game."""
-    with _one_dialog():
+    with one_dialog():
         return bridge.choose_folder(purpose.dialog_title, start)

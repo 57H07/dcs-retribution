@@ -139,13 +139,15 @@ describe("turn actions", () => {
       { [TOP_BAR]: topBar(), [CHECKS]: missionChecks() },
       { "/game/mission": MISSION },
     );
-    renderShell();
+    const { router } = renderShell();
     await userEvent.click(
       await screen.findByRole("button", { name: "Take off" }),
     );
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toMatchObject({ method: "POST", path: "/game/mission" });
     expect(await screen.findByText("Mission generated")).toBeInTheDocument();
+    // WEB-05.1: the waiting screen replaces the Qt waiting window.
+    expect(router.state.location.pathname).toBe("/waiting");
   });
 
   it("asks before an AI only mission and stops on No", async () => {
