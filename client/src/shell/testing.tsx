@@ -62,10 +62,11 @@ export function restoreFetch() {
 
 export function renderShell(path = "/") {
   const router = createMemoryRouter(ROUTES, { initialEntries: [path] });
+  const store = setupStore();
   const result = render(
-    <Provider store={setupStore()}>
+    <Provider store={store}>
       <RouterProvider router={router} />
     </Provider>,
   );
-  return { router, ...result };
+  return { router, store, ...result };
 }

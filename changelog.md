@@ -1,6 +1,8 @@
 # Retribution v1.6.0
 
 ## Features/Improvements
+* **[UI] The web interface is now on by default (W10).** The full-window web interface replaces the Qt main window at the next start. To go back to the Qt interface, turn off "Web interface" in Preferences and restart, or start Retribution with `RETRIBUTION_WEB_UI=0`. A preferences file that already says `"web_ui": false` keeps the Qt interface. (WEB-05.2)
+* **[UI]** Web after-action report (`/debrief`, the "Last debriefing" menu): verdict, air kills and ground units destroyed (friendly : enemy), pilots rescued, prisoners and still down, next-turn budget, the result of each package, the event log and the casualty lists of both sides. The waiting screen opens it when the mission ends; "Accept results" applies them exactly as the Qt path does (same `accept_results`), then the report shows what they decided (prisoners, budget, the engine's timestamped log) until "Continue". The report is built by `game/debriefingreport.py`, which the Qt debriefing window now shares for its casualty lists. (WEB-05.2)
 * **[Campaign]** Combat Search & Rescue (CSAR): ejected pilots go down on the map and can be rescued by CSAR helicopter flights (player or AI) before they go missing or are captured. Disabled by default for both sides, including in existing saves; enable it in the campaign settings. (taken over from `upstream#929` by Drexyl)
 * **[Campaign]** CSAR: optional automatic recovery of pilots who come down on land over friendly territory, away from enemy threat zones and front lines (both distances configurable). Off by default.
 * **[Campaign]** CSAR: optional bounty credited to a coalition's budget for each pilot its CSAR flights rescue, shown in the debriefing. Off by default (bounty 0).

@@ -24,6 +24,7 @@ from .missionresult import (
     MissionResultWaiter,
     ResultSim,
     abort_mission,
+    accept_and_report,
     accept_results,
 )
 from .sim import SpeedControlledSim, set_sim_speed
@@ -38,6 +39,7 @@ __all__ = [
     "ResultSim",
     "SpeedControlledSim",
     "abort_mission",
+    "accept_and_report",
     "accept_results",
     "fix_past_tots",
     "fix_tots",

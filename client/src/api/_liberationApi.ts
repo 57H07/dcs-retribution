@@ -200,6 +200,12 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: () => ({ url: `/game/mission/result` }),
     }),
+    getMissionReport: build.query<
+      GetMissionReportApiResponse,
+      GetMissionReportApiArg
+    >({
+      query: () => ({ url: `/game/mission/result/report` }),
+    }),
     loadMissionResultFile: build.mutation<
       LoadMissionResultFileApiResponse,
       LoadMissionResultFileApiArg
@@ -604,6 +610,9 @@ export type GetThreatZonesApiArg = void;
 export type GetMissionResultApiResponse =
   /** status 200 Successful Response */ MissionResult;
 export type GetMissionResultApiArg = void;
+export type GetMissionReportApiResponse =
+  /** status 200 Successful Response */ Debriefing;
+export type GetMissionReportApiArg = void;
 export type LoadMissionResultFileApiResponse =
   /** status 200 Successful Response */ MissionResult;
 export type LoadMissionResultFileApiArg = void;
@@ -1085,6 +1094,70 @@ export type MissionResult = {
   enemy_country?: string;
   losses: LossRow[];
 };
+export type DebriefingStatusJs = "none" | "pending" | "accepted";
+export type ToneJs = "good" | "bad" | "mixed" | "neutral";
+export type PilotLine = {
+  name: string;
+  aircraft: string;
+  squadron: string;
+  held_at?: string;
+};
+export type PackageResult = {
+  task: string;
+  target: string;
+  flights: string[];
+  lost: number;
+  aircraft: number;
+  result: string;
+  tone: ToneJs;
+};
+export type LossLine = {
+  name: string;
+  count: number;
+};
+export type DamagedUnitLine = {
+  friendly: boolean;
+  unit_type: string;
+  damage_percent: number;
+  unavailability: string;
+};
+export type ReportEvent = {
+  time?: string;
+  text: string;
+  tone: ToneJs;
+};
+export type AfterActionReport = {
+  turn: number;
+  date: string;
+  player_country: string;
+  enemy_country: string;
+  verdict: string;
+  verdict_tone: ToneJs;
+  summary: string;
+  air_kills_friendly: number;
+  air_kills_enemy: number;
+  ground_kills_friendly: number;
+  ground_kills_enemy: number;
+  bases_captured: number;
+  bases_lost: number;
+  pilots_rescued: PilotLine[];
+  rescue_bounty: number;
+  packages: PackageResult[];
+  friendly_losses: LossLine[];
+  enemy_losses: LossLine[];
+  damaged_units: DamagedUnitLine[];
+  events: ReportEvent[];
+  applied: boolean;
+  pilots_captured?: PilotLine[];
+  pilots_still_down?: number;
+  budget_next_turn?: number;
+  income_next_turn?: number;
+};
+export type Debriefing = {
+  status: DebriefingStatusJs;
+  can_accept: boolean;
+  report?: AfterActionReport;
+};
 export type FileOutcome = "saved" | "opened" | "cancelled";
 export type FileActionResult = {
   outcome: FileOutcome;
@@ -1173,8 +1246,7 @@ export type QtDialog =
   | "pretense-campaign"
   | "air-wing"
   | "transfers"
-  | "info-panel"
-  | "debriefing";
+  | "info-panel";
 export type UnitCountJs = {
   name: string;
   count: number;
@@ -1276,6 +1348,7 @@ export const {
   useListUnculledZonesQuery,
   useGetThreatZonesQuery,
   useGetMissionResultQuery,
+  useGetMissionReportQuery,
   useLoadMissionResultFileMutation,
   useAbortMissionMutation,
   useAcceptMissionResultMutation,

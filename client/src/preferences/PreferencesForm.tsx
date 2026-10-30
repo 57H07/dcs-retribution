@@ -237,11 +237,11 @@ export function PreferencesForm({
           />
         </Row>
         <Row
-          label="Web interface, experimental"
-          help="Fill the main window with the web interface."
+          label="Web interface"
+          help="Fill the main window with the web interface (on by default). Turn it off to use the classic Qt interface."
         >
           <Switch
-            aria-label="Web interface, experimental"
+            aria-label="Web interface"
             checked={draft.web_ui}
             onCheckedChange={(checked) => edit({ web_ui: checked })}
           />

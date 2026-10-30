@@ -1112,6 +1112,25 @@
         }
       }
     },
+    "/game/mission/result/report": {
+      "get": {
+        "summary": "Report",
+        "description": "The after-action report: of the result waiting to be accepted, else of the\nlast result accepted since the application started.",
+        "operationId": "get_mission_report",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DebriefingJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/game/mission/result/file": {
       "post": {
         "summary": "Load File",
@@ -1166,7 +1185,7 @@
     "/game/mission/result/accept": {
       "post": {
         "summary": "Accept",
-        "description": "\"Accept results\": applies the mission result and starts the next turn.\n\nThe Qt debriefing window then shows the report (until WEB-05.2).",
+        "description": "\"Accept results\": applies the mission result and starts the next turn.\n\nSame `accept_results` as the Qt waiting window; the report of the applied\nresult is then served by `GET /game/mission/result/report` (status\n\"accepted\"). The Qt widgets refresh and the campaign end is checked as after\nany turn (`QtCallbacks.turn_passed`), as closing the Qt debriefing did.",
         "operationId": "accept_mission_result",
         "responses": {
           "200": {
@@ -2500,6 +2519,156 @@
   },
   "components": {
     "schemas": {
+      "AfterActionReportJs": {
+        "properties": {
+          "turn": {
+            "type": "integer",
+            "title": "Turn"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "player_country": {
+            "type": "string",
+            "title": "Player Country"
+          },
+          "enemy_country": {
+            "type": "string",
+            "title": "Enemy Country"
+          },
+          "verdict": {
+            "type": "string",
+            "title": "Verdict"
+          },
+          "verdict_tone": {
+            "$ref": "#/components/schemas/ToneJs"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "air_kills_friendly": {
+            "type": "integer",
+            "title": "Air Kills Friendly"
+          },
+          "air_kills_enemy": {
+            "type": "integer",
+            "title": "Air Kills Enemy"
+          },
+          "ground_kills_friendly": {
+            "type": "integer",
+            "title": "Ground Kills Friendly"
+          },
+          "ground_kills_enemy": {
+            "type": "integer",
+            "title": "Ground Kills Enemy"
+          },
+          "bases_captured": {
+            "type": "integer",
+            "title": "Bases Captured"
+          },
+          "bases_lost": {
+            "type": "integer",
+            "title": "Bases Lost"
+          },
+          "pilots_rescued": {
+            "items": {
+              "$ref": "#/components/schemas/PilotLineJs"
+            },
+            "type": "array",
+            "title": "Pilots Rescued"
+          },
+          "rescue_bounty": {
+            "type": "integer",
+            "title": "Rescue Bounty"
+          },
+          "packages": {
+            "items": {
+              "$ref": "#/components/schemas/PackageResultJs"
+            },
+            "type": "array",
+            "title": "Packages"
+          },
+          "friendly_losses": {
+            "items": {
+              "$ref": "#/components/schemas/LossLineJs"
+            },
+            "type": "array",
+            "title": "Friendly Losses"
+          },
+          "enemy_losses": {
+            "items": {
+              "$ref": "#/components/schemas/LossLineJs"
+            },
+            "type": "array",
+            "title": "Enemy Losses"
+          },
+          "damaged_units": {
+            "items": {
+              "$ref": "#/components/schemas/DamagedUnitLineJs"
+            },
+            "type": "array",
+            "title": "Damaged Units"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/ReportEventJs"
+            },
+            "type": "array",
+            "title": "Events"
+          },
+          "applied": {
+            "type": "boolean",
+            "title": "Applied"
+          },
+          "pilots_captured": {
+            "title": "Pilots Captured",
+            "items": {
+              "$ref": "#/components/schemas/PilotLineJs"
+            },
+            "type": "array"
+          },
+          "pilots_still_down": {
+            "title": "Pilots Still Down",
+            "type": "integer"
+          },
+          "budget_next_turn": {
+            "title": "Budget Next Turn",
+            "type": "number"
+          },
+          "income_next_turn": {
+            "title": "Income Next Turn",
+            "type": "number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "turn",
+          "date",
+          "player_country",
+          "enemy_country",
+          "verdict",
+          "verdict_tone",
+          "summary",
+          "air_kills_friendly",
+          "air_kills_enemy",
+          "ground_kills_friendly",
+          "ground_kills_enemy",
+          "bases_captured",
+          "bases_lost",
+          "pilots_rescued",
+          "rescue_bounty",
+          "packages",
+          "friendly_losses",
+          "enemy_losses",
+          "damaged_units",
+          "events",
+          "applied"
+        ],
+        "title": "AfterActionReport",
+        "description": "The after-action report (`game.debriefingreport.AfterActionReport`)."
+      },
       "BaseForcesJs": {
         "properties": {
           "id": {
@@ -2822,6 +2991,64 @@
           "total"
         ],
         "title": "Count"
+      },
+      "DamagedUnitLineJs": {
+        "properties": {
+          "friendly": {
+            "type": "boolean",
+            "title": "Friendly"
+          },
+          "unit_type": {
+            "type": "string",
+            "title": "Unit Type"
+          },
+          "damage_percent": {
+            "type": "integer",
+            "title": "Damage Percent"
+          },
+          "unavailability": {
+            "type": "string",
+            "title": "Unavailability"
+          }
+        },
+        "type": "object",
+        "required": [
+          "friendly",
+          "unit_type",
+          "damage_percent",
+          "unavailability"
+        ],
+        "title": "DamagedUnitLine"
+      },
+      "DebriefingJs": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/DebriefingStatusJs"
+          },
+          "can_accept": {
+            "type": "boolean",
+            "title": "Can Accept"
+          },
+          "report": {
+            "$ref": "#/components/schemas/AfterActionReportJs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "can_accept"
+        ],
+        "title": "Debriefing",
+        "description": "What the /debrief screen shows (Qt: QDebriefingWindow)."
+      },
+      "DebriefingStatusJs": {
+        "type": "string",
+        "enum": [
+          "none",
+          "pending",
+          "accepted"
+        ],
+        "title": "DebriefingStatusJs"
       },
       "DownedPilotJs": {
         "properties": {
@@ -3613,6 +3840,24 @@
         ],
         "title": "LatLng"
       },
+      "LossLineJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "count"
+        ],
+        "title": "LossLine"
+      },
       "LossRowJs": {
         "properties": {
           "label": {
@@ -4017,6 +4262,51 @@
         ],
         "title": "Package"
       },
+      "PackageResultJs": {
+        "properties": {
+          "task": {
+            "type": "string",
+            "title": "Task"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "flights": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Flights"
+          },
+          "lost": {
+            "type": "integer",
+            "title": "Lost"
+          },
+          "aircraft": {
+            "type": "integer",
+            "title": "Aircraft"
+          },
+          "result": {
+            "type": "string",
+            "title": "Result"
+          },
+          "tone": {
+            "$ref": "#/components/schemas/ToneJs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task",
+          "target",
+          "flights",
+          "lost",
+          "aircraft",
+          "result",
+          "tone"
+        ],
+        "title": "PackageResult"
+      },
       "PackageTargetKind": {
         "type": "string",
         "enum": [
@@ -4026,6 +4316,33 @@
           "downed-pilot"
         ],
         "title": "PackageTargetKind"
+      },
+      "PilotLineJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "aircraft": {
+            "type": "string",
+            "title": "Aircraft"
+          },
+          "squadron": {
+            "type": "string",
+            "title": "Squadron"
+          },
+          "held_at": {
+            "title": "Held At",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "aircraft",
+          "squadron"
+        ],
+        "title": "PilotLine"
       },
       "Player": {
         "type": "string",
@@ -4046,10 +4363,30 @@
           "pretense-campaign",
           "air-wing",
           "transfers",
-          "info-panel",
-          "debriefing"
+          "info-panel"
         ],
         "title": "QtDialog"
+      },
+      "ReportEventJs": {
+        "properties": {
+          "time": {
+            "title": "Time",
+            "type": "string"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "tone": {
+            "$ref": "#/components/schemas/ToneJs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "tone"
+        ],
+        "title": "ReportEvent"
       },
       "RunwayJs": {
         "properties": {
@@ -4662,6 +4999,16 @@
           "flight_ids"
         ],
         "title": "TimelinePackage"
+      },
+      "ToneJs": {
+        "type": "string",
+        "enum": [
+          "good",
+          "bad",
+          "mixed",
+          "neutral"
+        ],
+        "title": "ToneJs"
       },
       "TopBarJs": {
         "properties": {

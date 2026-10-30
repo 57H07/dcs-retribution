@@ -129,10 +129,9 @@ main thread after the lock is released. A migrated screen removes its `QtDialog`
 value, its Qt slot and the dialog itself (W9), and replaces its `QtScreen`
 element in `client/src/shell/routes.tsx`.
 
-A command may also hand over to a Qt window that is not migrated yet: `POST
-/game/mission/result/accept` (WEB-05.1) applies the mission result, then calls
-`QtCallbacks.results_accepted`, which opens `QDebriefingWindow` until WEB-05.2
-replaces it.
+A command may also hand over to a Qt window that is not migrated yet, through a
+`QtCallbacks` callback emitting a `QLiberationWindow` signal (WEB-05.1 did so for
+the debriefing, until WEB-05.2 replaced it with the web after-action report).
 
 ## 8b. Background work: status + event + commands (WEB-05.1)
 
@@ -146,6 +145,14 @@ the client turns into a tag invalidation (`Tags.MISSION_RESULT` in
 lock, so reading the status never waits for the game lock; the watch thread
 (`PollDebriefingFileThread`) takes the game lock only to read a new file, and a
 generation counter drops callbacks of a watch stopped in between.
+
+The after-action report (WEB-05.2, `GET /game/mission/result/report`) is a read
+model built in `game/debriefingreport.py`, shared with the Qt debriefing. A
+command whose outcome is only known once it ran keeps both halves on the engine
+side: `accept_and_report` reads the report before applying the result (this
+turn's ATO is gone afterwards), calls the same `accept_results` as the Qt path,
+then completes the report (prisoners, budget, messages logged meanwhile) and
+keeps it in `MissionResultWaiter.last_report()` for the screen to refetch.
 
 ## 9. System actions: the native bridge `/native/*` (WEB-00.7, W7)
 

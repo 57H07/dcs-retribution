@@ -49,12 +49,21 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     // /game/mission/result (WEB-05.1): the waiting screen. Status changes also
     // arrive as `mission_result_updated` events.
     getMissionResult: { providesTags: [Tags.MISSION_RESULT] },
+    // /game/mission/result/report (WEB-05.2): the after-action report.
+    getMissionReport: { providesTags: [Tags.MISSION_RESULT] },
     loadMissionResultFile: { invalidatesTags: [Tags.MISSION_RESULT] },
     abortMission: {
       invalidatesTags: [Tags.MISSION_RESULT, Tags.TOP_BAR, Tags.TIMELINE],
     },
     acceptMissionResult: {
-      invalidatesTags: [Tags.MISSION_RESULT, Tags.TOP_BAR, Tags.TIMELINE],
+      invalidatesTags: [
+        Tags.MISSION_RESULT,
+        Tags.TOP_BAR,
+        Tags.TIMELINE,
+        Tags.INSPECTOR,
+        Tags.REPORTS,
+        Tags.PACKAGES,
+      ],
     },
     setSimSpeed: { invalidatesTags: [Tags.TOP_BAR] },
     // Map inspector (WEB-01.3): refetched after game changes (eventstream).

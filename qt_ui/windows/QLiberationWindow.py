@@ -82,8 +82,6 @@ class QLiberationWindow(QMainWindow):
     # WEB-00.3: Qt screens opened by the web shell, from API worker threads too.
     open_dialog_signal = Signal(object)
     edit_package_signal = Signal(object)
-    # WEB-05.1: the web UI accepted a mission result; Qt shows the debriefing.
-    results_accepted_signal = Signal(object)
     # WEB-07.1: a web command changed the game in depth (cheats, settings).
     game_changed_signal = Signal()
     # WEB-01.2: a web command removed a package.
@@ -113,7 +111,6 @@ class QLiberationWindow(QMainWindow):
         self.select_flight_signal.connect(self.on_select_flight)
         self.open_dialog_signal.connect(self.open_dialog)
         self.edit_package_signal.connect(self.open_edit_package_dialog)
-        self.results_accepted_signal.connect(self.on_results_accepted)
         self.game_changed_signal.connect(
             lambda: GameUpdateSignal.get_instance().updateGame(self.game)
         )
@@ -129,7 +126,6 @@ class QLiberationWindow(QMainWindow):
                 edit_package=lambda package: self.edit_package_signal.emit(package),
                 game_changed=lambda: self.game_changed_signal.emit(),
                 packages_changed=lambda: self.packages_changed_signal.emit(),
-                results_accepted=lambda d: self.results_accepted_signal.emit(d),
             )
         )
         # WEB-00.7: file dialogs, folders, links and quit for the web UI.
@@ -739,7 +735,6 @@ class QLiberationWindow(QMainWindow):
             QtDialog.AIR_WING: self.open_air_wing,
             QtDialog.TRANSFERS: self.open_transfers,
             QtDialog.INFO_PANEL: lambda: self._show_panel("reports_window"),
-            QtDialog.DEBRIEFING: self.show_last_debriefing,
         }
         # The game may have been unloaded between the request and this slot.
         if dialog.needs_game and self.game is None:
@@ -759,13 +754,6 @@ class QLiberationWindow(QMainWindow):
         self.dialog = PendingTransfersDialog(self.game_model)
         self.dialog.show()
 
-    def on_results_accepted(self, debriefing: Debriefing) -> None:
-        """The web UI accepted a mission result: show the Qt debriefing (until
-        WEB-05.2) and refresh the Qt widgets, as QWaitingForMissionResultWindow does.
-        """
-        GameUpdateSignal.get_instance().sendDebriefing(debriefing)
-        GameUpdateSignal.get_instance().updateGame(self.game)
-
     def _show_panel(self, name: str) -> None:
         # Without the web shell the panel is already part of the main window.
         window: QWidget | None = getattr(self, name, None)
@@ -774,16 +762,6 @@ class QLiberationWindow(QMainWindow):
         window.show()
         window.raise_()
         window.activateWindow()
-
-    def show_last_debriefing(self) -> None:
-        debriefing = getattr(self, "debriefing", None)
-        if debriefing is None:
-            QMessageBox.information(
-                self, "Debriefing", "No mission result has been received yet."
-            )
-            return
-        debriefing.show()
-        debriefing.raise_()
 
     def open_link(self, link: ExternalLink) -> None:
         self.native_bridge.open_url(link.url)

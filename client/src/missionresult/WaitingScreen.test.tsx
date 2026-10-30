@@ -1,3 +1,4 @@
+import { liberationApi, Tags } from "../api/liberationApi";
 import type { MissionResult } from "../api/liberationApi";
 import { recordFetch, renderShell, restoreFetch } from "../shell/testing";
 import { screen, waitFor, within } from "@testing-library/react";
@@ -27,7 +28,7 @@ const LOSSES = {
 };
 
 function accept() {
-  return screen.getByRole("button", { name: "Accept results" });
+  return screen.getByRole("button", { name: "Review results" });
 }
 
 describe("WaitingScreen", () => {
@@ -86,50 +87,36 @@ describe("WaitingScreen", () => {
     ).toBeInTheDocument();
   });
 
-  it("accepts the results of a finished mission", async () => {
-    const calls = recordFetch(
-      204,
-      undefined,
-      {
-        [RESULT]: result({
-          status: "detected",
-          mission_ended: true,
-          ...LOSSES,
-        }),
-      },
-      {
-        [`${RESULT}/accept`]: { body: { turn: 5, campaign_state: "continue" } },
-      },
-    );
+  it("opens the report of a finished mission", async () => {
+    const calls = recordFetch(204, undefined, {
+      [RESULT]: result({ status: "detected", mission_ended: true, ...LOSSES }),
+    });
     const { router } = renderShell("/waiting");
     expect(
       await screen.findByRole("heading", { name: "Mission is over" }),
     ).toBeInTheDocument();
+    // Already over when the screen opened: it stays until asked.
+    expect(router.state.location.pathname).toBe("/waiting");
     await userEvent.click(accept());
-    await waitFor(() => expect(router.state.location.pathname).toBe("/"));
-    expect(calls).toMatchObject([{ method: "POST", path: `${RESULT}/accept` }]);
-    expect(await screen.findByText("Results accepted")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe("/debrief"),
+    );
+    // Reviewing applies nothing.
+    expect(calls).toEqual([]);
   });
 
-  it("shows why the results were refused", async () => {
-    recordFetch(
-      204,
-      undefined,
-      { [RESULT]: result({ status: "detected", mission_ended: true }) },
-      {
-        [`${RESULT}/accept`]: {
-          status: 409,
-          body: { detail: "The mission is still being played." },
-        },
-      },
+  it("shows the report when the mission ends", async () => {
+    const gets: Record<string, unknown> = {
+      [RESULT]: result({ status: "detected", ...LOSSES }),
+    };
+    recordFetch(204, undefined, gets);
+    const { router, store } = renderShell("/waiting");
+    await screen.findByRole("heading", { name: "Mission is being played" });
+    gets[RESULT] = result({ status: "detected", mission_ended: true });
+    store.dispatch(liberationApi.util.invalidateTags([Tags.MISSION_RESULT]));
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe("/debrief"),
     );
-    const { router } = renderShell("/waiting");
-    await screen.findByRole("heading", { name: "Mission is over" });
-    await userEvent.click(accept());
-    expect(
-      await screen.findByText("The mission is still being played."),
-    ).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe("/waiting");
   });
 
   it("aborts the mission and goes back to the map", async () => {

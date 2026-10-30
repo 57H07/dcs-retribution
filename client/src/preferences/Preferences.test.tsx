@@ -89,9 +89,7 @@ describe("Preferences screen", () => {
     expect(
       screen.getByRole("textbox", { name: "DCS installation folder" }),
     ).toHaveValue(SAVED.dcs_install_dir);
-    expect(
-      screen.getByRole("switch", { name: "Web interface, experimental" }),
-    ).toBeChecked();
+    expect(screen.getByRole("switch", { name: "Web interface" })).toBeChecked();
 
     await userEvent.click(
       screen.getByRole("switch", { name: "Prefer custom Liberation payloads" }),
