@@ -47,14 +47,3 @@ export function matchesFilter(pkg: Package, filter: string): boolean {
   ];
   return haystack.some((text) => text.toLowerCase().includes(needle));
 }
-
-/** The package flying this flight, if any. */
-export function packageOfFlight(
-  packages: Package[],
-  flightId: string | null,
-): Package | undefined {
-  if (flightId == null) {
-    return undefined;
-  }
-  return packages.find((p) => p.flights.some((f) => f.id === flightId));
-}

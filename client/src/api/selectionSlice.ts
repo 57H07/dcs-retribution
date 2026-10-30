@@ -1,10 +1,10 @@
 // Package selection shared by the command view (WEB-01.4, WEB-01.2): the
 // timeline, the packages panel and the map select the same package.
 //
-// A package is keyed by the id of its first flight (the `id` of
-// `TimelinePackage`), as the routes acting on a package through one of its
-// flights. Selecting a package also selects that flight in `flightsSlice`, so
-// the map highlights its flight plan. A flight selected elsewhere (map click,
+// A package is keyed by its stable id (`Package.id`, WEB-01.2), the `id` of
+// both `Package` (/packages) and `TimelinePackage`. Selecting a package also
+// selects its lead flight in `flightsSlice`, so the map highlights its flight
+// plan (a package without flights deselects the flight). A flight selected elsewhere (map click,
 // Qt) clears the explicit package key: its package is then found from the
 // selected flight (`selectedPackageId`).
 import { AppDispatch, RootState } from "../app/store";
@@ -48,9 +48,11 @@ export const { packageSelected } = selectionSlice.actions;
 export function selectPackage(
   dispatch: AppDispatch,
   packageId: string,
-  leadFlightId: string = packageId,
+  leadFlightId: string | undefined,
 ) {
-  dispatch(selectFlight(leadFlightId));
+  dispatch(
+    leadFlightId === undefined ? deselectFlight() : selectFlight(leadFlightId),
+  );
   dispatch(packageSelected(packageId));
 }
 

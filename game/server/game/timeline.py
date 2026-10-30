@@ -19,8 +19,7 @@ if TYPE_CHECKING:
 
 
 class TimelinePackageJs(BaseModel):
-    #: Key of the package: the id of its first flight, as the routes that act on a
-    #: package through one of its flights (`/qt/edit-package/flight/{id}`).
+    #: Stable id of the package (`Package.id`, WEB-01.2), shared with `/packages`.
     id: str
     #: The FlightType value of the primary task ("BARCAP", "Strike"...).
     task: str
@@ -71,7 +70,7 @@ def _package(package: Package, start: datetime) -> TimelinePackageJs:
     flights = package.flights
     task = package.primary_task
     return TimelinePackageJs(
-        id=str(flights[0].id),
+        id=str(package.id),
         task=str(task) if task is not None else "",
         target=package.target.name,
         startup=offset(min(f.flight_plan.startup_time() for f in flights)),

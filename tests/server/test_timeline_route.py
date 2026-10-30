@@ -53,6 +53,7 @@ class _Package:
         task: FlightType | None = FlightType.STRIKE,
         target: str = "Ammo depot",
     ) -> None:
+        self.id: UUID = uuid4()
         self.flights = list(flights)
         self.primary_task = task
         self.target = SimpleNamespace(name=target)
@@ -69,10 +70,11 @@ def _game(*packages: _Package) -> Any:
 def test_package_spans_first_startup_to_last_landing() -> None:
     lead = _Flight(startup=10, tot=40, landing=70)
     escort = _Flight(startup=5, tot=38, landing=80)
-    timeline = TimelineJs.for_game(_game(_Package(lead, escort, tot=40)))
+    planned = _Package(lead, escort, tot=40)
+    timeline = TimelineJs.for_game(_game(planned))
     assert timeline.start_time == "06:30:00"
     [package] = timeline.packages
-    assert package.id == str(lead.id)
+    assert package.id == str(planned.id)
     assert package.task == "Strike"
     assert package.target == "Ammo depot"
     assert (package.startup, package.tot, package.landing) == (300, 2400, 4800)
@@ -117,14 +119,15 @@ def test_route_is_null_without_a_campaign(monkeypatch: pytest.MonkeyPatch) -> No
 
 def test_route(monkeypatch: pytest.MonkeyPatch) -> None:
     flight = _Flight(startup=10, tot=40, landing=70)
-    _load(monkeypatch, _game(_Package(flight, tot=40)))
+    package = _Package(flight, tot=40)
+    _load(monkeypatch, _game(package))
     status, body = _request("GET", "/game/timeline")
     assert status == 200
     assert body == {
         "start_time": "06:30:00",
         "packages": [
             {
-                "id": str(flight.id),
+                "id": str(package.id),
                 "task": "Strike",
                 "target": "Ammo depot",
                 "startup": 600,

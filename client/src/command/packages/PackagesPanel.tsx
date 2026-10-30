@@ -2,16 +2,17 @@
 // cards, a filter, and the selection shared with the map through the selected
 // flight of the flights slice (the map highlights its flight plan).
 import { commandErrorMessage } from "../../api/commands";
-import {
-  deselectFlight,
-  selectFlight,
-  selectSelectedFlightId,
-} from "../../api/flightsSlice";
+import { selectFlight, selectSelectedFlightId } from "../../api/flightsSlice";
 import {
   Package,
   useDeletePackageMutation,
   useListPackagesQuery,
 } from "../../api/liberationApi";
+import {
+  selectedPackageId,
+  selectPackage,
+  selectSelectedPackageKey,
+} from "../../api/selectionSlice";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { useQtCommands } from "../../shell/useQtCommands";
 import {
@@ -29,7 +30,6 @@ import {
   formatTot,
   matchesFilter,
   missingPilotsLabel,
-  packageOfFlight,
   packageTitle,
 } from "./packageFormat";
 import styles from "./PackagesPanel.module.css";
@@ -47,31 +47,27 @@ export function PackagesPanel({ onNewPackage }: PackagesPanelProps) {
   const packages = data ?? [];
   const dispatch = useAppDispatch();
   const selectedFlightId = useAppSelector(selectSelectedFlightId);
+  const packageKey = useAppSelector(selectSelectedPackageKey);
   const [side, setSide] = useState<Side>("friendly");
   const [filter, setFilter] = useState("");
-  // A package without flights cannot be selected through a flight.
-  const [emptySelection, setEmptySelection] = useState<string | null>(null);
 
-  const selectedByFlight = packageOfFlight(packages, selectedFlightId);
-  const selectedId = selectedByFlight?.id ?? emptySelection;
+  // Shared with the timeline and the map (selectionSlice).
+  const selectedId = selectedPackageId(
+    packageKey,
+    selectedFlightId,
+    packages.map((p) => ({ id: p.id, flight_ids: p.flights.map((f) => f.id) })),
+  );
+  const selectedBlue = packages.find((p) => p.id === selectedId)?.blue;
 
-  // A flight picked on the map shows its ATO (the Qt panel did the same).
+  // A package picked on the map or the timeline shows its ATO (as in Qt).
   useEffect(() => {
-    if (selectedByFlight !== undefined) {
-      setSide(selectedByFlight.blue ? "friendly" : "enemy");
+    if (selectedBlue !== undefined) {
+      setSide(selectedBlue ? "friendly" : "enemy");
     }
-  }, [selectedByFlight]);
+  }, [selectedId, selectedBlue]);
 
-  const select = (pkg: Package) => {
-    const first = pkg.flights[0];
-    if (first === undefined) {
-      dispatch(deselectFlight());
-      setEmptySelection(pkg.id);
-    } else {
-      setEmptySelection(null);
-      dispatch(selectFlight(first.id));
-    }
-  };
+  const select = (pkg: Package) =>
+    selectPackage(dispatch, pkg.id, pkg.flights[0]?.id);
 
   const friendly = packages.filter((p) => p.blue);
   const enemy = packages.filter((p) => !p.blue);

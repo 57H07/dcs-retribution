@@ -135,6 +135,8 @@ describe("packages panel", () => {
     const { store } = renderPanel();
     await userEvent.click(await screen.findByText("Ammo depot Krasnodar"));
     expect(store.getState().flights.selected).toBe("f-strike");
+    // The key shared with the timeline is the real package id.
+    expect(store.getState().selection.packageId).toBe("pkg-strike");
     expect(card(/Ammo depot/)).toHaveAttribute("aria-pressed", "true");
   });
 
