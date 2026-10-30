@@ -329,6 +329,24 @@ const injectedRtkApi = api.injectEndpoints({
         method: "POST",
       }),
     }),
+    getIntelReport: build.query<
+      GetIntelReportApiResponse,
+      GetIntelReportApiArg
+    >({
+      query: () => ({ url: `/reports/intel` }),
+    }),
+    getStatsReport: build.query<
+      GetStatsReportApiResponse,
+      GetStatsReportApiArg
+    >({
+      query: () => ({ url: `/reports/stats` }),
+    }),
+    getFinancesReport: build.query<
+      GetFinancesReportApiResponse,
+      GetFinancesReportApiArg
+    >({
+      query: () => ({ url: `/reports/finances` }),
+    }),
     listSupplyRoutes: build.query<
       ListSupplyRoutesApiResponse,
       ListSupplyRoutesApiArg
@@ -609,6 +627,15 @@ export type OpenEditPackageDialogApiResponse =
 export type OpenEditPackageDialogApiArg = {
   flightId: string;
 };
+export type GetIntelReportApiResponse =
+  /** status 200 Successful Response */ IntelJs | null;
+export type GetIntelReportApiArg = void;
+export type GetStatsReportApiResponse =
+  /** status 200 Successful Response */ StatsJs | null;
+export type GetStatsReportApiArg = void;
+export type GetFinancesReportApiResponse =
+  /** status 200 Successful Response */ FinancesJs | null;
+export type GetFinancesReportApiArg = void;
 export type ListSupplyRoutesApiResponse =
   /** status 200 Successful Response */ SupplyRoute[];
 export type ListSupplyRoutesApiArg = void;
@@ -976,7 +1003,6 @@ export type InstallPreferencesUpdate = {
   allow_empty_install_dir?: boolean;
 };
 export type QtDialog =
-  | "stats"
   | "notes"
   | "logs"
   | "about"
@@ -985,10 +1011,65 @@ export type QtDialog =
   | "air-wing"
   | "transfers"
   | "air-tasking-order"
-  | "reports"
-  | "finances"
-  | "intel"
+  | "info-panel"
   | "debriefing";
+export type UnitCountJs = {
+  name: string;
+  count: number;
+};
+export type BaseForcesJs = {
+  id: string;
+  name: string;
+  total: number;
+  units: UnitCountJs[];
+};
+export type ForcesJs = {
+  total: number;
+  bases: BaseForcesJs[];
+};
+export type CoalitionIntelJs = {
+  aircraft: ForcesJs;
+  ground: ForcesJs;
+};
+export type IntelJs = {
+  friendly: CoalitionIntelJs;
+  enemy: CoalitionIntelJs;
+};
+export type TurnStatsJs = {
+  turn: number;
+  friendly_aircraft: number;
+  enemy_aircraft: number;
+  friendly_vehicles: number;
+  enemy_vehicles: number;
+};
+export type StatsJs = {
+  turns: TurnStatsJs[];
+};
+export type BaseIncomeJs = {
+  id: string;
+  name: string;
+  income: number;
+};
+export type BuildingIncomeJs = {
+  name: string;
+  category: string;
+  count: number;
+  income_per_building: number;
+  income: number;
+};
+export type CoalitionFinancesJs = {
+  budget: number;
+  multiplier: number;
+  from_bases: number;
+  from_buildings: number;
+  total: number;
+  bases: BaseIncomeJs[];
+  buildings: BuildingIncomeJs[];
+};
+export type FinancesJs = {
+  friendly: CoalitionFinancesJs;
+  enemy: CoalitionFinancesJs;
+};
 export const {
   useListControlPointsQuery,
   useGetControlPointByIdQuery,
@@ -1039,6 +1120,9 @@ export const {
   useOpenControlPointInfoDialogMutation,
   useOpenQtDialogMutation,
   useOpenEditPackageDialogMutation,
+  useGetIntelReportQuery,
+  useGetStatsReportQuery,
+  useGetFinancesReportQuery,
   useListSupplyRoutesQuery,
   useListTgosQuery,
   useGetTgoByIdQuery,

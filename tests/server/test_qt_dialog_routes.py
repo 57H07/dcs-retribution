@@ -112,14 +112,14 @@ def test_dialogs_needing_a_campaign_are_refused_without_one(
     qt: _Recorder, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _set_game(monkeypatch, None)
-    assert _post("/qt/dialogs/stats") == (409, {"detail": "No campaign is loaded."})
+    assert _post("/qt/dialogs/notes") == (409, {"detail": "No campaign is loaded."})
     assert _post("/qt/dialogs/logs") == (204, None)
     assert qt.dialogs == [QtDialog.LOGS]
 
 
 def test_menu_actions_without_a_campaign() -> None:
     assert not QtDialog.LOGS.needs_game
-    assert QtDialog.STATS.needs_game
+    assert QtDialog.NOTES.needs_game
     assert QtDialog.AIR_WING.needs_game
 
 
@@ -133,13 +133,15 @@ def test_take_off_left_the_qt_dialogs(
     assert qt.dialogs == []
 
 
-def test_finances_and_intel_open_from_the_top_bar(
+def test_reports_left_the_qt_dialogs(
     qt: _Recorder, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    """WEB-08.1: stats, finances and intel are the web reports screen."""
     _set_game(monkeypatch, SimpleNamespace(turn=3))
-    assert _post("/qt/dialogs/finances") == (204, None)
-    assert _post("/qt/dialogs/intel") == (204, None)
-    assert qt.dialogs == [QtDialog.FINANCES, QtDialog.INTEL]
+    for dialog in ("stats", "finances", "intel", "reports"):
+        status, _ = _post(f"/qt/dialogs/{dialog}")
+        assert status == 422
+    assert qt.dialogs == []
 
 
 def test_unknown_dialog_is_rejected(
@@ -155,7 +157,7 @@ def test_dialogs_need_the_api_key(
     qt: _Recorder, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _set_game(monkeypatch, SimpleNamespace(turn=3))
-    status, _ = _post("/qt/dialogs/stats", api_key="wrong")
+    status, _ = _post("/qt/dialogs/notes", api_key="wrong")
     assert status == 401
     assert qt.dialogs == []
 
@@ -170,7 +172,7 @@ def test_without_a_qt_window_the_route_answers_503(
         QtContext, "_callbacks", QtCallbacks(ignore, ignore, ignore, ignore)
     )
     _set_game(monkeypatch, SimpleNamespace(turn=3))
-    assert _post("/qt/dialogs/stats")[0] == 503
+    assert _post("/qt/dialogs/notes")[0] == 503
 
 
 def test_edit_package_opens_the_package_of_the_flight(

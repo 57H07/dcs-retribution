@@ -2,6 +2,7 @@
 // the Qt dialog through /qt/* and comes back to the command view; a migrated
 // screen replaces its QtScreen element here (and deletes the Qt dialog, W9).
 import { PreferencesScreen } from "../preferences/PreferencesScreen";
+import { ReportsScreen } from "../reports/ReportsScreen";
 import { SettingsScreen } from "../settings/SettingsScreen";
 import { QtScreen } from "./QtScreen";
 import { Shell } from "./Shell";
@@ -46,8 +47,13 @@ export const ROUTES: RouteObject[] = [
         element: <QtScreen open={(qt) => qt.openDialog("debriefing")} />,
       },
       {
+        // Intel, Stats and Finances (WEB-08.1, W11).
         path: "reports",
-        element: <QtScreen open={(qt) => qt.openDialog("reports")} />,
+        element: <ReportsScreen />,
+      },
+      {
+        path: "reports/:tab",
+        element: <ReportsScreen />,
       },
       { path: "*", element: <Navigate to="/" replace /> },
     ],

@@ -1750,6 +1750,87 @@
         }
       }
     },
+    "/reports/intel": {
+      "get": {
+        "summary": "Intel",
+        "description": "Aircraft and ground units of each coalition, by base; null without a\ncampaign.",
+        "operationId": "get_intel_report",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/IntelJs"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Intel Report"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reports/stats": {
+      "get": {
+        "summary": "Stats",
+        "description": "Force counts of both coalitions at each turn; null without a campaign.",
+        "operationId": "get_stats_report",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/StatsJs"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Stats Report"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reports/finances": {
+      "get": {
+        "summary": "Finances",
+        "description": "Income breakdown and balance of each coalition; null without a campaign.",
+        "operationId": "get_finances_report",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/FinancesJs"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Finances Report"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/supply-routes/": {
       "get": {
         "summary": "List Supply Routes",
@@ -2131,6 +2212,94 @@
   },
   "components": {
     "schemas": {
+      "BaseForcesJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "units": {
+            "items": {
+              "$ref": "#/components/schemas/UnitCountJs"
+            },
+            "type": "array",
+            "title": "Units"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "total",
+          "units"
+        ],
+        "title": "BaseForcesJs",
+        "description": "Units present at one base, sorted by name."
+      },
+      "BaseIncomeJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "income": {
+            "type": "number",
+            "title": "Income"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "income"
+        ],
+        "title": "BaseIncomeJs"
+      },
+      "BuildingIncomeJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "income_per_building": {
+            "type": "number",
+            "title": "Income Per Building"
+          },
+          "income": {
+            "type": "number",
+            "title": "Income"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "category",
+          "count",
+          "income_per_building",
+          "income"
+        ],
+        "title": "BuildingIncomeJs"
+      },
       "CampaignStateJs": {
         "type": "string",
         "enum": [
@@ -2140,6 +2309,73 @@
         ],
         "title": "CampaignStateJs",
         "description": "Campaign state after a turn, mirror of `game.game.TurnState`."
+      },
+      "CoalitionFinancesJs": {
+        "properties": {
+          "budget": {
+            "type": "number",
+            "title": "Budget"
+          },
+          "multiplier": {
+            "type": "number",
+            "title": "Multiplier"
+          },
+          "from_bases": {
+            "type": "number",
+            "title": "From Bases"
+          },
+          "from_buildings": {
+            "type": "number",
+            "title": "From Buildings"
+          },
+          "total": {
+            "type": "number",
+            "title": "Total"
+          },
+          "bases": {
+            "items": {
+              "$ref": "#/components/schemas/BaseIncomeJs"
+            },
+            "type": "array",
+            "title": "Bases"
+          },
+          "buildings": {
+            "items": {
+              "$ref": "#/components/schemas/BuildingIncomeJs"
+            },
+            "type": "array",
+            "title": "Buildings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "budget",
+          "multiplier",
+          "from_bases",
+          "from_buildings",
+          "total",
+          "bases",
+          "buildings"
+        ],
+        "title": "CoalitionFinancesJs",
+        "description": "`FinancesLayout`: income per base and per building, multiplier and balance.\n\nBases and buildings come sorted by income, highest first."
+      },
+      "CoalitionIntelJs": {
+        "properties": {
+          "aircraft": {
+            "$ref": "#/components/schemas/ForcesJs"
+          },
+          "ground": {
+            "$ref": "#/components/schemas/ForcesJs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "aircraft",
+          "ground"
+        ],
+        "title": "CoalitionIntelJs",
+        "description": "The \"Air forces\" and \"Ground forces\" tabs of the Qt intel window."
       },
       "CommandErrorJs": {
         "properties": {
@@ -2289,6 +2525,23 @@
           "cancelled"
         ],
         "title": "FileOutcome"
+      },
+      "FinancesJs": {
+        "properties": {
+          "friendly": {
+            "$ref": "#/components/schemas/CoalitionFinancesJs"
+          },
+          "enemy": {
+            "$ref": "#/components/schemas/CoalitionFinancesJs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "friendly",
+          "enemy"
+        ],
+        "title": "FinancesJs",
+        "description": "Finances of the player, and of the enemy (the \"Economy\" intel tab)."
       },
       "FixedTotsJs": {
         "properties": {
@@ -2447,6 +2700,28 @@
         ],
         "title": "ForceBalance",
         "description": "Friendly and enemy strength of one arm, as the Intel box rated it."
+      },
+      "ForcesJs": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "bases": {
+            "items": {
+              "$ref": "#/components/schemas/BaseForcesJs"
+            },
+            "type": "array",
+            "title": "Bases"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "bases"
+        ],
+        "title": "ForcesJs",
+        "description": "Bases holding at least one unit, in theater order, and the coalition total."
       },
       "FrontLineJs": {
         "properties": {
@@ -2838,6 +3113,22 @@
         ],
         "title": "InstallPreferencesUpdate"
       },
+      "IntelJs": {
+        "properties": {
+          "friendly": {
+            "$ref": "#/components/schemas/CoalitionIntelJs"
+          },
+          "enemy": {
+            "$ref": "#/components/schemas/CoalitionIntelJs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "friendly",
+          "enemy"
+        ],
+        "title": "IntelJs"
+      },
       "JoinZonesJs": {
         "properties": {
           "homeBubble": {
@@ -3139,7 +3430,6 @@
       "QtDialog": {
         "type": "string",
         "enum": [
-          "stats",
           "notes",
           "logs",
           "about",
@@ -3148,9 +3438,7 @@
           "air-wing",
           "transfers",
           "air-tasking-order",
-          "reports",
-          "finances",
-          "intel",
+          "info-panel",
           "debriefing"
         ],
         "title": "QtDialog"
@@ -3391,6 +3679,23 @@
         ],
         "title": "SimSpeedJs",
         "description": "Mirror of `SimSpeedSetting` (whose values are tuples, unfit for OpenAPI)."
+      },
+      "StatsJs": {
+        "properties": {
+          "turns": {
+            "items": {
+              "$ref": "#/components/schemas/TurnStatsJs"
+            },
+            "type": "array",
+            "title": "Turns"
+          }
+        },
+        "type": "object",
+        "required": [
+          "turns"
+        ],
+        "title": "StatsJs",
+        "description": "Aircraft and combat vehicle counts recorded at each turn (`GameStats`)."
       },
       "SupplyRouteJs": {
         "properties": {
@@ -3777,6 +4082,39 @@
         "title": "Turn",
         "description": "The turn the game is in once a turn command has run."
       },
+      "TurnStatsJs": {
+        "properties": {
+          "turn": {
+            "type": "integer",
+            "title": "Turn"
+          },
+          "friendly_aircraft": {
+            "type": "integer",
+            "title": "Friendly Aircraft"
+          },
+          "enemy_aircraft": {
+            "type": "integer",
+            "title": "Enemy Aircraft"
+          },
+          "friendly_vehicles": {
+            "type": "integer",
+            "title": "Friendly Vehicles"
+          },
+          "enemy_vehicles": {
+            "type": "integer",
+            "title": "Enemy Vehicles"
+          }
+        },
+        "type": "object",
+        "required": [
+          "turn",
+          "friendly_aircraft",
+          "enemy_aircraft",
+          "friendly_vehicles",
+          "enemy_vehicles"
+        ],
+        "title": "TurnStatsJs"
+      },
       "UnculledZoneJs": {
         "properties": {
           "position": {
@@ -3793,6 +4131,24 @@
           "radius"
         ],
         "title": "UnculledZone"
+      },
+      "UnitCountJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "count"
+        ],
+        "title": "UnitCountJs"
       },
       "ValidationError": {
         "properties": {

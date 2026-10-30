@@ -16,7 +16,6 @@ describe("web shell routes", () => {
     ["/air-wing", "/qt/dialogs/air-wing"],
     ["/new-game", "/native/new-game"],
     ["/debrief", "/qt/dialogs/debriefing"],
-    ["/reports", "/qt/dialogs/reports"],
     ["/bases/cp-1", "/qt/info/control-point/cp-1"],
     ["/packages/flight-7", "/qt/edit-package/flight/flight-7"],
   ])(
@@ -38,6 +37,27 @@ describe("web shell routes", () => {
     ).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/settings");
     expect(calls.some((call) => call.path.startsWith("/qt/"))).toBe(false);
+  });
+
+  it.each(["/reports", "/reports/finances"])(
+    "shows the web reports screen on %s, without opening Qt",
+    async (path) => {
+      const calls = recordFetch();
+      const { router, findByRole } = renderShell(path);
+      expect(
+        await findByRole("heading", { level: 1, name: "Reports" }),
+      ).toBeInTheDocument();
+      expect(router.state.location.pathname).toBe(path);
+      expect(calls).toHaveLength(0);
+    },
+  );
+
+  it("sends an unknown reports tab to the first tab", async () => {
+    recordFetch();
+    const { router } = renderShell("/reports/nowhere");
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe("/reports"),
+    );
   });
 
   it("sends unknown paths back to the command view", async () => {

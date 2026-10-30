@@ -88,23 +88,28 @@ describe("top bar", () => {
   it("opens the campaign screens", async () => {
     const calls = recordFetch(204, undefined, { [TOP_BAR]: topBar() });
     const { router } = renderShell();
+    // Budget and force balance open the web reports tabs (WEB-08.1).
     await userEvent.click(
       await screen.findByRole("button", { name: /Budget/ }),
     );
-    await userEvent.click(screen.getByRole("button", { name: /open intel/ }));
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe("/reports/finances"),
+    );
+    await userEvent.click(
+      await screen.findByRole("button", { name: /open intel/ }),
+    );
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe("/reports/intel"),
+    );
     await userEvent.click(screen.getByRole("button", { name: "Transfers" }));
-    await waitFor(() => expect(calls).toHaveLength(3));
-    expect(calls.map((c) => c.path)).toEqual([
-      "/qt/dialogs/finances",
-      "/qt/dialogs/intel",
-      "/qt/dialogs/transfers",
-    ]);
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls.map((c) => c.path)).toEqual(["/qt/dialogs/transfers"]);
     await userEvent.click(screen.getByRole("button", { name: "Settings" }));
     // Settings is a web screen (WEB-07.1).
     await waitFor(() =>
       expect(router.state.location.pathname).toBe("/settings"),
     );
-    expect(calls).toHaveLength(3);
+    expect(calls).toHaveLength(1);
   });
 });
 

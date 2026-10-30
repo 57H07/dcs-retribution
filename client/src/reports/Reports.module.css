@@ -1,0 +1,192 @@
+/* Reports screen (WEB-08.1): tables and stat cards after mockups/Debrief.dc.html
+   and AirWing.dc.html; the frame is the settings screen's. */
+.tabs {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.tabList {
+  padding: 0 var(--ui-space-xl);
+  background: var(--ui-color-bg-panel);
+}
+
+.content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 20px 28px;
+  overflow-y: auto;
+}
+
+.content > * {
+  max-width: 1100px;
+}
+
+.state {
+  margin: 0;
+  color: var(--ui-color-text-secondary);
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--ui-space-lg);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  background: var(--ui-color-bg-card);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-md);
+}
+
+.cardTitle {
+  color: var(--ui-color-text-secondary);
+  font-family: var(--ui-font-display);
+  font-size: var(--ui-font-size-sm);
+  letter-spacing: var(--ui-letter-spacing-display);
+  text-transform: uppercase;
+}
+
+.cardValue {
+  color: var(--ui-color-text-strong);
+  font-family: var(--ui-font-mono);
+  font-size: 30px;
+}
+
+.cardValue[data-tone="friendly"] {
+  color: var(--ui-color-friendly);
+}
+
+.cardValue[data-tone="enemy"] {
+  color: var(--ui-color-hostile);
+}
+
+.versus {
+  color: var(--ui-color-hostile);
+  font-size: var(--ui-font-size-xl);
+}
+
+.cardDetail {
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-md);
+}
+
+.sectionTitle {
+  margin: 0;
+  color: var(--ui-color-text-strong);
+  font-family: var(--ui-font-display);
+  font-size: var(--ui-font-size-lg);
+  font-weight: var(--ui-font-weight-semibold);
+  letter-spacing: var(--ui-letter-spacing-display);
+  text-transform: uppercase;
+}
+
+.count {
+  margin-left: var(--ui-space-sm);
+  color: var(--ui-color-accent);
+  font-family: var(--ui-font-mono);
+}
+
+.bases {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--ui-space-lg);
+  align-items: start;
+}
+
+.baseTable {
+  min-width: 0;
+}
+
+.charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--ui-space-lg);
+}
+
+.chart {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-md);
+  margin: 0;
+  padding: 16px;
+  background: var(--ui-color-bg-card);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-md);
+}
+
+.chart svg {
+  width: 100%;
+  height: auto;
+}
+
+.grid {
+  stroke: var(--ui-color-line);
+  stroke-width: 1;
+}
+
+.axisLabel {
+  fill: var(--ui-color-text-secondary);
+  font-family: var(--ui-font-mono);
+  font-size: 11px;
+}
+
+.series polyline {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.series[data-tone="friendly"] {
+  stroke: var(--ui-color-friendly);
+  fill: var(--ui-color-friendly);
+}
+
+.series[data-tone="enemy"] {
+  stroke: var(--ui-color-hostile);
+  fill: var(--ui-color-hostile);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-lg);
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.legendItem::before {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 2px;
+  margin-right: var(--ui-space-sm);
+  vertical-align: middle;
+}
+
+.legendItem[data-tone="friendly"]::before {
+  background: var(--ui-color-friendly);
+}
+
+.legendItem[data-tone="enemy"]::before {
+  background: var(--ui-color-hostile);
+}

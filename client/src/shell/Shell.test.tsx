@@ -82,10 +82,10 @@ describe("app bar", () => {
     renderShell();
     await userEvent.click(screen.getByRole("button", { name: "Campaign" }));
     await userEvent.click(
-      await screen.findByRole("menuitem", { name: "Stats" }),
+      await screen.findByRole("menuitem", { name: "Notes" }),
     );
     await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0].path).toBe("/qt/dialogs/stats");
+    expect(calls[0].path).toBe("/qt/dialogs/notes");
   });
 
   it("opens the web Preferences screen from the File menu", async () => {
@@ -159,8 +159,8 @@ describe("app bar", () => {
         "quit",
         "transfers",
         "air-tasking-order",
-        "stats",
         "notes",
+        "info-panel",
         "pretense-campaign",
         "import-layouts",
         "logs",
@@ -186,6 +186,7 @@ describe("app bar", () => {
         "/settings",
         "/preferences",
         "/reports",
+        "/reports/stats",
         "/debrief",
       ]),
     );
