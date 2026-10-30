@@ -59,7 +59,6 @@ from qt_ui.windows.AirWingDialog import AirWingDialog
 from qt_ui.windows.GameUpdateSignal import GameUpdateSignal
 from qt_ui.windows.PendingTransfersDialog import PendingTransfersDialog
 from qt_ui.windows.QDebriefingWindow import QDebriefingWindow
-from qt_ui.windows.QWaitingForMissionResultWindow import QWaitingForMissionResultWindow
 from qt_ui.windows.basemenu.QBaseMenu2 import QBaseMenu2
 from qt_ui.windows.finances.QFinancesMenu import QFinancesMenu
 from qt_ui.windows.groundobject.QGroundObjectMenu import QGroundObjectMenu
@@ -85,8 +84,8 @@ class QLiberationWindow(QMainWindow):
     # WEB-00.3: Qt screens opened by the web shell, from API worker threads too.
     open_dialog_signal = Signal(object)
     edit_package_signal = Signal(object)
-    # WEB-01.1: the web UI took off; the Qt window waits for the mission result.
-    mission_generated_signal = Signal()
+    # WEB-05.1: the web UI accepted a mission result; Qt shows the debriefing.
+    results_accepted_signal = Signal(object)
     # WEB-07.1: a web command changed the game in depth (cheats, settings).
     game_changed_signal = Signal()
 
@@ -114,7 +113,7 @@ class QLiberationWindow(QMainWindow):
         self.select_flight_signal.connect(self.on_select_flight)
         self.open_dialog_signal.connect(self.open_dialog)
         self.edit_package_signal.connect(self.open_edit_package_dialog)
-        self.mission_generated_signal.connect(self.wait_for_mission_result)
+        self.results_accepted_signal.connect(self.on_results_accepted)
         self.game_changed_signal.connect(
             lambda: GameUpdateSignal.get_instance().updateGame(self.game)
         )
@@ -127,8 +126,8 @@ class QLiberationWindow(QMainWindow):
                 turn_passed=lambda state: self.turn_passed_signal.emit(state),
                 open_dialog=lambda dialog: self.open_dialog_signal.emit(dialog),
                 edit_package=lambda package: self.edit_package_signal.emit(package),
-                mission_generated=lambda: self.mission_generated_signal.emit(),
                 game_changed=lambda: self.game_changed_signal.emit(),
+                results_accepted=lambda d: self.results_accepted_signal.emit(d),
             )
         )
         # WEB-00.7: file dialogs, folders, links and quit for the web UI.
@@ -766,11 +765,12 @@ class QLiberationWindow(QMainWindow):
         self.dialog = IntelWindow(self.game)
         self.dialog.show()
 
-    def wait_for_mission_result(self) -> None:
-        """The web UI generated the mission: wait for its result (until WEB-05.1)."""
-        if self.game is None:
-            return
-        QWaitingForMissionResultWindow(self.game, self.sim_controller, self).exec()
+    def on_results_accepted(self, debriefing: Debriefing) -> None:
+        """The web UI accepted a mission result: show the Qt debriefing (until
+        WEB-05.2) and refresh the Qt widgets, as QWaitingForMissionResultWindow does.
+        """
+        GameUpdateSignal.get_instance().sendDebriefing(debriefing)
+        GameUpdateSignal.get_instance().updateGame(self.game)
 
     def _show_panel(self, name: str) -> None:
         # Without the web shell the panel is already part of the main window.

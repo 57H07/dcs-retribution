@@ -61,6 +61,7 @@ export interface GameUpdateEvents {
   game_unloaded: boolean;
   new_turn: boolean;
   budget_updated: boolean;
+  mission_result_updated: boolean;
 }
 
 export const handleStreamedEvents = (
@@ -155,6 +156,10 @@ export const handleStreamedEvents = (
 
   if (events.new_turn) {
     reloadGameState(dispatch, true);
+  }
+
+  if (events.mission_result_updated) {
+    dispatch(liberationApi.util.invalidateTags([Tags.MISSION_RESULT]));
   }
 
   if (topBarChanged(events)) {

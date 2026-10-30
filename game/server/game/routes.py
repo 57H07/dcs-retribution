@@ -24,6 +24,7 @@ from .topbar import (
 )
 from ..commanderrors import command_error_responses
 from ..dependencies import QtCallbacks, QtContext, UiOptions
+from ..missionresult import MissionResultContext
 
 router: APIRouter = APIRouter(prefix="/game")
 
@@ -131,19 +132,17 @@ def fix_tots(game: Game | None = Depends(GameContext.get)) -> FixedTotsJs:
     ),
 )
 @locked
-def take_off(
-    game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
-) -> MissionJs:
+def take_off(game: Game | None = Depends(GameContext.get)) -> MissionJs:
     """ "Take off": fast forwards to first contact if the settings ask for it, writes
-    the mission for DCS, then opens the window waiting for its result.
+    the mission for DCS, then watches state.json for its result (WEB-05.1: see
+    `GET /game/mission/result`).
 
     The client runs the confirmations of `GET /game/mission/checks` first.
     """
     game = _require_game(game)
-    path = generate_mission(game, GameContext.get_sim())
-    if qt is not None and qt.mission_generated is not None:
-        qt.mission_generated()
+    sim = GameContext.get_sim()
+    path = generate_mission(game, sim)
+    MissionResultContext.get().start(sim, path)
     return MissionJs(path=str(path))
 
 

@@ -7,6 +7,7 @@ export enum Tags {
   FLIGHT_PLAN = "FlightPlan",
   TOP_BAR = "TopBar",
   SETTINGS = "Settings",
+  MISSION_RESULT = "MissionResult",
   TIMELINE = "Timeline",
   PREFERENCES = "Preferences",
 }
@@ -34,7 +35,17 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     fixTots: { invalidatesTags: [Tags.TOP_BAR, Tags.TIMELINE] },
     // /game/timeline (WEB-01.4): refetched with the top bar on flight events.
     getTimeline: { providesTags: [Tags.TIMELINE] },
-    generateMission: { invalidatesTags: [Tags.TOP_BAR] },
+    generateMission: { invalidatesTags: [Tags.TOP_BAR, Tags.MISSION_RESULT] },
+    // /game/mission/result (WEB-05.1): the waiting screen. Status changes also
+    // arrive as `mission_result_updated` events.
+    getMissionResult: { providesTags: [Tags.MISSION_RESULT] },
+    loadMissionResultFile: { invalidatesTags: [Tags.MISSION_RESULT] },
+    abortMission: {
+      invalidatesTags: [Tags.MISSION_RESULT, Tags.TOP_BAR, Tags.TIMELINE],
+    },
+    acceptMissionResult: {
+      invalidatesTags: [Tags.MISSION_RESULT, Tags.TOP_BAR, Tags.TIMELINE],
+    },
     setSimSpeed: { invalidatesTags: [Tags.TOP_BAR] },
     // /debug/waypoint-geometries
     getDebugHoldZones: {

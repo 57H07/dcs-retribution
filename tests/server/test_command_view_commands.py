@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from collections.abc import MutableMapping
+from collections.abc import Iterator, MutableMapping
 from datetime import datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
@@ -17,6 +17,8 @@ from dcs.weather import Weather as PydcsWeather, Wind
 from game.ato.flightstate import Uninitialized
 from game.commands import (
     CommandError,
+    MissionResultStatus,
+    MissionResultWaiter,
     fix_past_tots,
     flights_missing_pilots,
     generate_mission,
@@ -28,9 +30,10 @@ from game.commands import mission as mission_module
 from game.gamelock import _GAME_LOCK
 from game.server import GameContext
 from game.server.app import app
-from game.server.dependencies import QtCallbacks, QtContext, UiOptions
+from game.server.dependencies import QtContext, UiOptions
 from game.server.eventstream import EventStream
 from game.server.game import topbar
+from game.server.missionresult import MissionResultContext
 from game.server.game.topbar import (
     SimSpeedJs,
     TopBarJs,
@@ -115,6 +118,10 @@ class _Sim:
     def set_simulation_speed(self, speed: SimSpeedSetting) -> None:
         self.calls.append(f"speed:{speed.name}")
         self.simulation_speed = speed
+
+    def wait_for_debriefing(self, callback: Any, on_error: Any = None) -> Any:
+        self.calls.append("wait_for_debriefing")
+        return SimpleNamespace(stop=lambda: self.calls.append("stop_waiting"))
 
 
 def _game(*packages: _Package, turn: int = 3) -> Any:
@@ -396,27 +403,11 @@ def test_budget_event_is_published_to_the_client() -> None:
 # --- HTTP side -----------------------------------------------------------------
 
 
-class _Recorder:
-    def __init__(self) -> None:
-        self.missions = 0
-        self.lock_held: list[bool] = []
-
-    def mission_generated(self) -> None:
-        self.lock_held.append(_GAME_LOCK._is_owned())  # type: ignore[attr-defined]
-        self.missions += 1
-
-    def callbacks(self) -> QtCallbacks:
-        def ignore(_: Any) -> None:
-            pass
-
-        return QtCallbacks(
-            ignore, ignore, ignore, ignore, mission_generated=self.mission_generated
-        )
-
-
 @pytest.fixture
-def sim() -> _Sim:
-    return _Sim()
+def sim() -> Iterator[_Sim]:
+    MissionResultContext.set(MissionResultWaiter(lambda: None))
+    yield _Sim()
+    MissionResultContext.set(None)
 
 
 def _load(monkeypatch: pytest.MonkeyPatch, game: Any, sim: _Sim) -> None:
@@ -539,30 +530,30 @@ def test_fix_tots_route_publishes_the_flights(
     assert [e.updated_flights for e in published] == [{late_flight}]
 
 
-def test_generate_mission_route_opens_the_qt_waiting_window(
+def test_generate_mission_route_waits_for_the_result(
     monkeypatch: pytest.MonkeyPatch, sim: _Sim
 ) -> None:
     _load(monkeypatch, _game(_Package(_Flight())), sim)
-    qt = _Recorder()
-    monkeypatch.setattr(QtContext, "_callbacks", qt.callbacks())
     status, body = _request("POST", "/game/mission")
     assert status == 200
     assert body == {"path": str(Path("M") / "retribution_nextturn.miz")}
     assert sim.lock_held == [True]
-    assert qt.missions == 1
+    assert sim.calls[-1] == "wait_for_debriefing"
+    snapshot = MissionResultContext.get().snapshot()
+    assert snapshot.status is MissionResultStatus.WAITING
+    assert snapshot.miz_path == Path("M") / "retribution_nextturn.miz"
 
 
 def test_generate_mission_route_refuses_missing_pilots(
     monkeypatch: pytest.MonkeyPatch, sim: _Sim
 ) -> None:
     _load(monkeypatch, _game(_Package(_Flight(missing_pilots=2))), sim)
-    qt = _Recorder()
-    monkeypatch.setattr(QtContext, "_callbacks", qt.callbacks())
     status, body = _request("POST", "/game/mission")
     assert status == 409
     assert "missing pilots" in body["detail"]
     assert sim.calls == []
-    assert qt.missions == 0
+    snapshot = MissionResultContext.get().snapshot()
+    assert snapshot.status is MissionResultStatus.IDLE
 
 
 def test_sim_speed_route(monkeypatch: pytest.MonkeyPatch, sim: _Sim) -> None:
