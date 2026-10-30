@@ -1,6 +1,7 @@
 // "Take off" (WEB-01.1): the confirmations of QTopPanel.launch_mission, in the
 // same order, then the generate-mission command. The server decides what needs
-// confirming (GET /game/mission/checks) and refuses missing pilots itself.
+// confirming (GET /game/mission/checks) and refuses missing pilots itself. Once
+// the mission is written, the waiting screen takes over (WEB-05.1).
 import { commandErrorMessage } from "../api/commands";
 import {
   MissionChecks,
@@ -9,8 +10,10 @@ import {
   useGenerateMissionMutation,
 } from "../api/liberationApi";
 import { useAppDispatch } from "../app/hooks";
+import { PATHS } from "../shell/paths";
 import { useToast } from "../ui";
 import { useCallback, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export type TakeOffStep =
   | { kind: "idle" }
@@ -34,6 +37,7 @@ export interface TakeOff {
 
 export function useTakeOff(): TakeOff {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const toast = useToast();
   const [fixTots] = useFixTotsMutation();
   const [generateMission] = useGenerateMissionMutation();
@@ -66,7 +70,8 @@ export function useTakeOff(): TakeOff {
       description: `Start ${result.data.path} in DCS, then wait for the result.`,
       tone: "success",
     });
-  }, [generateMission, fail, toast]);
+    navigate(PATHS.waiting);
+  }, [generateMission, fail, toast, navigate]);
 
   // After the player-pilot question: missing pilots block, past starts ask.
   const afterPlayers = useCallback(

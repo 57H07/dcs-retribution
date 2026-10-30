@@ -8,8 +8,10 @@ export enum Tags {
   TOP_BAR = "TopBar",
   SETTINGS = "Settings",
   INSPECTOR = "Inspector",
+  MISSION_RESULT = "MissionResult",
   TIMELINE = "Timeline",
   PREFERENCES = "Preferences",
+  PACKAGES = "Packages",
 }
 
 const LIST_ID = "LIST";
@@ -37,11 +39,24 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     fixTots: { invalidatesTags: [Tags.TOP_BAR, Tags.TIMELINE] },
     // /game/timeline (WEB-01.4): refetched with the top bar on flight events.
     getTimeline: { providesTags: [Tags.TIMELINE] },
-    generateMission: { invalidatesTags: [Tags.TOP_BAR] },
+    generateMission: { invalidatesTags: [Tags.TOP_BAR, Tags.MISSION_RESULT] },
+    // /game/mission/result (WEB-05.1): the waiting screen. Status changes also
+    // arrive as `mission_result_updated` events.
+    getMissionResult: { providesTags: [Tags.MISSION_RESULT] },
+    loadMissionResultFile: { invalidatesTags: [Tags.MISSION_RESULT] },
+    abortMission: {
+      invalidatesTags: [Tags.MISSION_RESULT, Tags.TOP_BAR, Tags.TIMELINE],
+    },
+    acceptMissionResult: {
+      invalidatesTags: [Tags.MISSION_RESULT, Tags.TOP_BAR, Tags.TIMELINE],
+    },
     setSimSpeed: { invalidatesTags: [Tags.TOP_BAR] },
     // Map inspector (WEB-01.3): refetched after game changes (eventstream).
     getControlPointSummary: { providesTags: [Tags.INSPECTOR] },
     getTgoSummary: { providesTags: [Tags.INSPECTOR] },
+    // /packages/ (WEB-01.2): also refetched on flight events (eventstream.tsx).
+    listPackages: { providesTags: [Tags.PACKAGES] },
+    deletePackage: { invalidatesTags: [Tags.PACKAGES, Tags.TOP_BAR] },
     // /debug/waypoint-geometries
     getDebugHoldZones: {
       providesTags: (result, error, arg) => [

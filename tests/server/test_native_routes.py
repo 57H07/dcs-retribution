@@ -61,6 +61,9 @@ class FakeBridge(NativeBridge):
     def choose_save_path(self, start: str) -> str | None:
         return self._ask("save", start)
 
+    def choose_file(self, title: str, start: str, file_filter: str) -> str | None:
+        return self._ask("file", start)
+
     def choose_folder(self, title: str, start: str) -> str | None:
         return self._ask(f"folder:{title}", start)
 

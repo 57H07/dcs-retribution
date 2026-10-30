@@ -14,7 +14,7 @@ const TIMELINE: Timeline = {
   start_time: "06:30:00",
   packages: [
     {
-      id: "strike-lead",
+      id: "pkg-strike",
       task: "Strike",
       target: "Ammo depot",
       startup: 600,
@@ -23,7 +23,7 @@ const TIMELINE: Timeline = {
       flight_ids: ["strike-lead", "strike-escort"],
     },
     {
-      id: "cap-lead",
+      id: "pkg-cap",
       task: "BARCAP",
       target: "Krymsk",
       startup: 0,
@@ -79,7 +79,7 @@ describe("mission timeline", () => {
       name: /^Strike/,
     });
     await userEvent.click(strike);
-    expect(store.getState().selection.packageId).toBe("strike-lead");
+    expect(store.getState().selection.packageId).toBe("pkg-strike");
     expect(store.getState().flights.selected).toBe("strike-lead");
     expect(strike).toHaveAttribute("aria-pressed", "true");
   });
@@ -91,9 +91,10 @@ describe("mission timeline", () => {
       store.dispatch(selectFlight("strike-escort"));
     });
     expect(strike).toHaveAttribute("aria-pressed", "true");
-    expect(
-      screen.getByRole("button", { name: /^BARCAP/ }),
-    ).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("button", { name: /^BARCAP/ })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
   });
 });
 
@@ -101,14 +102,14 @@ describe("selected package", () => {
   const packages = TIMELINE.packages;
 
   it("prefers the explicit package key", () => {
-    expect(selectedPackageId("cap-lead", "strike-escort", packages)).toBe(
-      "cap-lead",
+    expect(selectedPackageId("pkg-cap", "strike-escort", packages)).toBe(
+      "pkg-cap",
     );
   });
 
   it("falls back to the package of the selected flight", () => {
     expect(selectedPackageId(null, "strike-escort", packages)).toBe(
-      "strike-lead",
+      "pkg-strike",
     );
     expect(selectedPackageId("gone", null, packages)).toBeNull();
   });

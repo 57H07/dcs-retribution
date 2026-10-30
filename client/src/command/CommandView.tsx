@@ -8,6 +8,7 @@ import { Button, SidePanel } from "../ui";
 import styles from "./CommandView.module.css";
 import { MissionTimeline } from "./MissionTimeline";
 import { TurnActions } from "./TurnActions";
+import { PackagesPanel } from "./packages/PackagesPanel";
 import { ReactNode, useId, useState } from "react";
 
 export interface CommandViewProps {
@@ -17,8 +18,8 @@ export interface CommandViewProps {
   /** Floating card over the map; renders nothing while nothing is selected. */
   inspector?: ReactNode;
   timeline?: ReactNode;
-  /** Opens the Qt packages panel until WEB-01.2 replaces it. */
-  onOpenPackages?: () => void;
+  /** "+ New" of the packages panel. */
+  onNewPackage?: () => void;
 }
 
 export function CommandView({
@@ -26,21 +27,14 @@ export function CommandView({
   packages,
   inspector,
   timeline,
-  onOpenPackages,
+  onNewPackage,
 }: CommandViewProps) {
   const [timelineOpen, setTimelineOpen] = useState(true);
   const timelineId = useId();
   return (
     <div className={styles.view}>
       <SidePanel title="Packages" side="left" className={styles.side}>
-        {packages ?? (
-          <div className={styles.empty}>
-            <p>The packages of the turn open in their own window for now.</p>
-            {onOpenPackages && (
-              <Button onClick={onOpenPackages}>Open packages</Button>
-            )}
-          </div>
-        )}
+        {packages ?? <PackagesPanel onNewPackage={onNewPackage} />}
       </SidePanel>
       <div className={styles.center}>
         <div className={styles.map}>

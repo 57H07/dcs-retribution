@@ -51,10 +51,6 @@ export function appMenus({
       items: [
         { label: "Air Wing", onSelect: () => navigate(PATHS.airWing) },
         { label: "Transfers", onSelect: () => qt.openDialog("transfers") },
-        {
-          label: "Packages",
-          onSelect: () => qt.openDialog("air-tasking-order"),
-        },
         { label: "New package", shortcut: "N", onSelect: onNewPackage },
         "separator",
         { label: "Settings", onSelect: () => navigate(PATHS.settings) },

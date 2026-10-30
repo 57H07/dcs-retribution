@@ -96,9 +96,11 @@ class SimController(QObject):
         self.game_loop.pause_and_generate_miz(output)
 
     def wait_for_debriefing(
-        self, callback: Callable[[Debriefing], None]
+        self,
+        callback: Callable[[Debriefing], None],
+        on_error: Callable[[Exception], None] | None = None,
     ) -> PollDebriefingFileThread:
-        thread = PollDebriefingFileThread(callback, self.game_loop.sim)
+        thread = PollDebriefingFileThread(callback, self.game_loop.sim, on_error)
         thread.start()
         return thread
 

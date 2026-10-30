@@ -194,6 +194,27 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: () => ({ url: `/map-zones/threats` }),
     }),
+    getMissionResult: build.query<
+      GetMissionResultApiResponse,
+      GetMissionResultApiArg
+    >({
+      query: () => ({ url: `/game/mission/result` }),
+    }),
+    loadMissionResultFile: build.mutation<
+      LoadMissionResultFileApiResponse,
+      LoadMissionResultFileApiArg
+    >({
+      query: () => ({ url: `/game/mission/result/file`, method: "POST" }),
+    }),
+    abortMission: build.mutation<AbortMissionApiResponse, AbortMissionApiArg>({
+      query: () => ({ url: `/game/mission/result/cancel`, method: "POST" }),
+    }),
+    acceptMissionResult: build.mutation<
+      AcceptMissionResultApiResponse,
+      AcceptMissionResultApiArg
+    >({
+      query: () => ({ url: `/game/mission/result/accept`, method: "POST" }),
+    }),
     saveGame: build.mutation<SaveGameApiResponse, SaveGameApiArg>({
       query: () => ({ url: `/native/save`, method: "POST" }),
     }),
@@ -244,6 +265,28 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/navmesh/`,
         params: { for_player: queryArg.forPlayer },
+      }),
+    }),
+    listPackages: build.query<ListPackagesApiResponse, ListPackagesApiArg>({
+      query: () => ({ url: `/packages/` }),
+    }),
+    createPackage: build.mutation<
+      CreatePackageApiResponse,
+      CreatePackageApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/`,
+        method: "POST",
+        body: queryArg.newPackageJs,
+      }),
+    }),
+    deletePackage: build.mutation<
+      DeletePackageApiResponse,
+      DeletePackageApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}`,
+        method: "DELETE",
       }),
     }),
     getInstallPreferences: build.query<
@@ -540,6 +583,18 @@ export type ListUnculledZonesApiArg = void;
 export type GetThreatZonesApiResponse =
   /** status 200 Successful Response */ ThreatZoneContainer;
 export type GetThreatZonesApiArg = void;
+export type GetMissionResultApiResponse =
+  /** status 200 Successful Response */ MissionResult;
+export type GetMissionResultApiArg = void;
+export type LoadMissionResultFileApiResponse =
+  /** status 200 Successful Response */ MissionResult;
+export type LoadMissionResultFileApiArg = void;
+export type AbortMissionApiResponse =
+  /** status 204 Successful Response */ void;
+export type AbortMissionApiArg = void;
+export type AcceptMissionResultApiResponse =
+  /** status 200 Successful Response */ Turn;
+export type AcceptMissionResultApiArg = void;
 export type SaveGameApiResponse =
   /** status 200 Successful Response */ FileActionResult;
 export type SaveGameApiArg = void;
@@ -572,6 +627,19 @@ export type GetNavmeshApiResponse =
   /** status 200 Successful Response */ NavMesh;
 export type GetNavmeshApiArg = {
   forPlayer: Player;
+};
+export type ListPackagesApiResponse =
+  /** status 200 Successful Response */ Package[];
+export type ListPackagesApiArg = void;
+export type CreatePackageApiResponse =
+  /** status 204 Successful Response */ void;
+export type CreatePackageApiArg = {
+  newPackageJs: NewPackage;
+};
+export type DeletePackageApiResponse =
+  /** status 204 Successful Response */ void;
+export type DeletePackageApiArg = {
+  packageId: string;
 };
 export type GetInstallPreferencesApiResponse =
   /** status 200 Successful Response */ InstallPreferencesState;
@@ -974,6 +1042,22 @@ export type Settings = {
 export type SettingValueUpdate = {
   value: boolean | number | number | string;
 };
+export type MissionResultStatusJs = "idle" | "waiting" | "detected" | "error";
+export type LossRow = {
+  label: string;
+  blue: number;
+  red: number;
+};
+export type MissionResult = {
+  status: MissionResultStatusJs;
+  miz_path?: string;
+  state_path: string;
+  mission_ended: boolean;
+  error?: string;
+  player_country?: string;
+  enemy_country?: string;
+  losses: LossRow[];
+};
 export type FileOutcome = "saved" | "opened" | "cancelled";
 export type FileActionResult = {
   outcome: FileOutcome;
@@ -998,6 +1082,38 @@ export type ExternalLink =
   | "forum-thread"
   | "issues";
 export type Player = "Neutral" | "Blue" | "Red";
+export type PackageFlight = {
+  id: string;
+  task: string;
+  aircraft: string;
+  count: number;
+  clients: number;
+  missing_pilots: number;
+  squadron: string;
+  departure: string;
+  custom_name?: string;
+};
+export type Package = {
+  id: string;
+  blue: boolean;
+  task?: string;
+  description: string;
+  custom_name?: string;
+  target: string;
+  tot?: string;
+  auto_asap: boolean;
+  flights: PackageFlight[];
+  missing_pilots: number;
+};
+export type PackageTargetKind =
+  | "control-point"
+  | "tgo"
+  | "front-line"
+  | "downed-pilot";
+export type NewPackage = {
+  target_kind: PackageTargetKind;
+  target_id: string;
+};
 export type InstallPreferences = {
   saved_game_dir: string;
   dcs_install_dir: string;
@@ -1031,7 +1147,6 @@ export type QtDialog =
   | "pretense-campaign"
   | "air-wing"
   | "transfers"
-  | "air-tasking-order"
   | "reports"
   | "finances"
   | "intel"
@@ -1079,6 +1194,10 @@ export const {
   useGetOfflineBasemapImageQuery,
   useListUnculledZonesQuery,
   useGetThreatZonesQuery,
+  useGetMissionResultQuery,
+  useLoadMissionResultFileMutation,
+  useAbortMissionMutation,
+  useAcceptMissionResultMutation,
   useSaveGameMutation,
   useSaveGameAsMutation,
   useOpenGameMutation,
@@ -1088,6 +1207,9 @@ export const {
   useOpenExternalLinkMutation,
   useQuitApplicationMutation,
   useGetNavmeshQuery,
+  useListPackagesQuery,
+  useCreatePackageMutation,
+  useDeletePackageMutation,
   useGetInstallPreferencesQuery,
   useSetInstallPreferencesMutation,
   useOpenNewFrontLinePackageDialogMutation,

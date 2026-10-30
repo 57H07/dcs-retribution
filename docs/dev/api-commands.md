@@ -130,9 +130,22 @@ value, its Qt slot and the dialog itself (W9), and replaces its `QtScreen`
 element in `client/src/shell/routes.tsx`.
 
 A command may also hand over to a Qt window that is not migrated yet: `POST
-/game/mission` (take off, WEB-01.1) generates the mission, then calls
-`QtCallbacks.mission_generated`, which opens `QWaitingForMissionResultWindow`
-until WEB-05.1 replaces it.
+/game/mission/result/accept` (WEB-05.1) applies the mission result, then calls
+`QtCallbacks.results_accepted`, which opens `QDebriefingWindow` until WEB-05.2
+replaces it.
+
+## 8b. Background work: status + event + commands (WEB-05.1)
+
+Work that waits on something outside the API (DCS writing `state.json`) runs on
+its own thread and is exposed as a resource: `GET /game/mission/result` returns
+its status, every change publishes an event flag (`mission_result_updated`) that
+the client turns into a tag invalidation (`Tags.MISSION_RESULT` in
+`client/src/api/eventstream.tsx`), and commands act on it (`POST
+/game/mission/result/{file,cancel,accept}`). The state lives in
+`MissionResultWaiter` (`game/commands/missionresult.py`) behind its own small
+lock, so reading the status never waits for the game lock; the watch thread
+(`PollDebriefingFileThread`) takes the game lock only to read a new file, and a
+generation counter drops callbacks of a watch stopped in between.
 
 ## 9. System actions: the native bridge `/native/*` (WEB-00.7, W7)
 
@@ -155,5 +168,7 @@ later): `POST /native/save`, `/native/save-as`, `/native/open`, `/native/new-gam
   dialog waits (`game/native/files.py`), so they are marked `@locks_game_itself`
   instead of `@locked`. The other `/native/*` routes only queue work and use
   `@locked`.
+- Another file dialog (any file, Qt filter syntax) is `NativeBridge.choose_file`,
+  guarded by `one_dialog()`: see `POST /game/mission/result/file`.
 - `game/native/files.py` holds the save/open rules (last save file, migration,
   cancel); the Qt menus call the same functions.

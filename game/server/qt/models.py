@@ -19,7 +19,6 @@ class QtDialog(str, Enum):
     PRETENSE_CAMPAIGN = "pretense-campaign"
     AIR_WING = "air-wing"
     TRANSFERS = "transfers"
-    AIR_TASKING_ORDER = "air-tasking-order"
     REPORTS = "reports"
     FINANCES = "finances"
     INTEL = "intel"
