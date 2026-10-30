@@ -593,6 +593,33 @@
         }
       }
     },
+    "/game/timeline": {
+      "get": {
+        "summary": "Timeline",
+        "description": "Friendly packages on the mission time axis (startup, TOT, landing); null\nwithout a campaign.",
+        "operationId": "get_timeline",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/TimelineJs"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Timeline"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/game/turn/pass": {
       "post": {
         "summary": "Pass Turn",
@@ -1240,6 +1267,55 @@
         }
       }
     },
+    "/native/pick-folder": {
+      "post": {
+        "summary": "Pick Folder",
+        "description": "Asks for a folder and answers once the player closed the dialog.\n\nDoes not touch the campaign, so it never takes the game lock.",
+        "operationId": "pick_folder",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FolderPickRequestJs"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FolderPickResultJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "when another file dialog is open",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/native/new-game": {
       "post": {
         "summary": "New Game",
@@ -1348,6 +1424,72 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NavMeshJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/preferences/": {
+      "get": {
+        "summary": "Get Preferences",
+        "description": "DCS folders and the other install preferences, what is wrong with them, and\nwhether the first start setup must be shown.",
+        "operationId": "get_install_preferences",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstallPreferencesStateJs"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Set Preferences",
+        "description": "Validates and saves the preferences, like the Qt preferences window.\n\nCompleting the first start also replaces MissionScripting.lua in the DCS\ninstallation. Port and web interface changes need a restart.",
+        "operationId": "set_install_preferences",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InstallPreferencesUpdateJs"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstallPreferencesStateJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "when a folder is invalid, or the DCS installation folder is left empty without confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
                 }
               }
             }
@@ -2344,6 +2486,43 @@
         ],
         "title": "Waypoint"
       },
+      "FolderPickRequestJs": {
+        "properties": {
+          "purpose": {
+            "$ref": "#/components/schemas/FolderPurpose"
+          },
+          "start": {
+            "type": "string",
+            "title": "Start",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "purpose"
+        ],
+        "title": "FolderPickRequest"
+      },
+      "FolderPickResultJs": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "title": "FolderPickResult",
+        "description": "The folder chosen, or null when the player cancelled (WEB-07.2)."
+      },
+      "FolderPurpose": {
+        "type": "string",
+        "enum": [
+          "saved-games",
+          "dcs-install"
+        ],
+        "title": "FolderPurpose",
+        "description": "Folders the preferences ask for (WEB-07.2)."
+      },
       "ForceBalanceJs": {
         "properties": {
           "friendly": {
@@ -2635,6 +2814,128 @@
           "connections"
         ],
         "title": "IadsNetwork"
+      },
+      "InstallPreferencesJs": {
+        "properties": {
+          "saved_game_dir": {
+            "type": "string",
+            "title": "Saved Game Dir"
+          },
+          "dcs_install_dir": {
+            "type": "string",
+            "title": "Dcs Install Dir"
+          },
+          "prefer_liberation_payloads": {
+            "type": "boolean",
+            "title": "Prefer Liberation Payloads"
+          },
+          "setup_preferences_on_every_start": {
+            "type": "boolean",
+            "title": "Setup Preferences On Every Start"
+          },
+          "server_port": {
+            "type": "integer",
+            "maximum": 65535.0,
+            "minimum": 1.0,
+            "title": "Server Port"
+          },
+          "web_ui": {
+            "type": "boolean",
+            "title": "Web Ui"
+          }
+        },
+        "type": "object",
+        "required": [
+          "saved_game_dir",
+          "dcs_install_dir",
+          "prefer_liberation_payloads",
+          "setup_preferences_on_every_start",
+          "server_port",
+          "web_ui"
+        ],
+        "title": "InstallPreferences"
+      },
+      "InstallPreferencesStateJs": {
+        "properties": {
+          "preferences": {
+            "$ref": "#/components/schemas/InstallPreferencesJs"
+          },
+          "first_start": {
+            "type": "boolean",
+            "title": "First Start"
+          },
+          "saved_game_dir_problem": {
+            "title": "Saved Game Dir Problem",
+            "type": "string"
+          },
+          "dcs_install_dir_problem": {
+            "title": "Dcs Install Dir Problem",
+            "type": "string"
+          },
+          "warning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warning"
+          }
+        },
+        "type": "object",
+        "required": [
+          "preferences",
+          "first_start"
+        ],
+        "title": "InstallPreferencesState",
+        "description": "The saved preferences, what is wrong with them, and whether the first start\nsetup must be shown."
+      },
+      "InstallPreferencesUpdateJs": {
+        "properties": {
+          "saved_game_dir": {
+            "type": "string",
+            "title": "Saved Game Dir"
+          },
+          "dcs_install_dir": {
+            "type": "string",
+            "title": "Dcs Install Dir"
+          },
+          "prefer_liberation_payloads": {
+            "type": "boolean",
+            "title": "Prefer Liberation Payloads"
+          },
+          "setup_preferences_on_every_start": {
+            "type": "boolean",
+            "title": "Setup Preferences On Every Start"
+          },
+          "server_port": {
+            "type": "integer",
+            "maximum": 65535.0,
+            "minimum": 1.0,
+            "title": "Server Port"
+          },
+          "web_ui": {
+            "type": "boolean",
+            "title": "Web Ui"
+          },
+          "allow_empty_install_dir": {
+            "type": "boolean",
+            "title": "Allow Empty Install Dir",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "saved_game_dir",
+          "dcs_install_dir",
+          "prefer_liberation_payloads",
+          "setup_preferences_on_every_start",
+          "server_port",
+          "web_ui"
+        ],
+        "title": "InstallPreferencesUpdate"
       },
       "JoinZonesJs": {
         "properties": {
@@ -3018,7 +3319,6 @@
       "QtDialog": {
         "type": "string",
         "enum": [
-          "preferences",
           "stats",
           "notes",
           "logs",
@@ -3482,6 +3782,73 @@
           "radar_sams"
         ],
         "title": "ThreatZones"
+      },
+      "TimelineJs": {
+        "properties": {
+          "start_time": {
+            "type": "string",
+            "title": "Start Time"
+          },
+          "packages": {
+            "items": {
+              "$ref": "#/components/schemas/TimelinePackageJs"
+            },
+            "type": "array",
+            "title": "Packages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_time",
+          "packages"
+        ],
+        "title": "Timeline"
+      },
+      "TimelinePackageJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "task": {
+            "type": "string",
+            "title": "Task"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "startup": {
+            "type": "integer",
+            "title": "Startup"
+          },
+          "tot": {
+            "type": "integer",
+            "title": "Tot"
+          },
+          "landing": {
+            "type": "integer",
+            "title": "Landing"
+          },
+          "flight_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Flight Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "task",
+          "target",
+          "startup",
+          "tot",
+          "landing",
+          "flight_ids"
+        ],
+        "title": "TimelinePackage"
       },
       "TopBarJs": {
         "properties": {

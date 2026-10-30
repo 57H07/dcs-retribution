@@ -113,12 +113,11 @@ def test_dialogs_needing_a_campaign_are_refused_without_one(
 ) -> None:
     _set_game(monkeypatch, None)
     assert _post("/qt/dialogs/stats") == (409, {"detail": "No campaign is loaded."})
-    assert _post("/qt/dialogs/preferences") == (204, None)
-    assert qt.dialogs == [QtDialog.PREFERENCES]
+    assert _post("/qt/dialogs/logs") == (204, None)
+    assert qt.dialogs == [QtDialog.LOGS]
 
 
 def test_menu_actions_without_a_campaign() -> None:
-    assert not QtDialog.PREFERENCES.needs_game
     assert not QtDialog.LOGS.needs_game
     assert QtDialog.STATS.needs_game
     assert QtDialog.AIR_WING.needs_game

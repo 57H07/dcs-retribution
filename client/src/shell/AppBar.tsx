@@ -41,7 +41,7 @@ export function appMenus({
         },
         { label: "Save as…", onSelect: () => qt.openDialog("save-game-as") },
         "separator",
-        { label: "Preferences", onSelect: () => qt.openDialog("preferences") },
+        { label: "Preferences", onSelect: () => navigate(PATHS.preferences) },
         "separator",
         { label: "Exit", onSelect: () => qt.openDialog("quit") },
       ],

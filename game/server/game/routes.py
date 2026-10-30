@@ -12,6 +12,7 @@ from game.commands import (
 from game.commands.mission import describe_package
 from game.server import EventStream, GameContext
 from .models import CampaignStateJs, GameJs, TurnJs
+from .timeline import TimelineJs
 from .topbar import (
     FixedTotsJs,
     MissionChecksJs,
@@ -55,6 +56,16 @@ def top_bar(game: Game | None = Depends(GameContext.get)) -> TopBarJs | None:
         sim.current_time_in_sim_if_game_loaded,
         UiOptions.show_sim_speed_controls,
     )
+
+
+@router.get("/timeline", operation_id="get_timeline", response_model=TimelineJs | None)
+@locked
+def timeline(game: Game | None = Depends(GameContext.get)) -> TimelineJs | None:
+    """Friendly packages on the mission time axis (startup, TOT, landing); null
+    without a campaign."""
+    if game is None:
+        return None
+    return TimelineJs.for_game(game)
 
 
 @router.post(

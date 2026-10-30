@@ -28,8 +28,8 @@ from game.settings import Settings
 from game.sim import GameUpdateEvents
 from game.theater.start_generator import GameGenerator, GeneratorSettings, ModSettings
 from pydcs_extensions import load_mods
+from game import liberation_install
 from qt_ui import (
-    liberation_install,
     liberation_theme,
     uiconstants,
 )
@@ -83,7 +83,10 @@ def run_ui(game: Optional[Game], ui_flags: UiFlags) -> None:
     apply_theme(app)
 
     first_start = liberation_install.init()
-    if first_start:
+    # The web UI shows its own first start screen (WEB-07.2), which replaces the
+    # MissionScripting file once the player accepts.
+    web_first_start = first_start and liberation_install.web_ui_enabled()
+    if first_start and not web_first_start:
         window = QLiberationFirstStartWindow()
         window.exec()
 
@@ -108,7 +111,9 @@ def run_ui(game: Optional[Game], ui_flags: UiFlags) -> None:
     uiconstants.load_vehicle_icons()
 
     # Show warning if no DCS Installation directory was set
-    if liberation_install.get_dcs_install_directory() == "":
+    if web_first_start:
+        pass
+    elif liberation_install.get_dcs_install_directory() == "":
         logging.warning(
             "DCS Installation directory is empty. MissionScripting file will not be replaced!"
         )
@@ -136,7 +141,8 @@ def run_ui(game: Optional[Game], ui_flags: UiFlags) -> None:
             message_box.exec()
     # Replace DCS Mission scripting file to allow DCS Retribution to work
     try:
-        liberation_install.replace_mission_scripting_file()
+        if not web_first_start:
+            liberation_install.replace_mission_scripting_file()
     except Exception as e:
         logging.error(e)
         error_dialog = QtWidgets.QErrorMessage()

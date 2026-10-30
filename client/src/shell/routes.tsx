@@ -2,6 +2,7 @@
 // the Qt dialog through /qt/* and comes back to the command view; a migrated
 // screen replaces its QtScreen element here (and deletes the Qt dialog, W9).
 import { WaitingScreen } from "../missionresult/WaitingScreen";
+import { PreferencesScreen } from "../preferences/PreferencesScreen";
 import { SettingsScreen } from "../settings/SettingsScreen";
 import { QtScreen } from "./QtScreen";
 import { Shell } from "./Shell";
@@ -41,6 +42,10 @@ export const ROUTES: RouteObject[] = [
         // WEB-05.1: after Take off, until the results are accepted or aborted.
         path: "waiting",
         element: <WaitingScreen />,
+      },
+      {
+        path: "preferences",
+        element: <PreferencesScreen />,
       },
       {
         path: "debrief",

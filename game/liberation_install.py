@@ -1,20 +1,24 @@
+"""Install preferences: DCS folders, payloads, server port, web UI (WEB-07.2).
+
+Saved in `retribution_preferences.json` in the user data folder. They do not belong
+to a campaign: they are read at startup, before any game is loaded. Shared by the
+Qt preferences window and the `/preferences` API routes, so nothing here imports Qt.
+"""
+
+from __future__ import annotations
+
 import json
 import logging
 import os
 from pathlib import Path
 from shutil import copyfile
+from typing import Any
 
 import dcs
 
 from game import persistency
 
-global __dcs_saved_game_directory
-global __dcs_installation_directory
-global __last_save_file
-global __prefer_liberation_payloads
-global __setup_preferences_on_every_start
-global __server_port
-global __web_ui
+DEFAULT_SERVER_PORT = 16880
 
 
 def _user_data_path() -> Path:
@@ -37,10 +41,37 @@ PREFERENCES_PATH = USER_PATH / "retribution_preferences.json"
 # Overrides the "web_ui" preference for one launch: 1/true/yes/on or 0/false/no/off.
 WEB_UI_ENV_VAR = "RETRIBUTION_WEB_UI"
 
+__dcs_saved_game_directory = ""
+__dcs_installation_directory = ""
+__last_save_file = ""
+__ignore_empty_install_directory = False
+__prefer_liberation_payloads = False
+__setup_preferences_on_every_start = False
+__server_port = DEFAULT_SERVER_PORT
 __web_ui = False
+# True from a startup that needs the first start setup until preferences are applied.
+__first_start_pending = False
 
 
-def init():
+def _detect_saved_games_directory() -> str:
+    try:
+        saved_games: str = dcs.installation.get_dcs_saved_games_directory()
+        if os.path.exists(saved_games + ".openbeta"):
+            return saved_games + ".openbeta"
+        return saved_games
+    except Exception:
+        return ""
+
+
+def _detect_install_directory() -> str:
+    try:
+        return str(dcs.installation.get_dcs_install_directory())
+    except Exception:
+        return ""
+
+
+def init() -> bool:
+    """Load the preferences file. True when the first start setup must be shown."""
     global __dcs_saved_game_directory
     global __dcs_installation_directory
     global __last_save_file
@@ -49,13 +80,19 @@ def init():
     global __setup_preferences_on_every_start
     global __server_port
     global __web_ui
+    global __first_start_pending
 
     __web_ui = False
+    __last_save_file = ""
+    __ignore_empty_install_directory = False
+    __prefer_liberation_payloads = False
+    __setup_preferences_on_every_start = False
+    __server_port = DEFAULT_SERVER_PORT
     if PREFERENCES_PATH.exists():
         try:
             logging.debug("Loading Retribution preferences from %s", PREFERENCES_PATH)
             with PREFERENCES_PATH.open() as prefs:
-                pref_data = json.load(prefs)
+                pref_data: dict[str, Any] = json.load(prefs)
             __dcs_saved_game_directory = pref_data["saved_game_dir"]
             __dcs_installation_directory = pref_data["dcs_install_dir"]
             __last_save_file = pref_data.get("last_save_file", "")
@@ -68,40 +105,18 @@ def init():
             __setup_preferences_on_every_start = pref_data.get(
                 "setup_preferences_on_every_start", False
             )
-            __server_port = pref_data.get("server_port", 16880)
+            __server_port = pref_data.get("server_port", DEFAULT_SERVER_PORT)
             __web_ui = bool(pref_data.get("web_ui", False))
-            is_first_start = __setup_preferences_on_every_start
-        except (KeyError, json.JSONDecodeError):
+            is_first_start = bool(__setup_preferences_on_every_start)
+        except (KeyError, TypeError, AttributeError, json.JSONDecodeError):
             __dcs_saved_game_directory = ""
             __dcs_installation_directory = ""
-            __last_save_file = ""
-            __ignore_empty_install_directory = False
-            __prefer_liberation_payloads = False
-            __setup_preferences_on_every_start = False
-            __server_port = 16880
             is_first_start = True
     else:
-        __last_save_file = ""
-        __ignore_empty_install_directory = False
-        __prefer_liberation_payloads = False
-        __setup_preferences_on_every_start = False
-        __server_port = 16880
-        try:
-            __dcs_saved_game_directory = (
-                dcs.installation.get_dcs_saved_games_directory()
-            )
-            if os.path.exists(__dcs_saved_game_directory + ".openbeta"):
-                __dcs_saved_game_directory = (
-                    dcs.installation.get_dcs_saved_games_directory() + ".openbeta"
-                )
-        except:
-            __dcs_saved_game_directory = ""
-        try:
-            __dcs_installation_directory = dcs.installation.get_dcs_install_directory()
-        except:
-            __dcs_installation_directory = ""
-
+        __dcs_saved_game_directory = _detect_saved_games_directory()
+        __dcs_installation_directory = _detect_install_directory()
         is_first_start = True
+    __first_start_pending = is_first_start
     persistency.setup(
         __dcs_saved_game_directory, __prefer_liberation_payloads, __server_port
     )
@@ -109,37 +124,38 @@ def init():
 
 
 def setup(
-    saved_game_dir,
-    install_dir,
-    prefer_liberation_payloads,
-    setup_preferences_on_every_start,
-    port,
-):
+    saved_game_dir: str,
+    install_dir: str,
+    prefer_liberation_payloads: bool,
+    setup_preferences_on_every_start: bool,
+    port: int,
+) -> None:
     global __dcs_saved_game_directory
     global __dcs_installation_directory
     global __prefer_liberation_payloads
     global __setup_preferences_on_every_start
     global __server_port
+    global __first_start_pending
     __dcs_saved_game_directory = saved_game_dir
     __dcs_installation_directory = install_dir
     __prefer_liberation_payloads = prefer_liberation_payloads
     __setup_preferences_on_every_start = setup_preferences_on_every_start
     __server_port = port
+    __first_start_pending = False
     persistency.setup(saved_game_dir, prefer_liberation_payloads, port)
 
 
-def setup_last_save_file(last_save_file):
+def first_start_pending() -> bool:
+    """True when this launch needed the first start setup and it is not done yet."""
+    return __first_start_pending
+
+
+def setup_last_save_file(last_save_file: str) -> None:
     global __last_save_file
     __last_save_file = last_save_file
 
 
-def save_config():
-    global __dcs_saved_game_directory
-    global __dcs_installation_directory
-    global __last_save_file
-    global __ignore_empty_install_directory
-    global __server_port
-    global __web_ui
+def save_config() -> None:
     pref_data = {
         "saved_game_dir": __dcs_saved_game_directory,
         "dcs_install_dir": __dcs_installation_directory,
@@ -155,34 +171,28 @@ def save_config():
         json.dump(pref_data, prefs, indent="  ")
 
 
-def get_dcs_install_directory():
-    global __dcs_installation_directory
+def get_dcs_install_directory() -> str:
     return __dcs_installation_directory
 
 
-def get_saved_game_dir():
-    global __dcs_saved_game_directory
+def get_saved_game_dir() -> str:
     return __dcs_saved_game_directory
 
 
-def prefer_liberation_payloads():
-    global __prefer_liberation_payloads
+def prefer_liberation_payloads() -> bool:
     return __prefer_liberation_payloads
 
 
-def setup_preferences_on_every_start():
-    global __setup_preferences_on_every_start
+def setup_preferences_on_every_start() -> bool:
     return __setup_preferences_on_every_start
 
 
-def server_port():
-    global __server_port
+def server_port() -> int:
     return __server_port
 
 
 def web_ui_preference() -> bool:
     """The saved "web_ui" preference, ignoring the environment override."""
-    global __web_ui
     return __web_ui
 
 
@@ -205,26 +215,22 @@ def web_ui_enabled() -> bool:
     return web_ui_preference()
 
 
-def ignore_empty_install_directory():
-    global __ignore_empty_install_directory
+def ignore_empty_install_directory() -> bool:
     return __ignore_empty_install_directory
 
 
-def set_ignore_empty_install_directory(value: bool):
+def set_ignore_empty_install_directory(value: bool) -> None:
     global __ignore_empty_install_directory
     __ignore_empty_install_directory = value
 
 
-def get_last_save_file():
-    global __last_save_file
-    print(__last_save_file)
+def get_last_save_file() -> str | None:
     if os.path.exists(__last_save_file):
         return __last_save_file
-    else:
-        return None
+    return None
 
 
-def replace_mission_scripting_file():
+def replace_mission_scripting_file() -> None:
     install_dir = get_dcs_install_directory()
     mission_scripting_path = os.path.join(
         install_dir, "Scripts", "MissionScripting.lua"
@@ -245,7 +251,7 @@ def replace_mission_scripting_file():
         copyfile(liberation_scripting_path, mission_scripting_path)
 
 
-def restore_original_mission_scripting():
+def restore_original_mission_scripting() -> None:
     install_dir = get_dcs_install_directory()
     mission_scripting_path = os.path.join(
         install_dir, "Scripts", "MissionScripting.lua"

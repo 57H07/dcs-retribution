@@ -8,6 +8,8 @@ export enum Tags {
   TOP_BAR = "TopBar",
   SETTINGS = "Settings",
   MISSION_RESULT = "MissionResult",
+  TIMELINE = "Timeline",
+  PREFERENCES = "Preferences",
 }
 
 const LIST_ID = "LIST";
@@ -29,16 +31,20 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
   endpoints: {
     // /game/ (WEB-01.1): the top bar refreshes after each turn action.
     getTopBar: { providesTags: [Tags.TOP_BAR] },
-    passTurn: { invalidatesTags: [Tags.TOP_BAR] },
-    fixTots: { invalidatesTags: [Tags.TOP_BAR] },
+    passTurn: { invalidatesTags: [Tags.TOP_BAR, Tags.TIMELINE] },
+    fixTots: { invalidatesTags: [Tags.TOP_BAR, Tags.TIMELINE] },
+    // /game/timeline (WEB-01.4): refetched with the top bar on flight events.
+    getTimeline: { providesTags: [Tags.TIMELINE] },
     generateMission: { invalidatesTags: [Tags.TOP_BAR, Tags.MISSION_RESULT] },
     // /game/mission/result (WEB-05.1): the waiting screen. Status changes also
     // arrive as `mission_result_updated` events.
     getMissionResult: { providesTags: [Tags.MISSION_RESULT] },
     loadMissionResultFile: { invalidatesTags: [Tags.MISSION_RESULT] },
-    abortMission: { invalidatesTags: [Tags.MISSION_RESULT, Tags.TOP_BAR] },
+    abortMission: {
+      invalidatesTags: [Tags.MISSION_RESULT, Tags.TOP_BAR, Tags.TIMELINE],
+    },
     acceptMissionResult: {
-      invalidatesTags: [Tags.MISSION_RESULT, Tags.TOP_BAR],
+      invalidatesTags: [Tags.MISSION_RESULT, Tags.TOP_BAR, Tags.TIMELINE],
     },
     setSimSpeed: { invalidatesTags: [Tags.TOP_BAR] },
     // /debug/waypoint-geometries
@@ -71,6 +77,9 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     // A setting (cheats, fast forward...) may change what the top bar shows.
     setSetting: { invalidatesTags: [Tags.SETTINGS, Tags.TOP_BAR] },
     resetSettingsPage: { invalidatesTags: [Tags.SETTINGS, Tags.TOP_BAR] },
+    // /preferences/ (WEB-07.2): saving reloads the state (problems, first start).
+    getInstallPreferences: { providesTags: [Tags.PREFERENCES] },
+    setInstallPreferences: { invalidatesTags: [Tags.PREFERENCES] },
     // /waypoints/
     listAllWaypointsForFlight: {
       providesTags: (result, error, arg) => [

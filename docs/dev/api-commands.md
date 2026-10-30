@@ -153,7 +153,9 @@ What a web page cannot do goes through `NativeBridge` (`game/native/bridge.py`),
 which the shell implements (`qt_ui/nativebridge.py` today, Electron or a browser
 later): `POST /native/save`, `/native/save-as`, `/native/open`, `/native/new-game`,
 `/native/quit`, `/native/open-folder/{saves|missions}`,
-`/native/open-link/{link}` (`ExternalLink` in `game/native/places.py`).
+`/native/open-link/{link}` (`ExternalLink` in `game/native/places.py`), and
+`/native/pick-folder` (`{"purpose": "saved-games"|"dcs-install", "start"}` ->
+`{"path"}`, null when cancelled; WEB-07.2), which never touches the campaign.
 
 - The file routes answer **when the player closes the dialog**, with
   `FileActionResult` (`{"outcome": "saved"|"opened"|"cancelled", "path"}`), or a

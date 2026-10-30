@@ -8,6 +8,7 @@ export const PATHS = {
   newGame: "/new-game",
   settings: "/settings",
   waiting: "/waiting",
+  preferences: "/preferences",
   debrief: "/debrief",
   reports: "/reports",
 };

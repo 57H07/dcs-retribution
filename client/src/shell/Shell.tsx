@@ -1,6 +1,7 @@
 import { CommandView } from "../command/CommandView";
 import LiberationMap from "../components/liberationmap";
 import { toggleOverlay } from "../maplayers/layerToggle";
+import { FirstStart } from "../preferences/FirstStart";
 import { ToastProvider, useToast } from "../ui";
 import { AppBar } from "./AppBar";
 import { HelpOverlay } from "./HelpOverlay";
@@ -64,6 +65,7 @@ function ShellLayout() {
         <Outlet />
       </main>
       <HelpOverlay open={helpOpen} onOpenChange={setHelpOpen} />
+      <FirstStart />
     </div>
   );
 }
