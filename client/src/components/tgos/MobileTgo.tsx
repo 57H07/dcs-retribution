@@ -3,7 +3,6 @@ import backend from "../../api/backend";
 import {
   useClearTgoDestinationMutation,
   useOpenNewTgoPackageDialogMutation,
-  useOpenTgoInfoDialogMutation,
   useSetTgoDestinationMutation,
 } from "../../api/liberationApi";
 import {
@@ -12,6 +11,7 @@ import {
   setHoveredEmitter,
 } from "../../api/mapSlice";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { useInspectTgo } from "../../maplayers/mapSelection";
 import SplitLines from "../splitlines/SplitLines";
 import { MovementPath, MovementPathHandle } from "../controlpoints/MovementPath";
 import { TgoTooltip, useTgoIcon } from "./shared";
@@ -107,7 +107,7 @@ function PrimaryMarker(props: PrimaryMarkerProps) {
   const [putDestination, { isLoading }] = useSetTgoDestinationMutation();
   const [cancelTravel] = useClearTgoDestinationMutation();
 
-  const [openInfoDialog] = useOpenTgoInfoDialogMutation();
+  const inspect = useInspectTgo();
   const [openNewPackageDialog] = useOpenNewTgoPackageDialogMutation();
   const dispatch = useAppDispatch();
   // Raised above other icons while this emitter (or its ring) is hovered,
@@ -161,7 +161,7 @@ function PrimaryMarker(props: PrimaryMarkerProps) {
         eventHandlers={{
           click: () => {
             if (!hasDestination) {
-              openInfoDialog({ tgoId: props.tgo.id });
+              inspect(props.tgo.id);
             }
           },
           contextmenu: () => {
@@ -241,7 +241,7 @@ interface SecondaryMarkerProps {
 function SecondaryMarker(props: SecondaryMarkerProps) {
   const dispatch = useAppDispatch();
   const icon = useTgoIcon(props.tgo);
-  const [openInfoDialog] = useOpenTgoInfoDialogMutation();
+  const inspect = useInspectTgo();
   const [openNewPackageDialog] = useOpenNewTgoPackageDialogMutation();
   const raised = useAppSelector(
     (state) =>
@@ -260,7 +260,7 @@ function SecondaryMarker(props: SecondaryMarkerProps) {
       zIndexOffset={raised ? 10000 : 0}
       eventHandlers={{
         click: () => {
-          openInfoDialog({ tgoId: props.tgo.id });
+          inspect(props.tgo.id);
         },
         contextmenu: () => {
           openNewPackageDialog({ tgoId: props.tgo.id });

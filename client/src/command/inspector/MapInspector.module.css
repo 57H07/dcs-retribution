@@ -1,0 +1,79 @@
+/* Floating card of the Main mockup (top-right of the map). */
+.card {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  max-width: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  background: color-mix(in srgb, var(--ui-color-bg-panel) 95%, transparent);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-lg);
+  box-shadow: var(--ui-shadow-overlay);
+  font-family: var(--ui-font-body);
+  pointer-events: auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-md);
+  padding: var(--ui-space-lg) var(--ui-space-lg) var(--ui-space-md);
+  border-bottom: 1px solid var(--ui-color-line);
+}
+
+.titles {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.title {
+  overflow: hidden;
+  color: var(--ui-color-text-primary);
+  font-family: var(--ui-font-display);
+  font-size: var(--ui-font-size-lg);
+  font-weight: var(--ui-font-weight-bold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subtitle {
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-xs);
+}
+
+.close {
+  flex: none;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-lg);
+  padding: var(--ui-space-lg);
+}
+
+.gauges {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-sm);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-sm);
+}
+
+.actions > * {
+  flex: 1;
+}
+
+.note {
+  margin: 0;
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}

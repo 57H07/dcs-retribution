@@ -17,14 +17,16 @@ const CHECKS = "/game/mission/checks";
 const MISSION = { status: 200, body: { path: "C:/Missions/next.miz" } };
 
 describe("command view layout", () => {
-  it("has the packages, map, inspector and timeline regions", async () => {
+  it("has the packages, map, layer toolbar and timeline regions", async () => {
     recordFetch();
     const { container } = renderShell();
     expect(
       screen.getByRole("complementary", { name: "Packages" }),
     ).toBeInTheDocument();
+    // The inspector only shows once something is selected on the map.
+    expect(screen.queryByRole("region", { name: /^Inspector/ })).toBeNull();
     expect(
-      screen.getByRole("button", { name: "Expand Inspector" }),
+      screen.getByRole("toolbar", { name: "Map layers" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("region", { name: "Mission timeline" }),

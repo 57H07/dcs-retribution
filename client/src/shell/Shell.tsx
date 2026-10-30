@@ -1,6 +1,8 @@
 import { CommandView } from "../command/CommandView";
+import { MapInspector } from "../command/inspector/MapInspector";
 import LiberationMap from "../components/liberationmap";
 import { toggleOverlay } from "../maplayers/layerToggle";
+import { MapSelection } from "../maplayers/mapSelection";
 import { FirstStart } from "../preferences/FirstStart";
 import { ToastProvider, useToast } from "../ui";
 import { AppBar } from "./AppBar";
@@ -18,6 +20,7 @@ function overlayIsOpen(): boolean {
 
 function ShellLayout() {
   const [helpOpen, setHelpOpen] = useState(false);
+  const [selection, setSelection] = useState<MapSelection | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const qt = useQtCommands();
@@ -37,6 +40,9 @@ function ShellLayout() {
       case "close":
         if (!overlayIsOpen() && location.pathname !== "/") {
           navigate("/");
+        } else if (!overlayIsOpen()) {
+          // On the command view, Escape closes the map inspector.
+          setSelection(null);
         }
         break;
       case "layer":
@@ -59,7 +65,13 @@ function ShellLayout() {
       <AppBar onNewPackage={newPackage} onShowHelp={() => setHelpOpen(true)} />
       <main className={styles.content}>
         <CommandView
-          map={<LiberationMap />}
+          map={<LiberationMap onSelect={setSelection} layerToolbar />}
+          inspector={
+            <MapInspector
+              selection={selection}
+              onClose={() => setSelection(null)}
+            />
+          }
           onOpenPackages={() => qt.openDialog("air-tasking-order")}
         />
         <Outlet />

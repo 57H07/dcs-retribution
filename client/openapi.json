@@ -67,6 +67,47 @@
         }
       }
     },
+    "/control-points/{cp_id}/summary": {
+      "get": {
+        "summary": "Get Control Point Summary",
+        "description": "What the map inspector shows about a base (WEB-01.3).",
+        "operationId": "get_control_point_summary",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlPointSummaryJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/control-points/{cp_id}/destination-in-range": {
       "get": {
         "summary": "Destination In Range",
@@ -1834,6 +1875,47 @@
         }
       }
     },
+    "/tgos/{tgo_id}/summary": {
+      "get": {
+        "summary": "Get Tgo Summary",
+        "description": "What the map inspector shows about a ground object (WEB-01.3).",
+        "operationId": "get_tgo_summary",
+        "parameters": [
+          {
+            "name": "tgo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Tgo Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgoSummaryJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tgos/{tgo_id}/destination-in-range": {
       "get": {
         "summary": "Tgo Destination In Range",
@@ -2200,6 +2282,104 @@
           "sidc"
         ],
         "title": "ControlPoint"
+      },
+      "ControlPointSummaryJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "blue": {
+            "type": "boolean",
+            "title": "Blue"
+          },
+          "sidc": {
+            "type": "string",
+            "title": "Sidc"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "distance_to_front_nm": {
+            "title": "Distance To Front Nm",
+            "type": "number"
+          },
+          "runway": {
+            "$ref": "#/components/schemas/RunwayJs"
+          },
+          "parking": {
+            "$ref": "#/components/schemas/CountJs"
+          },
+          "ground_units": {
+            "$ref": "#/components/schemas/CountJs"
+          },
+          "ammo_depots": {
+            "$ref": "#/components/schemas/CountJs"
+          },
+          "fuel_depots": {
+            "$ref": "#/components/schemas/CountJs"
+          },
+          "can_buy_aircraft": {
+            "type": "boolean",
+            "title": "Can Buy Aircraft"
+          },
+          "can_buy_ground_units": {
+            "type": "boolean",
+            "title": "Can Buy Ground Units"
+          },
+          "can_repair_runway": {
+            "type": "boolean",
+            "title": "Can Repair Runway"
+          },
+          "can_afford_runway_repair": {
+            "type": "boolean",
+            "title": "Can Afford Runway Repair"
+          },
+          "runway_repair_cost": {
+            "type": "integer",
+            "title": "Runway Repair Cost"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "blue",
+          "sidc",
+          "category",
+          "ammo_depots",
+          "fuel_depots",
+          "can_buy_aircraft",
+          "can_buy_ground_units",
+          "can_repair_runway",
+          "can_afford_runway_repair",
+          "runway_repair_cost"
+        ],
+        "title": "ControlPointSummary"
+      },
+      "CountJs": {
+        "properties": {
+          "current": {
+            "type": "integer",
+            "title": "Current"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "current",
+          "total"
+        ],
+        "title": "Count"
       },
       "DownedPilotJs": {
         "properties": {
@@ -3155,6 +3335,28 @@
         ],
         "title": "QtDialog"
       },
+      "RunwayJs": {
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "operational",
+              "damaged",
+              "repairing"
+            ],
+            "title": "State"
+          },
+          "repair_turns_remaining": {
+            "title": "Repair Turns Remaining",
+            "type": "integer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "state"
+        ],
+        "title": "Runway"
+      },
       "SettingJs": {
         "properties": {
           "key": {
@@ -3522,6 +3724,64 @@
           "mobile"
         ],
         "title": "Tgo"
+      },
+      "TgoSummaryJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "blue": {
+            "type": "boolean",
+            "title": "Blue"
+          },
+          "sidc": {
+            "type": "string",
+            "title": "Sidc"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "control_point_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Control Point Id"
+          },
+          "control_point_name": {
+            "type": "string",
+            "title": "Control Point Name"
+          },
+          "distance_to_front_nm": {
+            "title": "Distance To Front Nm",
+            "type": "number"
+          },
+          "units": {
+            "$ref": "#/components/schemas/CountJs"
+          },
+          "dead": {
+            "type": "boolean",
+            "title": "Dead"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "blue",
+          "sidc",
+          "category",
+          "control_point_id",
+          "control_point_name",
+          "units",
+          "dead"
+        ],
+        "title": "TgoSummary"
       },
       "ThreatZoneContainerJs": {
         "properties": {

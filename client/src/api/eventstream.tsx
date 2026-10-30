@@ -161,7 +161,23 @@ export const handleStreamedEvents = (
     // The timeline (WEB-01.4) shows the same flights and turn.
     dispatch(liberationApi.util.invalidateTags([Tags.TOP_BAR, Tags.TIMELINE]));
   }
+
+  if (inspectorChanged(events)) {
+    dispatch(liberationApi.util.invalidateTags([Tags.INSPECTOR]));
+  }
 };
+
+/** Events after which the map inspector (WEB-01.3) refetches its summary. */
+export function inspectorChanged(events: GameUpdateEvents): boolean {
+  return (
+    events.new_turn ||
+    events.budget_updated ||
+    events.reset_on_map_center != null ||
+    events.updated_control_points.length > 0 ||
+    events.updated_tgos.length > 0 ||
+    events.updated_front_lines.length > 0
+  );
+}
 
 /** Events after which the top bar (WEB-01.1) refetches its data. */
 export function topBarChanged(events: GameUpdateEvents): boolean {

@@ -4,6 +4,8 @@ import { renderWithProviders } from "../../testutils";
 import { MapZones } from "../../api/_liberationApi";
 import Basemaps, {
   OFFLINE_BASEMAP_NAME,
+  ONLINE_BASEMAPS,
+  initialBasemapName,
   OnlineLayerRenderer,
   offlineBasemapImageUrl,
 } from "./Basemaps";
@@ -91,14 +93,45 @@ describe("TileHealth", () => {
 });
 
 describe("Basemaps", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it("starts on the first online basemap", () => {
+  it("starts on the dark basemap by default (W8)", () => {
     const map = renderMap();
+    const [layer] = tileLayersOn(map);
     expect(tileLayersOn(map)).toHaveLength(1);
+    expect(ONLINE_BASEMAPS[0].esriName).toBe("DarkGray");
+    expect((layer as unknown as { _url: string })._url).toContain("DarkGray");
     expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("starts on the basemap this viewer chose last", () => {
+    window.localStorage.setItem("retribution.map.basemap", "Topographic");
+    expect(initialBasemapName()).toBe("Topographic");
+    const map = renderMap();
+    const [layer] = tileLayersOn(map);
+    expect((layer as unknown as { _url: string })._url).toContain(
+      "Topographic",
+    );
+  });
+
+  it("ignores an unknown remembered basemap", () => {
+    window.localStorage.setItem("retribution.map.basemap", "Gone");
+    expect(initialBasemapName()).toBe(ONLINE_BASEMAPS[0].label);
+  });
+
+  it("does not remember the automatic offline fallback", () => {
+    const map = renderMap();
+    const [online] = tileLayersOn(map);
+    fireTileErrors(online, TILE_ERROR_THRESHOLD);
+    expect(window.localStorage.getItem("retribution.map.basemap")).not.toBe(
+      OFFLINE_BASEMAP_NAME,
+    );
   });
 
   it("lists the offline basemap in the layer control", () => {
