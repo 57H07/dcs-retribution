@@ -46,6 +46,7 @@ class GameUpdateEventsJs(BaseModel):
     game_unloaded: bool
     new_turn: bool
     budget_updated: bool
+    mission_result_updated: bool
 
     @classmethod
     def from_events(
@@ -123,4 +124,5 @@ class GameUpdateEventsJs(BaseModel):
             game_unloaded=events.game_unloaded,
             new_turn=events.new_turn,
             budget_updated=events.budget_updated,
+            mission_result_updated=events.mission_result_updated,
         )

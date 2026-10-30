@@ -111,6 +111,15 @@ class QtNativeBridge(NativeBridge):
 
         return self._wait_for(ask)
 
+    def choose_file(self, title: str, start: str, file_filter: str) -> str | None:
+        def ask() -> str | None:
+            path, _ = QFileDialog.getOpenFileName(
+                self._shell.window, title, dir=start, filter=file_filter
+            )
+            return path or None
+
+        return self._wait_for(ask)
+
     def choose_folder(self, title: str, start: str) -> str | None:
         def ask() -> str | None:
             path = QFileDialog.getExistingDirectory(

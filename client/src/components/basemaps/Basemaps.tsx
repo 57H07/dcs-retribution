@@ -13,6 +13,7 @@ import { selectMapZones } from "../../api/mapZonesSlice";
 import { useAppSelector } from "../../app/hooks";
 import { OFFLINE_BASEMAP_COLORS } from "../../maplayers/colors";
 import "./Basemaps.css";
+import { readBasemapPreference, writeBasemapPreference } from "./preference";
 import { TileHealth, browserIsOffline } from "./tileHealth";
 import {
   Layer,
@@ -44,7 +45,10 @@ export interface OnlineBasemap {
   esriName: EsriBasemapName;
 }
 
+// The first one is the default: a dark basemap keeps the game layers readable
+// (W8). The viewer's last choice wins over it (preference.ts).
 export const ONLINE_BASEMAPS: OnlineBasemap[] = [
+  { label: "Dark gray", esriName: "DarkGray" },
   { label: "Imagery Clarity", esriName: "ImageryClarity" },
   { label: "Imagery Firefly", esriName: "ImageryFirefly" },
   { label: "Topographic", esriName: "Topographic" },
@@ -52,6 +56,18 @@ export const ONLINE_BASEMAPS: OnlineBasemap[] = [
 
 export const OFFLINE_BASEMAP_NAME = "Offline (theatre landmap)";
 const OFFLINE_PANE = "offlineBasemap";
+
+/** The basemap shown first: the viewer's last choice, else the dark one. */
+export function initialBasemapName(): string {
+  const preferred = readBasemapPreference();
+  const known = [
+    ...ONLINE_BASEMAPS.map((basemap) => basemap.label),
+    OFFLINE_BASEMAP_NAME,
+  ];
+  return preferred !== null && known.includes(preferred)
+    ? preferred
+    : ONLINE_BASEMAPS[0].label;
+}
 
 export type OnlineLayerRenderer = (
   basemap: OnlineBasemap,
@@ -178,6 +194,7 @@ export default function Basemaps({
   const offline = useRef<LeafletLayerGroup>(null);
   const [offlineShown, setOfflineShown] = useState(false);
   const [automatic, setAutomatic] = useState(false);
+  const [initialName] = useState(initialBasemapName);
 
   useEffect(() => {
     const offlineLayer = offline.current;
@@ -189,10 +206,13 @@ export default function Basemaps({
     );
     const health = new TileHealth();
 
+    // True while the map falls back on its own: not the viewer's choice.
+    let fallingBack = false;
     const fallBack = () => {
       if (map.hasLayer(offlineLayer)) {
         return;
       }
+      fallingBack = true;
       onlineLayers.forEach((layer) => {
         if (map.hasLayer(layer)) {
           map.removeLayer(layer);
@@ -200,6 +220,7 @@ export default function Basemaps({
       });
       setAutomatic(true);
       map.addLayer(offlineLayer);
+      fallingBack = false;
     };
     const onTileError = () => {
       if (health.recordError()) {
@@ -216,6 +237,9 @@ export default function Basemaps({
       setOfflineShown(false);
     };
     const onBaseLayerChange = (e: LayersControlEvent) => {
+      if (!fallingBack) {
+        writeBasemapPreference(e.name);
+      }
       if (e.layer !== offlineLayer) {
         // Back on an online basemap: give it a fresh chance.
         health.reset();
@@ -251,14 +275,17 @@ export default function Basemaps({
         <LayersControl.BaseLayer
           key={basemap.label}
           name={basemap.label}
-          checked={index === 0}
+          checked={basemap.label === initialName}
         >
           {renderOnline(basemap, (layer) => {
             online.current[index] = layer;
           })}
         </LayersControl.BaseLayer>
       ))}
-      <LayersControl.BaseLayer name={OFFLINE_BASEMAP_NAME}>
+      <LayersControl.BaseLayer
+        name={OFFLINE_BASEMAP_NAME}
+        checked={initialName === OFFLINE_BASEMAP_NAME}
+      >
         <OfflineBasemapLayer ref={offline} />
       </LayersControl.BaseLayer>
       {offlineShown && <OfflineBanner automatic={automatic} />}

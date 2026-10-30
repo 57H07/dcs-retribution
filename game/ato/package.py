@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import logging
+import uuid
 from collections import defaultdict
 from copy import deepcopy
 from datetime import datetime
-from typing import Dict, Optional, TYPE_CHECKING
+from typing import Any, Dict, Optional, TYPE_CHECKING
 
 from game.db import Database
 from game.utils import Speed
@@ -32,6 +33,8 @@ class Package(RadioFrequencyContainer):
         custom_name: str | None = None,
         frequency: RadioFrequency | None = None,
     ) -> None:
+        # Stable API id (WEB-01.2): persisted in the save, unlike the list index.
+        self.id = uuid.uuid4()
         self.target = target
         self._db = db
         self.frequency = frequency
@@ -49,6 +52,11 @@ class Package(RadioFrequencyContainer):
         # the old behavior?
         self.time_over_target: datetime = datetime.min
         self.waypoints: PackageWaypoints | None = None
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        # Save compat: packages saved before WEB-01.2 had no id.
+        state.setdefault("id", uuid.uuid4())
+        self.__dict__.update(state)
 
     @property
     def has_players(self) -> bool:

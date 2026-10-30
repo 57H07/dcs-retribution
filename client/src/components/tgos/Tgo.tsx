@@ -1,7 +1,4 @@
-import {
-  useOpenNewTgoPackageDialogMutation,
-  useOpenTgoInfoDialogMutation,
-} from "../../api/liberationApi";
+import { useOpenNewTgoPackageDialogMutation } from "../../api/liberationApi";
 import { Tgo as TgoModel } from "../../api/liberationApi";
 import {
   selectHighlightEmitters,
@@ -9,6 +6,7 @@ import {
   setHoveredEmitter,
 } from "../../api/mapSlice";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { useInspectTgo } from "../../maplayers/mapSelection";
 import MobileTgo from "./MobileTgo";
 import { TgoTooltip, useTgoIcon } from "./shared";
 import { Marker } from "react-leaflet";
@@ -19,14 +17,14 @@ interface TgoProps {
 
 function StaticTgo(props: TgoProps) {
   const [openNewPackageDialog] = useOpenNewTgoPackageDialogMutation();
-  const [openInfoDialog] = useOpenTgoInfoDialogMutation();
+  const inspect = useInspectTgo();
   const dispatch = useAppDispatch();
   const icon = useTgoIcon(props.tgo);
   // Raised above other icons while this emitter (or its ring) is hovered.
   const raised = useAppSelector(
     (state) =>
       selectHighlightEmitters(state) &&
-      selectHoveredEmitter(state) === props.tgo.id
+      selectHoveredEmitter(state) === props.tgo.id,
   );
   return (
     <Marker
@@ -35,7 +33,7 @@ function StaticTgo(props: TgoProps) {
       zIndexOffset={raised ? 10000 : 0}
       eventHandlers={{
         click: () => {
-          openInfoDialog({ tgoId: props.tgo.id });
+          inspect(props.tgo.id);
         },
         contextmenu: () => {
           openNewPackageDialog({ tgoId: props.tgo.id });

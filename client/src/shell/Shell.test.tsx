@@ -23,13 +23,12 @@ describe("shortcuts in the shell", () => {
     expect(screen.getByText("C:/saves/a.retribution")).toBeInTheDocument();
   });
 
-  it("N opens the packages and explains how to plan one", async () => {
+  it("N explains how to plan a package, without a Qt window", async () => {
     const calls = recordFetch();
     renderShell();
     fireEvent.keyDown(window, { key: "n" });
-    await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0].path).toBe("/qt/dialogs/air-tasking-order");
     expect(await screen.findByText(/Right-click a target/)).toBeInTheDocument();
+    expect(calls).toHaveLength(0);
   });
 
   it("1-5 toggle map layers", () => {
@@ -158,7 +157,6 @@ describe("app bar", () => {
         "save-game-as",
         "quit",
         "transfers",
-        "air-tasking-order",
         "notes",
         "info-panel",
         "pretense-campaign",

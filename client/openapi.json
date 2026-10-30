@@ -67,6 +67,47 @@
         }
       }
     },
+    "/control-points/{cp_id}/summary": {
+      "get": {
+        "summary": "Get Control Point Summary",
+        "description": "What the map inspector shows about a base (WEB-01.3).",
+        "operationId": "get_control_point_summary",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlPointSummaryJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/control-points/{cp_id}/destination-in-range": {
       "get": {
         "summary": "Destination In Range",
@@ -710,7 +751,7 @@
     "/game/mission": {
       "post": {
         "summary": "Take Off",
-        "description": "\"Take off\": fast forwards to first contact if the settings ask for it, writes\nthe mission for DCS, then opens the window waiting for its result.\n\nThe client runs the confirmations of `GET /game/mission/checks` first.",
+        "description": "\"Take off\": fast forwards to first contact if the settings ask for it, writes\nthe mission for DCS, then watches state.json for its result (WEB-05.1: see\n`GET /game/mission/result`).\n\nThe client runs the confirmations of `GET /game/mission/checks` first.",
         "operationId": "generate_mission",
         "responses": {
           "200": {
@@ -1052,6 +1093,105 @@
         }
       }
     },
+    "/game/mission/result": {
+      "get": {
+        "summary": "Mission Result",
+        "description": "The mission waiting for its result: detection of state.json, losses so far.",
+        "operationId": "get_mission_result",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionResultJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/game/mission/result/file": {
+      "post": {
+        "summary": "Load File",
+        "description": "\"Load state.json\": asks for a state.json and takes it as the final result.\n\nAnswers once the dialog is closed; a cancelled dialog changes nothing.",
+        "operationId": "load_mission_result_file",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionResultJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded, no mission is waiting, another file dialog is open or the file cannot be read.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/game/mission/result/cancel": {
+      "post": {
+        "summary": "Cancel",
+        "description": "\"Abort mission\": stops waiting and goes back to planning, as in Qt.",
+        "operationId": "abort_mission",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "No campaign is loaded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/game/mission/result/accept": {
+      "post": {
+        "summary": "Accept",
+        "description": "\"Accept results\": applies the mission result and starts the next turn.\n\nThe Qt debriefing window then shows the report (until WEB-05.2).",
+        "operationId": "accept_mission_result",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TurnJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded, no result was received or the mission is not over.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/native/save": {
       "post": {
         "summary": "Save",
@@ -1325,6 +1465,113 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NavMeshJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/": {
+      "get": {
+        "summary": "List Packages",
+        "description": "The packages of both air tasking orders (friendly and enemy ATO).",
+        "operationId": "list_packages",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PackageJs"
+                  },
+                  "type": "array",
+                  "title": "Response List Packages"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Package",
+        "description": "Opens the package editor on a target (the Qt dialog until WEB-04.1).\n\nOnly queues the dialog onto the Qt main thread: the package joins the ATO when\nthe player saves it, and its flights reach the event stream then.",
+        "operationId": "create_package",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewPackageJs"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "No campaign is loaded, the target is gone or cannot be planned against.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}": {
+      "delete": {
+        "summary": "Remove Package",
+        "description": "Cancels a package of either ATO, or aborts its flights already under way.\n\nDeleted and aborted flights are published on the event stream. 404 when no\npackage has this id.",
+        "operationId": "delete_package",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "No campaign is loaded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
                 }
               }
             }
@@ -1915,6 +2162,47 @@
         }
       }
     },
+    "/tgos/{tgo_id}/summary": {
+      "get": {
+        "summary": "Get Tgo Summary",
+        "description": "What the map inspector shows about a ground object (WEB-01.3).",
+        "operationId": "get_tgo_summary",
+        "parameters": [
+          {
+            "name": "tgo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Tgo Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgoSummaryJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tgos/{tgo_id}/destination-in-range": {
       "get": {
         "summary": "Tgo Destination In Range",
@@ -2436,6 +2724,104 @@
           "sidc"
         ],
         "title": "ControlPoint"
+      },
+      "ControlPointSummaryJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "blue": {
+            "type": "boolean",
+            "title": "Blue"
+          },
+          "sidc": {
+            "type": "string",
+            "title": "Sidc"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "distance_to_front_nm": {
+            "title": "Distance To Front Nm",
+            "type": "number"
+          },
+          "runway": {
+            "$ref": "#/components/schemas/RunwayJs"
+          },
+          "parking": {
+            "$ref": "#/components/schemas/CountJs"
+          },
+          "ground_units": {
+            "$ref": "#/components/schemas/CountJs"
+          },
+          "ammo_depots": {
+            "$ref": "#/components/schemas/CountJs"
+          },
+          "fuel_depots": {
+            "$ref": "#/components/schemas/CountJs"
+          },
+          "can_buy_aircraft": {
+            "type": "boolean",
+            "title": "Can Buy Aircraft"
+          },
+          "can_buy_ground_units": {
+            "type": "boolean",
+            "title": "Can Buy Ground Units"
+          },
+          "can_repair_runway": {
+            "type": "boolean",
+            "title": "Can Repair Runway"
+          },
+          "can_afford_runway_repair": {
+            "type": "boolean",
+            "title": "Can Afford Runway Repair"
+          },
+          "runway_repair_cost": {
+            "type": "integer",
+            "title": "Runway Repair Cost"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "blue",
+          "sidc",
+          "category",
+          "ammo_depots",
+          "fuel_depots",
+          "can_buy_aircraft",
+          "can_buy_ground_units",
+          "can_repair_runway",
+          "can_afford_runway_repair",
+          "runway_repair_cost"
+        ],
+        "title": "ControlPointSummary"
+      },
+      "CountJs": {
+        "properties": {
+          "current": {
+            "type": "integer",
+            "title": "Current"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "current",
+          "total"
+        ],
+        "title": "Count"
       },
       "DownedPilotJs": {
         "properties": {
@@ -3227,6 +3613,30 @@
         ],
         "title": "LatLng"
       },
+      "LossRowJs": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "blue": {
+            "type": "integer",
+            "title": "Blue"
+          },
+          "red": {
+            "type": "integer",
+            "title": "Red"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "blue",
+          "red"
+        ],
+        "title": "LossRow",
+        "description": "One line of the mission status: losses of each side so far."
+      },
       "MapZonesJs": {
         "properties": {
           "inclusion": {
@@ -3336,6 +3746,63 @@
         "title": "Mission",
         "description": "The mission written for DCS."
       },
+      "MissionResultJs": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/MissionResultStatusJs"
+          },
+          "miz_path": {
+            "title": "Miz Path",
+            "type": "string"
+          },
+          "state_path": {
+            "type": "string",
+            "title": "State Path"
+          },
+          "mission_ended": {
+            "type": "boolean",
+            "title": "Mission Ended"
+          },
+          "error": {
+            "title": "Error",
+            "type": "string"
+          },
+          "player_country": {
+            "title": "Player Country",
+            "type": "string"
+          },
+          "enemy_country": {
+            "title": "Enemy Country",
+            "type": "string"
+          },
+          "losses": {
+            "items": {
+              "$ref": "#/components/schemas/LossRowJs"
+            },
+            "type": "array",
+            "title": "Losses"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "state_path",
+          "mission_ended",
+          "losses"
+        ],
+        "title": "MissionResult",
+        "description": "What the waiting screen shows (Qt: QWaitingForMissionResultWindow)."
+      },
+      "MissionResultStatusJs": {
+        "type": "string",
+        "enum": [
+          "idle",
+          "waiting",
+          "detected",
+          "error"
+        ],
+        "title": "MissionResultStatusJs"
+      },
       "NativeFolder": {
         "type": "string",
         "enum": [
@@ -3401,6 +3868,25 @@
         ],
         "title": "NavMeshes"
       },
+      "NewPackageJs": {
+        "properties": {
+          "target_kind": {
+            "$ref": "#/components/schemas/PackageTargetKind"
+          },
+          "target_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Target Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "target_kind",
+          "target_id"
+        ],
+        "title": "NewPackage",
+        "description": "What to plan a package against: opens the package editor on it."
+      },
       "OfflineBasemapImageJs": {
         "properties": {
           "south_west": {
@@ -3417,6 +3903,129 @@
         ],
         "title": "OfflineBasemapImage",
         "description": "Precomputed offline basemap image of a heavy theatre (GFX-04.2).\n\nServed by GET /map-zones/offline-basemap, drawn between these corners."
+      },
+      "PackageFlightJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "task": {
+            "type": "string",
+            "title": "Task"
+          },
+          "aircraft": {
+            "type": "string",
+            "title": "Aircraft"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "clients": {
+            "type": "integer",
+            "title": "Clients"
+          },
+          "missing_pilots": {
+            "type": "integer",
+            "title": "Missing Pilots"
+          },
+          "squadron": {
+            "type": "string",
+            "title": "Squadron"
+          },
+          "departure": {
+            "type": "string",
+            "title": "Departure"
+          },
+          "custom_name": {
+            "title": "Custom Name",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "task",
+          "aircraft",
+          "count",
+          "clients",
+          "missing_pilots",
+          "squadron",
+          "departure"
+        ],
+        "title": "PackageFlight"
+      },
+      "PackageJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "blue": {
+            "type": "boolean",
+            "title": "Blue"
+          },
+          "task": {
+            "title": "Task",
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "custom_name": {
+            "title": "Custom Name",
+            "type": "string"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "tot": {
+            "title": "Tot",
+            "type": "string",
+            "format": "date-time"
+          },
+          "auto_asap": {
+            "type": "boolean",
+            "title": "Auto Asap"
+          },
+          "flights": {
+            "items": {
+              "$ref": "#/components/schemas/PackageFlightJs"
+            },
+            "type": "array",
+            "title": "Flights"
+          },
+          "missing_pilots": {
+            "type": "integer",
+            "title": "Missing Pilots"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "blue",
+          "description",
+          "target",
+          "auto_asap",
+          "flights",
+          "missing_pilots"
+        ],
+        "title": "Package"
+      },
+      "PackageTargetKind": {
+        "type": "string",
+        "enum": [
+          "control-point",
+          "tgo",
+          "front-line",
+          "downed-pilot"
+        ],
+        "title": "PackageTargetKind"
       },
       "Player": {
         "type": "string",
@@ -3437,11 +4046,32 @@
           "pretense-campaign",
           "air-wing",
           "transfers",
-          "air-tasking-order",
           "info-panel",
           "debriefing"
         ],
         "title": "QtDialog"
+      },
+      "RunwayJs": {
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "operational",
+              "damaged",
+              "repairing"
+            ],
+            "title": "State"
+          },
+          "repair_turns_remaining": {
+            "title": "Repair Turns Remaining",
+            "type": "integer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "state"
+        ],
+        "title": "Runway"
       },
       "SettingJs": {
         "properties": {
@@ -3827,6 +4457,64 @@
           "mobile"
         ],
         "title": "Tgo"
+      },
+      "TgoSummaryJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "blue": {
+            "type": "boolean",
+            "title": "Blue"
+          },
+          "sidc": {
+            "type": "string",
+            "title": "Sidc"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "control_point_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Control Point Id"
+          },
+          "control_point_name": {
+            "type": "string",
+            "title": "Control Point Name"
+          },
+          "distance_to_front_nm": {
+            "title": "Distance To Front Nm",
+            "type": "number"
+          },
+          "units": {
+            "$ref": "#/components/schemas/CountJs"
+          },
+          "dead": {
+            "type": "boolean",
+            "title": "Dead"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "blue",
+          "sidc",
+          "category",
+          "control_point_id",
+          "control_point_name",
+          "units",
+          "dead"
+        ],
+        "title": "TgoSummary"
       },
       "ThreatZoneContainerJs": {
         "properties": {

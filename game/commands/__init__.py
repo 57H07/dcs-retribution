@@ -18,13 +18,27 @@ from .mission import (
     max_player_count,
     packages_starting_in_the_past,
 )
+from .missionresult import (
+    MissionResultSnapshot,
+    MissionResultStatus,
+    MissionResultWaiter,
+    ResultSim,
+    abort_mission,
+    accept_results,
+)
 from .sim import SpeedControlledSim, set_sim_speed
 from .turn import skip_turn
 
 __all__ = [
     "CommandError",
+    "MissionResultSnapshot",
+    "MissionResultStatus",
+    "MissionResultWaiter",
     "MissionSim",
+    "ResultSim",
     "SpeedControlledSim",
+    "abort_mission",
+    "accept_results",
     "fix_past_tots",
     "fix_tots",
     "flights_missing_pilots",

@@ -1,6 +1,8 @@
 import { CommandView } from "../command/CommandView";
+import { MapInspector } from "../command/inspector/MapInspector";
 import LiberationMap from "../components/liberationmap";
 import { toggleOverlay } from "../maplayers/layerToggle";
+import { MapSelection } from "../maplayers/mapSelection";
 import { FirstStart } from "../preferences/FirstStart";
 import { ToastProvider, useToast } from "../ui";
 import { AppBar } from "./AppBar";
@@ -18,14 +20,14 @@ function overlayIsOpen(): boolean {
 
 function ShellLayout() {
   const [helpOpen, setHelpOpen] = useState(false);
+  const [selection, setSelection] = useState<MapSelection | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const qt = useQtCommands();
   const toast = useToast();
 
   const newPackage = () => {
-    // No target-less package dialog in Qt: show the packages and how to plan.
-    qt.openDialog("air-tasking-order");
+    // No target-less package dialog in Qt: explain how to plan one.
     toast({
       title: "New package",
       description: "Right-click a target on the map to plan a package.",
@@ -37,6 +39,9 @@ function ShellLayout() {
       case "close":
         if (!overlayIsOpen() && location.pathname !== "/") {
           navigate("/");
+        } else if (!overlayIsOpen()) {
+          // On the command view, Escape closes the map inspector.
+          setSelection(null);
         }
         break;
       case "layer":
@@ -59,8 +64,14 @@ function ShellLayout() {
       <AppBar onNewPackage={newPackage} onShowHelp={() => setHelpOpen(true)} />
       <main className={styles.content}>
         <CommandView
-          map={<LiberationMap />}
-          onOpenPackages={() => qt.openDialog("air-tasking-order")}
+          map={<LiberationMap onSelect={setSelection} layerToolbar />}
+          inspector={
+            <MapInspector
+              selection={selection}
+              onClose={() => setSelection(null)}
+            />
+          }
+          onNewPackage={newPackage}
         />
         <Outlet />
       </main>

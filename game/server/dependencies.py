@@ -7,6 +7,7 @@ from game.theater import ControlPoint, MissionTarget, TheaterGroundObject
 if TYPE_CHECKING:
     from game import Game
     from game.ato import Flight, Package
+    from game.debriefing import Debriefing
     from game.game import TurnState
     from game.server.qt.models import QtDialog
     from qt_ui.models import GameModel
@@ -60,8 +61,9 @@ class QtCallbacks:
         turn_passed: Callable[[TurnState], None] | None = None,
         open_dialog: Callable[[QtDialog], None] | None = None,
         edit_package: Callable[[Package], None] | None = None,
-        mission_generated: Callable[[], None] | None = None,
         game_changed: Callable[[], None] | None = None,
+        packages_changed: Callable[[], None] | None = None,
+        results_accepted: Callable[[Debriefing], None] | None = None,
     ) -> None:
         self.create_new_package = create_new_package
         self.show_tgo_info = show_tgo_info
@@ -75,13 +77,16 @@ class QtCallbacks:
         # for the web UI (WEB-00.3). Same contract as turn_passed: emit a signal.
         self.open_dialog = open_dialog
         self.edit_package = edit_package
-        # Opens the Qt window waiting for the mission result once the web UI took
-        # off (WEB-01.1), until WEB-05.1 migrates it. Same contract: emit a signal.
-        self.mission_generated = mission_generated
         # Reloads every Qt widget after an API command changed the game in depth
         # (Qt: GameUpdateSignal.updateGame), e.g. a cheat or an expensive setting
         # (WEB-07.1). Same contract as turn_passed: emit a signal.
         self.game_changed = game_changed
+        # Resyncs the Qt ATO models and radio allocations after an API command
+        # removed a package (WEB-01.2). Same contract as turn_passed: emit a signal.
+        self.packages_changed = packages_changed
+        # Shows the Qt debriefing window once the web UI accepted a mission result
+        # (WEB-05.1), until WEB-05.2 migrates it. Same contract: emit a signal.
+        self.results_accepted = results_accepted
 
 
 class QtContext:

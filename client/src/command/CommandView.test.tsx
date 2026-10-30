@@ -17,14 +17,16 @@ const CHECKS = "/game/mission/checks";
 const MISSION = { status: 200, body: { path: "C:/Missions/next.miz" } };
 
 describe("command view layout", () => {
-  it("has the packages, map, inspector and timeline regions", async () => {
+  it("has the packages, map, layer toolbar and timeline regions", async () => {
     recordFetch();
     const { container } = renderShell();
     expect(
       screen.getByRole("complementary", { name: "Packages" }),
     ).toBeInTheDocument();
+    // The inspector only shows once something is selected on the map.
+    expect(screen.queryByRole("region", { name: /^Inspector/ })).toBeNull();
     expect(
-      screen.getByRole("button", { name: "Expand Inspector" }),
+      screen.getByRole("toolbar", { name: "Map layers" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("region", { name: "Mission timeline" }),
@@ -48,14 +50,15 @@ describe("command view layout", () => {
     );
   });
 
-  it("opens the Qt packages until the panel is migrated", async () => {
-    const calls = recordFetch();
+  it("fills the left slot with the packages panel (WEB-01.2)", async () => {
+    recordFetch();
     renderShell();
-    await userEvent.click(
-      screen.getByRole("button", { name: "Open packages" }),
-    );
-    await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0].path).toBe("/qt/dialogs/air-tasking-order");
+    expect(
+      await screen.findByRole("tab", { name: /Packages · 0/ }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Open packages" }),
+    ).not.toBeInTheDocument();
   });
 });
 
@@ -143,13 +146,15 @@ describe("turn actions", () => {
       { [TOP_BAR]: topBar(), [CHECKS]: missionChecks() },
       { "/game/mission": MISSION },
     );
-    renderShell();
+    const { router } = renderShell();
     await userEvent.click(
       await screen.findByRole("button", { name: "Take off" }),
     );
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toMatchObject({ method: "POST", path: "/game/mission" });
     expect(await screen.findByText("Mission generated")).toBeInTheDocument();
+    // WEB-05.1: the waiting screen replaces the Qt waiting window.
+    expect(router.state.location.pathname).toBe("/waiting");
   });
 
   it("asks before an AI only mission and stops on No", async () => {

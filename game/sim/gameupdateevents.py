@@ -43,6 +43,7 @@ class GameUpdateEvents:
     game_unloaded: bool = False
     new_turn: bool = False
     budget_updated: bool = False
+    mission_result_updated: bool = False
     shutting_down: bool = False
 
     @property
@@ -161,6 +162,11 @@ class GameUpdateEvents:
     def update_budget(self) -> GameUpdateEvents:
         """A coalition budget changed outside a new turn (purchases, repairs...)."""
         self.budget_updated = True
+        return self
+
+    def update_mission_result(self) -> GameUpdateEvents:
+        """The mission waiting for its result changed status (WEB-05.1)."""
+        self.mission_result_updated = True
         return self
 
     def shut_down(self) -> GameUpdateEvents:

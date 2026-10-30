@@ -1,0 +1,98 @@
+/* Top-left of the map, above the Leaflet panes and controls (Main mockup). */
+.toolbar {
+  position: absolute;
+  top: var(--ui-space-lg);
+  left: var(--ui-space-lg);
+  z-index: 1000;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-sm);
+  /* Leaves room for the inspector card on the right. */
+  max-width: max(50%, calc(100% - 340px));
+  font-family: var(--ui-font-body);
+}
+
+.toggle {
+  min-height: 32px;
+  padding: 0 var(--ui-space-md);
+  background: color-mix(in srgb, var(--ui-color-bg-panel) 90%, transparent);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-color-text-strong);
+  font: inherit;
+  font-size: var(--ui-font-size-sm);
+  cursor: pointer;
+}
+
+.toggle:hover {
+  background: var(--ui-color-bg-hover);
+}
+
+.toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-shadow-focus);
+}
+
+.toggle[aria-pressed="true"] {
+  border-color: var(--ui-color-accent);
+  color: var(--ui-color-accent-hover);
+}
+
+/* Threat zones read as hostile when shown, like the mockup. */
+.toggle[data-overlay="redThreatZonesFull"][aria-pressed="true"] {
+  border-color: var(--ui-color-hostile);
+  color: var(--ui-color-danger);
+}
+
+.menu {
+  z-index: var(--ui-z-index-overlay);
+  min-width: 240px;
+  max-height: min(70vh, 520px);
+  overflow-y: auto;
+  padding: var(--ui-space-xs) 0;
+  background: var(--ui-color-bg-raised);
+  border: 1px solid var(--ui-color-line-strong);
+  border-radius: var(--ui-radius-md);
+  box-shadow: var(--ui-shadow-overlay);
+  font-family: var(--ui-font-body);
+  font-size: var(--ui-font-size-sm);
+}
+
+.group {
+  padding: var(--ui-space-sm) var(--ui-space-md) var(--ui-space-xs);
+  color: var(--ui-color-text-secondary);
+  font-family: var(--ui-font-display);
+  font-size: var(--ui-font-size-xs);
+  font-weight: var(--ui-font-weight-semibold);
+  letter-spacing: var(--ui-letter-spacing-display);
+  text-transform: uppercase;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-sm);
+  padding: var(--ui-space-xs) var(--ui-space-md);
+  color: var(--ui-color-text-primary);
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+
+.item[data-highlighted] {
+  background: var(--ui-color-bg-hover);
+  color: var(--ui-color-text-strong);
+}
+
+.mark {
+  display: inline-flex;
+  justify-content: center;
+  width: 1em;
+  color: var(--ui-color-accent);
+}
+
+.separator {
+  height: 1px;
+  margin: var(--ui-space-xs) 0;
+  background: var(--ui-color-line);
+}

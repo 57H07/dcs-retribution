@@ -11,10 +11,7 @@ import {
   updateFlights,
   updateFlightPositions,
 } from "./flightsSlice";
-import {
-  deleteFrontLine,
-  updateFrontLine,
-} from "./frontLinesSlice";
+import { deleteFrontLine, updateFrontLine } from "./frontLinesSlice";
 import reloadGameState from "./gamestate";
 import {
   ControlPoint,
@@ -42,9 +39,9 @@ export interface GameUpdateEvents {
   new_combats: Combat[];
   updated_combats: Combat[];
   ended_combats: string[];
-  navmesh_updates: {blue: boolean, mesh: NavMesh}[];
+  navmesh_updates: { blue: boolean; mesh: NavMesh }[];
   updated_unculled_zones: UnculledZone[];
-  threat_zones_updated: {blue: boolean, zones: ThreatZones}[];
+  threat_zones_updated: { blue: boolean; zones: ThreatZones }[];
   new_flights: Flight[];
   updated_flights: Flight[];
   deleted_flights: string[];
@@ -61,15 +58,16 @@ export interface GameUpdateEvents {
   game_unloaded: boolean;
   new_turn: boolean;
   budget_updated: boolean;
+  mission_result_updated: boolean;
 }
 
 export const handleStreamedEvents = (
   dispatch: AppDispatch,
-  events: GameUpdateEvents
+  events: GameUpdateEvents,
 ) => {
   if (Object.keys(events.updated_flight_positions).length) {
     dispatch(
-      updateFlightPositions(Object.entries(events.updated_flight_positions))
+      updateFlightPositions(Object.entries(events.updated_flight_positions)),
     );
   }
 
@@ -130,7 +128,7 @@ export const handleStreamedEvents = (
   }
 
   if (events.updated_control_points.length > 0) {
-      dispatch(updateControlPoint(events.updated_control_points));
+    dispatch(updateControlPoint(events.updated_control_points));
   }
 
   if (events.deleted_iads.length > 0) {
@@ -157,6 +155,10 @@ export const handleStreamedEvents = (
     reloadGameState(dispatch, true);
   }
 
+  if (events.mission_result_updated) {
+    dispatch(liberationApi.util.invalidateTags([Tags.MISSION_RESULT]));
+  }
+
   if (topBarChanged(events)) {
     // The timeline (WEB-01.4) and the reports (WEB-08.1) show the same
     // flights, turn, budget and forces.
@@ -168,7 +170,38 @@ export const handleStreamedEvents = (
       ]),
     );
   }
+  if (inspectorChanged(events)) {
+    dispatch(liberationApi.util.invalidateTags([Tags.INSPECTOR]));
+  }
+
+  if (packagesChanged(events)) {
+    dispatch(liberationApi.util.invalidateTags([Tags.PACKAGES]));
+  }
 };
+
+/** Events after which the map inspector (WEB-01.3) refetches its summary. */
+export function inspectorChanged(events: GameUpdateEvents): boolean {
+  return (
+    events.new_turn ||
+    events.budget_updated ||
+    events.reset_on_map_center != null ||
+    events.updated_control_points.length > 0 ||
+    events.updated_tgos.length > 0 ||
+    events.updated_front_lines.length > 0
+  );
+}
+
+/** Events after which the packages panel (WEB-01.2) refetches the ATOs. */
+export function packagesChanged(events: GameUpdateEvents): boolean {
+  return (
+    events.new_turn ||
+    events.game_unloaded ||
+    events.reset_on_map_center != null ||
+    events.new_flights.length > 0 ||
+    events.updated_flights.length > 0 ||
+    events.deleted_flights.length > 0
+  );
+}
 
 /** Events after which the top bar (WEB-01.1) refetches its data. */
 export function topBarChanged(events: GameUpdateEvents): boolean {
