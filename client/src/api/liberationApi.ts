@@ -10,6 +10,7 @@ export enum Tags {
   MISSION_RESULT = "MissionResult",
   TIMELINE = "Timeline",
   PREFERENCES = "Preferences",
+  PACKAGES = "Packages",
 }
 
 const LIST_ID = "LIST";
@@ -47,6 +48,9 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
       invalidatesTags: [Tags.MISSION_RESULT, Tags.TOP_BAR, Tags.TIMELINE],
     },
     setSimSpeed: { invalidatesTags: [Tags.TOP_BAR] },
+    // /packages/ (WEB-01.2): also refetched on flight events (eventstream.tsx).
+    listPackages: { providesTags: [Tags.PACKAGES] },
+    deletePackage: { invalidatesTags: [Tags.PACKAGES, Tags.TOP_BAR] },
     // /debug/waypoint-geometries
     getDebugHoldZones: {
       providesTags: (result, error, arg) => [

@@ -16,6 +16,7 @@ from . import (
     missionresult,
     native,
     navmesh,
+    packages,
     preferences,
     qt,
     supplyroutes,
@@ -41,6 +42,7 @@ app.include_router(mapzones.router)
 app.include_router(missionresult.router)
 app.include_router(native.router)
 app.include_router(navmesh.router)
+app.include_router(packages.router)
 app.include_router(preferences.router)
 app.include_router(qt.router)
 app.include_router(supplyroutes.router)

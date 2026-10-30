@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response, status
 from game import Game
 from game.commands import CommandError
 from game.gamelock import locked
+from game.server.eventstream import EventStream
 from game.theater.player import Player
 from .models import QtDialog
 from ..commanderrors import command_error_responses
@@ -123,6 +124,10 @@ def select_flight(
             status.HTTP_404_NOT_FOUND,
             detail=f"Game has no flight with ID {flight_id}",
         )
+    # The web packages panel follows the map through the event stream (WEB-01.2);
+    # the Qt ATO panel, when shown, selects the flight too.
+    with EventStream.event_context() as events:
+        events.select_flight(flight)
     qt.select_flight(flight)
 
 

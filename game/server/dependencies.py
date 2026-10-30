@@ -62,6 +62,7 @@ class QtCallbacks:
         open_dialog: Callable[[QtDialog], None] | None = None,
         edit_package: Callable[[Package], None] | None = None,
         game_changed: Callable[[], None] | None = None,
+        packages_changed: Callable[[], None] | None = None,
         results_accepted: Callable[[Debriefing], None] | None = None,
     ) -> None:
         self.create_new_package = create_new_package
@@ -80,6 +81,9 @@ class QtCallbacks:
         # (Qt: GameUpdateSignal.updateGame), e.g. a cheat or an expensive setting
         # (WEB-07.1). Same contract as turn_passed: emit a signal.
         self.game_changed = game_changed
+        # Resyncs the Qt ATO models and radio allocations after an API command
+        # removed a package (WEB-01.2). Same contract as turn_passed: emit a signal.
+        self.packages_changed = packages_changed
         # Shows the Qt debriefing window once the web UI accepted a mission result
         # (WEB-05.1), until WEB-05.2 migrates it. Same contract: emit a signal.
         self.results_accepted = results_accepted

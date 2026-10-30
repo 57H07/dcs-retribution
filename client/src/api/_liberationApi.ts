@@ -259,6 +259,28 @@ const injectedRtkApi = api.injectEndpoints({
         params: { for_player: queryArg.forPlayer },
       }),
     }),
+    listPackages: build.query<ListPackagesApiResponse, ListPackagesApiArg>({
+      query: () => ({ url: `/packages/` }),
+    }),
+    createPackage: build.mutation<
+      CreatePackageApiResponse,
+      CreatePackageApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/`,
+        method: "POST",
+        body: queryArg.newPackageJs,
+      }),
+    }),
+    deletePackage: build.mutation<
+      DeletePackageApiResponse,
+      DeletePackageApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}`,
+        method: "DELETE",
+      }),
+    }),
     getInstallPreferences: build.query<
       GetInstallPreferencesApiResponse,
       GetInstallPreferencesApiArg
@@ -589,6 +611,19 @@ export type GetNavmeshApiResponse =
   /** status 200 Successful Response */ NavMesh;
 export type GetNavmeshApiArg = {
   forPlayer: Player;
+};
+export type ListPackagesApiResponse =
+  /** status 200 Successful Response */ Package[];
+export type ListPackagesApiArg = void;
+export type CreatePackageApiResponse =
+  /** status 204 Successful Response */ void;
+export type CreatePackageApiArg = {
+  newPackageJs: NewPackage;
+};
+export type DeletePackageApiResponse =
+  /** status 204 Successful Response */ void;
+export type DeletePackageApiArg = {
+  packageId: string;
 };
 export type GetInstallPreferencesApiResponse =
   /** status 200 Successful Response */ InstallPreferencesState;
@@ -1000,6 +1035,38 @@ export type ExternalLink =
   | "forum-thread"
   | "issues";
 export type Player = "Neutral" | "Blue" | "Red";
+export type PackageFlight = {
+  id: string;
+  task: string;
+  aircraft: string;
+  count: number;
+  clients: number;
+  missing_pilots: number;
+  squadron: string;
+  departure: string;
+  custom_name?: string;
+};
+export type Package = {
+  id: string;
+  blue: boolean;
+  task?: string;
+  description: string;
+  custom_name?: string;
+  target: string;
+  tot?: string;
+  auto_asap: boolean;
+  flights: PackageFlight[];
+  missing_pilots: number;
+};
+export type PackageTargetKind =
+  | "control-point"
+  | "tgo"
+  | "front-line"
+  | "downed-pilot";
+export type NewPackage = {
+  target_kind: PackageTargetKind;
+  target_id: string;
+};
 export type InstallPreferences = {
   saved_game_dir: string;
   dcs_install_dir: string;
@@ -1033,7 +1100,6 @@ export type QtDialog =
   | "pretense-campaign"
   | "air-wing"
   | "transfers"
-  | "air-tasking-order"
   | "reports"
   | "finances"
   | "intel"
@@ -1081,6 +1147,9 @@ export const {
   useOpenExternalLinkMutation,
   useQuitApplicationMutation,
   useGetNavmeshQuery,
+  useListPackagesQuery,
+  useCreatePackageMutation,
+  useDeletePackageMutation,
   useGetInstallPreferencesQuery,
   useSetInstallPreferencesMutation,
   useOpenNewFrontLinePackageDialogMutation,

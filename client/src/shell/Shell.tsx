@@ -24,8 +24,7 @@ function ShellLayout() {
   const toast = useToast();
 
   const newPackage = () => {
-    // No target-less package dialog in Qt: show the packages and how to plan.
-    qt.openDialog("air-tasking-order");
+    // No target-less package dialog in Qt: explain how to plan one.
     toast({
       title: "New package",
       description: "Right-click a target on the map to plan a package.",
@@ -58,10 +57,7 @@ function ShellLayout() {
     <div className={styles.shell}>
       <AppBar onNewPackage={newPackage} onShowHelp={() => setHelpOpen(true)} />
       <main className={styles.content}>
-        <CommandView
-          map={<LiberationMap />}
-          onOpenPackages={() => qt.openDialog("air-tasking-order")}
-        />
+        <CommandView map={<LiberationMap />} onNewPackage={newPackage} />
         <Outlet />
       </main>
       <HelpOverlay open={helpOpen} onOpenChange={setHelpOpen} />

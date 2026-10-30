@@ -166,7 +166,22 @@ export const handleStreamedEvents = (
     // The timeline (WEB-01.4) shows the same flights and turn.
     dispatch(liberationApi.util.invalidateTags([Tags.TOP_BAR, Tags.TIMELINE]));
   }
+  if (packagesChanged(events)) {
+    dispatch(liberationApi.util.invalidateTags([Tags.PACKAGES]));
+  }
 };
+
+/** Events after which the packages panel (WEB-01.2) refetches the ATOs. */
+export function packagesChanged(events: GameUpdateEvents): boolean {
+  return (
+    events.new_turn ||
+    events.game_unloaded ||
+    events.reset_on_map_center != null ||
+    events.new_flights.length > 0 ||
+    events.updated_flights.length > 0 ||
+    events.deleted_flights.length > 0
+  );
+}
 
 /** Events after which the top bar (WEB-01.1) refetches its data. */
 export function topBarChanged(events: GameUpdateEvents): boolean {

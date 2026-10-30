@@ -1441,6 +1441,113 @@
         }
       }
     },
+    "/packages/": {
+      "get": {
+        "summary": "List Packages",
+        "description": "The packages of both air tasking orders (friendly and enemy ATO).",
+        "operationId": "list_packages",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PackageJs"
+                  },
+                  "type": "array",
+                  "title": "Response List Packages"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Package",
+        "description": "Opens the package editor on a target (the Qt dialog until WEB-04.1).\n\nOnly queues the dialog onto the Qt main thread: the package joins the ATO when\nthe player saves it, and its flights reach the event stream then.",
+        "operationId": "create_package",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewPackageJs"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "No campaign is loaded, the target is gone or cannot be planned against.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}": {
+      "delete": {
+        "summary": "Remove Package",
+        "description": "Cancels a package of either ATO, or aborts its flights already under way.\n\nDeleted and aborted flights are published on the event stream. 404 when no\npackage has this id.",
+        "operationId": "delete_package",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "No campaign is loaded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/preferences/": {
       "get": {
         "summary": "Get Preferences",
@@ -3290,6 +3397,25 @@
         ],
         "title": "NavMeshes"
       },
+      "NewPackageJs": {
+        "properties": {
+          "target_kind": {
+            "$ref": "#/components/schemas/PackageTargetKind"
+          },
+          "target_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Target Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "target_kind",
+          "target_id"
+        ],
+        "title": "NewPackage",
+        "description": "What to plan a package against: opens the package editor on it."
+      },
       "OfflineBasemapImageJs": {
         "properties": {
           "south_west": {
@@ -3306,6 +3432,129 @@
         ],
         "title": "OfflineBasemapImage",
         "description": "Precomputed offline basemap image of a heavy theatre (GFX-04.2).\n\nServed by GET /map-zones/offline-basemap, drawn between these corners."
+      },
+      "PackageFlightJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "task": {
+            "type": "string",
+            "title": "Task"
+          },
+          "aircraft": {
+            "type": "string",
+            "title": "Aircraft"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "clients": {
+            "type": "integer",
+            "title": "Clients"
+          },
+          "missing_pilots": {
+            "type": "integer",
+            "title": "Missing Pilots"
+          },
+          "squadron": {
+            "type": "string",
+            "title": "Squadron"
+          },
+          "departure": {
+            "type": "string",
+            "title": "Departure"
+          },
+          "custom_name": {
+            "title": "Custom Name",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "task",
+          "aircraft",
+          "count",
+          "clients",
+          "missing_pilots",
+          "squadron",
+          "departure"
+        ],
+        "title": "PackageFlight"
+      },
+      "PackageJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "blue": {
+            "type": "boolean",
+            "title": "Blue"
+          },
+          "task": {
+            "title": "Task",
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "custom_name": {
+            "title": "Custom Name",
+            "type": "string"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "tot": {
+            "title": "Tot",
+            "type": "string",
+            "format": "date-time"
+          },
+          "auto_asap": {
+            "type": "boolean",
+            "title": "Auto Asap"
+          },
+          "flights": {
+            "items": {
+              "$ref": "#/components/schemas/PackageFlightJs"
+            },
+            "type": "array",
+            "title": "Flights"
+          },
+          "missing_pilots": {
+            "type": "integer",
+            "title": "Missing Pilots"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "blue",
+          "description",
+          "target",
+          "auto_asap",
+          "flights",
+          "missing_pilots"
+        ],
+        "title": "Package"
+      },
+      "PackageTargetKind": {
+        "type": "string",
+        "enum": [
+          "control-point",
+          "tgo",
+          "front-line",
+          "downed-pilot"
+        ],
+        "title": "PackageTargetKind"
       },
       "Player": {
         "type": "string",
@@ -3327,7 +3576,6 @@
           "pretense-campaign",
           "air-wing",
           "transfers",
-          "air-tasking-order",
           "reports",
           "finances",
           "intel",
