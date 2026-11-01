@@ -120,14 +120,14 @@ that codegen cannot handle (send a string or a list of strings instead).
 
 ## 8. Screens not migrated yet: `/qt/*` (WEB-00.3)
 
-Until a screen has its web version, its client route opens the Qt dialog:
-`POST /qt/dialogs/{dialog}` (`QtDialog` in `game/server/qt/models.py`) and the
-older target routes
-(`/qt/create-package/...`, `/qt/info/...`). The route only calls a `QtCallbacks`
-callback that emits a `QLiberationWindow` signal, so the dialog opens on the Qt
-main thread after the lock is released. A migrated screen removes its `QtDialog`
-value, its Qt slot and the dialog itself (W9), and replaces its `QtScreen`
-element in `client/src/shell/routes.tsx`. A tool with no file UI needs no dialog at
+Until a screen has its web version, its client route opens the Qt dialog through
+a target route (`/qt/create-package/...`, `/qt/info/...`,
+`/qt/edit-package/...`). The route only calls a `QtCallbacks` callback that emits
+a `QLiberationWindow` signal, so the dialog opens on the Qt main thread after the
+lock is released. A migrated screen removes its route, its Qt slot and the dialog
+itself (W9), and replaces its `QtScreen` element in
+`client/src/shell/routes.tsx`. The generic `POST /qt/dialogs/{dialog}` left with
+its last dialog, the air wing (WEB-03). A tool with no file UI needs no dialog at
 all: `POST /tools/import-layouts` and `POST /tools/pretense-campaign` (WEB-08.2) are
 plain commands that answer once the work is done.
 

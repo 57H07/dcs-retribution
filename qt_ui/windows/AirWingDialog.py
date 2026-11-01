@@ -110,7 +110,6 @@ class SquadronList(QListView):
         self.dialog = SquadronDialog(
             self.ato_model,
             SquadronModel(self.air_wing_model.squadron_at_index(index)),
-            self.theater,
             self.sim_controller,
             self,
         )

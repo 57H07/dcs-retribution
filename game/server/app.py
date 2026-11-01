@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from game.commands import CommandError
 
 from . import (
+    airwing,
     applog,
     careers,
     controlpoints,
@@ -36,6 +37,7 @@ from .settings import ServerSettings
 
 app = FastAPI(dependencies=[Depends(require_api_key)])
 app.add_exception_handler(CommandError, command_error_handler)
+app.include_router(airwing.router)
 app.include_router(controlpoints.router)
 app.include_router(debuggeometries.router)
 app.include_router(downedpilots.router)

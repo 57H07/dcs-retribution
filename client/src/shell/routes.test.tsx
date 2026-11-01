@@ -13,7 +13,6 @@ describe("web shell routes", () => {
   });
 
   it.each([
-    ["/air-wing", "/qt/dialogs/air-wing"],
     ["/new-game", "/native/new-game"],
     ["/packages/flight-7", "/qt/edit-package/flight/flight-7"],
   ])(

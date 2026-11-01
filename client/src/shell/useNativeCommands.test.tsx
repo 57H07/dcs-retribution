@@ -77,19 +77,17 @@ describe("native file actions", () => {
 });
 
 describe("useQtCommands", () => {
-  it("routes the File menu entries to the bridge and the rest to Qt", async () => {
+  it("routes the File menu entries and links to the bridge", async () => {
     const calls = recordFetch(200, { outcome: "cancelled" });
     const qt = renderHook(() => useQtCommands(), { wrapper }).result;
     act(() => {
       qt.current.openDialog("open-game");
-      qt.current.openDialog("air-wing");
       qt.current.openLink("github");
     });
-    await waitFor(() => expect(calls).toHaveLength(3));
+    await waitFor(() => expect(calls).toHaveLength(2));
     expect(calls.map((c) => c.path).sort()).toEqual([
       "/native/open",
       "/native/open-link/github",
-      "/qt/dialogs/air-wing",
     ]);
   });
 });

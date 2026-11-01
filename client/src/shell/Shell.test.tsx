@@ -76,15 +76,15 @@ describe("shortcuts in the shell", () => {
 });
 
 describe("app bar", () => {
-  it("opens a Qt dialog from a menu", async () => {
+  it("opens the web Air Wing screen from a menu, without Qt", async () => {
     const calls = recordFetch();
-    renderShell();
+    const { router } = renderShell();
     await userEvent.click(screen.getByRole("button", { name: "Campaign" }));
     await userEvent.click(
       await screen.findByRole("menuitem", { name: "Air Wing" }),
     );
-    await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0].path).toBe("/qt/dialogs/air-wing");
+    expect(router.state.location.pathname).toBe("/air-wing");
+    expect(calls).toHaveLength(0);
   });
 
   it("opens the web Notes screen from the Campaign menu, without Qt", async () => {
