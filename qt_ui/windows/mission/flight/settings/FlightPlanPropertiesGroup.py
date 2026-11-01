@@ -1,4 +1,3 @@
-import logging
 from datetime import timedelta
 
 from PySide6.QtCore import QTime
@@ -14,7 +13,12 @@ from PySide6.QtWidgets import (
 
 from game import Game
 from game.ato.flight import Flight
-from game.ato.flightplans.planningerror import PlanningError
+from game.commands import CommandError
+from game.commands.flightsettings import (
+    divert_options,
+    set_flight_divert,
+    set_flight_tot_offset,
+)
 from qt_ui.models import PackageModel
 from qt_ui.widgets.QLabeledWidget import QLabeledWidget
 from qt_ui.widgets.combos.QArrivalAirfieldSelector import QArrivalAirfieldSelector
@@ -84,11 +88,7 @@ class FlightPlanPropertiesGroup(QGroupBox):
         layout.addLayout(QLabeledWidget("Arrival:", arrival_label))
 
         self.divert = QArrivalAirfieldSelector(
-            [
-                cp
-                for cp in game.theater.controlpoints
-                if cp.captured == flight.coalition.player
-            ],
+            divert_options(flight),
             flight.unit_type,
             "None",
         )
@@ -112,17 +112,9 @@ class FlightPlanPropertiesGroup(QGroupBox):
         self.flight_wpt_list.update_list()
 
     def set_divert(self, index: int) -> None:
-        old_divert = self.flight.divert
-        divert = self.divert.itemData(index)
-        if divert == old_divert:
-            return
-
-        self.flight.divert = divert
         try:
-            self.flight.recreate_flight_plan()
-        except PlanningError as ex:
-            self.flight.divert = old_divert
-            logging.exception("Could not change divert airfield")
+            set_flight_divert(self.flight, self.divert.itemData(index))
+        except CommandError as ex:
             QMessageBox.critical(
                 self,
                 "Could not update flight plan",
@@ -130,17 +122,26 @@ class FlightPlanPropertiesGroup(QGroupBox):
                 QMessageBox.StandardButton.Ok,
             )
 
-    def set_tot_offset(self, offset: QTime) -> None:
-        offset = timedelta(
-            hours=offset.hour(), minutes=offset.minute(), seconds=offset.second()
-        )
-        if self.negative_offset_checkbox.isChecked():
-            offset = -offset
-        self.flight.flight_plan.tot_offset = offset
+    def _apply_tot_offset(self, offset: timedelta) -> None:
+        try:
+            set_flight_tot_offset(
+                self.flight,
+                offset,
+                self.package_model.game_model.sim_controller.current_time_in_sim,
+            )
+        except CommandError as ex:
+            QMessageBox.critical(self, "Could not edit flight", str(ex))
+            return
         self.package_model.update_tot()
         self.update_departure_time()
 
+    def set_tot_offset(self, offset: QTime) -> None:
+        delta = timedelta(
+            hours=offset.hour(), minutes=offset.minute(), seconds=offset.second()
+        )
+        if self.negative_offset_checkbox.isChecked():
+            delta = -delta
+        self._apply_tot_offset(delta)
+
     def toggle_negative_offset(self) -> None:
-        self.flight.flight_plan.tot_offset = -self.flight.flight_plan.tot_offset
-        self.package_model.update_tot()
-        self.update_departure_time()
+        self._apply_tot_offset(-self.flight.flight_plan.tot_offset)

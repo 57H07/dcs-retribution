@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QComboBox,
 )
 
+from game.commands.flightsettings import CALLSIGN_MAX_NUMBER, CALLSIGN_MIN_NUMBER
 from game.radio.CallsignContainer import CallsignContainer
 from qt_ui.uiconstants import EVENT_ICONS
 
@@ -34,7 +35,7 @@ class QCallsignDialog(QDialog):
         self.callsign_name_input = QComboBox()
         self.callsign_name_input.addItems(container.available_callsigns)
         self.callsign_nr_input = QSpinBox()
-        self.callsign_nr_input.setRange(1, 9)
+        self.callsign_nr_input.setRange(CALLSIGN_MIN_NUMBER, CALLSIGN_MAX_NUMBER)
         self.callsign_nr_input.setSingleStep(1)
         self.callsign_nr_input.setMaximumWidth(50)
         layout.addWidget(self.callsign_label)

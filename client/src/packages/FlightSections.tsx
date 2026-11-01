@@ -1,10 +1,12 @@
 // Tab frame of a flight in the package editor (mockups/Package.dc.html). Each tab is
-// a slot that a later lot fills: General and Pilots WEB-04.2, Payload WEB-04.3, Route
-// WEB-04.4, Radios & TACAN WEB-04.5. Until then the Qt editor keeps those features:
+// a slot that a lot fills: General and Pilots (WEB-04.2) and Radios & TACAN (WEB-04.5)
+// are done, Payload is WEB-04.3, Route WEB-04.4. Until then the Qt editor keeps those:
 // replace a tab's <QtEditorSlot> with its screen and remove the slot with the last.
 import { PackageEditorFlight } from "../api/liberationApi";
 import { useQtCommands } from "../shell/useQtCommands";
 import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from "../ui";
+import { FlightGeneralTab } from "./FlightGeneralTab";
+import { FlightPilotsTab } from "./FlightPilotsTab";
 import { FlightRadiosTab } from "./FlightRadiosTab";
 import styles from "./PackageEditor.module.css";
 import { PayloadTab } from "./PayloadTab";
@@ -21,6 +23,8 @@ export const FLIGHT_SECTIONS = [
 export interface FlightSectionsProps {
   packageId: string;
   flight: PackageEditorFlight;
+  /** A squadron change replaces the flight, which gets another id. */
+  onFlightReplaced?: (flightId: string) => void;
   /** Right of the tabs: what acts on the whole flight. */
   actions?: ReactNode;
 }
@@ -28,6 +32,7 @@ export interface FlightSectionsProps {
 export function FlightSections({
   packageId,
   flight,
+  onFlightReplaced,
   actions,
 }: FlightSectionsProps) {
   return (
@@ -44,21 +49,11 @@ export function FlightSections({
         {actions}
       </div>
       <TabsContent value="general" className={styles.section}>
-        <dl className={styles.facts}>
-          <dt>Task</dt>
-          <dd>{flight.task}</dd>
-          <dt>Aircraft</dt>
-          <dd>
-            {flight.count} × {flight.aircraft}
-          </dd>
-          <dt>Squadron</dt>
-          <dd>{flight.squadron}</dd>
-          <dt>Departure</dt>
-          <dd>{flight.departure}</dd>
-          <dt>Start type</dt>
-          <dd>{flight.start_type}</dd>
-        </dl>
-        <QtEditorSlot flight={flight} what="Editing a flight" />
+        <FlightGeneralTab
+          packageId={packageId}
+          flightId={flight.id}
+          onFlightReplaced={onFlightReplaced}
+        />
       </TabsContent>
       <TabsContent value="route" className={styles.section}>
         <QtEditorSlot flight={flight} what="The route" />
@@ -67,7 +62,7 @@ export function FlightSections({
         <PayloadTab packageId={packageId} flightId={flight.id} />
       </TabsContent>
       <TabsContent value="pilots" className={styles.section}>
-        <QtEditorSlot flight={flight} what="Pilots" />
+        <FlightPilotsTab packageId={packageId} flightId={flight.id} />
       </TabsContent>
       <TabsContent value="radios" className={styles.section}>
         <FlightRadiosTab flightId={flight.id} />

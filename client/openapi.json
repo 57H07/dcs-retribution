@@ -4701,6 +4701,776 @@
         }
       }
     },
+    "/packages/{package_id}/flights/{flight_id}/settings": {
+      "get": {
+        "summary": "Get Flight Settings",
+        "operationId": "get_flight_settings",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightSettingsJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded, or no such flight.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/squadron": {
+      "put": {
+        "summary": "Put Flight Squadron",
+        "description": "A new flight of this squadron replaces this one, under another id.",
+        "operationId": "set_flight_squadron",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlightSquadronChoiceJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightSquadronChangedJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The squadron cannot take the flight, or it cannot be planned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/size": {
+      "put": {
+        "summary": "Put Flight Size",
+        "operationId": "set_flight_size",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlightSizeJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackageDetailJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The squadron lacks the aircraft.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/start-type": {
+      "put": {
+        "summary": "Put Flight Start Type",
+        "operationId": "set_flight_start_type",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlightStartTypeJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackageDetailJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The base dictates the start type.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/divert": {
+      "put": {
+        "summary": "Put Flight Divert",
+        "operationId": "set_flight_divert",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlightDivertJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackageDetailJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The flight cannot divert there, or it cannot be planned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/tot-offset": {
+      "put": {
+        "summary": "Put Flight Tot Offset",
+        "operationId": "set_flight_tot_offset",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlightTotOffsetJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackageDetailJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The offset is out of range.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/custom-name": {
+      "put": {
+        "summary": "Put Flight Custom Name",
+        "operationId": "set_flight_custom_name",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlightCustomNameJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackageDetailJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The name has a | in it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/callsign": {
+      "put": {
+        "summary": "Put Flight Callsign",
+        "operationId": "set_flight_callsign",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlightCallsignJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackageDetailJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The callsign is not available.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Flight Callsign",
+        "description": "Back to an automatic callsign.",
+        "operationId": "reset_flight_callsign",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackageDetailJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded, or no such flight.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/pilots/{slot}": {
+      "put": {
+        "summary": "Put Flight Pilot",
+        "description": "A pilot, or nobody, in this slot (0 is the lead).",
+        "operationId": "set_flight_pilot",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          },
+          {
+            "name": "slot",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Slot"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlightPilotChoiceJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackageDetailJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The pilot is no longer available.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/pilots/{slot}/player": {
+      "put": {
+        "summary": "Put Flight Slot Player",
+        "description": "Makes the pilot of this slot a player or an AI.",
+        "operationId": "set_flight_slot_player",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          },
+          {
+            "name": "slot",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Slot"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlightSlotPlayerJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackageDetailJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The slot is empty or the pilot cannot change.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/packages/{package_id}/flights/{flight_id}/radios": {
       "get": {
         "summary": "Get Flight Radios",
@@ -8398,6 +9168,37 @@
         ],
         "title": "FlightAircraftOption"
       },
+      "FlightCallsignJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "number"
+        ],
+        "title": "FlightCallsign"
+      },
+      "FlightCustomNameJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "FlightCustomName"
+      },
       "FlightDatalinkJs": {
         "properties": {
           "name": {
@@ -8426,6 +9227,43 @@
           "members"
         ],
         "title": "FlightDatalink"
+      },
+      "FlightDivertJs": {
+        "properties": {
+          "divert_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Divert Id"
+          }
+        },
+        "type": "object",
+        "title": "FlightDivert"
+      },
+      "FlightDivertOptionJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "FlightDivertOption"
       },
       "FlightFrequencyJs": {
         "properties": {
@@ -8601,6 +9439,61 @@
         ],
         "title": "FlightPayload"
       },
+      "FlightPilotChoiceJs": {
+        "properties": {
+          "pilot_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pilot Id"
+          }
+        },
+        "type": "object",
+        "title": "FlightPilotChoice"
+      },
+      "FlightPilotOptionJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "player": {
+            "type": "boolean",
+            "title": "Player"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "player"
+        ],
+        "title": "FlightPilotOption"
+      },
+      "FlightPilotSlotJs": {
+        "properties": {
+          "pilot": {
+            "$ref": "#/components/schemas/FlightPilotOptionJs"
+          },
+          "player_refusal": {
+            "title": "Player Refusal",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "title": "FlightPilotSlot"
+      },
       "FlightRadiosJs": {
         "properties": {
           "frequency_mhz": {
@@ -8695,6 +9588,243 @@
         "title": "FlightRadios",
         "description": "What the Radios & TACAN tab shows: each command answers it whole."
       },
+      "FlightSettingsJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "task": {
+            "type": "string",
+            "title": "Task"
+          },
+          "aircraft": {
+            "type": "string",
+            "title": "Aircraft"
+          },
+          "departure": {
+            "type": "string",
+            "title": "Departure"
+          },
+          "arrival": {
+            "type": "string",
+            "title": "Arrival"
+          },
+          "startup": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Startup"
+          },
+          "editable": {
+            "type": "boolean",
+            "title": "Editable"
+          },
+          "squadron": {
+            "$ref": "#/components/schemas/FlightSettingsSquadronJs"
+          },
+          "squadron_options": {
+            "items": {
+              "$ref": "#/components/schemas/FlightSettingsSquadronJs"
+            },
+            "type": "array",
+            "title": "Squadron Options"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "max_count": {
+            "type": "integer",
+            "title": "Max Count"
+          },
+          "start_type": {
+            "type": "string",
+            "title": "Start Type"
+          },
+          "start_types": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Start Types"
+          },
+          "start_type_locked": {
+            "type": "boolean",
+            "title": "Start Type Locked"
+          },
+          "divert_id": {
+            "title": "Divert Id",
+            "type": "string",
+            "format": "uuid"
+          },
+          "divert_options": {
+            "items": {
+              "$ref": "#/components/schemas/FlightDivertOptionJs"
+            },
+            "type": "array",
+            "title": "Divert Options"
+          },
+          "tot_offset_seconds": {
+            "type": "integer",
+            "title": "Tot Offset Seconds"
+          },
+          "custom_name": {
+            "title": "Custom Name",
+            "type": "string"
+          },
+          "callsign": {
+            "$ref": "#/components/schemas/FlightCallsignJs"
+          },
+          "callsign_names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Callsign Names"
+          },
+          "callsign_min_number": {
+            "type": "integer",
+            "title": "Callsign Min Number"
+          },
+          "callsign_max_number": {
+            "type": "integer",
+            "title": "Callsign Max Number"
+          },
+          "slots": {
+            "items": {
+              "$ref": "#/components/schemas/FlightPilotSlotJs"
+            },
+            "type": "array",
+            "title": "Slots"
+          },
+          "free_pilots": {
+            "items": {
+              "$ref": "#/components/schemas/FlightPilotOptionJs"
+            },
+            "type": "array",
+            "title": "Free Pilots"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "task",
+          "aircraft",
+          "departure",
+          "arrival",
+          "startup",
+          "editable",
+          "squadron",
+          "squadron_options",
+          "count",
+          "max_count",
+          "start_type",
+          "start_types",
+          "start_type_locked",
+          "divert_options",
+          "tot_offset_seconds",
+          "callsign_names",
+          "callsign_min_number",
+          "callsign_max_number",
+          "slots",
+          "free_pilots"
+        ],
+        "title": "FlightSettings",
+        "description": "What the engine has and offers for these tabs: the client lists and sends."
+      },
+      "FlightSettingsSquadronJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "aircraft": {
+            "type": "string",
+            "title": "Aircraft"
+          },
+          "base": {
+            "type": "string",
+            "title": "Base"
+          },
+          "available": {
+            "type": "integer",
+            "title": "Available"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "aircraft",
+          "base",
+          "available"
+        ],
+        "title": "FlightSettingsSquadron"
+      },
+      "FlightSizeJs": {
+        "properties": {
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "size"
+        ],
+        "title": "FlightSize"
+      },
+      "FlightSlotPlayerJs": {
+        "properties": {
+          "player": {
+            "type": "boolean",
+            "title": "Player"
+          }
+        },
+        "type": "object",
+        "required": [
+          "player"
+        ],
+        "title": "FlightSlotPlayer"
+      },
+      "FlightSquadronChangedJs": {
+        "properties": {
+          "flight_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Flight Id"
+          },
+          "package": {
+            "$ref": "#/components/schemas/PackageDetailJs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "flight_id",
+          "package"
+        ],
+        "title": "FlightSquadronChanged"
+      },
+      "FlightSquadronChoiceJs": {
+        "properties": {
+          "squadron_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Squadron Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "squadron_id"
+        ],
+        "title": "FlightSquadronChoice"
+      },
       "FlightSquadronOptionJs": {
         "properties": {
           "id": {
@@ -8732,6 +9862,18 @@
           "max_size"
         ],
         "title": "FlightSquadronOption"
+      },
+      "FlightStartTypeJs": {
+        "properties": {
+          "start_type": {
+            "$ref": "#/components/schemas/StartType"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_type"
+        ],
+        "title": "FlightStartType"
       },
       "FlightTacanJs": {
         "properties": {
@@ -8792,6 +9934,19 @@
           "aircraft"
         ],
         "title": "FlightTaskOption"
+      },
+      "FlightTotOffsetJs": {
+        "properties": {
+          "seconds": {
+            "type": "integer",
+            "title": "Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seconds"
+        ],
+        "title": "FlightTotOffset"
       },
       "FlightWaypointJs": {
         "properties": {

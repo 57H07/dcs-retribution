@@ -1,8 +1,8 @@
-from typing import Optional
-
 from PySide6.QtWidgets import QGroupBox, QHBoxLayout, QLineEdit, QLabel, QMessageBox
 
 from game.ato.flight import Flight
+from game.commands import CommandError
+from game.commands.flightsettings import set_flight_custom_name
 
 
 class QFlightCustomName(QGroupBox):
@@ -20,13 +20,7 @@ class QFlightCustomName(QGroupBox):
         self.setLayout(self.layout)
 
     def on_change(self) -> None:
-        error = self.verify_form()
-        if error is not None:
-            QMessageBox.critical(self, "Could not edit flight", error)
-            return
-        self.flight.custom_name = self.custom_name_input.text()
-
-    def verify_form(self) -> Optional[str]:
-        if "|" in self.custom_name_input.text():
-            return f"Cannot include | in flight name"
-        return None
+        try:
+            set_flight_custom_name(self.flight, self.custom_name_input.text())
+        except CommandError as ex:
+            QMessageBox.critical(self, "Could not edit flight", str(ex))

@@ -70,6 +70,9 @@ the same.
 | `auto_create` | `QAutoCreateDialog.on_create_clicked` | `PackageFulfiller.plan_mission(ProposedMission(..., asap=True), 1, now, tracer, ignore_range=True)`, then `set_tot_asap` |
 | `add_flight` | `QFlightCreator.create_flight`, `QPackageDialog.add_flight` | `FlightRoster`, `Flight(...)` with `Settings.start_type_for`, `add_flight`, `recreate_flight_plan`, `set_tot_asap` |
 | `default_loadout` | `QFlightCreator._init_loadout_selector` | First name from `Loadout.default_loadout_names_for` that exists, else the first loadout |
+| `change_flight_squadron` | `QFlightSlotEditor._change_squadron` | New `Flight(...)` with `Loadout.default_for`, divert within 150 NM, `reassign_airlift`, `recreate_flight_plan`, old flight removed |
+| `set_flight_divert` | `FlightPlanPropertiesGroup.set_divert` | `flight.divert = ...`, `recreate_flight_plan`, restored if planning fails |
+| `resize_flight`, `set_flight_pilot`, `set_flight_slot_player` | `QFlightSlotEditor`, `QFlightStartType.on_pilot_selected`, `QGeneralFlightSettingsTab.on_player_toggle` | `Flight.resize` or `set_pilot`, laser codes, `Settings.start_type_for`, `set_tot_asap` |
 | `set_member_custom`, `set_member_loadout`, `set_member_pylon` (WEB-04.3) | `QFlightPayloadTab`, `QPylonEditor` | Custom: `Loadout("Custom", ...)` from what the date restriction leaves, as the Qt combos did; off: `default_loadout`; a pylon: `equip_pylon`. An editor round trip gives back the reference loadout |
 
 ## Determinism

@@ -311,8 +311,7 @@ describe("package editor", () => {
     ]) {
       expect(await screen.findByRole("tab", { name })).toBeInTheDocument();
     }
-    expect(screen.getByText("VFA-25")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("tab", { name: "Pilots" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Route" }));
     await userEvent.click(
       screen.getByRole("button", { name: "Open the Qt editor" }),
     );
