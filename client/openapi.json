@@ -2496,10 +2496,426 @@
           }
         }
       }
+    },
+    "/logs": {
+      "get": {
+        "summary": "Get Logs",
+        "description": "The last `lines` lines of the application log; works without a campaign.",
+        "operationId": "get_logs",
+        "parameters": [
+          {
+            "name": "lines",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 5000,
+              "minimum": 1,
+              "default": 1000,
+              "title": "Lines"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogTailJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/about": {
+      "get": {
+        "summary": "Get About",
+        "description": "Version and credits of DCS Retribution.",
+        "operationId": "get_about",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AboutJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/careers/": {
+      "get": {
+        "summary": "List Careers",
+        "description": "Careers of the player pilots, living first; null without a campaign.",
+        "operationId": "list_careers",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "items": {
+                        "$ref": "#/components/schemas/CareerJs"
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response List Careers"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notes": {
+      "get": {
+        "summary": "Get Notes",
+        "description": "The campaign notes (a kneeboard page); null without a campaign.",
+        "operationId": "get_notes",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/NotesJs"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Notes"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Put Notes",
+        "description": "Replaces the campaign notes; saved with the campaign.",
+        "operationId": "set_notes",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotesJs"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotesJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/informations": {
+      "get": {
+        "summary": "List Informations",
+        "description": "Messages of the info panel, newest first; null without a campaign.",
+        "operationId": "list_informations",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "items": {
+                        "$ref": "#/components/schemas/InformationJs"
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response List Informations"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/import-layouts": {
+      "post": {
+        "summary": "Post Import Layouts",
+        "description": "Re-imports the TGO layouts from the layout folders (a developer tool).\n\nTakes a few seconds; answers once done. Works without a campaign.",
+        "operationId": "import_layouts",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LayoutImportJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/pretense-campaign": {
+      "post": {
+        "summary": "Post Pretense Campaign",
+        "description": "Writes a Pretense mission of the running campaign to the missions folder.",
+        "operationId": "generate_pretense_campaign",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PretenseCampaignJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded (409), or the generation failed (500)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transfers/": {
+      "get": {
+        "summary": "List Transfers",
+        "description": "The player's pending ground unit transfers; null without a campaign.",
+        "operationId": "list_transfers",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "items": {
+                        "$ref": "#/components/schemas/TransferJs"
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response List Transfers"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transfers/{transfer_id}": {
+      "delete": {
+        "summary": "Cancel",
+        "description": "Cancels a player transfer: its units return to the origin's inventory.",
+        "operationId": "cancel_transfer",
+        "parameters": [
+          {
+            "name": "transfer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Transfer Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "No campaign is loaded, the transfer is not the player's, or it is gone",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AboutJs": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url"
+          },
+          "authors": {
+            "type": "string",
+            "title": "Authors"
+          },
+          "contributors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Contributors"
+          },
+          "special_thanks": {
+            "items": {
+              "$ref": "#/components/schemas/ThanksJs"
+            },
+            "type": "array",
+            "title": "Special Thanks"
+          },
+          "attributions": {
+            "items": {
+              "$ref": "#/components/schemas/AttributionJs"
+            },
+            "type": "array",
+            "title": "Attributions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "version",
+          "source_url",
+          "authors",
+          "contributors",
+          "special_thanks",
+          "attributions"
+        ],
+        "title": "AboutJs"
+      },
+      "AttributionJs": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "url"
+        ],
+        "title": "AttributionJs"
+      },
+      "AwardJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "turn": {
+            "type": "integer",
+            "title": "Turn"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "kind",
+          "date",
+          "turn",
+          "description"
+        ],
+        "title": "AwardJs"
+      },
       "BaseForcesJs": {
         "properties": {
           "id": {
@@ -2597,6 +3013,81 @@
         ],
         "title": "CampaignStateJs",
         "description": "Campaign state after a turn, mirror of `game.game.TurnState`."
+      },
+      "CareerJs": {
+        "properties": {
+          "pilot": {
+            "type": "string",
+            "title": "Pilot"
+          },
+          "squadron": {
+            "type": "string",
+            "title": "Squadron"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "alive": {
+            "type": "boolean",
+            "title": "Alive"
+          },
+          "rank": {
+            "title": "Rank",
+            "type": "string"
+          },
+          "totals": {
+            "items": {
+              "$ref": "#/components/schemas/CareerTotalJs"
+            },
+            "type": "array",
+            "title": "Totals"
+          },
+          "awards": {
+            "items": {
+              "$ref": "#/components/schemas/AwardJs"
+            },
+            "type": "array",
+            "title": "Awards"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/LogbookEntryJs"
+            },
+            "type": "array",
+            "title": "History"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pilot",
+          "squadron",
+          "status",
+          "alive",
+          "totals",
+          "awards",
+          "history"
+        ],
+        "title": "CareerJs",
+        "description": "A player pilot's logbook, rank, decorations and missions."
+      },
+      "CareerTotalJs": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "value"
+        ],
+        "title": "CareerTotalJs"
       },
       "CoalitionFinancesJs": {
         "properties": {
@@ -3377,6 +3868,35 @@
         ],
         "title": "IadsNetwork"
       },
+      "InformationJs": {
+        "properties": {
+          "turn": {
+            "type": "integer",
+            "title": "Turn"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "timestamp": {
+            "title": "Timestamp",
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "turn",
+          "title",
+          "text"
+        ],
+        "title": "InformationJs",
+        "description": "One message of the campaign's info panel."
+      },
       "InstallPreferencesJs": {
         "properties": {
           "saved_game_dir": {
@@ -3595,6 +4115,19 @@
         ],
         "title": "JoinZones"
       },
+      "LayoutImportJs": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count"
+        ],
+        "title": "LayoutImportJs"
+      },
       "LeafletPoint": {
         "properties": {
           "lat": {
@@ -3612,6 +4145,101 @@
           "lng"
         ],
         "title": "LatLng"
+      },
+      "LogTailJs": {
+        "properties": {
+          "lines": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lines",
+          "total",
+          "available"
+        ],
+        "title": "LogTailJs",
+        "description": "The last lines of the application log (read-only)."
+      },
+      "LogbookEntryJs": {
+        "properties": {
+          "turn": {
+            "type": "integer",
+            "title": "Turn"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "squadron": {
+            "type": "string",
+            "title": "Squadron"
+          },
+          "aircraft": {
+            "type": "string",
+            "title": "Aircraft"
+          },
+          "task": {
+            "type": "string",
+            "title": "Task"
+          },
+          "combat": {
+            "type": "boolean",
+            "title": "Combat"
+          },
+          "flight_time": {
+            "type": "string",
+            "title": "Flight Time"
+          },
+          "air_kills": {
+            "type": "integer",
+            "title": "Air Kills"
+          },
+          "ground_kills": {
+            "type": "integer",
+            "title": "Ground Kills"
+          },
+          "naval_kills": {
+            "type": "integer",
+            "title": "Naval Kills"
+          },
+          "rescues": {
+            "type": "integer",
+            "title": "Rescues"
+          },
+          "loss": {
+            "type": "string",
+            "title": "Loss"
+          }
+        },
+        "type": "object",
+        "required": [
+          "turn",
+          "date",
+          "squadron",
+          "aircraft",
+          "task",
+          "combat",
+          "flight_time",
+          "air_kills",
+          "ground_kills",
+          "naval_kills",
+          "rescues",
+          "loss"
+        ],
+        "title": "LogbookEntryJs"
       },
       "LossRowJs": {
         "properties": {
@@ -3887,6 +4515,19 @@
         "title": "NewPackage",
         "description": "What to plan a package against: opens the package editor on it."
       },
+      "NotesJs": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "NotesJs"
+      },
       "OfflineBasemapImageJs": {
         "properties": {
           "south_west": {
@@ -4036,17 +4677,23 @@
         ],
         "title": "Player"
       },
+      "PretenseCampaignJs": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "title": "PretenseCampaignJs"
+      },
       "QtDialog": {
         "type": "string",
         "enum": [
-          "notes",
-          "logs",
-          "about",
-          "import-layouts",
-          "pretense-campaign",
           "air-wing",
-          "transfers",
-          "info-panel",
           "debriefing"
         ],
         "title": "QtDialog"
@@ -4516,6 +5163,24 @@
         ],
         "title": "TgoSummary"
       },
+      "ThanksJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "reason"
+        ],
+        "title": "ThanksJs"
+      },
       "ThreatZoneContainerJs": {
         "properties": {
           "blue": {
@@ -4751,6 +5416,72 @@
         ],
         "title": "TopBar",
         "description": "Everything the top bar and the turn buttons of the command view show."
+      },
+      "TransferJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "origin": {
+            "type": "string",
+            "title": "Origin"
+          },
+          "destination": {
+            "type": "string",
+            "title": "Destination"
+          },
+          "position": {
+            "type": "string",
+            "title": "Position"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          },
+          "units": {
+            "items": {
+              "$ref": "#/components/schemas/TransferUnitJs"
+            },
+            "type": "array",
+            "title": "Units"
+          },
+          "transport": {
+            "type": "string",
+            "title": "Transport"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "origin",
+          "destination",
+          "position",
+          "size",
+          "units",
+          "transport"
+        ],
+        "title": "TransferJs",
+        "description": "A pending ground unit transfer of the player."
+      },
+      "TransferUnitJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "count"
+        ],
+        "title": "TransferUnitJs"
       },
       "TurnJs": {
         "properties": {

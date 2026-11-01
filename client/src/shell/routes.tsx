@@ -4,6 +4,12 @@
 import { WaitingScreen } from "../missionresult/WaitingScreen";
 import { PreferencesScreen } from "../preferences/PreferencesScreen";
 import { ReportsScreen } from "../reports/ReportsScreen";
+import { AboutScreen } from "../secondary/AboutScreen";
+import { CareerScreen } from "../secondary/CareerScreen";
+import { InfoPanelScreen } from "../secondary/InfoPanelScreen";
+import { LogsScreen } from "../secondary/LogsScreen";
+import { NotesScreen } from "../secondary/NotesScreen";
+import { TransfersScreen } from "../secondary/TransfersScreen";
 import { SettingsScreen } from "../settings/SettingsScreen";
 import { QtScreen } from "./QtScreen";
 import { Shell } from "./Shell";
@@ -61,6 +67,13 @@ export const ROUTES: RouteObject[] = [
         path: "reports/:tab",
         element: <ReportsScreen />,
       },
+      // Secondary screens (WEB-08.2).
+      { path: "transfers", element: <TransfersScreen /> },
+      { path: "notes", element: <NotesScreen /> },
+      { path: "info", element: <InfoPanelScreen /> },
+      { path: "career", element: <CareerScreen /> },
+      { path: "logs", element: <LogsScreen /> },
+      { path: "about", element: <AboutScreen /> },
       { path: "*", element: <Navigate to="/" replace /> },
     ],
   },

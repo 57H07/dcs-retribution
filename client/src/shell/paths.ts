@@ -16,4 +16,11 @@ export const PATHS = {
   debrief: "/debrief",
   reports: "/reports",
   reportTab: (tab: ReportTab) => `/reports/${tab}`,
+  // WEB-08.2
+  transfers: "/transfers",
+  notes: "/notes",
+  info: "/info",
+  career: "/career",
+  logs: "/logs",
+  about: "/about",
 };

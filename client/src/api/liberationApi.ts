@@ -13,6 +13,7 @@ export enum Tags {
   PREFERENCES = "Preferences",
   REPORTS = "Reports",
   PACKAGES = "Packages",
+  TRANSFERS = "Transfers",
 }
 
 const LIST_ID = "LIST";
@@ -92,6 +93,18 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     getIntelReport: { providesTags: [Tags.REPORTS] },
     getStatsReport: { providesTags: [Tags.REPORTS] },
     getFinancesReport: { providesTags: [Tags.REPORTS] },
+    // WEB-08.2 screens: refetched on mount and with the reports (new turn...).
+    listTransfers: { providesTags: [Tags.TRANSFERS, Tags.REPORTS] },
+    cancelTransfer: {
+      invalidatesTags: [
+        Tags.TRANSFERS,
+        Tags.PACKAGES,
+        Tags.INSPECTOR,
+        Tags.REPORTS,
+      ],
+    },
+    listInformations: { providesTags: [Tags.REPORTS] },
+    listCareers: { providesTags: [Tags.REPORTS] },
     // /settings/ (WEB-07.1): a change reloads the whole schema (values, markers).
     getSettings: { providesTags: [Tags.SETTINGS] },
     // A setting (cheats, fast forward...) may change what the top bar shows.

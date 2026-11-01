@@ -52,6 +52,23 @@ describe("web shell routes", () => {
     },
   );
 
+  it.each([
+    ["/transfers", "Transfers"],
+    ["/notes", "Notes"],
+    ["/info", "Info panel"],
+    ["/career", "Pilot career"],
+    ["/logs", "Logs"],
+    ["/about", "About"],
+  ])("shows the web screen %s, without opening Qt", async (path, title) => {
+    const calls = recordFetch();
+    const { router, findByRole } = renderShell(path);
+    expect(
+      await findByRole("heading", { level: 1, name: title }),
+    ).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe(path);
+    expect(calls).toHaveLength(0);
+  });
+
   it("sends an unknown reports tab to the first tab", async () => {
     recordFetch();
     const { router } = renderShell("/reports/nowhere");
