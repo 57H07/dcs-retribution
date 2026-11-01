@@ -5,6 +5,8 @@ from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton
 
 from game import Game
 from game.ato.flightmember import FlightMember
+from game.commands.flightpayload import set_tgp_laser_code
+from game.gamelock import game_lock
 
 
 class OwnLaserCodeInfo(QHBoxLayout):
@@ -48,11 +50,11 @@ class OwnLaserCodeInfo(QHBoxLayout):
             self.code_display.setText("AI does not use laser codes")
 
     def on_alloc_dealloc_clicked(self) -> None:
-        if self.flight_member.tgp_laser_code is not None:
-            self.flight_member.release_tgp_laser_code()
-        else:
-            self.flight_member.assign_tgp_laser_code(
-                self.game.laser_code_registry.alloc_laser_code()
+        with game_lock():
+            set_tgp_laser_code(
+                self.game,
+                self.flight_member,
+                self.flight_member.tgp_laser_code is None,
             )
         self.bind_to_selected_member()
         self.assigned_laser_code_changed.emit()

@@ -9,6 +9,7 @@ import { FlightGeneralTab } from "./FlightGeneralTab";
 import { FlightPilotsTab } from "./FlightPilotsTab";
 import { FlightRadiosTab } from "./FlightRadiosTab";
 import styles from "./PackageEditor.module.css";
+import { PayloadTab } from "./PayloadTab";
 import { ReactNode } from "react";
 
 export const FLIGHT_SECTIONS = [
@@ -58,7 +59,7 @@ export function FlightSections({
         <QtEditorSlot flight={flight} what="The route" />
       </TabsContent>
       <TabsContent value="payload" className={styles.section}>
-        <QtEditorSlot flight={flight} what="The payload" />
+        <PayloadTab packageId={packageId} flightId={flight.id} />
       </TabsContent>
       <TabsContent value="pilots" className={styles.section}>
         <FlightPilotsTab packageId={packageId} flightId={flight.id} />
