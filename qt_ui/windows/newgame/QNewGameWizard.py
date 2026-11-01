@@ -5,15 +5,19 @@ import logging
 from PySide6 import QtGui, QtWidgets
 
 from game.campaignloader.campaign import Campaign
-from game.dcs.aircrafttype import AircraftType
-from game.theater.start_generator import GameGenerator, GeneratorSettings, ModSettings
+from game.commands.newgame import (
+    NewGameParameters,
+    TIME_PERIODS,
+    finish_new_game,
+    generate_new_game,
+)
+from game.theater.start_generator import ModSettings
 from qt_ui.windows.AirWingConfigurationDialog import AirWingConfigurationDialog
 from qt_ui.windows.newgame.WizardPages.QFactionSelection import FactionSelection
 from qt_ui.windows.newgame.WizardPages.QGeneratorSettings import GeneratorOptions
 from qt_ui.windows.newgame.WizardPages.QNewGameSettings import NewGameSettings
 from qt_ui.windows.newgame.WizardPages.QTheaterConfiguration import (
     TheaterConfiguration,
-    TIME_PERIODS,
 )
 
 
@@ -68,23 +72,6 @@ class NewGameWizard(QtWidgets.QWizard):
 
         logging.info("New campaign start date: %s", start_date.strftime("%m/%d/%Y"))
 
-        generator_settings = GeneratorSettings(
-            start_date=start_date,
-            start_time=campaign.recommended_start_time,
-            player_budget=int(self.field("starting_money")),
-            enemy_budget=int(self.field("enemy_starting_money")),
-            # QSlider forces integers, so we use 1 to 50 and divide by 10 to
-            # give 0.1 to 5.0.
-            inverted=self.field("invertMap"),
-            advanced_iads=self.field("advanced_iads"),
-            no_carrier=self.field("no_carrier"),
-            no_lha=self.field("no_lha"),
-            no_player_navy=self.field("no_player_navy"),
-            no_enemy_navy=self.field("no_enemy_navy"),
-            tgo_config=campaign.load_ground_forces_config(),
-            carrier_config=campaign.load_carrier_config(),
-            squadrons_start_full=self.field("squadrons_start_full"),
-        )
         mod_settings = ModSettings(
             f9f_panther=self.field("f9f_panther"),
             a4_skyhawk=self.field("a4_skyhawk"),
@@ -145,36 +132,34 @@ class NewGameWizard(QtWidgets.QWizard):
         logging.info("New campaign blue faction: %s", blue_faction.name)
         logging.info("New campaign red faction: %s", red_faction.name)
 
-        theater = campaign.load_theater(generator_settings.advanced_iads)
-
-        logging.info("New campaign theater: %s", theater.terrain.name)
-
         settings = self.settings_page.settings_widget.settings
+        squadrons_start_full = self.field("squadrons_start_full")
 
-        generator = GameGenerator(
-            blue_faction,
-            red_faction,
-            theater,
-            campaign.load_air_wing_config(theater),
-            settings,
-            generator_settings,
-            mod_settings,
-            campaign_name=campaign.name,
+        self.generatedGame = generate_new_game(
+            NewGameParameters(
+                campaign=campaign,
+                blue_faction=blue_faction,
+                red_faction=red_faction,
+                settings=settings,
+                mod_settings=mod_settings,
+                start_date=start_date,
+                player_budget=int(self.field("starting_money")),
+                enemy_budget=int(self.field("enemy_starting_money")),
+                inverted=self.field("invertMap"),
+                advanced_iads=self.field("advanced_iads"),
+                no_carrier=self.field("no_carrier"),
+                no_lha=self.field("no_lha"),
+                no_player_navy=self.field("no_player_navy"),
+                no_enemy_navy=self.field("no_enemy_navy"),
+                squadrons_start_full=squadrons_start_full,
+            )
         )
-        self.generatedGame = generator.generate()
 
         AirWingConfigurationDialog(
-            self.generatedGame, generator.generator_settings.squadrons_start_full, self
+            self.generatedGame, squadrons_start_full, self
         ).exec()
 
-        g = self.generatedGame
-        herc = AircraftType.named("C-130J-30 Super Hercules")
-        if herc in g.blue.air_wing.squadrons or herc in g.red.air_wing.squadrons:
-            g.settings.set_plugin_option("herculescargo", True)
-
-        self.generatedGame.begin_turn_0(
-            squadrons_start_full=generator_settings.squadrons_start_full
-        )
+        finish_new_game(self.generatedGame, squadrons_start_full)
 
         super(NewGameWizard, self).accept()
 

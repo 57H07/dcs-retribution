@@ -17,9 +17,18 @@ export enum Tags {
   BASE = "Base",
   TGO = "Tgo",
   AIR_WING = "AirWing",
+  AIR_WING_CONFIG = "AirWingConfig",
+  NEW_GAME = "NewGame",
 }
 
 const LIST_ID = "LIST";
+
+/** What a change of the air wing configuration (WEB-06) refreshes. */
+const AIR_WING_CONFIG_COMMAND = {
+  invalidatesTags: [Tags.AIR_WING_CONFIG, Tags.AIR_WING, Tags.BASE],
+};
+
+const NEW_GAME_COMMAND = { invalidatesTags: [Tags.NEW_GAME] };
 
 /** What a change to a package touches: the screens and the aircraft it took. */
 const PACKAGE_COMMAND_TAGS = [
@@ -59,6 +68,26 @@ function providesList<R extends { id: string | number }[], T extends string>(
 export const liberationApi = _liberationApi.enhanceEndpoints({
   addTagTypes: Object.values(Tags),
   endpoints: {
+    // New campaign wizard and air wing configuration (WEB-06).
+    getNewGameGeneration: { providesTags: [Tags.NEW_GAME] },
+    startNewGameGeneration: NEW_GAME_COMMAND,
+    beginNewGame: NEW_GAME_COMMAND,
+    cancelNewGameGeneration: NEW_GAME_COMMAND,
+    getAirWingConfig: { providesTags: [Tags.AIR_WING_CONFIG] },
+    getConfigFaction: { providesTags: [Tags.AIR_WING_CONFIG] },
+    getConfigSquadronLiveries: { providesTags: [Tags.AIR_WING_CONFIG] },
+    updateConfigSquadron: AIR_WING_CONFIG_COMMAND,
+    removeConfigSquadron: AIR_WING_CONFIG_COMMAND,
+    setConfigSquadronAutoAssign: AIR_WING_CONFIG_COMMAND,
+    setConfigSquadronLivery: AIR_WING_CONFIG_COMMAND,
+    rerollConfigSquadronNickname: AIR_WING_CONFIG_COMMAND,
+    replaceConfigSquadron: AIR_WING_CONFIG_COMMAND,
+    addConfigSquadron: AIR_WING_CONFIG_COMMAND,
+    saveAirWingFile: AIR_WING_CONFIG_COMMAND,
+    loadAirWingFile: AIR_WING_CONFIG_COMMAND,
+    addConfigFactionUnit: AIR_WING_CONFIG_COMMAND,
+    setConfigFactionJtac: AIR_WING_CONFIG_COMMAND,
+    setConfigFactionDoctrine: AIR_WING_CONFIG_COMMAND,
     // /game/ (WEB-01.1): the top bar refreshes after each turn action.
     getTopBar: { providesTags: [Tags.TOP_BAR] },
     passTurn: {

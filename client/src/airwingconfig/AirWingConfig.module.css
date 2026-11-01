@@ -1,0 +1,149 @@
+/* Air wing configuration and faction units (WEB-06). */
+.panel,
+.side,
+.faction {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-md);
+}
+
+.panel {
+  min-width: 0;
+}
+
+.hint {
+  margin: 0;
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.label {
+  margin: 0;
+  color: var(--ui-color-text-secondary);
+  font-family: var(--ui-font-display);
+  font-size: var(--ui-font-size-sm);
+  font-weight: var(--ui-font-weight-semibold);
+  letter-spacing: var(--ui-letter-spacing-display);
+  text-transform: uppercase;
+}
+
+.columns {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.list {
+  flex: 1 1 280px;
+  max-width: 340px;
+  max-height: 70vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.editor {
+  flex: 999 1 480px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-md);
+  padding: var(--ui-space-lg);
+  background: var(--ui-color-bg-panel);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-md);
+}
+
+.editorTitle {
+  margin: 0;
+  font-family: var(--ui-font-display);
+  font-size: var(--ui-font-size-lg);
+  font-weight: var(--ui-font-weight-bold);
+}
+
+.fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--ui-space-md);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-xs);
+  min-width: 160px;
+}
+
+.input,
+.select {
+  min-height: var(--ui-size-control);
+  padding: 0 var(--ui-space-sm);
+  background: var(--ui-color-bg-canvas);
+  color: var(--ui-color-text-primary);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-sm);
+  font: inherit;
+}
+
+textarea.input {
+  padding: var(--ui-space-sm);
+  resize: vertical;
+}
+
+.input:focus-visible,
+.select:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-shadow-focus);
+}
+
+.tasks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-sm) var(--ui-space-md);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-sm);
+  color: var(--ui-color-text-strong);
+  font-size: var(--ui-font-size-sm);
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-sm);
+}
+
+.unitGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-sm);
+}
+
+.units {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--ui-space-xs) var(--ui-space-md);
+  font-size: var(--ui-font-size-sm);
+}
+
+.addUnit {
+  display: flex;
+  gap: var(--ui-space-sm);
+}
+
+.addUnit .select {
+  flex: 0 1 320px;
+  min-width: 0;
+}

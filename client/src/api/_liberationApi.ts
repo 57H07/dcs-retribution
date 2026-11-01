@@ -80,6 +80,144 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.pilotUpdateJs,
       }),
     }),
+    getAirWingConfig: build.query<
+      GetAirWingConfigApiResponse,
+      GetAirWingConfigApiArg
+    >({
+      query: (queryArg) => ({ url: `/air-wing-config/${queryArg.target}` }),
+    }),
+    updateConfigSquadron: build.mutation<
+      UpdateConfigSquadronApiResponse,
+      UpdateConfigSquadronApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/air-wing-config/${queryArg.target}/squadrons/${queryArg.squadronId}`,
+        method: "PATCH",
+        body: queryArg.squadronConfigUpdateJs,
+      }),
+    }),
+    removeConfigSquadron: build.mutation<
+      RemoveConfigSquadronApiResponse,
+      RemoveConfigSquadronApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/air-wing-config/${queryArg.target}/squadrons/${queryArg.squadronId}`,
+        method: "DELETE",
+      }),
+    }),
+    setConfigSquadronAutoAssign: build.mutation<
+      SetConfigSquadronAutoAssignApiResponse,
+      SetConfigSquadronAutoAssignApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/air-wing-config/${queryArg.target}/squadrons/${queryArg.squadronId}/auto-assign`,
+        method: "PUT",
+        body: queryArg.autoAssignJs,
+      }),
+    }),
+    getConfigSquadronLiveries: build.query<
+      GetConfigSquadronLiveriesApiResponse,
+      GetConfigSquadronLiveriesApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/air-wing-config/${queryArg.target}/squadrons/${queryArg.squadronId}/liveries`,
+      }),
+    }),
+    setConfigSquadronLivery: build.mutation<
+      SetConfigSquadronLiveryApiResponse,
+      SetConfigSquadronLiveryApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/air-wing-config/${queryArg.target}/squadrons/${queryArg.squadronId}/livery`,
+        method: "PUT",
+        body: queryArg.setLiveryJs,
+      }),
+    }),
+    rerollConfigSquadronNickname: build.mutation<
+      RerollConfigSquadronNicknameApiResponse,
+      RerollConfigSquadronNicknameApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/air-wing-config/${queryArg.target}/squadrons/${queryArg.squadronId}/reroll-nickname`,
+        method: "POST",
+      }),
+    }),
+    replaceConfigSquadron: build.mutation<
+      ReplaceConfigSquadronApiResponse,
+      ReplaceConfigSquadronApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/air-wing-config/${queryArg.target}/squadrons/${queryArg.squadronId}/preset`,
+        method: "POST",
+        body: queryArg.replacePresetJs,
+      }),
+    }),
+    addConfigSquadron: build.mutation<
+      AddConfigSquadronApiResponse,
+      AddConfigSquadronApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/air-wing-config/${queryArg.target}/sides/${queryArg.side}/squadrons`,
+        method: "POST",
+        body: queryArg.configNewSquadronJs,
+      }),
+    }),
+    saveAirWingFile: build.mutation<
+      SaveAirWingFileApiResponse,
+      SaveAirWingFileApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/air-wing-config/${queryArg.target}/sides/${queryArg.side}/file/save`,
+        method: "POST",
+      }),
+    }),
+    loadAirWingFile: build.mutation<
+      LoadAirWingFileApiResponse,
+      LoadAirWingFileApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/air-wing-config/${queryArg.target}/sides/${queryArg.side}/file/load`,
+        method: "POST",
+      }),
+    }),
+    getConfigFaction: build.query<
+      GetConfigFactionApiResponse,
+      GetConfigFactionApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/air-wing-config/${queryArg.target}/sides/${queryArg.side}/faction`,
+      }),
+    }),
+    addConfigFactionUnit: build.mutation<
+      AddConfigFactionUnitApiResponse,
+      AddConfigFactionUnitApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/air-wing-config/${queryArg.target}/sides/${queryArg.side}/faction/units`,
+        method: "POST",
+        body: queryArg.factionUnitJs,
+      }),
+    }),
+    setConfigFactionJtac: build.mutation<
+      SetConfigFactionJtacApiResponse,
+      SetConfigFactionJtacApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/air-wing-config/${queryArg.target}/sides/${queryArg.side}/faction/jtac`,
+        method: "PUT",
+        body: queryArg.factionJtacJs,
+      }),
+    }),
+    setConfigFactionDoctrine: build.mutation<
+      SetConfigFactionDoctrineApiResponse,
+      SetConfigFactionDoctrineApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/air-wing-config/${queryArg.target}/sides/${queryArg.side}/faction/doctrine`,
+        method: "PUT",
+        body: queryArg.factionDoctrineJs,
+      }),
+    }),
     listControlPoints: build.query<
       ListControlPointsApiResponse,
       ListControlPointsApiArg
@@ -757,6 +895,72 @@ const injectedRtkApi = api.injectEndpoints({
         params: { for_player: queryArg.forPlayer },
       }),
     }),
+    getNewGameOptions: build.query<
+      GetNewGameOptionsApiResponse,
+      GetNewGameOptionsApiArg
+    >({
+      query: () => ({ url: `/new-game/options` }),
+    }),
+    getCampaignPreview: build.query<
+      GetCampaignPreviewApiResponse,
+      GetCampaignPreviewApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/new-game/campaigns/${queryArg.campaignId}/preview`,
+      }),
+    }),
+    getCampaignDefaults: build.query<
+      GetCampaignDefaultsApiResponse,
+      GetCampaignDefaultsApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/new-game/campaigns/${queryArg.campaignId}/defaults`,
+      }),
+    }),
+    getNewGameFaction: build.query<
+      GetNewGameFactionApiResponse,
+      GetNewGameFactionApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/new-game/faction`,
+        params: { name: queryArg.name },
+      }),
+    }),
+    saveNewGameFaction: build.mutation<
+      SaveNewGameFactionApiResponse,
+      SaveNewGameFactionApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/new-game/factions`,
+        method: "POST",
+        body: queryArg.saveFactionJs,
+      }),
+    }),
+    getNewGameGeneration: build.query<
+      GetNewGameGenerationApiResponse,
+      GetNewGameGenerationApiArg
+    >({
+      query: () => ({ url: `/new-game/generation` }),
+    }),
+    startNewGameGeneration: build.mutation<
+      StartNewGameGenerationApiResponse,
+      StartNewGameGenerationApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/new-game/generation`,
+        method: "POST",
+        body: queryArg.newGameRequestJs,
+      }),
+    }),
+    cancelNewGameGeneration: build.mutation<
+      CancelNewGameGenerationApiResponse,
+      CancelNewGameGenerationApiArg
+    >({
+      query: () => ({ url: `/new-game/generation`, method: "DELETE" }),
+    }),
+    beginNewGame: build.mutation<BeginNewGameApiResponse, BeginNewGameApiArg>({
+      query: () => ({ url: `/new-game/generation/begin`, method: "POST" }),
+    }),
     listPackages: build.query<ListPackagesApiResponse, ListPackagesApiArg>({
       query: () => ({ url: `/packages/` }),
     }),
@@ -1380,6 +1584,103 @@ export type UpdatePilotApiArg = {
   pilotId: string;
   pilotUpdateJs: PilotUpdate;
 };
+export type GetAirWingConfigApiResponse =
+  /** status 200 Successful Response */ AirWingConfig;
+export type GetAirWingConfigApiArg = {
+  target: ConfigTarget;
+};
+export type UpdateConfigSquadronApiResponse =
+  /** status 204 Successful Response */ void;
+export type UpdateConfigSquadronApiArg = {
+  target: ConfigTarget;
+  squadronId: string;
+  squadronConfigUpdateJs: SquadronConfigUpdate;
+};
+export type RemoveConfigSquadronApiResponse =
+  /** status 204 Successful Response */ void;
+export type RemoveConfigSquadronApiArg = {
+  target: ConfigTarget;
+  squadronId: string;
+};
+export type SetConfigSquadronAutoAssignApiResponse =
+  /** status 204 Successful Response */ void;
+export type SetConfigSquadronAutoAssignApiArg = {
+  squadronId: string;
+  target: ConfigTarget;
+  autoAssignJs: AutoAssign;
+};
+export type GetConfigSquadronLiveriesApiResponse =
+  /** status 200 Successful Response */ LiveryChoice[];
+export type GetConfigSquadronLiveriesApiArg = {
+  squadronId: string;
+  target: ConfigTarget;
+};
+export type SetConfigSquadronLiveryApiResponse =
+  /** status 204 Successful Response */ void;
+export type SetConfigSquadronLiveryApiArg = {
+  squadronId: string;
+  target: ConfigTarget;
+  setLiveryJs: SetLivery;
+};
+export type RerollConfigSquadronNicknameApiResponse =
+  /** status 204 Successful Response */ void;
+export type RerollConfigSquadronNicknameApiArg = {
+  squadronId: string;
+  target: ConfigTarget;
+};
+export type ReplaceConfigSquadronApiResponse =
+  /** status 204 Successful Response */ void;
+export type ReplaceConfigSquadronApiArg = {
+  target: ConfigTarget;
+  squadronId: string;
+  replacePresetJs: AirWingConfigReplacePreset;
+};
+export type AddConfigSquadronApiResponse =
+  /** status 204 Successful Response */ void;
+export type AddConfigSquadronApiArg = {
+  target: ConfigTarget;
+  side: ConfigSide;
+  configNewSquadronJs: AirWingConfigNewSquadron;
+};
+export type SaveAirWingFileApiResponse =
+  /** status 200 Successful Response */ AirWingFileResult;
+export type SaveAirWingFileApiArg = {
+  side: ConfigSide;
+  target: ConfigTarget;
+};
+export type LoadAirWingFileApiResponse =
+  /** status 200 Successful Response */ AirWingFileResult;
+export type LoadAirWingFileApiArg = {
+  target: ConfigTarget;
+  side: ConfigSide;
+};
+export type GetConfigFactionApiResponse =
+  /** status 200 Successful Response */ FactionSheet;
+export type GetConfigFactionApiArg = {
+  side: ConfigSide;
+  target: ConfigTarget;
+};
+export type AddConfigFactionUnitApiResponse =
+  /** status 204 Successful Response */ void;
+export type AddConfigFactionUnitApiArg = {
+  side: ConfigSide;
+  target: ConfigTarget;
+  factionUnitJs: AirWingConfigFactionUnit;
+};
+export type SetConfigFactionJtacApiResponse =
+  /** status 204 Successful Response */ void;
+export type SetConfigFactionJtacApiArg = {
+  side: ConfigSide;
+  target: ConfigTarget;
+  factionJtacJs: AirWingConfigFactionJtac;
+};
+export type SetConfigFactionDoctrineApiResponse =
+  /** status 204 Successful Response */ void;
+export type SetConfigFactionDoctrineApiArg = {
+  side: ConfigSide;
+  target: ConfigTarget;
+  factionDoctrineJs: AirWingConfigFactionDoctrine;
+};
 export type ListControlPointsApiResponse =
   /** status 200 Successful Response */ ControlPoint[];
 export type ListControlPointsApiArg = void;
@@ -1738,7 +2039,7 @@ export type GetFrontLineByIdApiArg = {
   frontLineId: string;
 };
 export type GetGameStateApiResponse =
-  /** status 200 Successful Response */ Game;
+  /** status 200 Successful Response */ Game | null;
 export type GetGameStateApiArg = void;
 export type GetTopBarApiResponse =
   /** status 200 Successful Response */ TopBar | null;
@@ -1840,6 +2141,43 @@ export type GetNavmeshApiResponse =
 export type GetNavmeshApiArg = {
   forPlayer: Player;
 };
+export type GetNewGameOptionsApiResponse =
+  /** status 200 Successful Response */ NewGameOptions;
+export type GetNewGameOptionsApiArg = void;
+export type GetCampaignPreviewApiResponse =
+  /** status 200 Successful Response */ CampaignPreview;
+export type GetCampaignPreviewApiArg = {
+  campaignId: string;
+};
+export type GetCampaignDefaultsApiResponse =
+  /** status 200 Successful Response */ CampaignDefaults;
+export type GetCampaignDefaultsApiArg = {
+  campaignId: string;
+};
+export type GetNewGameFactionApiResponse =
+  /** status 200 Successful Response */ FactionSheet;
+export type GetNewGameFactionApiArg = {
+  name: string;
+};
+export type SaveNewGameFactionApiResponse =
+  /** status 204 Successful Response */ void;
+export type SaveNewGameFactionApiArg = {
+  saveFactionJs: SaveFaction;
+};
+export type GetNewGameGenerationApiResponse =
+  /** status 200 Successful Response */ NewGameGeneration;
+export type GetNewGameGenerationApiArg = void;
+export type StartNewGameGenerationApiResponse =
+  /** status 200 Successful Response */ NewGameGeneration;
+export type StartNewGameGenerationApiArg = {
+  newGameRequestJs: NewGameRequest;
+};
+export type CancelNewGameGenerationApiResponse =
+  /** status 200 Successful Response */ NewGameGeneration;
+export type CancelNewGameGenerationApiArg = void;
+export type BeginNewGameApiResponse =
+  /** status 200 Successful Response */ NewGameGeneration;
+export type BeginNewGameApiArg = void;
 export type ListPackagesApiResponse =
   /** status 200 Successful Response */ Package[];
 export type ListPackagesApiArg = void;
@@ -2312,6 +2650,7 @@ export type AirWing = {
   pilot_count: number;
   bases: AirWingBase[];
   inventory: InventoryRow[];
+  adjustments_enabled: boolean;
 };
 export type ValidationError = {
   loc: (string | number)[];
@@ -2363,6 +2702,99 @@ export type PilotUpdate = {
   player?: boolean | null;
   on_leave?: boolean | null;
   name?: string | null;
+};
+export type AirWingConfigBase = {
+  id: string;
+  name: string;
+};
+export type AirWingConfigParking = {
+  required: number;
+  total: number;
+  fitting?: number;
+};
+export type AirWingConfigSquadron = {
+  id: string;
+  name: string;
+  nickname?: string;
+  aircraft: string;
+  aircraft_id: string;
+  primary_task: string;
+  primary_tasks: string[];
+  tasks: AllowedTask[];
+  max_size: number;
+  base_id: string;
+  bases: AirWingConfigBase[];
+  parking: AirWingConfigParking;
+  player_names: string[];
+  player_names_refusal?: string;
+  presets: string[];
+};
+export type AirWingConfigAircraftOption = {
+  aircraft_id: string;
+  aircraft: string;
+  primary_tasks: string[];
+  bases: AirWingConfigBase[];
+  presets: string[];
+};
+export type AirWingConfigSide = {
+  side: string;
+  faction: string;
+  squadrons: AirWingConfigSquadron[];
+  aircraft_options: AirWingConfigAircraftOption[];
+};
+export type AirWingConfig = {
+  replans: boolean;
+  sides: AirWingConfigSide[];
+};
+export type ConfigTarget = "draft" | "campaign";
+export type SquadronConfigUpdate = {
+  name?: string | null;
+  nickname?: string | null;
+  max_size?: number | null;
+  primary_task?: string | null;
+  base_id?: string | null;
+  player_names?: string[] | null;
+};
+export type AirWingConfigReplacePreset = {
+  preset: string;
+};
+export type ConfigSide = "blue" | "red";
+export type AirWingConfigNewSquadron = {
+  aircraft_id: string;
+  base_id: string;
+  primary_task: string;
+  preset?: string | null;
+};
+export type AirWingFileResult = {
+  path?: string;
+};
+export type FactionUnitGroup = {
+  key: string;
+  label: string;
+  units: string[];
+  addable: string[];
+};
+export type FactionSheet = {
+  name: string;
+  description: string;
+  authors: string;
+  requirements: {
+    [key: string]: string;
+  };
+  has_jtac: boolean;
+  doctrine: string;
+  doctrines: string[];
+  groups: FactionUnitGroup[];
+};
+export type AirWingConfigFactionUnit = {
+  group: string;
+  unit: string;
+};
+export type AirWingConfigFactionJtac = {
+  has_jtac: boolean;
+};
+export type AirWingConfigFactionDoctrine = {
+  doctrine: string;
 };
 export type LatLng = {
   lat: number;
@@ -3079,6 +3511,119 @@ export type ExternalLink =
   | "forum-thread"
   | "issues";
 export type Player = "Neutral" | "Blue" | "Red";
+export type NewGameCampaign = {
+  id: string;
+  name: string;
+  theater: string;
+  authors: string;
+  description: string;
+  version: string;
+  compatible: boolean;
+  warning?: string;
+  era?: string;
+  start_date?: string;
+  performance: number;
+  performance_label: string;
+  performance_text: string;
+  recommended_blue_faction: string;
+  recommended_red_faction: string;
+};
+export type NewGameTimePeriod = {
+  name: string;
+  start_date: string;
+};
+export type NewGameModChoice = {
+  key: string;
+  label: string;
+};
+export type NewGameOptions = {
+  campaigns: NewGameCampaign[];
+  factions: string[];
+  time_periods: NewGameTimePeriod[];
+  default_time_period: string;
+  mods: NewGameModChoice[];
+};
+export type CampaignPreviewBase = {
+  name: string;
+  x: number;
+  y: number;
+  side: string;
+  kind: string;
+};
+export type CampaignPreviewLink = {
+  from_index: number;
+  to_index: number;
+  front_line: boolean;
+};
+export type CampaignPreview = {
+  width: number;
+  height: number;
+  bases: CampaignPreviewBase[];
+  links: CampaignPreviewLink[];
+  blue_bases: number;
+  red_bases: number;
+  front_lines: number;
+};
+export type CampaignDefaults = {
+  settings_pages: SettingsPage[];
+  blue_faction: string;
+  red_faction: string;
+  start_date?: string;
+  time_period?: string;
+  player_budget: number;
+  enemy_budget: number;
+  advanced_iads_available: boolean;
+  no_carrier: boolean;
+  no_lha: boolean;
+  no_player_navy: boolean;
+  no_enemy_navy: boolean;
+  squadrons_start_full: boolean;
+  mods: string[];
+};
+export type NewGameFactionChoice = {
+  name: string;
+  removed?: {
+    [key: string]: string[];
+  };
+  added?: {
+    [key: string]: string[];
+  };
+  has_jtac?: boolean | null;
+  doctrine?: string | null;
+};
+export type SaveFaction = {
+  faction: NewGameFactionChoice;
+  name: string;
+  description?: string;
+  authors?: string;
+};
+export type NewGameGeneration = {
+  status: string;
+  step?: string;
+  step_index: number;
+  step_count: number;
+  error?: string;
+};
+export type NewGameRequest = {
+  campaign_id: string;
+  blue: NewGameFactionChoice;
+  red: NewGameFactionChoice;
+  start_date: string;
+  player_budget: number;
+  enemy_budget: number;
+  inverted?: boolean;
+  advanced_iads?: boolean;
+  no_carrier?: boolean;
+  no_lha?: boolean;
+  no_player_navy?: boolean;
+  no_enemy_navy?: boolean;
+  squadrons_start_full?: boolean;
+  mods?: string[];
+  settings?: {
+    [key: string]: boolean | number | number | string;
+  };
+  seed?: number | null;
+};
 export type PackageFlight = {
   id: string;
   task: string;
@@ -3619,6 +4164,21 @@ export const {
   useSetSquadronDestinationMutation,
   useCreatePlayerPilotMutation,
   useUpdatePilotMutation,
+  useGetAirWingConfigQuery,
+  useUpdateConfigSquadronMutation,
+  useRemoveConfigSquadronMutation,
+  useSetConfigSquadronAutoAssignMutation,
+  useGetConfigSquadronLiveriesQuery,
+  useSetConfigSquadronLiveryMutation,
+  useRerollConfigSquadronNicknameMutation,
+  useReplaceConfigSquadronMutation,
+  useAddConfigSquadronMutation,
+  useSaveAirWingFileMutation,
+  useLoadAirWingFileMutation,
+  useGetConfigFactionQuery,
+  useAddConfigFactionUnitMutation,
+  useSetConfigFactionJtacMutation,
+  useSetConfigFactionDoctrineMutation,
   useListControlPointsQuery,
   useGetControlPointByIdQuery,
   useGetControlPointSummaryQuery,
@@ -3707,6 +4267,15 @@ export const {
   useOpenExternalLinkMutation,
   useQuitApplicationMutation,
   useGetNavmeshQuery,
+  useGetNewGameOptionsQuery,
+  useGetCampaignPreviewQuery,
+  useGetCampaignDefaultsQuery,
+  useGetNewGameFactionQuery,
+  useSaveNewGameFactionMutation,
+  useGetNewGameGenerationQuery,
+  useStartNewGameGenerationMutation,
+  useCancelNewGameGenerationMutation,
+  useBeginNewGameMutation,
   useListPackagesQuery,
   useCreatePackageMutation,
   useGetPackageQuery,

@@ -51,12 +51,14 @@ class QtShell:
         window: QWidget,
         on_game_loaded: Callable[[Game, str], None],
         on_game_saved: Callable[[str], None],
+        on_game_created: Callable[[Game], None],
         open_new_game: Callable[[], None],
         quit: Callable[[], None],
     ) -> None:
         self.window = window
         self.on_game_loaded = on_game_loaded
         self.on_game_saved = on_game_saved
+        self.on_game_created = on_game_created
         self.open_new_game = open_new_game
         self.quit = quit
 
@@ -120,6 +122,15 @@ class QtNativeBridge(NativeBridge):
 
         return self._wait_for(ask)
 
+    def choose_save_file(self, title: str, start: str, file_filter: str) -> str | None:
+        def ask() -> str | None:
+            path, _ = QFileDialog.getSaveFileName(
+                self._shell.window, title, dir=start, filter=file_filter
+            )
+            return path or None
+
+        return self._wait_for(ask)
+
     def choose_folder(self, title: str, start: str) -> str | None:
         def ask() -> str | None:
             path = QFileDialog.getExistingDirectory(
@@ -131,6 +142,9 @@ class QtNativeBridge(NativeBridge):
 
     def game_loaded(self, game: Game, path: str) -> None:
         self._queue(lambda: self._shell.on_game_loaded(game, path))
+
+    def game_created(self, game: Game) -> None:
+        self._queue(lambda: self._shell.on_game_created(game))
 
     def game_saved(self, path: str) -> None:
         self._queue(lambda: self._shell.on_game_saved(path))

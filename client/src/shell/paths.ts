@@ -19,6 +19,7 @@ export const PATHS = {
   command: "/",
   airWing: "/air-wing",
   airWingView: (view: AirWingView) => `/air-wing/${view}`,
+  airWingConfig: "/air-wing-config",
   base: (id: string) => `/bases/${id}`,
   baseTab: (id: string, tab: BaseTabId) => `/bases/${id}/${tab}`,
   package: (id: string) => `/packages/${id}`,

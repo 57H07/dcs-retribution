@@ -1,6 +1,7 @@
 # Retribution v1.6.0
 
 ## Features/Improvements
+* **[UX]** Web new campaign wizard (`/new-game`): Theater (campaign list filterable by text, theater and era, map preview, description), Factions (recommended by the campaign, units editable, save as a new faction), Campaign options (date, inverted map, advanced IADS, every setting), Generator (navies, budgets, mods, optional seed) and Summary. Generation shows its progress without blocking the campaign in play, which stays until the new one starts; the air wing is then configured on the generated campaign (squadrons of both sides, files, faction tabs). The same air wing and faction tabs open in a running campaign from the Air Wing screen when "Enable Air Wing adjustments" is on. The CLI `new-game`, the Qt wizard and the web wizard now share `game/commands/newgame.py`: the CLI also applies the campaign's settings and income multipliers and the player's `Default.zip`, and gains `--seed` (WEB-06).
 * **[UX]** Web route editor (Route tab of a flight in `/packages/:id`): map with the enemy threat zones and draggable waypoints, waypoint table (name, altitude, time, minimum fuel), NAV, predefined and RTB waypoints, deletion with the same warning before a custom flight plan, one altitude for all en-route waypoints, recreating the route, and a warning for each waypoint inside a threat zone. `game/commands/flightroute.py` holds the rules, shared with the Qt tab and the map drag; on the main map, target points, as the engine always intended, can no longer be dragged. The flight-plan references are unchanged (WEB-04.4).
 * **[UX]** Web package editor: the General tab of a flight changes its squadron (and so its type), size, start type, divert field, TOT offset, custom name and callsign, and the Pilots tab assigns pilots and players, with the rules of the Qt editor, which now uses the same commands. A new squadron keeps the custom name of the flight. Flight plan references are unchanged (WEB-04.2).
 * **[UX]** Web package editor, Radios & TACAN tab of a flight: flight frequency within what its radio tunes, package frequency, a tanker's TACAN, the Link 16, SADL or IDM values of each member, and the radios of the departure base (TACAN, ICLS, Link 4). A double booked frequency now gets a warning there and on the base screen. The Attack button of a departing convoy and the Transport mission entry of a new package on your base now use the web screens instead of Qt dialogs (WEB-04.5).
@@ -101,6 +102,7 @@
 
 ## Fixes
 
+* **[UI]** Launching without a campaign no longer logs a server error when the map asks for the game state.
 * **[UI]** The end-of-campaign dialog said "Victory!" even after a defeat.
 * **[UI]** Loading another campaign now forgets a pending mission result, so it cannot be accepted against the wrong game.
 * **[CSAR]** Helicopters that DCS does not allow to fly Transport (SA342 Gazelles, AH-64, AH-1W, Ka-50) are no longer CSAR-capable; assigning one used to abort mission generation.

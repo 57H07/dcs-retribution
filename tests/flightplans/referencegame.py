@@ -2,7 +2,7 @@
 
 The game is generated from a campaign shipped in ``resources/campaigns/`` through
 the engine path only (``Campaign`` -> ``GameGenerator`` -> ``Game.begin_turn_0``),
-the same sequence as ``qt_ui.main.create_game`` minus the Qt and DCS-install
+the same sequence as ``game.commands.newgame.create_game`` minus the Qt and DCS-install
 specific steps. Generation takes a few seconds, which is why no save is committed.
 """
 

@@ -468,6 +468,869 @@
         }
       }
     },
+    "/air-wing-config/{target}": {
+      "get": {
+        "summary": "Get Config",
+        "description": "Squadrons of both coalitions, with everything they can change into.",
+        "operationId": "get_air_wing_config",
+        "parameters": [
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConfigTarget"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AirWingConfigJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "when no campaign can be configured, or the change is refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/air-wing-config/{target}/squadrons/{squadron_id}": {
+      "patch": {
+        "summary": "Patch Squadron",
+        "operationId": "update_config_squadron",
+        "parameters": [
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConfigTarget"
+            }
+          },
+          {
+            "name": "squadron_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Squadron Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SquadronConfigUpdateJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "when no campaign can be configured, or the change is refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Squadron",
+        "operationId": "remove_config_squadron",
+        "parameters": [
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConfigTarget"
+            }
+          },
+          {
+            "name": "squadron_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Squadron Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "when no campaign can be configured, or the change is refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/air-wing-config/{target}/squadrons/{squadron_id}/auto-assign": {
+      "put": {
+        "summary": "Put Auto Assign",
+        "operationId": "set_config_squadron_auto_assign",
+        "parameters": [
+          {
+            "name": "squadron_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Squadron Id"
+            }
+          },
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConfigTarget"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutoAssignJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "when no campaign can be configured, or the change is refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/air-wing-config/{target}/squadrons/{squadron_id}/liveries": {
+      "get": {
+        "summary": "Get Liveries",
+        "operationId": "get_config_squadron_liveries",
+        "parameters": [
+          {
+            "name": "squadron_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Squadron Id"
+            }
+          },
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConfigTarget"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LiveryChoiceJs"
+                  },
+                  "title": "Response Get Config Squadron Liveries"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "when no campaign can be configured, or the change is refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/air-wing-config/{target}/squadrons/{squadron_id}/livery": {
+      "put": {
+        "summary": "Put Livery",
+        "operationId": "set_config_squadron_livery",
+        "parameters": [
+          {
+            "name": "squadron_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Squadron Id"
+            }
+          },
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConfigTarget"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetLiveryJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "when no campaign can be configured, or the change is refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/air-wing-config/{target}/squadrons/{squadron_id}/reroll-nickname": {
+      "post": {
+        "summary": "Post Reroll",
+        "operationId": "reroll_config_squadron_nickname",
+        "parameters": [
+          {
+            "name": "squadron_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Squadron Id"
+            }
+          },
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConfigTarget"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "when no campaign can be configured, or the change is refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/air-wing-config/{target}/squadrons/{squadron_id}/preset": {
+      "post": {
+        "summary": "Post Preset",
+        "description": "Replaces the squadron with a preset of the same aircraft.",
+        "operationId": "replace_config_squadron",
+        "parameters": [
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConfigTarget"
+            }
+          },
+          {
+            "name": "squadron_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Squadron Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplacePresetJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "when no campaign can be configured, or the change is refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/air-wing-config/{target}/sides/{side}/squadrons": {
+      "post": {
+        "summary": "Post Squadron",
+        "operationId": "add_config_squadron",
+        "parameters": [
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConfigTarget"
+            }
+          },
+          {
+            "name": "side",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConfigSide"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfigNewSquadronJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "when no campaign can be configured, or the change is refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/air-wing-config/{target}/sides/{side}/file/save": {
+      "post": {
+        "summary": "Post Save File",
+        "description": "Asks where to save the coalition's squadrons, then writes them.",
+        "operationId": "save_air_wing_file",
+        "parameters": [
+          {
+            "name": "side",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConfigSide"
+            }
+          },
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConfigTarget"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AirWingFileResultJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "when no campaign can be configured, or the change is refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/air-wing-config/{target}/sides/{side}/file/load": {
+      "post": {
+        "summary": "Post Load File",
+        "description": "Asks for an air wing file, then replaces the coalition's squadrons with it.",
+        "operationId": "load_air_wing_file",
+        "parameters": [
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConfigTarget"
+            }
+          },
+          {
+            "name": "side",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConfigSide"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AirWingFileResultJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "when no campaign can be configured, or the change is refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/air-wing-config/{target}/sides/{side}/faction": {
+      "get": {
+        "summary": "Get Faction",
+        "operationId": "get_config_faction",
+        "parameters": [
+          {
+            "name": "side",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConfigSide"
+            }
+          },
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConfigTarget"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FactionSheetJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "when no campaign can be configured, or the change is refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/air-wing-config/{target}/sides/{side}/faction/units": {
+      "post": {
+        "summary": "Post Faction Unit",
+        "description": "Adds a unit to the faction; it stays there for the rest of the campaign.",
+        "operationId": "add_config_faction_unit",
+        "parameters": [
+          {
+            "name": "side",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConfigSide"
+            }
+          },
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConfigTarget"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FactionUnitJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "when no campaign can be configured, or the change is refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/air-wing-config/{target}/sides/{side}/faction/jtac": {
+      "put": {
+        "summary": "Put Faction Jtac",
+        "operationId": "set_config_faction_jtac",
+        "parameters": [
+          {
+            "name": "side",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConfigSide"
+            }
+          },
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConfigTarget"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FactionJtacJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "when no campaign can be configured, or the change is refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/air-wing-config/{target}/sides/{side}/faction/doctrine": {
+      "put": {
+        "summary": "Put Faction Doctrine",
+        "operationId": "set_config_faction_doctrine",
+        "parameters": [
+          {
+            "name": "side",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConfigSide"
+            }
+          },
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConfigTarget"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FactionDoctrineJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "when no campaign can be configured, or the change is refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/control-points/": {
       "get": {
         "summary": "List Control Points",
@@ -3864,7 +4727,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GameJs"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/GameJs"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Game State"
                 }
               }
             }
@@ -4762,6 +5633,323 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/new-game/options": {
+      "get": {
+        "summary": "Get Options",
+        "description": "The campaigns, factions, time periods and mods the wizard offers.",
+        "operationId": "get_new_game_options",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NewGameOptionsJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/new-game/campaigns/{campaign_id}/preview": {
+      "get": {
+        "summary": "Get Preview",
+        "description": "The bases and front lines of a campaign, for its map preview.",
+        "operationId": "get_campaign_preview",
+        "parameters": [
+          {
+            "name": "campaign_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Campaign Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignPreviewJs"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown campaign."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/new-game/campaigns/{campaign_id}/defaults": {
+      "get": {
+        "summary": "Get Defaults",
+        "description": "What the wizard proposes for this campaign: factions, date, settings...",
+        "operationId": "get_campaign_defaults",
+        "parameters": [
+          {
+            "name": "campaign_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Campaign Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignDefaultsJs"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown campaign."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/new-game/faction": {
+      "get": {
+        "summary": "Get Faction",
+        "description": "Description and units of a faction. Its name may hold any character.",
+        "operationId": "get_new_game_faction",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FactionSheetJs"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown faction."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/new-game/factions": {
+      "post": {
+        "summary": "Post Faction",
+        "description": "Saves a customized faction under a new name, in the user's factions folder.",
+        "operationId": "save_new_game_faction",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveFactionJs"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "when the name is empty, unusable or taken",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/new-game/generation": {
+      "get": {
+        "summary": "Get Generation",
+        "operationId": "get_new_game_generation",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerationJs"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Post Generation",
+        "description": "Generates the campaign on a thread: answers at once. The campaign in play stays\nuntil `POST /new-game/generation/begin`.",
+        "operationId": "start_new_game_generation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewGameRequestJs"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerationJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "when a new campaign is already being created, or a parameter is refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown campaign, faction or setting."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Generation",
+        "description": "Drops the generated campaign; the campaign in play goes on.",
+        "operationId": "cancel_new_game_generation",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerationJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "while a step is running",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/new-game/generation/begin": {
+      "post": {
+        "summary": "Post Begin",
+        "description": "Starts turn 0 on a thread, then makes it the campaign in play.",
+        "operationId": "begin_new_game",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerationJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "when no new campaign is waiting to start",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The native shell is not available."
           }
         }
       }
@@ -8541,6 +9729,37 @@
         ],
         "title": "AirWingBase"
       },
+      "AirWingConfigJs": {
+        "properties": {
+          "replans": {
+            "type": "boolean",
+            "title": "Replans"
+          },
+          "sides": {
+            "items": {
+              "$ref": "#/components/schemas/ConfigSideJs"
+            },
+            "type": "array",
+            "title": "Sides"
+          }
+        },
+        "type": "object",
+        "required": [
+          "replans",
+          "sides"
+        ],
+        "title": "AirWingConfig"
+      },
+      "AirWingFileResultJs": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "title": "AirWingFileResult"
+      },
       "AirWingJs": {
         "properties": {
           "blue": {
@@ -8572,6 +9791,10 @@
             },
             "type": "array",
             "title": "Inventory"
+          },
+          "adjustments_enabled": {
+            "type": "boolean",
+            "title": "Adjustments Enabled"
           }
         },
         "type": "object",
@@ -8581,7 +9804,8 @@
           "aircraft_count",
           "pilot_count",
           "bases",
-          "inventory"
+          "inventory",
+          "adjustments_enabled"
         ],
         "title": "AirWing"
       },
@@ -9225,6 +10449,220 @@
         ],
         "title": "BuildingIncomeJs"
       },
+      "CampaignDefaultsJs": {
+        "properties": {
+          "settings_pages": {
+            "items": {
+              "$ref": "#/components/schemas/SettingsPageJs"
+            },
+            "type": "array",
+            "title": "Settings Pages"
+          },
+          "blue_faction": {
+            "type": "string",
+            "title": "Blue Faction"
+          },
+          "red_faction": {
+            "type": "string",
+            "title": "Red Faction"
+          },
+          "start_date": {
+            "title": "Start Date",
+            "type": "string",
+            "format": "date"
+          },
+          "time_period": {
+            "title": "Time Period",
+            "type": "string"
+          },
+          "player_budget": {
+            "type": "integer",
+            "title": "Player Budget"
+          },
+          "enemy_budget": {
+            "type": "integer",
+            "title": "Enemy Budget"
+          },
+          "advanced_iads_available": {
+            "type": "boolean",
+            "title": "Advanced Iads Available"
+          },
+          "no_carrier": {
+            "type": "boolean",
+            "title": "No Carrier"
+          },
+          "no_lha": {
+            "type": "boolean",
+            "title": "No Lha"
+          },
+          "no_player_navy": {
+            "type": "boolean",
+            "title": "No Player Navy"
+          },
+          "no_enemy_navy": {
+            "type": "boolean",
+            "title": "No Enemy Navy"
+          },
+          "squadrons_start_full": {
+            "type": "boolean",
+            "title": "Squadrons Start Full"
+          },
+          "mods": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Mods"
+          }
+        },
+        "type": "object",
+        "required": [
+          "settings_pages",
+          "blue_faction",
+          "red_faction",
+          "player_budget",
+          "enemy_budget",
+          "advanced_iads_available",
+          "no_carrier",
+          "no_lha",
+          "no_player_navy",
+          "no_enemy_navy",
+          "squadrons_start_full",
+          "mods"
+        ],
+        "title": "CampaignDefaults",
+        "description": "What the wizard proposes when this campaign is chosen."
+      },
+      "CampaignJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "theater": {
+            "type": "string",
+            "title": "Theater"
+          },
+          "authors": {
+            "type": "string",
+            "title": "Authors"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "compatible": {
+            "type": "boolean",
+            "title": "Compatible"
+          },
+          "warning": {
+            "title": "Warning",
+            "type": "string"
+          },
+          "era": {
+            "title": "Era",
+            "type": "string"
+          },
+          "start_date": {
+            "title": "Start Date",
+            "type": "string",
+            "format": "date"
+          },
+          "performance": {
+            "type": "integer",
+            "title": "Performance"
+          },
+          "performance_label": {
+            "type": "string",
+            "title": "Performance Label"
+          },
+          "performance_text": {
+            "type": "string",
+            "title": "Performance Text"
+          },
+          "recommended_blue_faction": {
+            "type": "string",
+            "title": "Recommended Blue Faction"
+          },
+          "recommended_red_faction": {
+            "type": "string",
+            "title": "Recommended Red Faction"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "theater",
+          "authors",
+          "description",
+          "version",
+          "compatible",
+          "performance",
+          "performance_label",
+          "performance_text",
+          "recommended_blue_faction",
+          "recommended_red_faction"
+        ],
+        "title": "NewGameCampaign"
+      },
+      "CampaignPreviewJs": {
+        "properties": {
+          "width": {
+            "type": "number",
+            "title": "Width"
+          },
+          "height": {
+            "type": "number",
+            "title": "Height"
+          },
+          "bases": {
+            "items": {
+              "$ref": "#/components/schemas/PreviewBaseJs"
+            },
+            "type": "array",
+            "title": "Bases"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/PreviewLinkJs"
+            },
+            "type": "array",
+            "title": "Links"
+          },
+          "blue_bases": {
+            "type": "integer",
+            "title": "Blue Bases"
+          },
+          "red_bases": {
+            "type": "integer",
+            "title": "Red Bases"
+          },
+          "front_lines": {
+            "type": "integer",
+            "title": "Front Lines"
+          }
+        },
+        "type": "object",
+        "required": [
+          "width",
+          "height",
+          "bases",
+          "links",
+          "blue_bases",
+          "red_bases",
+          "front_lines"
+        ],
+        "title": "CampaignPreview"
+      },
       "CampaignStateJs": {
         "type": "string",
         "enum": [
@@ -9396,6 +10834,272 @@
         ],
         "title": "CommandError",
         "description": "Body of a refused command: a message the client can show as is."
+      },
+      "ConfigAircraftOptionJs": {
+        "properties": {
+          "aircraft_id": {
+            "type": "string",
+            "title": "Aircraft Id"
+          },
+          "aircraft": {
+            "type": "string",
+            "title": "Aircraft"
+          },
+          "primary_tasks": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Primary Tasks"
+          },
+          "bases": {
+            "items": {
+              "$ref": "#/components/schemas/ConfigBaseJs"
+            },
+            "type": "array",
+            "title": "Bases"
+          },
+          "presets": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Presets"
+          }
+        },
+        "type": "object",
+        "required": [
+          "aircraft_id",
+          "aircraft",
+          "primary_tasks",
+          "bases",
+          "presets"
+        ],
+        "title": "AirWingConfigAircraftOption",
+        "description": "What a new squadron of this aircraft can be."
+      },
+      "ConfigBaseJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "AirWingConfigBase"
+      },
+      "ConfigNewSquadronJs": {
+        "properties": {
+          "aircraft_id": {
+            "type": "string",
+            "title": "Aircraft Id"
+          },
+          "base_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Base Id"
+          },
+          "primary_task": {
+            "type": "string",
+            "title": "Primary Task"
+          },
+          "preset": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preset"
+          }
+        },
+        "type": "object",
+        "required": [
+          "aircraft_id",
+          "base_id",
+          "primary_task"
+        ],
+        "title": "AirWingConfigNewSquadron"
+      },
+      "ConfigParkingJs": {
+        "properties": {
+          "required": {
+            "type": "integer",
+            "title": "Required"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "fitting": {
+            "title": "Fitting",
+            "type": "integer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "required",
+          "total"
+        ],
+        "title": "AirWingConfigParking"
+      },
+      "ConfigSide": {
+        "type": "string",
+        "enum": [
+          "blue",
+          "red"
+        ],
+        "title": "ConfigSide"
+      },
+      "ConfigSideJs": {
+        "properties": {
+          "side": {
+            "type": "string",
+            "title": "Side"
+          },
+          "faction": {
+            "type": "string",
+            "title": "Faction"
+          },
+          "squadrons": {
+            "items": {
+              "$ref": "#/components/schemas/ConfigSquadronJs"
+            },
+            "type": "array",
+            "title": "Squadrons"
+          },
+          "aircraft_options": {
+            "items": {
+              "$ref": "#/components/schemas/ConfigAircraftOptionJs"
+            },
+            "type": "array",
+            "title": "Aircraft Options"
+          }
+        },
+        "type": "object",
+        "required": [
+          "side",
+          "faction",
+          "squadrons",
+          "aircraft_options"
+        ],
+        "title": "AirWingConfigSide"
+      },
+      "ConfigSquadronJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "nickname": {
+            "title": "Nickname",
+            "type": "string"
+          },
+          "aircraft": {
+            "type": "string",
+            "title": "Aircraft"
+          },
+          "aircraft_id": {
+            "type": "string",
+            "title": "Aircraft Id"
+          },
+          "primary_task": {
+            "type": "string",
+            "title": "Primary Task"
+          },
+          "primary_tasks": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Primary Tasks"
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/AllowedTaskJs"
+            },
+            "type": "array",
+            "title": "Tasks"
+          },
+          "max_size": {
+            "type": "integer",
+            "title": "Max Size"
+          },
+          "base_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Base Id"
+          },
+          "bases": {
+            "items": {
+              "$ref": "#/components/schemas/ConfigBaseJs"
+            },
+            "type": "array",
+            "title": "Bases"
+          },
+          "parking": {
+            "$ref": "#/components/schemas/ConfigParkingJs"
+          },
+          "player_names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Player Names"
+          },
+          "player_names_refusal": {
+            "title": "Player Names Refusal",
+            "type": "string"
+          },
+          "presets": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Presets"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "aircraft",
+          "aircraft_id",
+          "primary_task",
+          "primary_tasks",
+          "tasks",
+          "max_size",
+          "base_id",
+          "bases",
+          "parking",
+          "player_names",
+          "presets"
+        ],
+        "title": "AirWingConfigSquadron"
+      },
+      "ConfigTarget": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "campaign"
+        ],
+        "title": "ConfigTarget"
       },
       "ControlPointJs": {
         "properties": {
@@ -9773,6 +11477,198 @@
         ],
         "title": "ExternalLink",
         "description": "Pages of the Help menu, opened in the system browser."
+      },
+      "FactionChoiceJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "removed": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Removed",
+            "default": {}
+          },
+          "added": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Added",
+            "default": {}
+          },
+          "has_jtac": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Has Jtac"
+          },
+          "doctrine": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Doctrine"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "NewGameFactionChoice"
+      },
+      "FactionDoctrineJs": {
+        "properties": {
+          "doctrine": {
+            "type": "string",
+            "title": "Doctrine"
+          }
+        },
+        "type": "object",
+        "required": [
+          "doctrine"
+        ],
+        "title": "AirWingConfigFactionDoctrine"
+      },
+      "FactionJtacJs": {
+        "properties": {
+          "has_jtac": {
+            "type": "boolean",
+            "title": "Has Jtac"
+          }
+        },
+        "type": "object",
+        "required": [
+          "has_jtac"
+        ],
+        "title": "AirWingConfigFactionJtac"
+      },
+      "FactionSheetJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "authors": {
+            "type": "string",
+            "title": "Authors"
+          },
+          "requirements": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Requirements"
+          },
+          "has_jtac": {
+            "type": "boolean",
+            "title": "Has Jtac"
+          },
+          "doctrine": {
+            "type": "string",
+            "title": "Doctrine"
+          },
+          "doctrines": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Doctrines"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/FactionUnitGroupJs"
+            },
+            "type": "array",
+            "title": "Groups"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "authors",
+          "requirements",
+          "has_jtac",
+          "doctrine",
+          "doctrines",
+          "groups"
+        ],
+        "title": "FactionSheet"
+      },
+      "FactionUnitGroupJs": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "units": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Units"
+          },
+          "addable": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Addable"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "units",
+          "addable"
+        ],
+        "title": "FactionUnitGroup"
+      },
+      "FactionUnitJs": {
+        "properties": {
+          "group": {
+            "type": "string",
+            "title": "Group"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "group",
+          "unit"
+        ],
+        "title": "AirWingConfigFactionUnit"
       },
       "FileActionResultJs": {
         "properties": {
@@ -11051,6 +12947,37 @@
         ],
         "title": "Game"
       },
+      "GenerationJs": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "step": {
+            "title": "Step",
+            "type": "string"
+          },
+          "step_index": {
+            "type": "integer",
+            "title": "Step Index"
+          },
+          "step_count": {
+            "type": "integer",
+            "title": "Step Count"
+          },
+          "error": {
+            "title": "Error",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "step_index",
+          "step_count"
+        ],
+        "title": "NewGameGeneration"
+      },
       "GroundForcesJs": {
         "properties": {
           "units": {
@@ -12283,6 +14210,24 @@
         ],
         "title": "MissionResultStatusJs"
       },
+      "ModChoiceJs": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label"
+        ],
+        "title": "NewGameModChoice"
+      },
       "NativeFolder": {
         "type": "string",
         "enum": [
@@ -12381,6 +14326,167 @@
           "size"
         ],
         "title": "NewFlight"
+      },
+      "NewGameOptionsJs": {
+        "properties": {
+          "campaigns": {
+            "items": {
+              "$ref": "#/components/schemas/CampaignJs"
+            },
+            "type": "array",
+            "title": "Campaigns"
+          },
+          "factions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Factions"
+          },
+          "time_periods": {
+            "items": {
+              "$ref": "#/components/schemas/TimePeriodJs"
+            },
+            "type": "array",
+            "title": "Time Periods"
+          },
+          "default_time_period": {
+            "type": "string",
+            "title": "Default Time Period"
+          },
+          "mods": {
+            "items": {
+              "$ref": "#/components/schemas/ModChoiceJs"
+            },
+            "type": "array",
+            "title": "Mods"
+          }
+        },
+        "type": "object",
+        "required": [
+          "campaigns",
+          "factions",
+          "time_periods",
+          "default_time_period",
+          "mods"
+        ],
+        "title": "NewGameOptions",
+        "description": "What the wizard offers whatever the campaign."
+      },
+      "NewGameRequestJs": {
+        "properties": {
+          "campaign_id": {
+            "type": "string",
+            "title": "Campaign Id"
+          },
+          "blue": {
+            "$ref": "#/components/schemas/FactionChoiceJs"
+          },
+          "red": {
+            "$ref": "#/components/schemas/FactionChoiceJs"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date"
+          },
+          "player_budget": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Player Budget"
+          },
+          "enemy_budget": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Enemy Budget"
+          },
+          "inverted": {
+            "type": "boolean",
+            "title": "Inverted",
+            "default": false
+          },
+          "advanced_iads": {
+            "type": "boolean",
+            "title": "Advanced Iads",
+            "default": false
+          },
+          "no_carrier": {
+            "type": "boolean",
+            "title": "No Carrier",
+            "default": false
+          },
+          "no_lha": {
+            "type": "boolean",
+            "title": "No Lha",
+            "default": false
+          },
+          "no_player_navy": {
+            "type": "boolean",
+            "title": "No Player Navy",
+            "default": false
+          },
+          "no_enemy_navy": {
+            "type": "boolean",
+            "title": "No Enemy Navy",
+            "default": false
+          },
+          "squadrons_start_full": {
+            "type": "boolean",
+            "title": "Squadrons Start Full",
+            "default": false
+          },
+          "mods": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Mods",
+            "default": []
+          },
+          "settings": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Settings",
+            "default": {}
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "campaign_id",
+          "blue",
+          "red",
+          "start_date",
+          "player_budget",
+          "enemy_budget"
+        ],
+        "title": "NewGameRequest",
+        "description": "The full parameters of a new campaign."
       },
       "NewPackageJs": {
         "properties": {
@@ -13284,6 +15390,62 @@
         ],
         "title": "PretenseCampaignJs"
       },
+      "PreviewBaseJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "x": {
+            "type": "number",
+            "title": "X"
+          },
+          "y": {
+            "type": "number",
+            "title": "Y"
+          },
+          "side": {
+            "type": "string",
+            "title": "Side"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "x",
+          "y",
+          "side",
+          "kind"
+        ],
+        "title": "CampaignPreviewBase"
+      },
+      "PreviewLinkJs": {
+        "properties": {
+          "from_index": {
+            "type": "integer",
+            "title": "From Index"
+          },
+          "to_index": {
+            "type": "integer",
+            "title": "To Index"
+          },
+          "front_line": {
+            "type": "boolean",
+            "title": "Front Line"
+          }
+        },
+        "type": "object",
+        "required": [
+          "from_index",
+          "to_index",
+          "front_line"
+        ],
+        "title": "CampaignPreviewLink"
+      },
       "PrimaryTaskJs": {
         "properties": {
           "task": {
@@ -13456,6 +15618,19 @@
         ],
         "title": "Repair"
       },
+      "ReplacePresetJs": {
+        "properties": {
+          "preset": {
+            "type": "string",
+            "title": "Preset"
+          }
+        },
+        "type": "object",
+        "required": [
+          "preset"
+        ],
+        "title": "AirWingConfigReplacePreset"
+      },
       "ReportEventJs": {
         "properties": {
           "time": {
@@ -13511,6 +15686,33 @@
           "same"
         ],
         "title": "SameForAll"
+      },
+      "SaveFactionJs": {
+        "properties": {
+          "faction": {
+            "$ref": "#/components/schemas/FactionChoiceJs"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          },
+          "authors": {
+            "type": "string",
+            "title": "Authors",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "faction",
+          "name"
+        ],
+        "title": "SaveFaction"
       },
       "SavePayloadJs": {
         "properties": {
@@ -13881,6 +16083,83 @@
           "presets"
         ],
         "title": "SquadronChoice"
+      },
+      "SquadronConfigUpdateJs": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "nickname": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nickname"
+          },
+          "max_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Size"
+          },
+          "primary_task": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Task"
+          },
+          "base_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Id"
+          },
+          "player_names": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Player Names"
+          }
+        },
+        "type": "object",
+        "title": "SquadronConfigUpdate",
+        "description": "What to change; the others stay."
       },
       "SquadronJs": {
         "properties": {
@@ -14764,6 +17043,25 @@
           "radar_sams"
         ],
         "title": "ThreatZones"
+      },
+      "TimePeriodJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "start_date"
+        ],
+        "title": "NewGameTimePeriod"
       },
       "TimelineJs": {
         "properties": {

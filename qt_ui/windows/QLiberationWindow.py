@@ -127,6 +127,7 @@ class QLiberationWindow(QMainWindow):
                 self,
                 on_game_loaded=self._on_game_opened,
                 on_game_saved=self._on_game_saved,
+                on_game_created=self.onGameGenerated,
                 open_new_game=self.newGame,
                 quit=self.close,
             )
@@ -415,6 +416,10 @@ class QLiberationWindow(QMainWindow):
         return action
 
     def newGame(self):
+        if self.web_ui:
+            # WEB-06: the wizard is a screen of the web shell.
+            self.liberation_map.show_screen("/new-game")
+            return
         wizard = NewGameWizard(self)
         wizard.show()
         wizard.accepted.connect(lambda: self.onGameGenerated(wizard.generatedGame))

@@ -5,6 +5,7 @@ from game.commands import CommandError
 
 from . import (
     airwing,
+    airwingconfig,
     applog,
     careers,
     controlpoints,
@@ -21,6 +22,7 @@ from . import (
     missionresult,
     native,
     navmesh,
+    newgame,
     packages,
     preferences,
     qt,
@@ -41,6 +43,7 @@ from .settings import ServerSettings
 app = FastAPI(dependencies=[Depends(require_api_key)])
 app.add_exception_handler(CommandError, command_error_handler)
 app.include_router(airwing.router)
+app.include_router(airwingconfig.router)
 app.include_router(controlpoints.router)
 app.include_router(debuggeometries.router)
 app.include_router(downedpilots.router)
@@ -55,6 +58,7 @@ app.include_router(mapzones.router)
 app.include_router(missionresult.router)
 app.include_router(native.router)
 app.include_router(navmesh.router)
+app.include_router(newgame.router)
 app.include_router(packages.router)
 app.include_router(preferences.router)
 app.include_router(qt.router)

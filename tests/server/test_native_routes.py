@@ -64,11 +64,17 @@ class FakeBridge(NativeBridge):
     def choose_file(self, title: str, start: str, file_filter: str) -> str | None:
         return self._ask("file", start)
 
+    def choose_save_file(self, title: str, start: str, file_filter: str) -> str | None:
+        return self._ask("save-file", start)
+
     def choose_folder(self, title: str, start: str) -> str | None:
         return self._ask(f"folder:{title}", start)
 
     def game_loaded(self, game: Any, path: str) -> None:
         self.loaded.append((game, path))
+
+    def game_created(self, game: Any) -> None:
+        self.calls.append("game-created")
 
     def game_saved(self, path: str) -> None:
         self.saved.append(path)
