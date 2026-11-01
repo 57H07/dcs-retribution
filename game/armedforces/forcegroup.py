@@ -74,18 +74,20 @@ class ForceGroup:
         unit_types are accessible by the faction. All accessible units will be added to
         the force group
         """
-        units: set[UnitType[Any]] = set()
-        statics: set[Type[DcsUnitType]] = set()
+        # Ordered dicts rather than sets: statics hash by address, so a set would
+        # order them differently on every run.
+        units: dict[UnitType[Any], None] = {}
+        statics: dict[Type[DcsUnitType], None] = {}
         for unit_group in layout.all_unit_groups:
             if unit_group.optional and not unit_group.fill:
                 continue
             for unit_type in unit_group.possible_types_for_faction(faction):
                 if issubclass(unit_type, VehicleType):
-                    units.add(next(GroundUnitType.for_dcs_type(unit_type)))
+                    units[next(GroundUnitType.for_dcs_type(unit_type))] = None
                 elif issubclass(unit_type, ShipType):
-                    units.add(next(ShipUnitType.for_dcs_type(unit_type)))
+                    units[next(ShipUnitType.for_dcs_type(unit_type))] = None
                 elif issubclass(unit_type, StaticType):
-                    statics.add(unit_type)
+                    statics[unit_type] = None
 
         return ForceGroup(
             ", ".join([t.description for t in layout.tasks]),
@@ -190,10 +192,12 @@ class ForceGroup:
         """Merge the group with another similar group."""
         # Unified name for the resulting group
         self.name = ", ".join([t.description for t in self.tasks])
-        # merge units, statics and layouts
-        self.units = list(set(self.units + new_group.units))
-        self.statics = list(set(self.statics + new_group.statics))
-        self.layouts = list(set(self.layouts + new_group.layouts))
+        # merge units, statics and layouts. dict.fromkeys dedupes in a stable order:
+        # layouts and statics hash by address, so a set ordered them differently
+        # on every run, and random.choice over them picked different groups.
+        self.units = list(dict.fromkeys(self.units + new_group.units))
+        self.statics = list(dict.fromkeys(self.statics + new_group.statics))
+        self.layouts = list(dict.fromkeys(self.layouts + new_group.layouts))
 
     def generate(
         self,

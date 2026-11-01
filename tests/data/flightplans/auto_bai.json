@@ -1,0 +1,118 @@
+{
+  "target": "SLUG",
+  "target_type": "VehicleGroupGroundObject",
+  "primary_task": "BAI",
+  "auto_asap": true,
+  "tot": "2010-06-01T16:12:52",
+  "flights": [
+    {
+      "task": "BAI",
+      "aircraft": "AH-64D Apache Longbow",
+      "squadron": "113th Squadron",
+      "departure": "Golan South",
+      "arrival": "Golan South",
+      "divert": null,
+      "count": 2,
+      "start_type": "Cold",
+      "flight_plan": "BaiFlightPlan",
+      "startup": "2010-06-01T16:00:00",
+      "takeoff": "2010-06-01T16:04:30",
+      "tot": "2010-06-01T16:12:52",
+      "landing": "2010-06-01T16:26:05",
+      "waypoints": [
+        {
+          "type": "TAKEOFF",
+          "name": "TAKEOFF",
+          "x": -239830,
+          "y": -20281,
+          "alt_ft": 0,
+          "alt_type": "RADIO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "JOIN",
+          "name": "JOIN",
+          "x": -237490,
+          "y": -29234,
+          "alt_ft": 200,
+          "alt_type": "RADIO",
+          "tot": "2010-06-01T16:06:46",
+          "depart": null
+        },
+        {
+          "type": "INGRESS_BAI",
+          "name": "INGRESS",
+          "x": -223150,
+          "y": -23523,
+          "alt_ft": 200,
+          "alt_type": "RADIO",
+          "tot": "2010-06-01T16:10:35",
+          "depart": null
+        },
+        {
+          "type": "TARGET_POINT",
+          "name": "0059 | SLUG (Armor Group) at SLUG",
+          "x": -214544,
+          "y": -20106,
+          "alt_ft": 0,
+          "alt_type": "RADIO",
+          "tot": "2010-06-01T16:12:52",
+          "depart": null
+        },
+        {
+          "type": "SPLIT",
+          "name": "SPLIT",
+          "x": -239830,
+          "y": -20281,
+          "alt_ft": 200,
+          "alt_type": "RADIO",
+          "tot": "2010-06-01T16:19:51",
+          "depart": null
+        },
+        {
+          "type": "LANDING_POINT",
+          "name": "LANDING",
+          "x": -239830,
+          "y": -20281,
+          "alt_ft": 0,
+          "alt_type": "RADIO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "BULLSEYE",
+          "name": "BULLSEYE",
+          "x": -213950,
+          "y": -19133,
+          "alt_ft": 0,
+          "alt_type": "BARO",
+          "tot": null,
+          "depart": null
+        }
+      ],
+      "loadouts": [
+        {
+          "name": "Retribution BAI",
+          "pylons": {
+            "1": "{M299_4xAGM_114L}",
+            "2": "{M299_4xAGM_114L}",
+            "3": "{M299_4xAGM_114L}",
+            "4": "{M299_4xAGM_114L}",
+            "6": "{AN_APG_78}"
+          }
+        },
+        {
+          "name": "Retribution BAI",
+          "pylons": {
+            "1": "{M299_4xAGM_114L}",
+            "2": "{M299_4xAGM_114L}",
+            "3": "{M299_4xAGM_114L}",
+            "4": "{M299_4xAGM_114L}",
+            "6": "{AN_APG_78}"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "target": "Ramat David",
+  "target_type": "Airfield",
+  "primary_task": "BARCAP",
+  "auto_asap": true,
+  "tot": "2010-06-01T16:16:40",
+  "flights": [
+    {
+      "task": "BARCAP",
+      "aircraft": "F-15C Eagle",
+      "squadron": "106th Squadron",
+      "departure": "Ramat David",
+      "arrival": "Ramat David",
+      "divert": null,
+      "count": 2,
+      "start_type": "Cold",
+      "flight_plan": "BarCapFlightPlan",
+      "startup": "2010-06-01T16:00:00",
+      "takeoff": "2010-06-01T16:10:30",
+      "tot": "2010-06-01T16:16:40",
+      "landing": "2010-06-01T17:22:50",
+      "waypoints": [
+        {
+          "type": "TAKEOFF",
+          "name": "TAKEOFF",
+          "x": -259121,
+          "y": -75105,
+          "alt_ft": 0,
+          "alt_type": "RADIO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "PATROL_TRACK",
+          "name": "RACETRACK START",
+          "x": -323309,
+          "y": -154370,
+          "alt_ft": 32000,
+          "alt_type": "BARO",
+          "tot": "2010-06-01T16:16:40",
+          "depart": null
+        },
+        {
+          "type": "PATROL",
+          "name": "RACETRACK END",
+          "x": -286665,
+          "y": -109118,
+          "alt_ft": 32000,
+          "alt_type": "BARO",
+          "tot": null,
+          "depart": "2010-06-01T17:16:40"
+        },
+        {
+          "type": "LANDING_POINT",
+          "name": "LANDING",
+          "x": -259121,
+          "y": -75105,
+          "alt_ft": 0,
+          "alt_type": "RADIO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "BULLSEYE",
+          "name": "BULLSEYE",
+          "x": -213950,
+          "y": -19133,
+          "alt_ft": 0,
+          "alt_type": "BARO",
+          "tot": null,
+          "depart": null
+        }
+      ],
+      "loadouts": [
+        {
+          "name": "CAP",
+          "pylons": {
+            "1": "{6CEB49FC-DED8-4DED-B053-E1F033FF72D3}",
+            "2": "{E1F29B21-F291-4589-9FD8-3272EEC69506}",
+            "3": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "4": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "5": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "6": "{E1F29B21-F291-4589-9FD8-3272EEC69506}",
+            "7": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "8": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "9": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "10": "{E1F29B21-F291-4589-9FD8-3272EEC69506}",
+            "11": "{6CEB49FC-DED8-4DED-B053-E1F033FF72D3}"
+          }
+        },
+        {
+          "name": "CAP",
+          "pylons": {
+            "1": "{6CEB49FC-DED8-4DED-B053-E1F033FF72D3}",
+            "2": "{E1F29B21-F291-4589-9FD8-3272EEC69506}",
+            "3": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "4": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "5": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "6": "{E1F29B21-F291-4589-9FD8-3272EEC69506}",
+            "7": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "8": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "9": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "10": "{E1F29B21-F291-4589-9FD8-3272EEC69506}",
+            "11": "{6CEB49FC-DED8-4DED-B053-E1F033FF72D3}"
+          }
+        }
+      ]
+    }
+  ]
+}
