@@ -166,7 +166,6 @@ describe("app bar", () => {
         openDialog: (d) => dialogs.push(d),
         openLink: (l) => links.push(l),
         openFolder: () => {},
-        openBase: () => {},
         editPackageOfFlight: () => {},
       },
       navigate: (p) => paths.push(p),

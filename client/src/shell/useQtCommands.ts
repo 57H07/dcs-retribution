@@ -6,7 +6,6 @@ import { commandErrorMessage } from "../api/commands";
 import {
   ExternalLink,
   NativeFolder,
-  useOpenControlPointInfoDialogMutation,
   useOpenEditPackageDialogMutation,
 } from "../api/liberationApi";
 import { useToast } from "../ui";
@@ -19,14 +18,12 @@ export interface QtCommands {
   openDialog: (action: FileAction) => void;
   openLink: (link: ExternalLink) => void;
   openFolder: (folder: NativeFolder) => void;
-  openBase: (controlPointId: string) => void;
   editPackageOfFlight: (flightId: string) => void;
 }
 
 export function useQtCommands(): QtCommands {
   const toast = useToast();
   const native = useNativeCommands();
-  const [openControlPointInfo] = useOpenControlPointInfoDialogMutation();
   const [openEditPackage] = useOpenEditPackageDialogMutation();
 
   const report = useCallback(
@@ -51,10 +48,8 @@ export function useQtCommands(): QtCommands {
       openDialog: native.runFileAction,
       openLink: native.openLink,
       openFolder: native.openFolder,
-      openBase: (cpId) => report(openControlPointInfo({ cpId })),
-      editPackageOfFlight: (flightId) =>
-        report(openEditPackage({ flightId })),
+      editPackageOfFlight: (flightId) => report(openEditPackage({ flightId })),
     }),
-    [report, native, openControlPointInfo, openEditPackage],
+    [report, native, openEditPackage],
   );
 }

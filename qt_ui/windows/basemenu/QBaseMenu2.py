@@ -12,15 +12,15 @@ from PySide6.QtWidgets import (
 )
 
 from game import Game
-from game.ato.flighttype import FlightType
 from game.commands import RUNWAY_REPAIR_ID, CommandError, order_repair
+from game.commands.cheats import cheat_capture, cheat_runway_state
+from game.commands.transfers import can_attack_airfield, can_transfer_units
 from game.config import RUNWAY_REPAIR_COST
+from game.gamelock import game_lock
 from game.radio.ICLSContainer import ICLSContainer
 from game.radio.RadioFrequencyContainer import RadioFrequencyContainer
 from game.radio.TacanContainer import TacanContainer
 from game.server import EventStream
-from game.sim import GameUpdateEvents
-from game.sim.missionresultsprocessor import MissionResultsProcessor
 from game.theater import (
     AMMO_DEPOT_FRONTLINE_UNIT_CONTRIBUTION,
     ControlPoint,
@@ -147,14 +147,14 @@ class QBaseMenu2(QDialog):
         bottom_row = QHBoxLayout()
         main_layout.addLayout(bottom_row)
 
-        if FlightType.OCA_RUNWAY in self.cp.mission_types(for_player=Player.BLUE):
+        if can_attack_airfield(self.cp):
             runway_attack_button = QPushButton("Attack airfield")
             bottom_row.addWidget(runway_attack_button)
 
             runway_attack_button.setProperty("style", "btn-danger")
             runway_attack_button.clicked.connect(self.new_package)
 
-        if self.cp.captured.is_blue and self.has_transfer_destinations:
+        if can_transfer_units(self.game_model.game, self.cp):
             transfer_button = QPushButton("Transfer Units")
             transfer_button.setProperty("style", "btn-success")
             bottom_row.addWidget(transfer_button)
@@ -193,36 +193,12 @@ class QBaseMenu2(QDialog):
         return self.game_model.game.settings.enable_base_capture_cheat
 
     def cheat_capture(self) -> None:
-        events = GameUpdateEvents()
-        if self.cp.is_fleet:
-            for go in self.cp.ground_objects:
-                if go.is_naval_control_point:
-                    if go.alive_unit_count > 0:
-                        for u in go.units:
-                            u.kill(events)
-                    else:
-                        for u in go.units:
-                            u.revive(events)
-        else:
-            self.cp.capture(
-                self.game_model.game, events, for_player=self.cp.captured.opponent
-            )
-            mrp = MissionResultsProcessor(self.game_model.game)
-            mrp.redeploy_units(self.cp)
-        # Reinitialized ground planners and the like. The ATO needs to be reset because
-        # missions planned against the flipped base (or killed carrier) are no longer valid.
-        self.game_model.game.initialize_turn(events)
-        EventStream.put_nowait(events)
+        # Same rules as the web base screen (WEB-02.3).
+        with game_lock(), EventStream.event_context() as events:
+            state = cheat_capture(self.game_model.game, self.cp, events)
         GameUpdateSignal.get_instance().updateGame(self.game_model.game)
-        state = self.game_model.game.check_win_loss()
         GameUpdateSignal.get_instance().gameStateChanged(state)
         self.close()
-
-    @property
-    def has_transfer_destinations(self) -> bool:
-        return self.game_model.game.transit_network_for(
-            self.cp.captured
-        ).has_destinations(self.cp)
 
     def update_cheat_runway_state_text(self) -> None:
         if self.cp.runway_can_be_repaired:
@@ -231,15 +207,11 @@ class QBaseMenu2(QDialog):
             self.cheat_runway_state.setText("CHEAT: Destroy runway")
 
     def on_cheat_runway_state(self) -> None:
-        if self.cp.runway_can_be_repaired:
-            self.cp.runway_status.repair()
-        else:
-            self.cp.runway_status.damage()
+        with game_lock(), EventStream.event_context() as events:
+            cheat_runway_state(self.game_model.game, self.cp, events)
         self.update_cheat_runway_state_text()
         self.update_repair_button()
         self.update_intel_summary()
-        with EventStream.event_context() as events:
-            events.update_control_point(self.cp)
 
     @property
     def can_repair_runway(self) -> bool:

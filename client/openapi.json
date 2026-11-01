@@ -280,7 +280,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TransferOptionsJs"
+                  "$ref": "#/components/schemas/SquadronTransferOptionsJs"
                 }
               }
             }
@@ -930,6 +930,601 @@
           },
           "409": {
             "description": "not a player base, or an aircraft, task or preset this base does not offer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control-points/{cp_id}/ground-forces": {
+      "get": {
+        "summary": "Get Ground Forces",
+        "description": "The \"Ground forces HQ\" tab: units, their orders and the front lines.",
+        "operationId": "get_ground_forces",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroundForcesJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control-points/{cp_id}/purchases/ground-units": {
+      "post": {
+        "summary": "Order Base Ground Units",
+        "description": "Applies a whole order: negative quantities cancel pending orders.",
+        "operationId": "order_ground_units",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroundOrdersJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroundForcesJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "not a player base, an empty order, a unit of another faction, or refused by the budget or the lack of a factory (then nothing is ordered)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control-points/{cp_id}/front-lines/{enemy_id}/stance": {
+      "put": {
+        "summary": "Set Stance",
+        "operationId": "set_front_line_stance",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          },
+          {
+            "name": "enemy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Enemy Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StanceJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroundForcesJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "not a front line of this player base, or an unknown stance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control-points/{cp_id}/convoys": {
+      "get": {
+        "summary": "Get Departing Convoys",
+        "description": "The \"Departing convoys\" tab: convoys and cargo ships leaving this base.",
+        "operationId": "get_departing_convoys",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DepartingConvoyJs"
+                  },
+                  "title": "Response Get Departing Convoys"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control-points/{cp_id}/convoys/{destination_id}/package": {
+      "post": {
+        "summary": "Attack Departing Convoy",
+        "description": "Opens the package editor on a convoy (the Qt dialog until WEB-04.1).",
+        "operationId": "attack_departing_convoy",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          },
+          {
+            "name": "destination_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Destination Id"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "convoy",
+                "cargo-ship"
+              ],
+              "type": "string",
+              "default": "convoy",
+              "title": "Kind"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "the convoy is gone, or it is the player's",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control-points/{cp_id}/transfer-options": {
+      "get": {
+        "summary": "Get Transfer Options",
+        "description": "What the new transfer dialog offers from this base.",
+        "operationId": "get_transfer_options",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          },
+          {
+            "name": "destination_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Destination Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferOptionsJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control-points/{cp_id}/actions": {
+      "get": {
+        "summary": "Get Base Actions",
+        "description": "The buttons and radio settings around the tabs of the base screen.",
+        "operationId": "get_base_actions",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseActionsJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control-points/{cp_id}/radios": {
+      "put": {
+        "summary": "Set Radios",
+        "description": "Replaces the radio settings of the base; a None value goes back to automatic.",
+        "operationId": "set_base_radios",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BaseRadiosUpdateJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseActionsJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "not a player base, a setting this base does not have, or a value out of limits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control-points/{cp_id}/front-lines/{enemy_id}/cheat": {
+      "post": {
+        "summary": "Cheat Front Line",
+        "operationId": "cheat_move_front_line",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          },
+          {
+            "name": "enemy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Enemy Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FrontLineCheatJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "the cheat is off, or not a front line of this player base",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control-points/{cp_id}/cheat/runway": {
+      "post": {
+        "summary": "Cheat Runway",
+        "operationId": "cheat_runway_state",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "the cheat is off, or this base has no runway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control-points/{cp_id}/cheat/capture": {
+      "post": {
+        "summary": "Cheat Capture Base",
+        "description": "Flips a base. The campaign may be over: `turn_passed` tells the Qt window.",
+        "operationId": "cheat_capture_base",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "the cheat is off",
             "content": {
               "application/json": {
                 "schema": {
@@ -3589,6 +4184,53 @@
             }
           }
         }
+      },
+      "post": {
+        "summary": "Create Transfer",
+        "description": "Sends ground units to another base. With a squadron: a Transport mission.",
+        "operationId": "create_transfer",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewTransferJs"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded, not a player base, a destination this base cannot send to, no units or more than the base has, no route, or a squadron that cannot fly it (then nothing changes)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/transfers/{transfer_id}": {
@@ -4088,6 +4730,41 @@
         ],
         "title": "AwardJs"
       },
+      "BaseActionsJs": {
+        "properties": {
+          "can_transfer": {
+            "type": "boolean",
+            "title": "Can Transfer"
+          },
+          "can_plan_transport": {
+            "type": "boolean",
+            "title": "Can Plan Transport"
+          },
+          "can_attack_airfield": {
+            "type": "boolean",
+            "title": "Can Attack Airfield"
+          },
+          "cheat_capture": {
+            "title": "Cheat Capture",
+            "type": "string"
+          },
+          "cheat_runway": {
+            "title": "Cheat Runway",
+            "type": "string"
+          },
+          "radios": {
+            "$ref": "#/components/schemas/BaseRadiosJs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "can_transfer",
+          "can_plan_transport",
+          "can_attack_airfield"
+        ],
+        "title": "BaseActions",
+        "description": "The buttons and settings of the Qt base menu around its tabs."
+      },
       "BaseForcesJs": {
         "properties": {
           "id": {
@@ -4205,6 +4882,154 @@
           "airfield"
         ],
         "title": "Base"
+      },
+      "BaseRadiosJs": {
+        "properties": {
+          "has_frequency": {
+            "type": "boolean",
+            "title": "Has Frequency"
+          },
+          "has_tacan": {
+            "type": "boolean",
+            "title": "Has Tacan"
+          },
+          "has_icls": {
+            "type": "boolean",
+            "title": "Has Icls"
+          },
+          "has_link4": {
+            "type": "boolean",
+            "title": "Has Link4"
+          },
+          "frequency_mhz": {
+            "title": "Frequency Mhz",
+            "type": "number"
+          },
+          "tacan_channel": {
+            "title": "Tacan Channel",
+            "type": "integer"
+          },
+          "tacan_band": {
+            "title": "Tacan Band",
+            "type": "string"
+          },
+          "tacan_callsign": {
+            "title": "Tacan Callsign",
+            "type": "string"
+          },
+          "icls_channel": {
+            "title": "Icls Channel",
+            "type": "integer"
+          },
+          "icls_callsign": {
+            "title": "Icls Callsign",
+            "type": "string"
+          },
+          "link4_mhz": {
+            "title": "Link4 Mhz",
+            "type": "number"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "has_frequency",
+          "has_tacan",
+          "has_icls",
+          "has_link4",
+          "warnings"
+        ],
+        "title": "BaseRadios",
+        "description": "The settings this base has; a None value is automatic."
+      },
+      "BaseRadiosUpdateJs": {
+        "properties": {
+          "frequency_mhz": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Frequency Mhz"
+          },
+          "tacan_channel": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tacan Channel"
+          },
+          "tacan_band": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tacan Band"
+          },
+          "tacan_callsign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tacan Callsign"
+          },
+          "icls_channel": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icls Channel"
+          },
+          "icls_callsign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icls Callsign"
+          },
+          "link4_mhz": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Link4 Mhz"
+          }
+        },
+        "type": "object",
+        "title": "BaseRadiosUpdate"
       },
       "BaseTabJs": {
         "properties": {
@@ -4637,6 +5462,52 @@
         ],
         "title": "DebriefingStatusJs"
       },
+      "DepartingConvoyJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "convoy",
+              "cargo-ship"
+            ],
+            "title": "Kind"
+          },
+          "destination_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Destination Id"
+          },
+          "destination": {
+            "type": "string",
+            "title": "Destination"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          },
+          "units": {
+            "items": {
+              "$ref": "#/components/schemas/UnitCountJs"
+            },
+            "type": "array",
+            "title": "Units"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "kind",
+          "destination_id",
+          "destination",
+          "size",
+          "units"
+        ],
+        "title": "DepartingConvoy"
+      },
       "DownedPilotJs": {
         "properties": {
           "id": {
@@ -4923,6 +5794,19 @@
         "title": "ForcesJs",
         "description": "Bases holding at least one unit, in theater order, and the coalition total."
       },
+      "FrontLineCheatJs": {
+        "properties": {
+          "advance": {
+            "type": "boolean",
+            "title": "Advance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "advance"
+        ],
+        "title": "FrontLineCheat"
+      },
       "FrontLineJs": {
         "properties": {
           "id": {
@@ -4944,6 +5828,30 @@
           "extents"
         ],
         "title": "FrontLine"
+      },
+      "FrontLineStanceJs": {
+        "properties": {
+          "enemy_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Enemy Id"
+          },
+          "enemy": {
+            "type": "string",
+            "title": "Enemy"
+          },
+          "stance": {
+            "type": "string",
+            "title": "Stance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "enemy_id",
+          "enemy",
+          "stance"
+        ],
+        "title": "FrontLineStance"
       },
       "GameJs": {
         "properties": {
@@ -5027,6 +5935,147 @@
           "map_zones"
         ],
         "title": "Game"
+      },
+      "GroundForcesJs": {
+        "properties": {
+          "units": {
+            "items": {
+              "$ref": "#/components/schemas/GroundUnitRowJs"
+            },
+            "type": "array",
+            "title": "Units"
+          },
+          "recruitment_refusal": {
+            "title": "Recruitment Refusal",
+            "type": "string"
+          },
+          "has_factory": {
+            "type": "boolean",
+            "title": "Has Factory"
+          },
+          "present": {
+            "type": "integer",
+            "title": "Present"
+          },
+          "ordered": {
+            "type": "integer",
+            "title": "Ordered"
+          },
+          "transferring": {
+            "type": "integer",
+            "title": "Transferring"
+          },
+          "deployable_limit": {
+            "title": "Deployable Limit",
+            "type": "integer"
+          },
+          "reserve": {
+            "title": "Reserve",
+            "type": "integer"
+          },
+          "front_lines": {
+            "items": {
+              "$ref": "#/components/schemas/FrontLineStanceJs"
+            },
+            "type": "array",
+            "title": "Front Lines"
+          },
+          "stance_options": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Stance Options"
+          },
+          "front_line_cheats": {
+            "type": "boolean",
+            "title": "Front Line Cheats"
+          }
+        },
+        "type": "object",
+        "required": [
+          "units",
+          "has_factory",
+          "present",
+          "ordered",
+          "transferring",
+          "front_lines",
+          "stance_options",
+          "front_line_cheats"
+        ],
+        "title": "GroundForces"
+      },
+      "GroundOrderLineJs": {
+        "properties": {
+          "unit_id": {
+            "type": "string",
+            "title": "Unit Id"
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unit_id",
+          "quantity"
+        ],
+        "title": "GroundOrderLine"
+      },
+      "GroundOrdersJs": {
+        "properties": {
+          "orders": {
+            "items": {
+              "$ref": "#/components/schemas/GroundOrderLineJs"
+            },
+            "type": "array",
+            "title": "Orders"
+          }
+        },
+        "type": "object",
+        "required": [
+          "orders"
+        ],
+        "title": "GroundOrders"
+      },
+      "GroundUnitRowJs": {
+        "properties": {
+          "unit_id": {
+            "type": "string",
+            "title": "Unit Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "unit_cost": {
+            "type": "number",
+            "title": "Unit Cost"
+          },
+          "owned": {
+            "type": "integer",
+            "title": "Owned"
+          },
+          "pending": {
+            "type": "integer",
+            "title": "Pending"
+          },
+          "max_add": {
+            "type": "integer",
+            "title": "Max Add"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unit_id",
+          "name",
+          "unit_cost",
+          "owned",
+          "pending",
+          "max_add"
+        ],
+        "title": "GroundUnitRow"
       },
       "HTTPValidationError": {
         "properties": {
@@ -6022,6 +7071,69 @@
           "primary_task"
         ],
         "title": "NewSquadron"
+      },
+      "NewTransferJs": {
+        "properties": {
+          "origin_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Origin Id"
+          },
+          "destination_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Destination Id"
+          },
+          "units": {
+            "items": {
+              "$ref": "#/components/schemas/NewTransferLineJs"
+            },
+            "type": "array",
+            "title": "Units"
+          },
+          "airlift": {
+            "type": "boolean",
+            "title": "Airlift",
+            "default": false
+          },
+          "squadron_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Squadron Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "origin_id",
+          "destination_id",
+          "units"
+        ],
+        "title": "NewTransfer"
+      },
+      "NewTransferLineJs": {
+        "properties": {
+          "unit_id": {
+            "type": "string",
+            "title": "Unit Id"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unit_id",
+          "count"
+        ],
+        "title": "NewTransferLine"
       },
       "NotesJs": {
         "properties": {
@@ -7052,6 +8164,81 @@
         "title": "SquadronRepair",
         "description": "The expedited repair: `POST /control-points/{cp}/repairs/{repair_id}`."
       },
+      "SquadronTransferDestinationJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "room": {
+            "type": "integer",
+            "title": "Room"
+          },
+          "refusal": {
+            "title": "Refusal",
+            "type": "string"
+          },
+          "overflow": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Overflow"
+          },
+          "selected": {
+            "type": "boolean",
+            "title": "Selected"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "room",
+          "overflow",
+          "selected"
+        ],
+        "title": "SquadronTransferDestination"
+      },
+      "SquadronTransferOptionsJs": {
+        "properties": {
+          "room_here": {
+            "type": "integer",
+            "title": "Room Here"
+          },
+          "destinations": {
+            "items": {
+              "$ref": "#/components/schemas/SquadronTransferDestinationJs"
+            },
+            "type": "array",
+            "title": "Destinations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "room_here",
+          "destinations"
+        ],
+        "title": "SquadronTransferOptions"
+      },
+      "StanceJs": {
+        "properties": {
+          "stance": {
+            "type": "string",
+            "title": "Stance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stance"
+        ],
+        "title": "Stance"
+      },
       "StatsJs": {
         "properties": {
           "turns": {
@@ -7532,34 +8719,12 @@
           "name": {
             "type": "string",
             "title": "Name"
-          },
-          "room": {
-            "type": "integer",
-            "title": "Room"
-          },
-          "refusal": {
-            "title": "Refusal",
-            "type": "string"
-          },
-          "overflow": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Overflow"
-          },
-          "selected": {
-            "type": "boolean",
-            "title": "Selected"
           }
         },
         "type": "object",
         "required": [
           "id",
-          "name",
-          "room",
-          "overflow",
-          "selected"
+          "name"
         ],
         "title": "TransferDestination"
       },
@@ -7613,24 +8778,45 @@
       },
       "TransferOptionsJs": {
         "properties": {
-          "room_here": {
-            "type": "integer",
-            "title": "Room Here"
-          },
           "destinations": {
             "items": {
               "$ref": "#/components/schemas/TransferDestinationJs"
             },
             "type": "array",
             "title": "Destinations"
+          },
+          "destination_id": {
+            "title": "Destination Id",
+            "type": "string",
+            "format": "uuid"
+          },
+          "units": {
+            "items": {
+              "$ref": "#/components/schemas/TransferableUnitJs"
+            },
+            "type": "array",
+            "title": "Units"
+          },
+          "squadrons": {
+            "items": {
+              "$ref": "#/components/schemas/TransportSquadronJs"
+            },
+            "type": "array",
+            "title": "Squadrons"
+          },
+          "no_squadron_warning": {
+            "title": "No Squadron Warning",
+            "type": "string"
           }
         },
         "type": "object",
         "required": [
-          "room_here",
-          "destinations"
+          "destinations",
+          "units",
+          "squadrons"
         ],
-        "title": "TransferOptions"
+        "title": "TransferOptions",
+        "description": "What the new transfer dialog offers, for the destination it shows."
       },
       "TransferUnitJs": {
         "properties": {
@@ -7649,6 +8835,53 @@
           "count"
         ],
         "title": "TransferUnitJs"
+      },
+      "TransferableUnitJs": {
+        "properties": {
+          "unit_id": {
+            "type": "string",
+            "title": "Unit Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "available": {
+            "type": "integer",
+            "title": "Available"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unit_id",
+          "name",
+          "available"
+        ],
+        "title": "TransferableUnit"
+      },
+      "TransportSquadronJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "capacity": {
+            "type": "integer",
+            "title": "Capacity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "capacity"
+        ],
+        "title": "TransportSquadron"
       },
       "TurnJs": {
         "properties": {

@@ -458,7 +458,7 @@ class SetLiveryJs(BaseModel):
         title = "SetLivery"
 
 
-class TransferDestinationJs(BaseModel):
+class SquadronTransferDestinationJs(BaseModel):
     id: UUID
     name: str
     room: int
@@ -469,13 +469,13 @@ class TransferDestinationJs(BaseModel):
     selected: bool
 
     class Config:
-        title = "TransferDestination"
+        title = "SquadronTransferDestination"
 
     @staticmethod
     def from_destination(
         squadron: Squadron, destination: TransferDestination
-    ) -> TransferDestinationJs:
-        return TransferDestinationJs(
+    ) -> SquadronTransferDestinationJs:
+        return SquadronTransferDestinationJs(
             id=destination.control_point.id,
             name=destination.control_point.name,
             room=destination.room,
@@ -485,13 +485,13 @@ class TransferDestinationJs(BaseModel):
         )
 
 
-class TransferOptionsJs(BaseModel):
+class SquadronTransferOptionsJs(BaseModel):
     #: Free parking slots for the squadron's aircraft at its current base.
     room_here: int
-    destinations: list[TransferDestinationJs]
+    destinations: list[SquadronTransferDestinationJs]
 
     class Config:
-        title = "TransferOptions"
+        title = "SquadronTransferOptions"
 
 
 class SetDestinationJs(BaseModel):

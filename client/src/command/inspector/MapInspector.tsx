@@ -187,7 +187,10 @@ function ControlPointInspector(props: { id: string; onClose: () => void }) {
             <Button disabled={!data.can_buy_aircraft} onClick={openBase}>
               Buy aircraft
             </Button>
-            <Button disabled={!data.can_buy_ground_units} onClick={openBase}>
+            <Button
+              disabled={!data.can_buy_ground_units}
+              onClick={() => navigate(PATHS.baseTab(data.id, "ground-forces"))}
+            >
               Ground units
             </Button>
             {data.can_repair_runway && (

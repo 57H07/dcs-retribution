@@ -35,8 +35,8 @@ from .models import (
     PrimaryTaskJs,
     SetDestinationJs,
     SetLiveryJs,
-    TransferDestinationJs,
-    TransferOptionsJs,
+    SquadronTransferDestinationJs,
+    SquadronTransferOptionsJs,
 )
 from ..commanderrors import command_error_responses
 from ..dependencies import GameContext, QtCallbacks, QtContext
@@ -144,18 +144,18 @@ def put_livery(
 @router.get(
     "/squadrons/{squadron_id}/destinations",
     operation_id="get_squadron_destinations",
-    response_model=TransferOptionsJs,
+    response_model=SquadronTransferOptionsJs,
 )
 @locked
 def get_destinations(
     squadron_id: UUID, game: Game = Depends(GameContext.require)
-) -> TransferOptionsJs:
+) -> SquadronTransferOptionsJs:
     """Where the squadron can transfer. Costly: only asked when choosing."""
     squadron = _squadron(game, squadron_id)
-    return TransferOptionsJs(
+    return SquadronTransferOptionsJs(
         room_here=room_at_base(squadron),
         destinations=[
-            TransferDestinationJs.from_destination(squadron, destination)
+            SquadronTransferDestinationJs.from_destination(squadron, destination)
             for destination in transfer_destinations(squadron)
         ],
     )

@@ -1,8 +1,18 @@
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QGridLayout, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QGridLayout,
+    QMessageBox,
+    QScrollArea,
+    QVBoxLayout,
+    QWidget,
+)
 
+from game.commands import CommandError
+from game.commands.groundorders import change_ground_unit_order
 from game.dcs.groundunittype import GroundUnitType
+from game.gamelock import game_lock
 from game.purchaseadapter import GroundUnitPurchaseAdapter
+from game.server import EventStream
 from game.theater import ControlPoint
 from game.theater.player import Player
 from qt_ui.models import GameModel
@@ -48,3 +58,23 @@ class QArmorRecruitmentMenu(UnitTransactionFrame[GroundUnitType]):
         scroll.setWidget(scroll_content)
         main_layout.addWidget(scroll)
         self.setLayout(main_layout)
+
+    def _change_order(self, item: GroundUnitType, quantity: int, failure: str) -> None:
+        # Same rules as the web base screen (WEB-02.3).
+        try:
+            with game_lock(), EventStream.event_context() as events:
+                change_ground_unit_order(
+                    self.game_model.game, self.cp, item, quantity, events
+                )
+        except CommandError as ex:
+            QMessageBox.warning(
+                self, failure, ex.message, QMessageBox.StandardButton.Ok
+            )
+        finally:
+            self.post_transaction_update()
+
+    def buy(self, item: GroundUnitType, quantity: int) -> None:
+        self._change_order(item, quantity, "Purchase failed")
+
+    def sell(self, item: GroundUnitType, quantity: int) -> None:
+        self._change_order(item, -quantity, "Sale failed")
