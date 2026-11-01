@@ -87,7 +87,7 @@ def test_first_start_without_preferences_file_and_no_campaign(prefs: Path) -> No
     assert state["saved_game_dir_problem"] == "Choose your DCS Saved Games folder."
     assert state["dcs_install_dir_problem"] is None
     assert state["preferences"]["server_port"] == 16880
-    assert state["preferences"]["web_ui"] is False
+    assert state["preferences"]["web_ui"] is True  # on by default (W10)
 
 
 @pytest.mark.parametrize("content", ["", "{}", "[]", "not json"])

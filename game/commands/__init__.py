@@ -36,6 +36,7 @@ from .missionresult import (
     MissionResultWaiter,
     ResultSim,
     abort_mission,
+    accept_and_report,
     accept_results,
 )
 from .repairs import (
@@ -62,6 +63,7 @@ __all__ = [
     "SpeedControlledSim",
     "SquadronChoice",
     "abort_mission",
+    "accept_and_report",
     "accept_results",
     "base_repairs",
     "cancel_aircraft_orders",

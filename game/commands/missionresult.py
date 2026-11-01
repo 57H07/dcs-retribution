@@ -13,6 +13,7 @@ lock is never held while waiting for DCS.
 
 from __future__ import annotations
 
+import dataclasses
 import logging
 import threading
 from collections.abc import Callable
@@ -22,6 +23,12 @@ from pathlib import Path
 from typing import Protocol, TYPE_CHECKING
 
 from game.ato.flightstate import Uninitialized
+from game.debriefingreport import (
+    AfterActionReport,
+    build_report,
+    complete_report,
+    minimal_report,
+)
 from game.polldebriefingfilethread import STATE_FILE, STATE_FILE_ERRORS
 from game.profiling import logged_duration
 from game.sim.gameupdateevents import GameUpdateEvents
@@ -96,6 +103,8 @@ class MissionResultWaiter:
         self._debriefing: Debriefing | None = None
         self._error: str | None = None
         self._watch: Stoppable | None = None
+        #: The report of the last result accepted from the web UI (WEB-05.2).
+        self._last_report: AfterActionReport | None = None
         # Bumped on every start/stop: a late callback of a stopped watch is ignored.
         self._generation = 0
 
@@ -142,6 +151,23 @@ class MissionResultWaiter:
             self._debriefing = None
             self._error = None
         self._on_change()
+
+    def reset(self) -> None:
+        """Another campaign was loaded: forget its pending and last results."""
+        with self._lock:
+            self._last_report = None
+        self.stop()
+
+    def finish(self, report: AfterActionReport) -> None:
+        """The results were accepted: stop, and keep their report for review."""
+        with self._lock:
+            self._last_report = report
+        self.stop()
+
+    def last_report(self) -> AfterActionReport | None:
+        """The report of the last accepted result ("Last debriefing")."""
+        with self._lock:
+            return self._last_report
 
     def load(self, sim: ResultSim, path: Path) -> Debriefing:
         """Use a state.json picked by hand as the final result ("Manually submit").
@@ -223,8 +249,39 @@ def abort_mission(game: Game, sim: ResultSim) -> GameUpdateEvents:
 def accept_results(game: Game, sim: ResultSim, debriefing: Debriefing) -> None:
     """ "Accept results": apply the mission result and start the next turn.
 
+    The one function both front ends call (Qt: QWaitingForMissionResultWindow,
+    web: `accept_and_report`), so the same state.json gives the same campaign.
     `Game.pass_turn` publishes `new_turn`. The caller holds the game lock.
     """
     with logged_duration("Turn processing"):
         sim.process_results(debriefing)
         game.pass_turn()
+
+
+def accept_and_report(
+    game: Game, sim: ResultSim, debriefing: Debriefing
+) -> AfterActionReport:
+    """ "Accept results" from the web report (WEB-05.2): `accept_results`, framed
+    by the after-action report.
+
+    The report is read before the results are applied (the package results need
+    this turn's ATO), then completed with what applying them decided (prisoners,
+    pilots still down, budget, the messages logged meanwhile). The caller holds the
+    game lock.
+    """
+    # The report must never stand between the player and their results.
+    report: AfterActionReport | None
+    try:
+        report = build_report(debriefing)
+    except Exception:
+        logging.exception("Could not build the after-action report")
+        report = None
+    logged_before = len(game.informations)
+    accept_results(game, sim, debriefing)
+    if report is None:
+        return minimal_report(debriefing)
+    try:
+        return complete_report(report, debriefing, game.informations[logged_before:])
+    except Exception:
+        logging.exception("Could not complete the after-action report")
+        return dataclasses.replace(report, applied=True)

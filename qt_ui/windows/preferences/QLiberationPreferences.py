@@ -124,7 +124,7 @@ class QLiberationPreferences(QFrame):
         self.port_input.setStyleSheet("QSpinBox{ width: 50 }")
 
         layout.addWidget(
-            QLabel("<strong>Web interface, experimental (restart required):</strong>"),
+            QLabel("<strong>Web interface (restart required):</strong>"),
             8,
             0,
             alignment=Qt.AlignmentFlag.AlignLeft,

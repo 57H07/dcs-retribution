@@ -1,4 +1,7 @@
-"""WEB-00.3: the web UI option (preference + RETRIBUTION_WEB_UI override, W10)."""
+"""WEB-00.3: the web UI option (preference + RETRIBUTION_WEB_UI override, W10).
+
+On by default since WEB-05.2.
+"""
 
 from __future__ import annotations
 
@@ -24,9 +27,43 @@ def _write(path: Path, **extra: object) -> None:
     path.write_text(json.dumps(data))
 
 
-def test_off_by_default(prefs: Path) -> None:
+def test_on_by_default(prefs: Path) -> None:
     _write(prefs)
     liberation_install.init()
+    assert liberation_install.web_ui_preference() is True
+    assert liberation_install.web_ui_enabled() is True
+
+
+def test_on_by_default_without_a_preferences_file(
+    prefs: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(liberation_install, "_detect_saved_games_directory", str)
+    monkeypatch.setattr(liberation_install, "_detect_install_directory", str)
+    assert not prefs.exists()
+    liberation_install.init()
+    assert liberation_install.web_ui_enabled() is True
+
+
+def test_on_by_default_with_a_broken_preferences_file(prefs: Path) -> None:
+    prefs.write_text("{not json")
+    liberation_install.init()
+    assert liberation_install.web_ui_enabled() is True
+
+
+def test_an_explicit_false_is_kept(prefs: Path) -> None:
+    _write(prefs, web_ui=False)
+    liberation_install.init()
+    assert liberation_install.web_ui_enabled() is False
+    liberation_install.save_config()
+    assert json.loads(prefs.read_text())["web_ui"] is False
+
+
+def test_environment_forces_qt_mode(
+    prefs: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write(prefs)
+    liberation_install.init()
+    monkeypatch.setenv(liberation_install.WEB_UI_ENV_VAR, "0")
     assert liberation_install.web_ui_enabled() is False
 
 

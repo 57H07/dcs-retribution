@@ -15,7 +15,6 @@ describe("web shell routes", () => {
   it.each([
     ["/air-wing", "/qt/dialogs/air-wing"],
     ["/new-game", "/native/new-game"],
-    ["/debrief", "/qt/dialogs/debriefing"],
     ["/packages/flight-7", "/qt/edit-package/flight/flight-7"],
   ])(
     "%s opens its Qt screen once and returns to the command view",
@@ -27,6 +26,21 @@ describe("web shell routes", () => {
       expect(router.state.location.pathname).toBe("/");
     },
   );
+
+  it("shows the after-action report on /debrief, without opening Qt", async () => {
+    const calls = recordFetch(204, undefined, {
+      "/game/mission/result/report": {
+        status: "none",
+        can_accept: false,
+      },
+    });
+    const { router, findByRole } = renderShell("/debrief");
+    expect(
+      await findByRole("heading", { level: 1, name: "No debriefing yet" }),
+    ).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/debrief");
+    expect(calls.some((call) => call.path.startsWith("/qt/"))).toBe(false);
+  });
 
   it.each(["/bases/cp-1", "/bases/cp-1/intel"])(
     "shows the web base screen on %s, without opening Qt",

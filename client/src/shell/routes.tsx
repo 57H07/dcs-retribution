@@ -2,6 +2,7 @@
 // the Qt dialog through /qt/* and comes back to the command view; a migrated
 // screen replaces its QtScreen element here (and deletes the Qt dialog, W9).
 import { BaseScreen } from "../bases/BaseScreen";
+import { DebriefScreen } from "../missionresult/DebriefScreen";
 import { WaitingScreen } from "../missionresult/WaitingScreen";
 import { PreferencesScreen } from "../preferences/PreferencesScreen";
 import { ReportsScreen } from "../reports/ReportsScreen";
@@ -62,8 +63,9 @@ export const ROUTES: RouteObject[] = [
         element: <PreferencesScreen />,
       },
       {
+        // WEB-05.2: the after-action report, before and after acceptance.
         path: "debrief",
-        element: <QtScreen open={(qt) => qt.openDialog("debriefing")} />,
+        element: <DebriefScreen />,
       },
       {
         // Intel, Stats and Finances (WEB-08.1, W11).

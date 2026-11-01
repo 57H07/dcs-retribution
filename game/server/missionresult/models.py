@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import dataclasses
 from enum import Enum
 
 from pydantic import BaseModel
 
 from game.commands import MissionResultSnapshot, MissionResultStatus
+from game.debriefingreport import AfterActionReport, PilotLine, Tone
 from game.theater import Player
 
 
@@ -84,3 +86,177 @@ class MissionResultJs(BaseModel):
             enemy_country=enemy_country,
             losses=losses,
         )
+
+
+class ToneJs(str, Enum):
+    GOOD = "good"
+    BAD = "bad"
+    MIXED = "mixed"
+    NEUTRAL = "neutral"
+
+    @staticmethod
+    def from_tone(tone: Tone) -> ToneJs:
+        return ToneJs(tone.value)
+
+
+class LossLineJs(BaseModel):
+    name: str
+    count: int
+
+    class Config:
+        title = "LossLine"
+
+
+class PilotLineJs(BaseModel):
+    name: str
+    aircraft: str
+    squadron: str
+    held_at: str | None
+
+    class Config:
+        title = "PilotLine"
+
+
+class PackageResultJs(BaseModel):
+    task: str
+    target: str
+    flights: list[str]
+    lost: int
+    aircraft: int
+    result: str
+    tone: ToneJs
+
+    class Config:
+        title = "PackageResult"
+
+
+class ReportEventJs(BaseModel):
+    #: HH:MM:SS the engine logged it; null for events read from state.json.
+    time: str | None
+    text: str
+    tone: ToneJs
+
+    class Config:
+        title = "ReportEvent"
+
+
+class DamagedUnitLineJs(BaseModel):
+    friendly: bool
+    unit_type: str
+    damage_percent: int
+    unavailability: str
+
+    class Config:
+        title = "DamagedUnitLine"
+
+
+class AfterActionReportJs(BaseModel):
+    """The after-action report (`game.debriefingreport.AfterActionReport`)."""
+
+    turn: int
+    date: str
+    player_country: str
+    enemy_country: str
+    verdict: str
+    verdict_tone: ToneJs
+    summary: str
+    air_kills_friendly: int
+    air_kills_enemy: int
+    ground_kills_friendly: int
+    ground_kills_enemy: int
+    bases_captured: int
+    bases_lost: int
+    pilots_rescued: list[PilotLineJs]
+    rescue_bounty: int
+    packages: list[PackageResultJs]
+    friendly_losses: list[LossLineJs]
+    enemy_losses: list[LossLineJs]
+    damaged_units: list[DamagedUnitLineJs]
+    events: list[ReportEventJs]
+    #: True once the results were applied; the fields below are null before.
+    applied: bool
+    pilots_captured: list[PilotLineJs] | None
+    pilots_still_down: int | None
+    budget_next_turn: float | None
+    income_next_turn: float | None
+
+    class Config:
+        title = "AfterActionReport"
+
+    @staticmethod
+    def from_report(report: AfterActionReport) -> AfterActionReportJs:
+        def pilots(lines: list[PilotLine]) -> list[PilotLineJs]:
+            return [PilotLineJs(**dataclasses.asdict(p)) for p in lines]
+
+        return AfterActionReportJs(
+            turn=report.turn,
+            date=report.date,
+            player_country=report.player_country,
+            enemy_country=report.enemy_country,
+            verdict=report.verdict,
+            verdict_tone=ToneJs.from_tone(report.verdict_tone),
+            summary=report.summary,
+            air_kills_friendly=report.air_kills_friendly,
+            air_kills_enemy=report.air_kills_enemy,
+            ground_kills_friendly=report.ground_kills_friendly,
+            ground_kills_enemy=report.ground_kills_enemy,
+            bases_captured=report.bases_captured,
+            bases_lost=report.bases_lost,
+            pilots_rescued=pilots(report.pilots_rescued),
+            rescue_bounty=report.rescue_bounty,
+            packages=[
+                PackageResultJs(
+                    task=p.task,
+                    target=p.target,
+                    flights=list(p.flights),
+                    lost=p.lost,
+                    aircraft=p.aircraft,
+                    result=p.result,
+                    tone=ToneJs.from_tone(p.tone),
+                )
+                for p in report.packages
+            ],
+            friendly_losses=[
+                LossLineJs(name=x.name, count=x.count) for x in report.friendly_losses
+            ],
+            enemy_losses=[
+                LossLineJs(name=x.name, count=x.count) for x in report.enemy_losses
+            ],
+            damaged_units=[
+                DamagedUnitLineJs(**dataclasses.asdict(d)) for d in report.damaged_units
+            ],
+            events=[
+                ReportEventJs(time=e.time, text=e.text, tone=ToneJs.from_tone(e.tone))
+                for e in report.events
+            ],
+            applied=report.applied,
+            pilots_captured=(
+                None
+                if report.pilots_captured is None
+                else pilots(report.pilots_captured)
+            ),
+            pilots_still_down=report.pilots_still_down,
+            budget_next_turn=report.budget_next_turn,
+            income_next_turn=report.income_next_turn,
+        )
+
+
+class DebriefingStatusJs(str, Enum):
+    #: No result received yet, and none accepted since the application started.
+    NONE = "none"
+    #: A result was received and is not applied yet.
+    PENDING = "pending"
+    #: The last accepted result.
+    ACCEPTED = "accepted"
+
+
+class DebriefingJs(BaseModel):
+    """What the /debrief screen shows (Qt: QDebriefingWindow)."""
+
+    status: DebriefingStatusJs
+    #: True when "Accept results" can be pressed: pending and the mission is over.
+    can_accept: bool
+    report: AfterActionReportJs | None
+
+    class Config:
+        title = "Debriefing"

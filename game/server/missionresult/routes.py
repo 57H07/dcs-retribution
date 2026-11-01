@@ -1,4 +1,5 @@
-"""Waiting for the mission result (WEB-05.1): status, manual load, abort, accept.
+"""Waiting for the mission result (WEB-05.1): status, manual load, abort, accept;
+and its after-action report (WEB-05.2).
 
 `POST /game/mission` starts the wait; the status changes are published on the event
 stream (`mission_result_updated`), so the waiting screen refetches
@@ -18,11 +19,17 @@ from game.commands import (
     CommandError,
     MissionResultStatus,
     abort_mission,
-    accept_results,
+    accept_and_report,
 )
+from game.debriefingreport import build_report
 from game.gamelock import game_lock, locked, locks_game_itself
 from game.native import NativeBridge, one_dialog
-from .models import MissionResultJs
+from .models import (
+    AfterActionReportJs,
+    DebriefingJs,
+    DebriefingStatusJs,
+    MissionResultJs,
+)
 from .waiter import MissionResultContext
 from ..commanderrors import command_error_responses
 from ..dependencies import GameContext, QtCallbacks, QtContext
@@ -46,6 +53,29 @@ def _require_game(game: Game | None) -> Game:
 def mission_result() -> MissionResultJs:
     """The mission waiting for its result: detection of state.json, losses so far."""
     return MissionResultJs.from_snapshot(MissionResultContext.get().snapshot())
+
+
+@router.get("/report", operation_id="get_mission_report", response_model=DebriefingJs)
+@locked
+def report() -> DebriefingJs:
+    """The after-action report: of the result waiting to be accepted, else of the
+    last result accepted since the application started."""
+    waiter = MissionResultContext.get()
+    snapshot = waiter.snapshot()
+    if snapshot.debriefing is not None and GameContext.get() is not None:
+        return DebriefingJs(
+            status=DebriefingStatusJs.PENDING,
+            can_accept=snapshot.mission_ended,
+            report=AfterActionReportJs.from_report(build_report(snapshot.debriefing)),
+        )
+    last = waiter.last_report()
+    if last is not None:
+        return DebriefingJs(
+            status=DebriefingStatusJs.ACCEPTED,
+            can_accept=False,
+            report=AfterActionReportJs.from_report(last),
+        )
+    return DebriefingJs(status=DebriefingStatusJs.NONE, can_accept=False, report=None)
 
 
 @router.post(
@@ -109,16 +139,20 @@ def cancel(qt: QtCallbacks | None = Depends(QtContext.get_optional)) -> None:
 def accept(qt: QtCallbacks | None = Depends(QtContext.get_optional)) -> TurnJs:
     """ "Accept results": applies the mission result and starts the next turn.
 
-    The Qt debriefing window then shows the report (until WEB-05.2).
+    Same `accept_results` as the Qt waiting window; the report of the applied
+    result is then served by `GET /game/mission/result/report` (status
+    "accepted"). The Qt widgets refresh and the campaign end is checked as after
+    any turn (`QtCallbacks.turn_passed`), as closing the Qt debriefing did.
     """
     game = _require_game(GameContext.get())
     waiter = MissionResultContext.get()
     debriefing = waiter.final_result()
-    accept_results(game, GameContext.get_sim(), debriefing)
-    waiter.stop()
-    if qt is not None and qt.results_accepted is not None:
-        qt.results_accepted(debriefing)
+    report = accept_and_report(game, GameContext.get_sim(), debriefing)
+    waiter.finish(report)
+    state = game.check_win_loss()
+    if qt is not None and qt.turn_passed is not None:
+        qt.turn_passed(state)
     return TurnJs(
         turn=game.turn,
-        campaign_state=CampaignStateJs.from_turn_state(game.check_win_loss()),
+        campaign_state=CampaignStateJs.from_turn_state(state),
     )

@@ -3,20 +3,20 @@
 // mockups/Debrief.dc.html. The engine watches state.json and owns every rule
 // (stale files, when results can be accepted): this screen shows the status of
 // GET /game/mission/result, refetched on `mission_result_updated` events, and
-// sends the commands. Accepting hands over to the Qt debriefing window until
-// WEB-05.2.
+// sends the commands. Once the mission is over, the after-action report
+// (/debrief, WEB-05.2) shows the results and accepts them.
 import { commandErrorMessage } from "../api/commands";
 import {
   LossRow,
   MissionResult,
   useAbortMissionMutation,
-  useAcceptMissionResultMutation,
   useGetMissionResultQuery,
   useLoadMissionResultFileMutation,
 } from "../api/liberationApi";
 import { PATHS } from "../shell/paths";
 import { Button, Table, TableColumn, useToast } from "../ui";
 import styles from "./WaitingScreen.module.css";
+import { useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 type Detection = {
@@ -89,10 +89,22 @@ export function WaitingScreen() {
   const { data: result } = useGetMissionResultQuery();
   const [loadFile, loading] = useLoadMissionResultFileMutation();
   const [abort, aborting] = useAbortMissionMutation();
-  const [accept, accepting] = useAcceptMissionResultMutation();
   const navigate = useNavigate();
   const toast = useToast();
-  const busy = loading.isLoading || aborting.isLoading || accepting.isLoading;
+  const busy = loading.isLoading || aborting.isLoading;
+
+  // The mission ends while this screen is open: show its report. A result
+  // already over when the screen opens stays here ("Review results").
+  const ended = result == null ? null : result.mission_ended;
+  const wasEnded = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (ended === true && wasEnded.current === false) {
+      navigate(PATHS.debrief);
+    }
+    if (ended != null) {
+      wasEnded.current = ended;
+    }
+  }, [ended, navigate]);
 
   const refused = (title: string, error: unknown) =>
     toast({
@@ -117,20 +129,6 @@ export function WaitingScreen() {
       return;
     }
     toast({ title: "Mission aborted", description: "Back to planning." });
-    navigate(PATHS.command);
-  };
-
-  const onAccept = async () => {
-    const answer = await accept();
-    if ("error" in answer) {
-      refused("Results not accepted", answer.error);
-      return;
-    }
-    toast({
-      title: "Results accepted",
-      description: `Turn ${answer.data.turn} begins.`,
-      tone: "success",
-    });
     navigate(PATHS.command);
   };
 
@@ -170,10 +168,10 @@ export function WaitingScreen() {
             <Button
               variant="primary"
               size="lg"
-              onClick={onAccept}
+              onClick={() => navigate(PATHS.debrief)}
               disabled={busy || !result.mission_ended}
             >
-              {accepting.isLoading ? "Processing results…" : "Accept results"}
+              Review results
             </Button>
           </div>
         )}

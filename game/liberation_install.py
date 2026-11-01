@@ -48,7 +48,9 @@ __ignore_empty_install_directory = False
 __prefer_liberation_payloads = False
 __setup_preferences_on_every_start = False
 __server_port = DEFAULT_SERVER_PORT
-__web_ui = False
+# On by default since WEB-05.2 (W10). A preferences file that says false keeps it.
+DEFAULT_WEB_UI = True
+__web_ui = DEFAULT_WEB_UI
 # True from a startup that needs the first start setup until preferences are applied.
 __first_start_pending = False
 
@@ -82,7 +84,7 @@ def init() -> bool:
     global __web_ui
     global __first_start_pending
 
-    __web_ui = False
+    __web_ui = DEFAULT_WEB_UI
     __last_save_file = ""
     __ignore_empty_install_directory = False
     __prefer_liberation_payloads = False
@@ -106,7 +108,7 @@ def init() -> bool:
                 "setup_preferences_on_every_start", False
             )
             __server_port = pref_data.get("server_port", DEFAULT_SERVER_PORT)
-            __web_ui = bool(pref_data.get("web_ui", False))
+            __web_ui = bool(pref_data.get("web_ui", DEFAULT_WEB_UI))
             is_first_start = bool(__setup_preferences_on_every_start)
         except (KeyError, TypeError, AttributeError, json.JSONDecodeError):
             __dcs_saved_game_directory = ""
@@ -202,10 +204,11 @@ def set_web_ui_preference(value: bool) -> None:
 
 
 def web_ui_enabled() -> bool:
-    """True when the web UI fills the main window (WEB-00.3, off by default: W10).
+    """True when the web UI fills the main window (WEB-00.3, on by default: W10).
 
     The RETRIBUTION_WEB_UI environment variable, when set to a known value, wins
-    over the saved preference. Read at startup: changing it needs a restart.
+    over the saved preference (`RETRIBUTION_WEB_UI=0` brings back the Qt
+    interface). Read at startup: changing it needs a restart.
     """
     override = os.environ.get(WEB_UI_ENV_VAR, "").strip().lower()
     if override in ("1", "true", "yes", "on"):
