@@ -1,0 +1,141 @@
+/* Payload tab of a flight (WEB-04.3). */
+.tab,
+.section,
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section {
+  padding-top: 12px;
+  border-top: 1px solid var(--ui-color-line);
+}
+
+.title,
+.subtitle {
+  margin: 0;
+  color: var(--ui-color-text-secondary);
+  font-family: var(--ui-font-display);
+  font-size: var(--ui-font-size-sm);
+  font-weight: var(--ui-font-weight-semibold);
+  letter-spacing: var(--ui-letter-spacing-display);
+  text-transform: uppercase;
+}
+
+.subtitle {
+  margin-bottom: 8px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 20px;
+}
+
+.members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-md);
+}
+
+.member {
+  height: var(--ui-size-control);
+  padding: 0 var(--ui-space-md);
+  background: var(--ui-color-bg-canvas);
+  border: 1px solid var(--ui-color-line-strong);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-color-text-primary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.member[aria-selected="true"] {
+  border-color: var(--ui-color-accent, #e8a33d);
+}
+
+.member:focus-visible,
+.input:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-shadow-focus);
+}
+
+.hint,
+.warning {
+  margin: 0;
+  font-size: var(--ui-font-size-sm);
+}
+
+.hint {
+  color: var(--ui-color-text-secondary);
+}
+
+.warning {
+  color: var(--ui-color-accent, #e8a33d);
+  font-weight: var(--ui-font-weight-semibold);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.field select {
+  max-width: none;
+}
+
+.input {
+  height: var(--ui-size-control);
+  padding: 0 var(--ui-space-md);
+  background: var(--ui-color-bg-canvas);
+  border: 1px solid var(--ui-color-line-strong);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-color-text-primary);
+  font: inherit;
+}
+
+.pylons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pylon {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-md);
+}
+
+.pylon select {
+  flex: 1 1 280px;
+  max-width: 480px;
+}
+
+.pylonNumber {
+  flex: 0 0 28px;
+  font-family: var(--ui-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--ui-font-weight-semibold);
+  text-align: right;
+}
+
+.properties {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px 20px;
+  align-items: end;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ui-space-md);
+}

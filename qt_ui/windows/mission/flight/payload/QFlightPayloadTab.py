@@ -16,6 +16,15 @@ from game import Game
 from game.ato.flight import Flight
 from game.ato.flightmember import FlightMember
 from game.ato.loadouts import Loadout
+from game.commands.flightpayload import (
+    apply_member_livery,
+    assign_loadout,
+    set_flight_fuel,
+    set_member_custom,
+    set_same_livery,
+    set_same_loadout,
+)
+from game.gamelock import game_lock
 from qt_ui.widgets.QLabeledWidget import QLabeledWidget
 from qt_ui.widgets.combos.QSquadronLiverySelector import SquadronLiverySelector
 from .QLoadoutEditor import QLoadoutEditor
@@ -80,7 +89,8 @@ class DcsFuelSelector(QHBoxLayout):
         self.addWidget(self.unit)
 
     def on_fuel_change(self, value: int) -> None:
-        self.flight.fuel = value
+        with game_lock():
+            set_flight_fuel(self.flight, value)
         if self.unit.currentIndex() == 0:
             self.fuel_spinner.setValue(value)
         elif self.unit.currentIndex() == 1 and not self.unit_changing:
@@ -117,6 +127,7 @@ class QFlightPayloadTab(QFrame):
     def __init__(self, flight: Flight, game: Game):
         super(QFlightPayloadTab, self).__init__()
         self.flight = flight
+        self.game = game
         self.payload_editor = QLoadoutEditor(
             flight, self.flight.roster.members[0], game
         )
@@ -264,22 +275,23 @@ class QFlightPayloadTab(QFrame):
 
     def on_new_loadout(self, index: int) -> None:
         loadout = self.loadout_at(index)
-        self.member_selector.selected_member.loadout = loadout
-        if self.flight.use_same_loadout_for_all_members:
-            self.flight.roster.use_same_loadout_for_all_members()
+        with game_lock():
+            assign_loadout(self.flight, self.member_selector.selected_member, loadout)
         self.payload_editor.reset_pylons()
 
     def on_custom_toggled(self, use_custom: bool) -> None:
         self.loadout_selector.setDisabled(use_custom)
         member = self.member_selector.selected_member
-        member.use_custom_loadout = use_custom
-        if use_custom:
-            member.loadout = member.loadout.derive_custom("Custom")
-        else:
-            member.loadout = self.current_loadout()
+        with game_lock():
+            set_member_custom(
+                self.game,
+                self.flight,
+                member,
+                use_custom,
+                named=None if use_custom else self.current_loadout(),
+            )
+        if not use_custom:
             self.payload_editor.reset_pylons()
-        if self.flight.use_same_loadout_for_all_members:
-            self.flight.roster.use_same_loadout_for_all_members()
 
     def on_saved_payload(self, payload_name: str) -> None:
         loadout = self.member_selector.selected_member.loadout
@@ -287,33 +299,29 @@ class QFlightPayloadTab(QFrame):
         self.loadout_selector.setCurrentIndex(self.loadout_selector.count() - 1)
 
     def on_same_loadout_toggled(self, checked: bool) -> None:
-        self.flight.use_same_loadout_for_all_members = checked
+        with game_lock():
+            set_same_loadout(self.flight, checked)
         if self.member_selector.value():
             self.loadout_selector.setDisabled(checked)
             self.payload_editor.setDisabled(checked)
-        if checked:
-            self.flight.roster.use_same_loadout_for_all_members()
-            if self.member_selector.value():
-                self.rebind_to_selected_member()
-        else:
-            self.flight.roster.use_distinct_loadouts_for_each_member()
+        if checked and self.member_selector.value():
+            self.rebind_to_selected_member()
 
     def on_same_livery_toggled(self, checked: bool) -> None:
-        self.flight.use_same_livery_for_all_members = checked
+        with game_lock():
+            set_same_livery(self.flight, checked)
         if self.member_selector.value():
             self.livery_selector.setDisabled(checked)
-        if checked:
-            self.flight.roster.use_same_livery_for_all_members()
-            if self.member_selector.value():
-                self.rebind_to_selected_member()
+        if checked and self.member_selector.value():
+            self.rebind_to_selected_member()
 
     def on_livery_change(self) -> None:
         livery = self.livery_selector.currentData()
         use_livery_set = self.livery_selector.using_livery_set
-        if self.flight.use_same_livery_for_all_members:
-            for m in self.flight.roster.members:
-                m.livery = livery
-                m.use_livery_set = use_livery_set
-        else:
-            self.member_selector.selected_member.livery = livery
-            self.member_selector.selected_member.use_livery_set = use_livery_set
+        with game_lock():
+            apply_member_livery(
+                self.flight,
+                self.member_selector.selected_member,
+                livery,
+                use_livery_set,
+            )

@@ -280,6 +280,7 @@ function PackageBody({ pkg }: { pkg: PackageDetail }) {
         ) : (
           <FlightSections
             key={selected.id}
+            packageId={pkg.id}
             flight={selected}
             actions={
               <Button

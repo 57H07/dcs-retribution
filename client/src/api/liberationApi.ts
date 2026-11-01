@@ -227,6 +227,21 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     removePackageFlight: { invalidatesTags: PACKAGE_COMMAND_TAGS },
     getAutoCreateOptions: { providesTags: [Tags.PACKAGES, Tags.BASE] },
     autoCreatePackage: { invalidatesTags: PACKAGE_COMMAND_TAGS },
+    // Payload tab (WEB-04.3): follows the flight's size, pilots and events.
+    getFlightPayload: { providesTags: [Tags.PACKAGES] },
+    setFlightFuel: { invalidatesTags: [Tags.PACKAGES] },
+    setSameLoadout: { invalidatesTags: [Tags.PACKAGES] },
+    setSameLivery: { invalidatesTags: [Tags.PACKAGES] },
+    setMemberLoadout: { invalidatesTags: [Tags.PACKAGES] },
+    setMemberCustomLoadout: { invalidatesTags: [Tags.PACKAGES] },
+    setMemberPylon: { invalidatesTags: [Tags.PACKAGES] },
+    setMemberWeaponSetting: { invalidatesTags: [Tags.PACKAGES] },
+    resetMemberWeaponSettings: { invalidatesTags: [Tags.PACKAGES] },
+    setMemberTgpLaserCode: { invalidatesTags: [Tags.PACKAGES] },
+    setMemberWeaponLaserCode: { invalidatesTags: [Tags.PACKAGES] },
+    setMemberLivery: { invalidatesTags: [Tags.PACKAGES] },
+    setMemberProperty: { invalidatesTags: [Tags.PACKAGES] },
+    saveMemberPayload: { invalidatesTags: [Tags.PACKAGES] },
     // /debug/waypoint-geometries
     getDebugHoldZones: {
       providesTags: (result, error, arg) => [
