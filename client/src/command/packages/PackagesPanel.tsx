@@ -14,7 +14,7 @@ import {
   selectSelectedPackageKey,
 } from "../../api/selectionSlice";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { useQtCommands } from "../../shell/useQtCommands";
+import { PATHS } from "../../shell/paths";
 import {
   Button,
   ListCard,
@@ -34,6 +34,7 @@ import {
 } from "./packageFormat";
 import styles from "./PackagesPanel.module.css";
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 type Side = "friendly" | "enemy";
 
@@ -144,7 +145,7 @@ function PackageCard({
   onSelect,
 }: PackageCardProps) {
   const dispatch = useAppDispatch();
-  const qt = useQtCommands();
+  const navigate = useNavigate();
   const toast = useToast();
   const [deletePackage, { isLoading: deleting }] = useDeletePackageMutation();
   const ref = useRef<HTMLLIElement>(null);
@@ -167,7 +168,6 @@ function PackageCard({
     }
   };
 
-  const first = pkg.flights[0];
   return (
     <li ref={ref} className={styles.item} data-selected={selected || undefined}>
       <ListCard
@@ -218,8 +218,8 @@ function PackageCard({
             </ul>
           )}
           <div className={styles.actions}>
-            {pkg.blue && first !== undefined && (
-              <Button onClick={() => qt.editPackageOfFlight(first.id)}>
+            {pkg.blue && (
+              <Button onClick={() => navigate(PATHS.package(pkg.id))}>
                 Edit
               </Button>
             )}

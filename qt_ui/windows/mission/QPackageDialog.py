@@ -17,8 +17,8 @@ from PySide6.QtWidgets import (
 )
 
 from game.ato.flight import Flight
-from game.ato.flightplans.planningerror import PlanningError
 from game.ato.package import Package
+from game.commands import CommandError
 from game.game import Game
 from game.radio.radios import RadioFrequency
 from game.server import EventStream
@@ -219,13 +219,10 @@ class QPackageDialog(QDialog):
 
     def add_flight(self, flight: Flight) -> None:
         """Adds the new flight to the package."""
-        self.package_model.add_flight(flight)
         try:
-            flight.recreate_flight_plan()
-            self.package_model.update_tot()
+            self.package_model.add_and_plan_flight(flight)
             EventStream.put_nowait(GameUpdateEvents().new_flight(flight))
-        except PlanningError as ex:
-            self.package_model.delete_flight(flight)
+        except CommandError as ex:
             logging.exception("Could not create flight")
             QMessageBox.critical(
                 self, "Could not create flight", str(ex), QMessageBox.StandardButton.Ok

@@ -5,6 +5,7 @@ from typing import Optional
 from PySide6.QtWidgets import QComboBox
 
 from game.ato.flighttype import FlightType
+from game.commands.packageflights import squadrons_for
 from game.dcs.aircrafttype import AircraftType
 from game.squadrons.airwing import AirWing
 
@@ -48,11 +49,8 @@ class SquadronSelector(QComboBox):
             self.addItem("No aircraft selected", None)
             return
 
-        for squadron in self.air_wing.squadrons_for(aircraft):
-            valid_task = squadron.capable_of(task)
-            runway_operational = squadron.location.runway_is_operational()
-            if valid_task and squadron.untasked_aircraft and runway_operational:
-                self.addItem(f"{squadron.location}: {squadron}", squadron)
+        for squadron in squadrons_for(self.air_wing, task, aircraft):
+            self.addItem(f"{squadron.location}: {squadron}", squadron)
 
         if self.count() == 0:
             self.addItem("No capable aircraft available", None)

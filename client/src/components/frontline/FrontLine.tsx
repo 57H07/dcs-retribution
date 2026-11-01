@@ -1,7 +1,5 @@
-import {
-  FrontLine as FrontLineModel,
-  useOpenNewFrontLinePackageDialogMutation,
-} from "../../api/liberationApi";
+import { FrontLine as FrontLineModel } from "../../api/liberationApi";
+import { useNewPackage } from "../../maplayers/mapSelection";
 import { FRONT_LINE_WEIGHT, LAYER_COLORS } from "../../maplayers/colors";
 import { Polyline } from "react-leaflet";
 
@@ -10,7 +8,7 @@ interface FrontLineProps {
 }
 
 function FrontLine(props: FrontLineProps) {
-  const [openNewPackageDialog] = useOpenNewFrontLinePackageDialogMutation();
+  const newPackage = useNewPackage();
   return (
     <Polyline
       positions={props.front.extents}
@@ -18,7 +16,7 @@ function FrontLine(props: FrontLineProps) {
       color={LAYER_COLORS.frontLine}
       eventHandlers={{
         contextmenu: () => {
-          openNewPackageDialog({ frontLineId: props.front.id });
+          newPackage("front-line", props.front.id);
         },
       }}
     />

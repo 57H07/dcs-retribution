@@ -372,31 +372,12 @@ def test_delete_route_unknown_package(game: _Game) -> None:
     )
 
 
-def test_create_route_opens_the_package_editor(
-    game: _Game, qt: _Qt, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    tgo = SimpleNamespace(name="SA-11")
-    tgo_id = uuid4()
-    game.db = SimpleNamespace(tgos=Database())  # type: ignore[attr-defined]
-    game.db.tgos.add(tgo_id, tgo)  # type: ignore[attr-defined]
-
-    status, _ = _request(
-        "POST", "/packages/", {"target_kind": "tgo", "target_id": str(tgo_id)}
-    )
-
-    assert status == 204
-    assert qt.targets == [tgo]
-    # Only queued (a signal) while the route held the lock: never waits on Qt.
-    assert qt.lock_held == [True]
-
-
 def test_create_route_unknown_target(game: _Game, qt: _Qt) -> None:
     game.db = SimpleNamespace(front_lines=Database())  # type: ignore[attr-defined]
     status, body = _request(
         "POST", "/packages/", {"target_kind": "front-line", "target_id": str(uuid4())}
     )
     assert (status, body) == (404, {"detail": "This target no longer exists."})
-    assert qt.targets == []
 
 
 def test_create_route_refuses_enemy_downed_pilots(game: _Game, qt: _Qt) -> None:
@@ -410,7 +391,6 @@ def test_create_route_refuses_enemy_downed_pilots(game: _Game, qt: _Qt) -> None:
         {"target_kind": "downed-pilot", "target_id": str(pilot_id)},
     )
     assert status == 409
-    assert qt.targets == []
 
 
 def test_create_route_without_a_campaign(

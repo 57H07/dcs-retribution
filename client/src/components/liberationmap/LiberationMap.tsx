@@ -25,6 +25,8 @@ import {
   MapInspectedContext,
   MapSelection,
   MapSelectionContext,
+  NewPackageContext,
+  NewPackageHandler,
 } from "../../maplayers/mapSelection";
 import { overlayProps } from "../../maplayers/overlays";
 import { MapZoomProvider } from "../../maplayers/zoom";
@@ -46,6 +48,11 @@ export interface LiberationMapProps {
   /** What the inspector shows: its marker gives up its hover tooltip. */
   selection?: MapSelection | null;
   /**
+   * Web shell (WEB-04.1): a right-click on a target plans a package in the web
+   * editor instead of opening the Qt dialog.
+   */
+  onNewPackage?: NewPackageHandler;
+  /**
    * Web shell (WEB-01.3): compact layer toolbar in place of the expanded
    * Leaflet layer controls, which stay mounted but hidden.
    */
@@ -54,6 +61,7 @@ export interface LiberationMapProps {
 
 export default function LiberationMap({
   onSelect,
+  onNewPackage,
   selection = null,
   layerToolbar = false,
 }: LiberationMapProps = {}) {
@@ -92,119 +100,123 @@ export default function LiberationMap({
     [],
   );
   return (
-    <MapSelectionContext.Provider value={onSelect ?? null}>
-      <MapInspectedContext.Provider value={selection}>
-        <MapContainer
-          zoom={map.current?.getZoom() ?? 8}
-          zoomControl={false}
-          ref={mapRef}
-          className={layerToolbar ? "liberation-map--toolbar" : undefined}
-        >
-          <MapZoomProvider>
-            <ScaleControl />
-            <LeafletRuler />
-            <LayersControl collapsed={false} ref={overlayControl}>
-              <Basemaps />
-              <LayersControl.Overlay {...overlayProps("controlPoints")}>
-                <ControlPointsLayer />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay {...overlayProps("aircraft")}>
-                <AircraftLayer />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay {...overlayProps("activeCombat")}>
-                <CombatLayer />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay {...overlayProps("blueDownedPilots")}>
-                <DownedPilotsLayer blue={true} />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay {...overlayProps("redDownedPilots")}>
-                <DownedPilotsLayer blue={false} />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay {...overlayProps("airDefenses")}>
-                <TgosLayer categories={["aa"]} />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay {...overlayProps("lorad")}>
-                <TgosLayer categories={["aa"]} task={"LORAD"} />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay {...overlayProps("merad")}>
-                <TgosLayer categories={["aa"]} task={"MERAD"} />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay {...overlayProps("shorad")}>
-                <TgosLayer categories={["aa"]} task={"SHORAD"} />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay {...overlayProps("aaa")}>
-                <TgosLayer categories={["aa"]} task={"AAA"} />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay {...overlayProps("factories")}>
-                <TgosLayer categories={["factory"]} />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay {...overlayProps("ships")}>
-                <TgosLayer categories={["ship"]} />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay {...overlayProps("otherGroundObjects")}>
-                <TgosLayer categories={["aa", "factory", "ship"]} exclude />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay {...overlayProps("supplyRoutes")}>
-                <SupplyRoutesLayer />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay {...overlayProps("frontLines")}>
-                <FrontLinesLayer />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay {...overlayProps("enemySamThreatRange")}>
-                <AirDefenseRangeLayer blue={false} />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay
-                {...overlayProps("enemySamDetectionRange")}
-              >
-                <AirDefenseRangeLayer blue={false} detection />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay {...overlayProps("enemyIadsNetwork")}>
-                <Iadsnetworklayer blue={false} />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay {...overlayProps("alliedSamThreatRange")}>
-                <AirDefenseRangeLayer blue={true} />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay
-                {...overlayProps("alliedSamDetectionRange")}
-              >
-                <AirDefenseRangeLayer blue={true} detection />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay {...overlayProps("emitterHighlight")}>
-                <EmitterHighlightToggle />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay {...overlayProps("alliedIadsNetwork")}>
-                <Iadsnetworklayer blue={true} />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay {...overlayProps("selectedFlightPlan")}>
-                <FlightPlansLayer selectedOnly />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay {...overlayProps("blueFlightPlans")}>
-                <FlightPlansLayer blue={true} />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay {...overlayProps("redFlightPlans")}>
-                <FlightPlansLayer blue={false} />
-              </LayersControl.Overlay>
-            </LayersControl>
-            <LayersControl position="topleft" ref={debugControl}>
-              <CoalitionThreatZones blue={true} />
-              <CoalitionThreatZones blue={false} />
-              <LayersControl.Overlay name="Blue navmesh">
-                <NavMeshLayer blue={true} />
-              </LayersControl.Overlay>
-              <LayersControl.Overlay name="Red navmesh">
-                <NavMeshLayer blue={false} />
-              </LayersControl.Overlay>
-              <TerrainZonesLayers />
-              <CullingExclusionZones />
-              <WaypointDebugZonesControls />
-            </LayersControl>
-            <Legend />
-          </MapZoomProvider>
-        </MapContainer>
-        {layerToolbar && leafletMap && (
-          <LayerToolbar map={leafletMap} controls={controls} />
-        )}
-      </MapInspectedContext.Provider>
-    </MapSelectionContext.Provider>
+    <NewPackageContext.Provider value={onNewPackage ?? null}>
+      <MapSelectionContext.Provider value={onSelect ?? null}>
+        <MapInspectedContext.Provider value={selection}>
+          <MapContainer
+            zoom={map.current?.getZoom() ?? 8}
+            zoomControl={false}
+            ref={mapRef}
+            className={layerToolbar ? "liberation-map--toolbar" : undefined}
+          >
+            <MapZoomProvider>
+              <ScaleControl />
+              <LeafletRuler />
+              <LayersControl collapsed={false} ref={overlayControl}>
+                <Basemaps />
+                <LayersControl.Overlay {...overlayProps("controlPoints")}>
+                  <ControlPointsLayer />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay {...overlayProps("aircraft")}>
+                  <AircraftLayer />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay {...overlayProps("activeCombat")}>
+                  <CombatLayer />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay {...overlayProps("blueDownedPilots")}>
+                  <DownedPilotsLayer blue={true} />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay {...overlayProps("redDownedPilots")}>
+                  <DownedPilotsLayer blue={false} />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay {...overlayProps("airDefenses")}>
+                  <TgosLayer categories={["aa"]} />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay {...overlayProps("lorad")}>
+                  <TgosLayer categories={["aa"]} task={"LORAD"} />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay {...overlayProps("merad")}>
+                  <TgosLayer categories={["aa"]} task={"MERAD"} />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay {...overlayProps("shorad")}>
+                  <TgosLayer categories={["aa"]} task={"SHORAD"} />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay {...overlayProps("aaa")}>
+                  <TgosLayer categories={["aa"]} task={"AAA"} />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay {...overlayProps("factories")}>
+                  <TgosLayer categories={["factory"]} />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay {...overlayProps("ships")}>
+                  <TgosLayer categories={["ship"]} />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay {...overlayProps("otherGroundObjects")}>
+                  <TgosLayer categories={["aa", "factory", "ship"]} exclude />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay {...overlayProps("supplyRoutes")}>
+                  <SupplyRoutesLayer />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay {...overlayProps("frontLines")}>
+                  <FrontLinesLayer />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay {...overlayProps("enemySamThreatRange")}>
+                  <AirDefenseRangeLayer blue={false} />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay
+                  {...overlayProps("enemySamDetectionRange")}
+                >
+                  <AirDefenseRangeLayer blue={false} detection />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay {...overlayProps("enemyIadsNetwork")}>
+                  <Iadsnetworklayer blue={false} />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay
+                  {...overlayProps("alliedSamThreatRange")}
+                >
+                  <AirDefenseRangeLayer blue={true} />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay
+                  {...overlayProps("alliedSamDetectionRange")}
+                >
+                  <AirDefenseRangeLayer blue={true} detection />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay {...overlayProps("emitterHighlight")}>
+                  <EmitterHighlightToggle />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay {...overlayProps("alliedIadsNetwork")}>
+                  <Iadsnetworklayer blue={true} />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay {...overlayProps("selectedFlightPlan")}>
+                  <FlightPlansLayer selectedOnly />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay {...overlayProps("blueFlightPlans")}>
+                  <FlightPlansLayer blue={true} />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay {...overlayProps("redFlightPlans")}>
+                  <FlightPlansLayer blue={false} />
+                </LayersControl.Overlay>
+              </LayersControl>
+              <LayersControl position="topleft" ref={debugControl}>
+                <CoalitionThreatZones blue={true} />
+                <CoalitionThreatZones blue={false} />
+                <LayersControl.Overlay name="Blue navmesh">
+                  <NavMeshLayer blue={true} />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay name="Red navmesh">
+                  <NavMeshLayer blue={false} />
+                </LayersControl.Overlay>
+                <TerrainZonesLayers />
+                <CullingExclusionZones />
+                <WaypointDebugZonesControls />
+              </LayersControl>
+              <Legend />
+            </MapZoomProvider>
+          </MapContainer>
+          {layerToolbar && leafletMap && (
+            <LayerToolbar map={leafletMap} controls={controls} />
+          )}
+        </MapInspectedContext.Provider>
+      </MapSelectionContext.Provider>
+    </NewPackageContext.Provider>
   );
 }

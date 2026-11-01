@@ -17,7 +17,8 @@ It takes about 6 seconds. A failure prints a unified diff of the fingerprint JSO
    `Campaign` -> `GameGenerator` -> `Game.begin_turn_0`, on `golan_heights_lite` with
    Israel 2000 against Syria 2011. Generating takes a few seconds, so no save is
    committed.
-3. `scenarios.py` plans one blue package per scenario.
+3. `scenarios.py` plans one blue package per scenario, through the commands of the web
+   editor (`game/commands/packages.py`, `packageflights.py`).
 4. `fingerprint.py` reduces each package to JSON. The test compares it with
    `tests/data/flightplans/<scenario>.json`.
 5. The child also pickles the planned game. The test loads it to check that a save keeps
@@ -56,21 +57,19 @@ $env:UPDATE_FLIGHTPLAN_FINGERPRINTS = "1"; python -m pytest tests/flightplans -q
 An editor migration (WEB-04.1 to 04.5) should not need a refresh: W16 requires identical
 plans before and after.
 
-## What the web commands must reproduce
+## What the web commands reproduce
 
-`POST /packages` only opens a Qt dialog today, so `scenarios.py` calls the engine
-functions the Qt dialogs call. When a command replaces a dialog, change the scenario to
-go through that command and keep the references untouched.
+The references were produced with the engine calls of the Qt dialogs. WEB-04.1 moved
+those sequences into commands, which Qt now shares, and the scenarios go through them
+with the references untouched. A later lot (WEB-04.2 to 04.5) that adds a command does
+the same.
 
-| Future command | Qt code it replaces | Engine sequence in `scenarios.py` |
+| Command | Qt code it replaced | Engine sequence |
 | --- | --- | --- |
-| WEB-04.1 create package | `QNewPackageDialog` | `Package(target, game.db.flights, auto_asap=True)`, then `ato.add_package` on save |
-| WEB-04.1 auto-create | `QAutoCreateDialog.on_create_clicked` | `PackageFulfiller.plan_mission(ProposedMission(..., asap=True), 1, now, tracer, ignore_range=True)`, then `set_tot_asap` |
-| WEB-04.2 add flight | `QFlightCreator.create_flight`, `QPackageDialog.add_flight` | `FlightRoster`, `Flight(...)` with `Settings.start_type_for`, `add_flight`, `recreate_flight_plan`, `set_tot_asap` |
-| WEB-04.3 default loadout | `QFlightCreator._init_loadout_selector` | First name from `Loadout.default_loadout_names_for` that exists, else the first loadout |
-
-`plan_manual` leaves out the player laser code step of `QFlightCreator.create_flight`
-(no player pilot here, and the fingerprint has no laser code).
+| `create_package` | `QNewPackageDialog` | `Package(target, game.db.flights, auto_asap=True)`, added to the ATO at once (Qt: on save) |
+| `auto_create` | `QAutoCreateDialog.on_create_clicked` | `PackageFulfiller.plan_mission(ProposedMission(..., asap=True), 1, now, tracer, ignore_range=True)`, then `set_tot_asap` |
+| `add_flight` | `QFlightCreator.create_flight`, `QPackageDialog.add_flight` | `FlightRoster`, `Flight(...)` with `Settings.start_type_for`, `add_flight`, `recreate_flight_plan`, `set_tot_asap` |
+| `default_loadout` | `QFlightCreator._init_loadout_selector` | First name from `Loadout.default_loadout_names_for` that exists, else the first loadout |
 
 ## Determinism
 

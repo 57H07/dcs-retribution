@@ -21,6 +21,15 @@ export enum Tags {
 
 const LIST_ID = "LIST";
 
+/** What a change to a package touches: the screens and the aircraft it took. */
+const PACKAGE_COMMAND_TAGS = [
+  Tags.PACKAGES,
+  Tags.TOP_BAR,
+  Tags.TIMELINE,
+  Tags.BASE,
+  Tags.INSPECTOR,
+];
+
 /** What repairing, selling or buying at a ground object changes. */
 const TGO_CHANGES = [
   Tags.TGO,
@@ -206,7 +215,18 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     buyTgoGroup: { invalidatesTags: TGO_CHANGES },
     // /packages/ (WEB-01.2): also refetched on flight events (eventstream.tsx).
     listPackages: { providesTags: [Tags.PACKAGES] },
-    deletePackage: { invalidatesTags: [Tags.PACKAGES, Tags.TOP_BAR] },
+    deletePackage: { invalidatesTags: PACKAGE_COMMAND_TAGS },
+    // Package editor (WEB-04.1).
+    getPackage: { providesTags: [Tags.PACKAGES] },
+    createPackage: { invalidatesTags: PACKAGE_COMMAND_TAGS },
+    renamePackage: { invalidatesTags: [Tags.PACKAGES, Tags.TIMELINE] },
+    setPackageTot: { invalidatesTags: PACKAGE_COMMAND_TAGS },
+    setPackageTotEarliest: { invalidatesTags: PACKAGE_COMMAND_TAGS },
+    getFlightOptions: { providesTags: [Tags.PACKAGES, Tags.BASE] },
+    addPackageFlight: { invalidatesTags: PACKAGE_COMMAND_TAGS },
+    removePackageFlight: { invalidatesTags: PACKAGE_COMMAND_TAGS },
+    getAutoCreateOptions: { providesTags: [Tags.PACKAGES, Tags.BASE] },
+    autoCreatePackage: { invalidatesTags: PACKAGE_COMMAND_TAGS },
     // /debug/waypoint-geometries
     getDebugHoldZones: {
       providesTags: (result, error, arg) => [

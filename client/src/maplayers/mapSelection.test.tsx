@@ -3,8 +3,10 @@ import { setupStore } from "../app/store";
 import { recordFetch, restoreFetch } from "../shell/testing";
 import {
   MapSelectionContext,
+  NewPackageContext,
   useInspectControlPoint,
   useInspectTgo,
+  useNewPackage,
 } from "./mapSelection";
 import { renderHook, waitFor } from "@testing-library/react";
 import { PropsWithChildren } from "react";
@@ -25,6 +27,38 @@ function wrapper(select: ((s: unknown) => void) | null) {
     </Provider>
   );
 }
+
+describe("map right-clicks", () => {
+  it("plan the package in the web editor in the web shell", () => {
+    const post = vi.spyOn(backend, "post");
+    const plan = vi.fn();
+    const { result } = renderHook(() => useNewPackage(), {
+      wrapper: ({ children }: PropsWithChildren) => (
+        <NewPackageContext.Provider value={plan}>
+          {children}
+        </NewPackageContext.Provider>
+      ),
+    });
+    result.current("front-line", "fl-1");
+    expect(plan).toHaveBeenCalledWith({
+      target_kind: "front-line",
+      target_id: "fl-1",
+    });
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it.each(["control-point", "tgo", "front-line", "downed-pilot"] as const)(
+    "open the Qt dialog on a %s in the Qt map",
+    (kind) => {
+      const post = vi
+        .spyOn(backend, "post")
+        .mockResolvedValue({ data: null } as never);
+      const { result } = renderHook(() => useNewPackage());
+      result.current(kind, "id-1");
+      expect(post).toHaveBeenCalledWith(`/qt/create-package/${kind}/id-1`);
+    },
+  );
+});
 
 describe("map clicks", () => {
   it("select the base for the inspector in the web shell", () => {

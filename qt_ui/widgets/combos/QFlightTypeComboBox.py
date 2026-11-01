@@ -2,7 +2,7 @@
 
 from PySide6.QtWidgets import QComboBox
 
-from game.ato.flighttype import FlightType
+from game.commands.packageflights import plannable_tasks
 from game.settings.settings import Settings
 from game.theater import ConflictTheater, MissionTarget
 from game.theater.player import Player
@@ -21,12 +21,7 @@ class QFlightTypeComboBox(QComboBox):
         super().__init__()
         self.theater = theater
         self.target = target
-        for mission_type in self.target.mission_types(
-            for_player=Player.BLUE if is_ownfor else Player.RED
+        for mission_type in plannable_tasks(
+            self.target, settings, Player.BLUE if is_ownfor else Player.RED
         ):
-            if mission_type == FlightType.AIR_ASSAULT and not settings.plugin_option(
-                "ctld"
-            ):
-                # Only add Air Assault if ctld plugin is enabled
-                continue
             self.addItem(str(mission_type), userData=mission_type)

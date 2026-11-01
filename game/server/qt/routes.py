@@ -172,8 +172,8 @@ def edit_package_of_flight(
 ) -> None:
     """Opens the Qt package editor of the package flying this flight.
 
-    Packages have no ID in the API yet (WEB-03 adds them): a flight stands for its
-    package.
+    What the flight tabs of the web package editor offer until WEB-04.2 to 04.5 fill
+    them.
     """
     edit_package = _require_callback(qt.edit_package)
     try:

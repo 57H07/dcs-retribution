@@ -86,10 +86,12 @@ export function TgoScreen() {
       actions={
         sheet && (
           <>
-            <span className={styles.budget}>
-              Budget{" "}
-              <span className={secondary.mono}>{money(sheet.budget)}</span>
-            </span>
+            {sheet.summary.blue && (
+              <span className={styles.budget}>
+                Budget{" "}
+                <span className={secondary.mono}>{money(sheet.budget)}</span>
+              </span>
+            )}
             <Button asChild>
               <Link to={PATHS.base(sheet.summary.control_point_id)}>
                 {sheet.summary.control_point_name}

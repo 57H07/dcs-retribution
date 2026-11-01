@@ -242,6 +242,7 @@ describe("ground object sheet", () => {
   it("offers nothing on an enemy site", async () => {
     renderScreen({
       [SHEET_PATH]: sheet({
+        summary: { ...sheet().summary, blue: false },
         heading: { degrees: 90, can_adjust: false, to_conflict: 180 },
         can_buy: false,
         disband_value: 0,
@@ -254,6 +255,8 @@ describe("ground object sheet", () => {
       screen.queryByRole("button", { name: "Head to conflict" }),
     ).toBeNull();
     expect(screen.getByRole("switch", { name: "Hidden on MFD" })).toBeEnabled();
+    // The sheet carries the owner's budget: the enemy's is not ours to see.
+    expect(screen.queryByText(/Budget/)).not.toBeInTheDocument();
   });
 
   it("hides the site on the MFD", async () => {

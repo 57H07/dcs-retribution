@@ -14,6 +14,7 @@ import { PackagesPanel } from "./PackagesPanel";
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
+import { createMemoryRouter, RouterProvider } from "react-router-dom";
 
 afterEach(restoreFetch);
 
@@ -80,14 +81,25 @@ function renderPanel(onNewPackage?: () => void) {
   const calls = recordFetch(204, undefined, {
     "/packages/": [DEAD, STRIKE, ENEMY],
   });
+  const router = createMemoryRouter(
+    [
+      {
+        path: "*",
+        element: (
+          <ToastProvider>
+            <PackagesPanel onNewPackage={onNewPackage} />
+          </ToastProvider>
+        ),
+      },
+    ],
+    { initialEntries: ["/"] },
+  );
   render(
     <Provider store={store}>
-      <ToastProvider>
-        <PackagesPanel onNewPackage={onNewPackage} />
-      </ToastProvider>
+      <RouterProvider router={router} />
     </Provider>,
   );
-  return { store, calls };
+  return { store, calls, router };
 }
 
 const card = (name: RegExp) => screen.getByRole("button", { name });
@@ -179,11 +191,11 @@ describe("packages panel", () => {
   });
 
   it("edits a friendly package in the package editor", async () => {
-    const { calls } = renderPanel();
+    const { calls, router } = renderPanel();
     await userEvent.click(await screen.findByText("SA-11 Krasnodar East"));
     await userEvent.click(screen.getByRole("button", { name: "Edit" }));
-    await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0].path).toBe("/qt/edit-package/flight/f-dead");
+    expect(router.state.location.pathname).toBe("/packages/pkg-dead");
+    expect(calls).toHaveLength(0);
   });
 
   it("+ New explains how to plan a package", async () => {

@@ -2,16 +2,34 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, time
 from enum import Enum
 from typing import TYPE_CHECKING
 from uuid import UUID
 
 from pydantic import BaseModel
 
+from game.ato.flighttype import FlightType
+from game.ato.starttype import StartType
+from game.commands.packageflights import (
+    AUTO_CREATE_EXCLUDED_WITH_CAS,
+    AUTO_CREATE_MAX_COUNT,
+    AUTO_CREATE_MIN_COUNT,
+    AUTO_CREATE_SUPPORT_TASKS,
+    auto_create_default_count,
+    auto_create_primary_tasks,
+    max_flight_size,
+    plannable_tasks,
+    squadrons_for,
+)
+from game.commands.packages import coalition_of
+from game.utils import meters
+
 if TYPE_CHECKING:
     from game import Game
     from game.ato import Flight, Package
+    from game.dcs.aircrafttype import AircraftType
+    from game.squadrons import AirWing, Squadron
 
 
 class PackageFlightJs(BaseModel):
@@ -107,3 +125,280 @@ class NewPackageJs(BaseModel):
 
     class Config:
         title = "NewPackage"
+
+
+class PackageNameJs(BaseModel):
+    name: str
+
+    class Config:
+        title = "PackageName"
+
+
+class PackageTotJs(BaseModel):
+    """A time of day: the date is the one of the current TOT."""
+
+    tot: time
+
+    class Config:
+        title = "PackageTot"
+
+
+class PackageEditorFlightJs(PackageFlightJs):
+    #: A StartType value, e.g. "Cold".
+    start_type: str
+    startup: datetime
+    takeoff: datetime
+    #: False once under way: removing the flight then aborts it.
+    cancelable: bool
+
+    class Config:
+        title = "PackageEditorFlight"
+
+    @staticmethod
+    def for_editor(flight: Flight) -> PackageEditorFlightJs:
+        return PackageEditorFlightJs(
+            **PackageFlightJs.for_flight(flight).model_dump(),
+            start_type=flight.start_type.value,
+            startup=flight.flight_plan.startup_time(),
+            takeoff=flight.flight_plan.takeoff_time(),
+            cancelable=flight.state.cancelable,
+        )
+
+
+class PackageDetailJs(BaseModel):
+    """What the package editor shows (WEB-04.1)."""
+
+    id: UUID
+    blue: bool
+    task: str | None
+    description: str
+    custom_name: str | None
+    target: str
+    tot: datetime | None
+    #: "Earliest TOT" is on: the TOT follows the flights.
+    auto_asap: bool
+    #: The TOT cannot change once a flight has started.
+    tot_locked: bool
+    #: The auto-planner only fills an empty package.
+    can_auto_create: bool
+    #: Closest departure base of the flights and its distance to the target.
+    closest_base: str | None
+    closest_base_distance_nm: int | None
+    flights: list[PackageEditorFlightJs]
+
+    class Config:
+        title = "PackageDetail"
+
+    @staticmethod
+    def for_package(game: Game, package: Package) -> PackageDetailJs:
+        summary = PackageJs.for_package(
+            package, coalition_of(game, package).player.is_blue
+        )
+        closest = min(
+            (flight.departure for flight in package.flights),
+            key=package.target.distance_to,
+            default=None,
+        )
+        return PackageDetailJs(
+            id=summary.id,
+            blue=summary.blue,
+            task=summary.task,
+            description=summary.description,
+            custom_name=summary.custom_name,
+            target=summary.target,
+            tot=summary.tot,
+            auto_asap=summary.auto_asap,
+            tot_locked=not package.all_flights_waiting_for_start(),
+            can_auto_create=not package.flights,
+            closest_base=None if closest is None else closest.name,
+            closest_base_distance_nm=(
+                None
+                if closest is None
+                else round(meters(package.target.distance_to(closest)).nautical_miles)
+            ),
+            flights=[PackageEditorFlightJs.for_editor(f) for f in package.flights],
+        )
+
+
+class FlightSquadronOptionJs(BaseModel):
+    id: UUID
+    name: str
+    base: str
+    available: int
+    #: The most aircraft a new flight of this squadron can have.
+    max_size: int
+    #: The StartType value its base dictates (carrier, off-map spawn), if any.
+    required_start_type: str | None
+
+    class Config:
+        title = "FlightSquadronOption"
+
+    @staticmethod
+    def for_squadron(squadron: Squadron) -> FlightSquadronOptionJs:
+        required = squadron.location.required_aircraft_start_type
+        return FlightSquadronOptionJs(
+            id=squadron.id,
+            name=str(squadron),
+            base=squadron.location.name,
+            available=squadron.untasked_aircraft,
+            max_size=max_flight_size(squadron),
+            required_start_type=None if required is None else required.value,
+        )
+
+
+class FlightAircraftOptionJs(BaseModel):
+    #: The id `POST /packages/{id}/auto-create` takes.
+    id: str
+    name: str
+    squadrons: list[FlightSquadronOptionJs]
+
+    class Config:
+        title = "FlightAircraftOption"
+
+
+class FlightTaskOptionJs(BaseModel):
+    task: str
+    #: Best aircraft for the task first, each with the squadrons that can fly it now.
+    aircraft: list[FlightAircraftOptionJs]
+
+    class Config:
+        title = "FlightTaskOption"
+
+    @staticmethod
+    def for_task(air_wing: AirWing, task: FlightType) -> FlightTaskOptionJs:
+        aircraft = []
+        for aircraft_type in air_wing.best_available_aircrafts_for(task):
+            squadrons = squadrons_for(air_wing, task, aircraft_type)
+            if squadrons:
+                aircraft.append(
+                    FlightAircraftOptionJs(
+                        id=aircraft_type.variant_id,
+                        name=str(aircraft_type),
+                        squadrons=[
+                            FlightSquadronOptionJs.for_squadron(s) for s in squadrons
+                        ],
+                    )
+                )
+        return FlightTaskOptionJs(task=task.value, aircraft=aircraft)
+
+
+class FlightOptionsJs(BaseModel):
+    tasks: list[FlightTaskOptionJs]
+    #: StartType values.
+    start_types: list[str]
+
+    class Config:
+        title = "FlightOptions"
+
+    @staticmethod
+    def for_package(game: Game, package: Package) -> FlightOptionsJs:
+        coalition = coalition_of(game, package)
+        return FlightOptionsJs(
+            tasks=[
+                FlightTaskOptionJs.for_task(coalition.air_wing, task)
+                for task in plannable_tasks(
+                    package.target, game.settings, coalition.player
+                )
+            ],
+            start_types=[start_type.value for start_type in StartType],
+        )
+
+
+class NewFlightJs(BaseModel):
+    task: str
+    squadron_id: UUID
+    size: int
+    #: None for the default of the task and pilots.
+    start_type: StartType | None = None
+
+    class Config:
+        title = "NewFlight"
+
+
+class AutoCreateAircraftJs(BaseModel):
+    id: str
+    name: str
+
+    class Config:
+        title = "AutoCreateAircraft"
+
+
+class AutoCreateTaskJs(BaseModel):
+    task: str
+    default_count: int
+    aircraft: list[AutoCreateAircraftJs]
+
+    class Config:
+        title = "AutoCreateTask"
+
+    @staticmethod
+    def for_task(
+        air_wing: AirWing, task: FlightType, default_count: int
+    ) -> AutoCreateTaskJs:
+        return AutoCreateTaskJs(
+            task=task.value,
+            default_count=default_count,
+            aircraft=[
+                _auto_create_aircraft(aircraft)
+                for aircraft in air_wing.best_available_aircrafts_for(task)
+            ],
+        )
+
+
+def _auto_create_aircraft(aircraft: AircraftType) -> AutoCreateAircraftJs:
+    return AutoCreateAircraftJs(id=aircraft.variant_id, name=str(aircraft))
+
+
+class AutoCreateOptionsJs(BaseModel):
+    """The form of `QAutoCreateDialog`: one main flight, then optional ones."""
+
+    primary: list[AutoCreateTaskJs]
+    support: list[AutoCreateTaskJs]
+    #: Support tasks a CAS package does not take.
+    excluded_with_cas: list[str]
+    min_count: int
+    max_count: int
+
+    class Config:
+        title = "AutoCreateOptions"
+
+    @staticmethod
+    def for_package(game: Game, package: Package) -> AutoCreateOptionsJs:
+        coalition = coalition_of(game, package)
+        air_wing = coalition.air_wing
+        count = auto_create_default_count(package.target)
+        return AutoCreateOptionsJs(
+            primary=[
+                AutoCreateTaskJs.for_task(air_wing, task, count)
+                for task in auto_create_primary_tasks(package.target, coalition.player)
+            ],
+            support=[
+                AutoCreateTaskJs.for_task(air_wing, task, default)
+                for task, default in AUTO_CREATE_SUPPORT_TASKS.items()
+            ],
+            excluded_with_cas=[
+                task.value
+                for task in AUTO_CREATE_SUPPORT_TASKS
+                if task in AUTO_CREATE_EXCLUDED_WITH_CAS
+            ],
+            min_count=AUTO_CREATE_MIN_COUNT,
+            max_count=AUTO_CREATE_MAX_COUNT,
+        )
+
+
+class AutoCreateFlightJs(BaseModel):
+    task: str
+    count: int
+    #: The preferred aircraft id, None to let the planner choose.
+    aircraft: str | None = None
+
+    class Config:
+        title = "AutoCreateFlight"
+
+
+class AutoCreateRequestJs(BaseModel):
+    #: The main flight first, then the optional ones.
+    flights: list[AutoCreateFlightJs]
+
+    class Config:
+        title = "AutoCreateRequest"

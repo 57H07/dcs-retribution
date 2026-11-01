@@ -17,6 +17,7 @@ from game.ato.airtaaskingorder import AirTaskingOrder
 from game.ato.flight import Flight
 from game.ato.flighttype import FlightType
 from game.ato.package import Package
+from game.commands.packageflights import plan_flight_in_package
 from game.commands.packages import cancel_or_abort_package
 from game.commands.baseradios import tacan_channels_in_use
 from game.commands.squadrons import (
@@ -174,14 +175,33 @@ class PackageModel(QAbstractListModel):
             return QIcon(AIRCRAFT_ICONS[name])
         return None
 
-    def add_flight(self, flight: Flight) -> None:
-        """Adds the given flight to the package."""
+    def add_and_plan_flight(self, flight: Flight) -> None:
+        """Adds the flight to the package (game.commands), or raises CommandError."""
         with self.game_model.sim_controller.paused_sim():
-            self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
-            self.package.add_flight(flight)
-            # update_tot is not called here because the new flight does not have a
-            # flight plan yet. Will be called manually by the caller.
-            self.endInsertRows()
+            self.beginResetModel()
+            try:
+                plan_flight_in_package(
+                    self.package,
+                    flight,
+                    self.game_model.sim_controller.current_time_in_sim,
+                )
+            finally:
+                self.endResetModel()
+            self.update_tot()
+
+    def add_and_plan_flight(self, flight: Flight) -> None:
+        """Adds the flight to the package (game.commands), or raises CommandError."""
+        with self.game_model.sim_controller.paused_sim():
+            self.beginResetModel()
+            try:
+                plan_flight_in_package(
+                    self.package,
+                    flight,
+                    self.game_model.sim_controller.current_time_in_sim,
+                )
+            finally:
+                self.endResetModel()
+            self.update_tot()
 
     def cancel_or_abort_flight_at_index(self, index: QModelIndex) -> None:
         """Removes the flight at the given index from the package."""

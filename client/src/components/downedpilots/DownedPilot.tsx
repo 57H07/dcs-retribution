@@ -1,7 +1,5 @@
-import {
-  DownedPilot as DownedPilotModel,
-  useOpenNewDownedPilotPackageDialogMutation,
-} from "../../api/liberationApi";
+import { DownedPilot as DownedPilotModel } from "../../api/liberationApi";
+import { useNewPackage } from "../../maplayers/mapSelection";
 import { Icon, Point } from "leaflet";
 import { Marker, Tooltip } from "react-leaflet";
 import { downedPilotIconDataUrl } from "../../maplayers/downedPilotIcon";
@@ -19,7 +17,7 @@ interface DownedPilotProps {
 }
 
 export default function DownedPilot(props: DownedPilotProps) {
-  const [openNewPackageDialog] = useOpenNewDownedPilotPackageDialogMutation();
+  const newPackage = useNewPackage();
   const pilot = props.downedPilot;
   const turns = pilot.turns_remaining;
   return (
@@ -33,7 +31,7 @@ export default function DownedPilot(props: DownedPilotProps) {
         pilot.blue
           ? {
               contextmenu: () => {
-                openNewPackageDialog({ pilotId: pilot.id });
+                newPackage("downed-pilot", pilot.id);
               },
             }
           : {}
