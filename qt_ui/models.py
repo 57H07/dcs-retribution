@@ -17,6 +17,7 @@ from game.ato.airtaaskingorder import AirTaskingOrder
 from game.ato.flight import Flight
 from game.ato.flighttype import FlightType
 from game.ato.package import Package
+from game.commands.flightsettings import change_flight_squadron
 from game.commands.packageflights import plan_flight_in_package
 from game.commands.packages import cancel_or_abort_package
 from game.commands.baseradios import tacan_channels_in_use
@@ -189,19 +190,27 @@ class PackageModel(QAbstractListModel):
                 self.endResetModel()
             self.update_tot()
 
-    def add_and_plan_flight(self, flight: Flight) -> None:
-        """Adds the flight to the package (game.commands), or raises CommandError."""
+    def add_flight(self, flight: Flight) -> None:
+        """Adds the given flight to the package. The caller plans it (clones do)."""
+        with self.game_model.sim_controller.paused_sim():
+            self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
+            self.package.add_flight(flight)
+            self.endInsertRows()
+
+    def change_flight_squadron(self, flight: Flight, squadron: Squadron) -> Flight:
+        """The flight replacing this one (game.commands), or raises CommandError."""
         with self.game_model.sim_controller.paused_sim():
             self.beginResetModel()
             try:
-                plan_flight_in_package(
-                    self.package,
+                replacement = change_flight_squadron(
                     flight,
+                    squadron,
                     self.game_model.sim_controller.current_time_in_sim,
                 )
             finally:
                 self.endResetModel()
             self.update_tot()
+            return replacement
 
     def cancel_or_abort_flight_at_index(self, index: QModelIndex) -> None:
         """Removes the flight at the given index from the package."""

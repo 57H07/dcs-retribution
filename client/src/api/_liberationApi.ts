@@ -607,6 +607,113 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.autoCreateRequestJs,
       }),
     }),
+    getFlightSettings: build.query<
+      GetFlightSettingsApiResponse,
+      GetFlightSettingsApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/settings`,
+      }),
+    }),
+    setFlightSquadron: build.mutation<
+      SetFlightSquadronApiResponse,
+      SetFlightSquadronApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/squadron`,
+        method: "PUT",
+        body: queryArg.flightSquadronChoiceJs,
+      }),
+    }),
+    setFlightSize: build.mutation<
+      SetFlightSizeApiResponse,
+      SetFlightSizeApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/size`,
+        method: "PUT",
+        body: queryArg.flightSizeJs,
+      }),
+    }),
+    setFlightStartType: build.mutation<
+      SetFlightStartTypeApiResponse,
+      SetFlightStartTypeApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/start-type`,
+        method: "PUT",
+        body: queryArg.flightStartTypeJs,
+      }),
+    }),
+    setFlightDivert: build.mutation<
+      SetFlightDivertApiResponse,
+      SetFlightDivertApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/divert`,
+        method: "PUT",
+        body: queryArg.flightDivertJs,
+      }),
+    }),
+    setFlightTotOffset: build.mutation<
+      SetFlightTotOffsetApiResponse,
+      SetFlightTotOffsetApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/tot-offset`,
+        method: "PUT",
+        body: queryArg.flightTotOffsetJs,
+      }),
+    }),
+    setFlightCustomName: build.mutation<
+      SetFlightCustomNameApiResponse,
+      SetFlightCustomNameApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/custom-name`,
+        method: "PUT",
+        body: queryArg.flightCustomNameJs,
+      }),
+    }),
+    setFlightCallsign: build.mutation<
+      SetFlightCallsignApiResponse,
+      SetFlightCallsignApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/callsign`,
+        method: "PUT",
+        body: queryArg.flightCallsignJs,
+      }),
+    }),
+    resetFlightCallsign: build.mutation<
+      ResetFlightCallsignApiResponse,
+      ResetFlightCallsignApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/callsign`,
+        method: "DELETE",
+      }),
+    }),
+    setFlightPilot: build.mutation<
+      SetFlightPilotApiResponse,
+      SetFlightPilotApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/pilots/${queryArg.slot}`,
+        method: "PUT",
+        body: queryArg.flightPilotChoiceJs,
+      }),
+    }),
+    setFlightSlotPlayer: build.mutation<
+      SetFlightSlotPlayerApiResponse,
+      SetFlightSlotPlayerApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/pilots/${queryArg.slot}/player`,
+        method: "PUT",
+        body: queryArg.flightSlotPlayerJs,
+      }),
+    }),
     getInstallPreferences: build.query<
       GetInstallPreferencesApiResponse,
       GetInstallPreferencesApiArg
@@ -1315,6 +1422,83 @@ export type AutoCreatePackageApiResponse =
 export type AutoCreatePackageApiArg = {
   packageId: string;
   autoCreateRequestJs: AutoCreateRequest;
+};
+export type GetFlightSettingsApiResponse =
+  /** status 200 Successful Response */ FlightSettings;
+export type GetFlightSettingsApiArg = {
+  packageId: string;
+  flightId: string;
+};
+export type SetFlightSquadronApiResponse =
+  /** status 200 Successful Response */ FlightSquadronChanged;
+export type SetFlightSquadronApiArg = {
+  packageId: string;
+  flightId: string;
+  flightSquadronChoiceJs: FlightSquadronChoice;
+};
+export type SetFlightSizeApiResponse =
+  /** status 200 Successful Response */ PackageDetail;
+export type SetFlightSizeApiArg = {
+  packageId: string;
+  flightId: string;
+  flightSizeJs: FlightSize;
+};
+export type SetFlightStartTypeApiResponse =
+  /** status 200 Successful Response */ PackageDetail;
+export type SetFlightStartTypeApiArg = {
+  packageId: string;
+  flightId: string;
+  flightStartTypeJs: FlightStartType;
+};
+export type SetFlightDivertApiResponse =
+  /** status 200 Successful Response */ PackageDetail;
+export type SetFlightDivertApiArg = {
+  packageId: string;
+  flightId: string;
+  flightDivertJs: FlightDivert;
+};
+export type SetFlightTotOffsetApiResponse =
+  /** status 200 Successful Response */ PackageDetail;
+export type SetFlightTotOffsetApiArg = {
+  packageId: string;
+  flightId: string;
+  flightTotOffsetJs: FlightTotOffset;
+};
+export type SetFlightCustomNameApiResponse =
+  /** status 200 Successful Response */ PackageDetail;
+export type SetFlightCustomNameApiArg = {
+  packageId: string;
+  flightId: string;
+  flightCustomNameJs: FlightCustomName;
+};
+export type SetFlightCallsignApiResponse =
+  /** status 200 Successful Response */ PackageDetail;
+export type SetFlightCallsignApiArg = {
+  packageId: string;
+  flightId: string;
+  flightCallsignJs: FlightCallsign;
+};
+export type ResetFlightCallsignApiResponse =
+  /** status 200 Successful Response */ PackageDetail;
+export type ResetFlightCallsignApiArg = {
+  packageId: string;
+  flightId: string;
+};
+export type SetFlightPilotApiResponse =
+  /** status 200 Successful Response */ PackageDetail;
+export type SetFlightPilotApiArg = {
+  packageId: string;
+  flightId: string;
+  slot: number;
+  flightPilotChoiceJs: FlightPilotChoice;
+};
+export type SetFlightSlotPlayerApiResponse =
+  /** status 200 Successful Response */ PackageDetail;
+export type SetFlightSlotPlayerApiArg = {
+  packageId: string;
+  flightId: string;
+  slot: number;
+  flightSlotPlayerJs: FlightSlotPlayer;
 };
 export type GetInstallPreferencesApiResponse =
   /** status 200 Successful Response */ InstallPreferencesState;
@@ -2346,6 +2530,84 @@ export type AutoCreateFlight = {
 export type AutoCreateRequest = {
   flights: AutoCreateFlight[];
 };
+export type FlightSettingsSquadron = {
+  id: string;
+  name: string;
+  aircraft: string;
+  base: string;
+  available: number;
+};
+export type FlightDivertOption = {
+  id: string;
+  name: string;
+};
+export type FlightCallsign = {
+  name: string;
+  number: number;
+};
+export type FlightPilotOption = {
+  id: string;
+  name: string;
+  player: boolean;
+};
+export type FlightPilotSlot = {
+  pilot?: FlightPilotOption;
+  player_refusal?: string;
+};
+export type FlightSettings = {
+  id: string;
+  task: string;
+  aircraft: string;
+  departure: string;
+  arrival: string;
+  startup: string;
+  editable: boolean;
+  squadron: FlightSettingsSquadron;
+  squadron_options: FlightSettingsSquadron[];
+  count: number;
+  max_count: number;
+  start_type: string;
+  start_types: string[];
+  start_type_locked: boolean;
+  divert_id?: string;
+  divert_options: FlightDivertOption[];
+  tot_offset_seconds: number;
+  custom_name?: string;
+  callsign?: FlightCallsign;
+  callsign_names: string[];
+  callsign_min_number: number;
+  callsign_max_number: number;
+  slots: FlightPilotSlot[];
+  free_pilots: FlightPilotOption[];
+};
+export type FlightSquadronChanged = {
+  flight_id: string;
+  package: PackageDetail;
+};
+export type FlightSquadronChoice = {
+  squadron_id: string;
+};
+export type FlightSize = {
+  size: number;
+};
+export type FlightStartType = {
+  start_type: StartType;
+};
+export type FlightDivert = {
+  divert_id?: string | null;
+};
+export type FlightTotOffset = {
+  seconds: number;
+};
+export type FlightCustomName = {
+  name: string;
+};
+export type FlightPilotChoice = {
+  pilot_id?: string | null;
+};
+export type FlightSlotPlayer = {
+  player: boolean;
+};
 export type InstallPreferences = {
   saved_game_dir: string;
   dcs_install_dir: string;
@@ -2704,6 +2966,17 @@ export const {
   useRemovePackageFlightMutation,
   useGetAutoCreateOptionsQuery,
   useAutoCreatePackageMutation,
+  useGetFlightSettingsQuery,
+  useSetFlightSquadronMutation,
+  useSetFlightSizeMutation,
+  useSetFlightStartTypeMutation,
+  useSetFlightDivertMutation,
+  useSetFlightTotOffsetMutation,
+  useSetFlightCustomNameMutation,
+  useSetFlightCallsignMutation,
+  useResetFlightCallsignMutation,
+  useSetFlightPilotMutation,
+  useSetFlightSlotPlayerMutation,
   useGetInstallPreferencesQuery,
   useSetInstallPreferencesMutation,
   useOpenNewFrontLinePackageDialogMutation,

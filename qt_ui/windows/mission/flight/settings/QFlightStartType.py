@@ -3,11 +3,14 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
     QLabel,
+    QMessageBox,
     QVBoxLayout,
 )
 
 from game.ato.flight import Flight
 from game.ato.starttype import StartType
+from game.commands import CommandError
+from game.commands.flightsettings import set_flight_start_type
 from game.theater import OffMapSpawn
 from qt_ui.models import PackageModel
 
@@ -60,6 +63,14 @@ class QFlightStartType(QGroupBox):
         self.package_model.update_tot()
 
     def _on_start_type_selected(self):
-        selected = self.start_type.currentData()
-        self.flight.start_type = selected
+        try:
+            set_flight_start_type(
+                self.flight,
+                self.start_type.currentData(),
+                self.package_model.game_model.sim_controller.current_time_in_sim,
+            )
+        except CommandError as ex:
+            QMessageBox.critical(self, "Could not edit flight", str(ex))
+            self.start_type.setCurrentText(self.flight.start_type.value)
+            return
         self.package_model.update_tot()

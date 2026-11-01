@@ -13,21 +13,23 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QPushButton,
     QDialog,
+    QMessageBox,
     QWidget,
     QSizePolicy,
 )
 
 from game import Game
-from game.ato.closestairfields import ClosestAirfields
 from game.ato.flight import Flight
 from game.ato.flightroster import FlightRoster
 from game.ato.iflightroster import IFlightRoster
-from game.dcs.aircrafttype import AircraftType
+from game.commands import CommandError
+from game.commands.flightsettings import (
+    flight_squadron_candidates,
+    max_flight_resize,
+    resize_flight,
+)
 from game.squadrons import Squadron
 from game.squadrons.pilot import Pilot
-from game.theater import ControlPoint, OffMapSpawn
-from game.transfers import Airlift, airlift_squadrons, reassign_airlift
-from game.utils import nautical_miles
 from qt_ui.models import PackageModel
 
 
@@ -261,9 +263,7 @@ class QSquadronSelector(QDialog):
         self.setLayout(vbox)
 
         self.selector = QComboBox()
-        for squadron in self._candidate_squadrons():
-            if squadron is self.flight.squadron:
-                continue
+        for squadron in flight_squadron_candidates(self.flight):
             self.selector.addItem(
                 f"{squadron.name} - {squadron.aircraft.variant_id}", squadron
             )
@@ -280,25 +280,6 @@ class QSquadronSelector(QDialog):
 
         vbox.addLayout(hbox)
 
-    def _candidate_squadrons(self) -> list[Squadron]:
-        air_wing = self.flight.coalition.air_wing
-        cargo = self.flight.cargo
-        if cargo is not None and isinstance(cargo.transport, Airlift):
-            # A transfer flight must keep serving its pickup and drop-off. Any
-            # Transport-capable squadron may take it, so the player can move it to
-            # a squadron kept off auto-planning and fly it.
-            return airlift_squadrons(
-                air_wing, cargo, cargo.transport.destination, self.flight.count
-            )
-        return air_wing.best_squadrons_for(
-            self.flight.package.target,
-            self.flight.flight_type,
-            self.flight.roster.max_size,
-            self.flight.is_helo,
-            True,
-            ignore_range=True,
-        )
-
 
 class QFlightSlotEditor(QGroupBox):
     flight_resized = Signal(int)
@@ -314,14 +295,7 @@ class QFlightSlotEditor(QGroupBox):
         self.package_model = package_model
         self.flight = flight
         self.game = game
-        self.closest_airfields = ClosestAirfields(
-            flight.package.target,
-            list(game.theater.control_points_for(self.flight.coalition.player)),
-        )
-        available = self.flight.squadron.untasked_aircraft
-        max_count = self.flight.count + available
-        if max_count > 4:
-            max_count = 4
+        max_count = min(max_flight_resize(flight), FlightRosterEditor.MAX_PILOTS)
 
         layout = QGridLayout()
 
@@ -355,59 +329,26 @@ class QFlightSlotEditor(QGroupBox):
             squadron: Optional[Squadron] = dialog.selector.currentData()
             if not squadron:
                 return
-            flight = Flight(
-                self.package_model.package,
-                squadron,
-                self.flight.count,
-                self.flight.flight_type,
-                self.flight.start_type,
-                self._find_divert_field(squadron.aircraft, squadron.location),
-                frequency=self.flight.frequency,
-                cargo=self.flight.cargo,
-                channel=self.flight.tacan,
-                callsign_tcn=self.flight.tcn_name,
-            )
-            # Keep the transfer attached, otherwise deleting the old flight drops
-            # its Airlift and the cargo is neither delivered nor generated.
-            reassign_airlift(self.flight, flight)
-            self.package_model.add_flight(flight)
-            self.package_model.delete_flight(self.flight)
+            try:
+                flight = self.package_model.change_flight_squadron(
+                    self.flight, squadron
+                )
+            except CommandError as ex:
+                QMessageBox.critical(self, "Could not change squadron", str(ex))
+                return
             self.squadron_changed.emit(flight)
 
-    def _find_divert_field(
-        self, aircraft: AircraftType, arrival: ControlPoint
-    ) -> Optional[ControlPoint]:
-        divert_limit = nautical_miles(150)
-        for airfield in self.closest_airfields.operational_airfields_within(
-            divert_limit
-        ):
-            if airfield.captured != self.flight.coalition.player:
-                continue
-            if airfield == arrival:
-                continue
-            if not airfield.can_operate(aircraft):
-                continue
-            if isinstance(airfield, OffMapSpawn):
-                continue
-            return airfield
-        return None
-
     def _changed_aircraft_count(self):
-        old_count = self.flight.count
         new_count = int(self.aircraft_count_spinner.value())
         try:
-            self.flight.resize(new_count)
-        except ValueError:
-            # The UI should have prevented this, but if we ran out of aircraft
-            # then roll back the inventory change.
-            difference = new_count - self.flight.count
-            available = self.flight.squadron.untasked_aircraft
-            logging.error(
-                f"Could not add {difference} additional aircraft to "
-                f"{self.flight} because {self.flight.departure} has only "
-                f"{available} {self.flight.unit_type} remaining"
+            resize_flight(
+                self.flight,
+                new_count,
+                self.package_model.game_model.sim_controller.current_time_in_sim,
             )
-            self.flight.resize(old_count)
+        except CommandError as ex:
+            logging.error(f"Could not resize {self.flight}: {ex}")
+            self.aircraft_count_spinner.setValue(self.flight.count)
             return
         self.roster_editor.resize(new_count)
         self.flight_resized.emit(new_count)
