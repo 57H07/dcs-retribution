@@ -176,7 +176,7 @@ class SquadronConfigUpdateJs(BaseModel):
         title = "SquadronConfigUpdate"
 
 
-class NewSquadronJs(BaseModel):
+class ConfigNewSquadronJs(BaseModel):
     aircraft_id: str
     base_id: UUID
     primary_task: str

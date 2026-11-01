@@ -159,7 +159,7 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/air-wing-config/${queryArg.target}/sides/${queryArg.side}/squadrons`,
         method: "POST",
-        body: queryArg.gameServerAirwingconfigModelsNewSquadronJs,
+        body: queryArg.configNewSquadronJs,
       }),
     }),
     saveAirWingFile: build.mutation<
@@ -290,7 +290,7 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/control-points/${queryArg.cpId}/squadrons`,
         method: "POST",
-        body: queryArg.gameServerControlpointsAircraftordersNewSquadronJs,
+        body: queryArg.newSquadronJs,
       }),
     }),
     getGroundForces: build.query<
@@ -1236,7 +1236,7 @@ export type AddConfigSquadronApiResponse =
 export type AddConfigSquadronApiArg = {
   target: ConfigTarget;
   side: ConfigSide;
-  gameServerAirwingconfigModelsNewSquadronJs: AirWingConfigNewSquadron;
+  configNewSquadronJs: AirWingConfigNewSquadron;
 };
 export type SaveAirWingFileApiResponse =
   /** status 200 Successful Response */ AirWingFileResult;
@@ -1325,7 +1325,7 @@ export type CreateSquadronApiResponse =
   /** status 200 Successful Response */ Base;
 export type CreateSquadronApiArg = {
   cpId: string;
-  gameServerControlpointsAircraftordersNewSquadronJs: NewSquadron;
+  newSquadronJs: NewSquadron;
 };
 export type GetGroundForcesApiResponse =
   /** status 200 Successful Response */ GroundForces;

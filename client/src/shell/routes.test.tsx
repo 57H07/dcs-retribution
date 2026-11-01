@@ -12,18 +12,28 @@ describe("web shell routes", () => {
     expect(container.querySelector("header")).not.toBeNull();
   });
 
-  it.each([
-    ["/new-game", "/native/new-game"],
-  ])(
-    "%s opens its Qt screen once and returns to the command view",
-    async (path, qtRoute) => {
-      const calls = recordFetch();
-      const { router } = renderShell(path);
-      await waitFor(() => expect(calls).toHaveLength(1));
-      expect(calls[0]).toMatchObject({ method: "POST", path: qtRoute });
-      expect(router.state.location.pathname).toBe("/");
-    },
-  );
+  it("shows the wizard on /new-game, without opening Qt", async () => {
+    const calls = recordFetch(204, undefined, {
+      "/new-game/generation": {
+        status: "idle",
+        step_index: 0,
+        step_count: 0,
+      },
+      "/new-game/options": {
+        campaigns: [],
+        factions: [],
+        time_periods: [],
+        default_time_period: "",
+        mods: [],
+      },
+    });
+    const { router, findByRole } = renderShell("/new-game");
+    expect(
+      await findByRole("heading", { level: 1, name: "New campaign" }),
+    ).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/new-game");
+    expect(calls).toEqual([]);
+  });
 
   it("shows the after-action report on /debrief, without opening Qt", async () => {
     const calls = recordFetch(204, undefined, {

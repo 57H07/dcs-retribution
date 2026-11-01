@@ -52,7 +52,7 @@ from .models import (
     FactionDoctrineJs,
     FactionJtacJs,
     FactionUnitJs,
-    NewSquadronJs,
+    ConfigNewSquadronJs,
     ReplacePresetJs,
     SquadronConfigUpdateJs,
 )
@@ -274,7 +274,7 @@ def delete_squadron(
 def post_squadron(
     target: ConfigTarget,
     side: ConfigSide,
-    body: NewSquadronJs,
+    body: ConfigNewSquadronJs,
     game: Game = Depends(_game),
     qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> None:

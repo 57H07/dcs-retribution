@@ -136,6 +136,7 @@ const OTHER: AirWingSquadron = {
 
 const AIR_WING: AirWing = {
   blue: true,
+  adjustments_enabled: false,
   squadron_count: 2,
   aircraft_count: 20,
   pilot_count: 5,
@@ -235,6 +236,13 @@ async function selectKrymsk() {
 }
 
 describe("squadrons view", () => {
+  it("links to the adjustments only when the cheat is on", async () => {
+    renderScreen("/air-wing", { ...AIR_WING, adjustments_enabled: true });
+    expect(
+      await screen.findByRole("link", { name: "Air wing adjustments" }),
+    ).toHaveAttribute("href", "/air-wing-config");
+  });
+
   it("says when no campaign is loaded", async () => {
     renderScreen("/air-wing", null);
     expect(await screen.findByText("No campaign loaded.")).toBeInTheDocument();

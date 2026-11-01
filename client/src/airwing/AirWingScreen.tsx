@@ -10,6 +10,7 @@ import {
 import { QueryBody, ScreenFrame } from "../secondary/ScreenFrame";
 import { AIR_WING_VIEWS, AirWingView, PATHS } from "../shell/paths";
 import {
+  Button,
   ListCard,
   MilSymbol,
   Table,
@@ -23,7 +24,7 @@ import styles from "./AirWing.module.css";
 import { PilotsTable } from "./PilotsTable";
 import { SquadronSheet } from "./SquadronSheet";
 import { useMemo, useState } from "react";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 
 const LABELS: Record<AirWingView, string> = {
   squadrons: "Squadrons",
@@ -172,6 +173,11 @@ export function AirWingScreen() {
               {airWing.squadron_count} squadrons · {airWing.aircraft_count}{" "}
               aircraft · {airWing.pilot_count} pilots
             </span>
+          )}
+          {airWing?.adjustments_enabled && (
+            <Button asChild>
+              <Link to={PATHS.airWingConfig}>Air wing adjustments</Link>
+            </Button>
           )}
           <label className={styles.check}>
             <input

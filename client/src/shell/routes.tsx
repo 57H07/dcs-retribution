@@ -1,10 +1,10 @@
-// Screens of the web UI (WEB-00.3). Until a screen is migrated, its route opens
-// the Qt dialog through /qt/* and comes back to the command view; a migrated
-// screen replaces its QtScreen element here (and deletes the Qt dialog, W9).
+// Screens of the web UI (WEB-00.3).
 import { AirWingScreen } from "../airwing/AirWingScreen";
+import { AirWingConfigScreen } from "../airwingconfig/AirWingConfigScreen";
 import { BaseScreen } from "../bases/BaseScreen";
 import { DebriefScreen } from "../missionresult/DebriefScreen";
 import { WaitingScreen } from "../missionresult/WaitingScreen";
+import { NewGameScreen } from "../newgame/NewGameScreen";
 import { PackageEditor } from "../packages/PackageEditor";
 import { PreferencesScreen } from "../preferences/PreferencesScreen";
 import { ReportsScreen } from "../reports/ReportsScreen";
@@ -17,7 +17,6 @@ import { TransfersScreen } from "../secondary/TransfersScreen";
 import { SettingsScreen } from "../settings/SettingsScreen";
 import { TgoScreen } from "../tgos/TgoScreen";
 import { UnitInfoScreen } from "../tgos/UnitInfoScreen";
-import { QtScreen } from "./QtScreen";
 import { Shell } from "./Shell";
 import { Navigate, RouteObject } from "react-router-dom";
 
@@ -31,6 +30,8 @@ export const ROUTES: RouteObject[] = [
       // Squadrons, aircraft and pilots (WEB-03).
       { path: "air-wing", element: <AirWingScreen /> },
       { path: "air-wing/:view", element: <AirWingScreen /> },
+      // Air wing and factions of the campaign in play, behind a cheat (WEB-06).
+      { path: "air-wing-config", element: <AirWingConfigScreen /> },
       {
         // Base screen (WEB-02.1); purchases and transfers still open the Qt
         // base menu from their tabs until WEB-02.2 and WEB-02.3.
@@ -47,8 +48,9 @@ export const ROUTES: RouteObject[] = [
         element: <PackageEditor />,
       },
       {
+        // New campaign wizard (WEB-06).
         path: "new-game",
-        element: <QtScreen open={(qt) => qt.openDialog("new-game")} />,
+        element: <NewGameScreen />,
       },
       {
         path: "settings",

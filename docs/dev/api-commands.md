@@ -126,8 +126,7 @@ a target route (`/qt/create-package/...`, `/qt/info/...`,
 web mode, where its callback is `None`). The route only calls a `QtCallbacks` callback that emits
 a `QLiberationWindow` signal, so the dialog opens on the Qt main thread after the
 lock is released. A migrated screen removes its route, its Qt slot and the dialog
-itself (W9), and replaces its `QtScreen` element in
-`client/src/shell/routes.tsx`. The generic `POST /qt/dialogs/{dialog}` left with
+itself (W9). `QtScreen` left with its last use, the new campaign wizard (WEB-06). The generic `POST /qt/dialogs/{dialog}` left with
 its last dialog, the air wing (WEB-03). A tool with no file UI needs no dialog at
 all: `POST /tools/import-layouts` and `POST /tools/pretense-campaign` (WEB-08.2) are
 plain commands that answer once the work is done.
@@ -179,6 +178,24 @@ side: `accept_and_report` reads the report before applying the result (this
 turn's ATO is gone afterwards), calls the same `accept_results` as the Qt path,
 then completes the report (prisoners, budget, messages logged meanwhile) and
 keeps it in `MissionResultWaiter.last_report()` for the screen to refetch.
+
+## 8c. Long work on a game nobody else sees: the new campaign (WEB-06)
+
+`POST /new-game/generation` validates the parameters, starts a thread and answers at
+once. `NewGameGeneration` (`game/commands/newgame.py`) keeps the status behind its own
+small lock, as in §8b (`GET /new-game/generation`, event flag `new_game_updated`). The
+draft `Game` is reachable by no other thread, so generation takes no game lock at all
+and these routes are `@locks_game_itself`. The player then configures it through
+`/air-wing-config/draft/...`, plain `@locked` commands that the status only allows
+while no thread runs. `POST /new-game/generation/begin` starts turn 0 on the thread and
+hands the game to the shell (`NativeBridge.game_created`), which publishes `game_loaded`.
+
+The same routes serve the campaign in play as `/air-wing-config/campaign/...`, behind
+the `enable_air_wing_adjustments` cheat: `target` is the only difference.
+
+A seeded generation is reproducible within a process: `tests/server/test_new_game.py`
+compares a web campaign with a CLI one. Each path must use one copy of the faction
+(`customized_faction`): the order of a copied set decides random draws.
 
 ## 9. System actions: the native bridge `/native/*` (WEB-00.7, W7)
 

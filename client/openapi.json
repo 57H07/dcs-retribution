@@ -951,7 +951,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/game__server__airwingconfig__models__NewSquadronJs"
+                "$ref": "#/components/schemas/ConfigNewSquadronJs"
               }
             }
           }
@@ -1775,7 +1775,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/game__server__controlpoints__aircraftorders__NewSquadronJs"
+                "$ref": "#/components/schemas/NewSquadronJs"
               }
             }
           }
@@ -7932,6 +7932,41 @@
         ],
         "title": "AirWingConfigBase"
       },
+      "ConfigNewSquadronJs": {
+        "properties": {
+          "aircraft_id": {
+            "type": "string",
+            "title": "Aircraft Id"
+          },
+          "base_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Base Id"
+          },
+          "primary_task": {
+            "type": "string",
+            "title": "Primary Task"
+          },
+          "preset": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preset"
+          }
+        },
+        "type": "object",
+        "required": [
+          "aircraft_id",
+          "base_id",
+          "primary_task"
+        ],
+        "title": "AirWingConfigNewSquadron"
+      },
       "ConfigParkingJs": {
         "properties": {
           "required": {
@@ -10469,6 +10504,35 @@
           "name"
         ],
         "title": "NewPilot"
+      },
+      "NewSquadronJs": {
+        "properties": {
+          "aircraft": {
+            "type": "string",
+            "title": "Aircraft"
+          },
+          "primary_task": {
+            "type": "string",
+            "title": "Primary Task"
+          },
+          "preset": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preset"
+          }
+        },
+        "type": "object",
+        "required": [
+          "aircraft",
+          "primary_task"
+        ],
+        "title": "NewSquadron"
       },
       "NewTransferJs": {
         "properties": {
@@ -13247,70 +13311,6 @@
           "speed_kt"
         ],
         "title": "Wind"
-      },
-      "game__server__airwingconfig__models__NewSquadronJs": {
-        "properties": {
-          "aircraft_id": {
-            "type": "string",
-            "title": "Aircraft Id"
-          },
-          "base_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Base Id"
-          },
-          "primary_task": {
-            "type": "string",
-            "title": "Primary Task"
-          },
-          "preset": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Preset"
-          }
-        },
-        "type": "object",
-        "required": [
-          "aircraft_id",
-          "base_id",
-          "primary_task"
-        ],
-        "title": "AirWingConfigNewSquadron"
-      },
-      "game__server__controlpoints__aircraftorders__NewSquadronJs": {
-        "properties": {
-          "aircraft": {
-            "type": "string",
-            "title": "Aircraft"
-          },
-          "primary_task": {
-            "type": "string",
-            "title": "Primary Task"
-          },
-          "preset": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Preset"
-          }
-        },
-        "type": "object",
-        "required": [
-          "aircraft",
-          "primary_task"
-        ],
-        "title": "NewSquadron"
       }
     }
   }
