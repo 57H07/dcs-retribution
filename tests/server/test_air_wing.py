@@ -348,7 +348,7 @@ def test_transfer_then_cancel_with_ferry_flights(game: Game) -> None:
     )
 
     assert _request("PUT", route, {"destination_id": None}) == (204, None)
-    assert squadron.destination is None
+    assert _sheet(game, squadron)["destination"] is None
     assert squadron.location == origin
     assert not any(
         flight.squadron == squadron and flight.flight_type is FlightType.FERRY
@@ -425,10 +425,9 @@ def test_player_flag_route(game: Game) -> None:
     squadron = next(s for s in _blue(game) if s.aircraft.flyable)
     pilot = next(p for p in squadron.current_roster if p.alive and not p.player)
     route = f"/squadrons/{squadron.id}/pilots/{pilot.id}"
-    assert _request("PATCH", route, {"player": True}) == (204, None)
-    assert pilot.player is True
-    assert _request("PATCH", route, {"player": False}) == (204, None)
-    assert pilot.player is False
+    for player in (True, False):
+        assert _request("PATCH", route, {"player": player}) == (204, None)
+        assert pilot.player is player
 
     status, _ = _request("PATCH", f"/squadrons/{squadron.id}/pilots/{uuid4()}", {})
     assert status == 404
