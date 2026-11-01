@@ -1,5 +1,5 @@
 import logging
-from typing import Callable, Iterator, Optional
+from typing import Callable
 
 from PySide6.QtCore import QItemSelection, QItemSelectionModel, QModelIndex, Qt
 from PySide6.QtWidgets import (
@@ -18,13 +18,20 @@ from PySide6.QtWidgets import (
     QMessageBox,
 )
 
-from game.ato.flightplans.custom import CustomFlightPlan
 from game.ato.flighttype import FlightType
-from game.ato.flightwaypointtype import FlightWaypointType
 from game.commands import (
     AircraftPurchaseAdapter,
     CommandError,
     change_aircraft_order,
+    TransferDestination,
+    new_pilot_refusal,
+    order_repair,
+    rename_pilot,
+    room_at_base,
+    set_primary_task,
+    squadron_repair_id,
+    transfer_destinations,
+    transfer_squadron,
 )
 from game.gamelock import game_lock
 from game.server import EventStream
@@ -32,10 +39,8 @@ from game.sim import GameUpdateEvents
 from game.squadrons import Pilot, Squadron
 from game.squadrons.career import Career
 from game.squadrons.pilot import PilotStatus
-from game.squadrons.transferparking import transfer_parking
-from game.theater import ConflictTheater, ControlPoint, ParkingType
+from game.theater import ParkingType
 from qt_ui.delegates import TwoColumnRowDelegate
-from qt_ui.errorreporter import report_errors
 from qt_ui.models import AtoModel, SquadronModel
 from qt_ui.simcontroller import SimController
 from qt_ui.windows.CareerDialog import CareerDialog
@@ -117,77 +122,43 @@ class AutoAssignedTaskControls(QVBoxLayout):
 
 
 class SquadronDestinationComboBox(QComboBox):
-    def __init__(self, squadron: Squadron, theater: ConflictTheater) -> None:
+    def __init__(self, squadron: Squadron) -> None:
         super().__init__()
-        self.squadron = squadron
-        self.theater = theater
-
-        parking_type = ParkingType().from_squadron(squadron)
-        room = squadron.location.unclaimed_parking(parking_type)
+        with game_lock():
+            room = room_at_base(squadron)
+            destinations = transfer_destinations(squadron)
         self.addItem(
             f"Remain at {squadron.location} (room for {room} more aircraft)",
             squadron.location,
         )
-        selected_index: Optional[int] = None
-        for idx, destination in enumerate(sorted(self.iter_destinations(), key=str), 1):
-            if destination == squadron.destination:
-                selected_index = idx
-            room = self.parking_room(destination)
-            self.addItem(
-                f"Transfer to {destination} (room for {room} more aircraft)",
-                destination,
-            )
-            if room < squadron.owned_aircraft or room == 0:
-                diff = squadron.owned_aircraft - room
-                text = (
-                    f"Transfer to {destination} not possible "
-                    f"({diff} additional slots required)"
-                )
-                if squadron.owned_aircraft == 0 and room == 0:
-                    text = (
-                        f"Transfer to {destination} not possible "
-                        f"(no fitting slots found)"
-                    )
-                self.setItemText(idx, text)
+        self.setCurrentIndex(0)
+        for idx, destination in enumerate(destinations, 1):
+            cp = destination.control_point
+            if destination.overflow:
+                self._warn_about_overflow(destination.control_point.name, destination)
+            if destination.refusal is None:
+                text = f"Transfer to {cp} (room for {destination.room} more aircraft)"
+            else:
+                text = f"Transfer to {cp} not possible ({destination.refusal})"
+            self.addItem(text, cp)
+            if destination.refusal is not None:
                 self.model().item(idx).setEnabled(False)
+            if cp == squadron.destination:
+                self.setCurrentIndex(idx)
 
-        if squadron.destination is None:
-            selected_index = 0
-
-        if selected_index is not None:
-            self.setCurrentIndex(selected_index)
-
-    def iter_destinations(self) -> Iterator[ControlPoint]:
-        size = self.squadron.expected_size_next_turn
-        parking_type = ParkingType().from_squadron(self.squadron)
-        for control_point in self.theater.control_points_for(self.squadron.player):
-            if control_point == self.squadron.location:
-                continue
-            if not control_point.can_operate(self.squadron.aircraft):
-                continue
-            if (
-                self.squadron.destination is not control_point
-                and control_point.unclaimed_parking(parking_type) < size
-                and self.parking_room(control_point) < size
-            ):
-                continue
-            yield control_point
-
-    def parking_room(self, cp: ControlPoint) -> int:
-        parking = transfer_parking(self.squadron, cp)
-        if parking.overflow:
-            overflow_msg = "".join(
-                f"{s.name} - {s.aircraft.variant_id}<br/>" for s in parking.overflow
-            )
-            QMessageBox.warning(
-                None,
-                "Insufficient parking space detected!",
-                f"Insufficient parking space was detected at {cp.name}:<br/><br/>"
-                f"{overflow_msg}<br/>"
-                f"Consider moving these squadrons to different airfield "
-                "to avoid possible air-starts.",
-            )
-        return parking.room
+    @staticmethod
+    def _warn_about_overflow(name: str, destination: TransferDestination) -> None:
+        overflow_msg = "".join(
+            f"{s.name} - {s.aircraft.variant_id}<br/>" for s in destination.overflow
+        )
+        QMessageBox.warning(
+            None,
+            "Insufficient parking space detected!",
+            f"Insufficient parking space was detected at {name}:<br/><br/>"
+            f"{overflow_msg}<br/>"
+            f"Consider moving these squadrons to different airfield "
+            "to avoid possible air-starts.",
+        )
 
 
 class SquadronDialog(QDialog):
@@ -197,7 +168,6 @@ class SquadronDialog(QDialog):
         self,
         ato_model: AtoModel,
         squadron_model: SquadronModel,
-        theater: ConflictTheater,
         sim_controller: SimController,
         parent,
     ) -> None:
@@ -303,9 +273,7 @@ class SquadronDialog(QDialog):
 
         button_panel = QHBoxLayout()
 
-        self.transfer_destination = SquadronDestinationComboBox(
-            squadron_model.squadron, theater
-        )
+        self.transfer_destination = SquadronDestinationComboBox(squadron_model.squadron)
         self.transfer_destination.currentIndexChanged.connect(
             self.on_destination_changed
         )
@@ -432,14 +400,32 @@ class SquadronDialog(QDialog):
         )
 
     def repair_aircraft(self) -> None:
-        with report_errors("Could not repair aircraft", self):
-            released = self.squadron.buy_expedited_maintenance()
-            if released:
-                logging.info(
-                    f"Expedited repair of {released} aircraft of {self.squadron}"
-                )
+        game = self.ato_model.game
+        self._command(
+            "Could not repair aircraft",
+            lambda events: order_repair(
+                game,
+                self.squadron.location,
+                squadron_repair_id(self.squadron),
+                events,
+            ),
+        )
         self._refresh_aircraft_controls()
-        GameUpdateSignal.get_instance().updateBudget(self.ato_model.game)
+        GameUpdateSignal.get_instance().updateBudget(game)
+
+    def _command(
+        self, failure: str, action: Callable[[GameUpdateEvents], object]
+    ) -> bool:
+        """Runs a command under the game lock; shows why it was refused."""
+        try:
+            with game_lock(), EventStream.event_context() as events:
+                action(events)
+        except CommandError as ex:
+            QMessageBox.warning(
+                self, failure, ex.message, QMessageBox.StandardButton.Ok
+            )
+            return False
+        return True
 
     def _change_order(self, quantity: int, failure: str) -> None:
         # Same rules as the web base screen (WEB-02.2).
@@ -462,31 +448,18 @@ class SquadronDialog(QDialog):
     def sell_aircraft(self) -> None:
         self._change_order(-self._purchase_amount(), "Sale failed")
 
-    def _instant_relocate(self, destination: ControlPoint) -> None:
-        self.squadron.relocate_to(destination)
-        for _, f in self.squadron.flight_db.objects.items():
-            if f.squadron == self.squadron:
-                if isinstance(f.flight_plan, CustomFlightPlan):
-                    for wpt in f.flight_plan.waypoints:
-                        if wpt.waypoint_type == FlightWaypointType.LANDING_POINT:
-                            wpt.control_point = destination
-                            wpt.position = wpt.control_point.position
-                            break
-                f.recreate_flight_plan()
-                EventStream.put_nowait(GameUpdateEvents().update_flight(f))
-
     def on_destination_changed(self, index: int) -> None:
-        with report_errors("Could not change squadron destination", self):
-            destination = self.transfer_destination.itemData(index)
-            if destination is self.squadron.location:
-                self.squadron.cancel_relocation()
-            elif self.ato_model.game.settings.enable_transfer_cheat:
-                self._instant_relocate(destination)
-            else:
-                self.squadron.plan_relocation(
-                    destination, self.sim_controller.current_time_in_sim
-                )
-            self.ato_model.replace_from_game(player=True)
+        destination = self.transfer_destination.itemData(index)
+        self._command(
+            "Could not change squadron destination",
+            lambda events: transfer_squadron(
+                self.squadron,
+                destination,
+                self.sim_controller.current_time_in_sim,
+                events,
+            ),
+        )
+        self.ato_model.replace_from_game(player=True)
 
     def check_disabled_button_states(
         self, button: QPushButton, index: QModelIndex
@@ -512,15 +485,14 @@ class SquadronDialog(QDialog):
             self, "Rename pilot", "New name: ", QLineEdit.EchoMode.Normal
         )
         if ok:
-            p.name = text
+            self._command("Could not rename pilot", lambda _: rename_pilot(p, text))
+            self.squadron_model.layoutChanged.emit()
 
     def reset_new_player_state(self) -> None:
-        if not self.squadron.aircraft.flyable:
+        refusal = new_pilot_refusal(self.squadron)
+        if refusal is not None:
             self.new_player_button.setDisabled(True)
-            self.new_player_button.setToolTip("This aircraft is not flyable.")
-        elif not self.squadron.has_unfilled_pilot_slots:
-            self.new_player_button.setDisabled(True)
-            self.new_player_button.setToolTip("The squadron is full.")
+            self.new_player_button.setToolTip(refusal)
         else:
             self.new_player_button.setEnabled(True)
             self.new_player_button.setToolTip(
@@ -533,7 +505,10 @@ class SquadronDialog(QDialog):
         )
         name = name.strip()
         if ok and name:
-            self.squadron_model.create_player_pilot(name)
+            self._command(
+                "Could not add pilot",
+                lambda _: self.squadron_model.create_player_pilot(name),
+            )
             self.reset_new_player_state()
 
     def reset_career_state(self, index: QModelIndex) -> None:
@@ -567,7 +542,10 @@ class SquadronDialog(QDialog):
         if not index.isValid():
             logging.error("Cannot toggle player/AI: no pilot is selected")
             return
-        self.squadron_model.toggle_ai_state(index)
+        self._command(
+            "Could not change pilot",
+            lambda _: self.squadron_model.toggle_ai_state(index),
+        )
         self.reset_career_state(self.pilot_list.currentIndex())
 
     def reset_ai_toggle_state(self, index: QModelIndex) -> None:
@@ -588,7 +566,10 @@ class SquadronDialog(QDialog):
         if not index.isValid():
             logging.error("Cannot toggle on leave state: no pilot is selected")
             return
-        self.squadron_model.toggle_leave_state(index)
+        self._command(
+            "Could not change pilot",
+            lambda _: self.squadron_model.toggle_leave_state(index),
+        )
         self.reset_new_player_state()
 
     def reset_leave_toggle_state(self, index: QModelIndex) -> None:
@@ -620,4 +601,7 @@ class SquadronDialog(QDialog):
         task = self.primary_task_selector.itemData(index)
         if task is None:
             raise RuntimeError("Selected task cannot be None")
-        self.squadron.primary_task = task
+        self._command(
+            "Could not change primary task",
+            lambda _: set_primary_task(self.squadron, task),
+        )

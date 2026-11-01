@@ -1,6 +1,7 @@
 // Screens of the web UI (WEB-00.3). Until a screen is migrated, its route opens
 // the Qt dialog through /qt/* and comes back to the command view; a migrated
 // screen replaces its QtScreen element here (and deletes the Qt dialog, W9).
+import { AirWingScreen } from "../airwing/AirWingScreen";
 import { BaseScreen } from "../bases/BaseScreen";
 import { DebriefScreen } from "../missionresult/DebriefScreen";
 import { WaitingScreen } from "../missionresult/WaitingScreen";
@@ -24,10 +25,9 @@ export const ROUTES: RouteObject[] = [
     children: [
       // The command view is the map itself, always mounted by the shell.
       { index: true, element: null },
-      {
-        path: "air-wing",
-        element: <QtScreen open={(qt) => qt.openDialog("air-wing")} />,
-      },
+      // Squadrons, aircraft and pilots (WEB-03).
+      { path: "air-wing", element: <AirWingScreen /> },
+      { path: "air-wing/:view", element: <AirWingScreen /> },
       {
         // Base screen (WEB-02.1); purchases and transfers still open the Qt
         // base menu from their tabs until WEB-02.2 and WEB-02.3.

@@ -18,16 +18,22 @@ from game.ato.flight import Flight
 from game.ato.flighttype import FlightType
 from game.ato.package import Package
 from game.commands.packages import cancel_or_abort_package
+from game.commands.squadrons import (
+    create_player_pilot,
+    set_auto_assignable,
+    set_pilot_on_leave,
+    set_pilot_player,
+)
 from game.commands.transfers import cancel_transfer
 from game.dcs.beacons import Beacons
 from game.game import Game
+from game.gamelock import game_lock
 from game.radio.RadioFrequencyContainer import RadioFrequencyContainer
 from game.radio.radios import RadioFrequency
 from game.radio.tacan import TacanChannel
 from game.server import EventStream
 from game.sim.gameupdateevents import GameUpdateEvents
 from game.squadrons.squadron import Pilot, Squadron
-from game.squadrons.pilot import PilotStatus
 from game.theater import NavalControlPoint, Player
 from game.theater.missiontarget import MissionTarget
 from game.transfers import (
@@ -558,36 +564,35 @@ class SquadronModel(QAbstractListModel):
     def toggle_ai_state(self, index: QModelIndex) -> None:
         pilot = self.pilot_at_index(index)
         self.beginResetModel()
-        pilot.player = not pilot.player
-        self.endResetModel()
+        try:
+            with game_lock(), EventStream.event_context() as events:
+                set_pilot_player(self.squadron, pilot, not pilot.player, events)
+        finally:
+            self.endResetModel()
 
     def create_player_pilot(self, name: str) -> Pilot:
         self.beginResetModel()
-        pilot = self.squadron.create_player_pilot(name)
-        self.endResetModel()
-        return pilot
+        try:
+            with game_lock():
+                return create_player_pilot(self.squadron, name)
+        finally:
+            self.endResetModel()
 
     def toggle_leave_state(self, index: QModelIndex) -> None:
         pilot = self.pilot_at_index(index)
-        # send_on_leave/return_from_leave only accept Active/OnLeave pilots and
-        # raise otherwise, so downed/recovering/captive pilots are a no-op here.
-        if not (pilot.on_leave or pilot.status is PilotStatus.Active):
-            return
         self.beginResetModel()
-        if pilot.on_leave:
-            self.squadron.return_from_leave(pilot)
-        else:
-            self.squadron.send_on_leave(pilot)
-        self.endResetModel()
+        try:
+            with game_lock():
+                set_pilot_on_leave(self.squadron, pilot, not pilot.on_leave)
+        finally:
+            self.endResetModel()
 
     def is_auto_assignable(self, task: FlightType) -> bool:
         return task in self.squadron.auto_assignable_mission_types
 
     def set_auto_assignable(self, task: FlightType, auto_assignable: bool) -> None:
-        if auto_assignable:
-            self.squadron.auto_assignable_mission_types.add(task)
-        else:
-            self.squadron.auto_assignable_mission_types.remove(task)
+        with game_lock():
+            set_auto_assignable(self.squadron, task, auto_assignable)
 
 
 class GameModel:
