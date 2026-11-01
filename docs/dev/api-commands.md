@@ -141,9 +141,9 @@ A right-click on a target thus plans a package with `POST /packages` and opens
 A base screen tab does not fetch through `GET /control-points/{id}/base` when it
 has its own read model (`/ground-forces`, `/convoys`, `/actions`, WEB-02.3): they all
 provide `Tags.BASE`, so a base event refreshes them together.
-`POST /control-points/{id}/convoys/{destination}/package` opens the package editor on
-a convoy or cargo ship (they have no id of their own, hence the origin, destination
-and `kind`); WEB-04.1 moves it to the web editor with `POST /packages`.
+`POST /control-points/{id}/convoys/{destination}/package` plans a package on a convoy
+or cargo ship and answers its id (they have no id of their own, hence the origin,
+destination and `kind`); the client then opens the package editor.
 
 A command may also hand over to a Qt window that is not migrated yet, through a
 `QtCallbacks` callback emitting a `QLiberationWindow` signal (WEB-05.1 did so for
@@ -158,6 +158,13 @@ decides. Rules a Qt dialog checked when saved move to the command that would bre
 them: an escort cannot come first, the last escorted flight cannot leave. Qt dialogs
 stay in Qt mode and call the same functions (`game/commands/packageflights.py`), which
 `tests/flightplans` (W16) drives against unchanged references.
+
+The Radios & TACAN tab (WEB-04.5, `game/commands/flightradios.py`,
+`game/server/packages/radioroutes.py`) follows the same pattern with its own read model
+(`GET /packages/{id}/flights/{id}/radios`). The warnings of frequencies (guard, double
+booked) are `frequency_warnings` in `game/commands/baseradios.py`, shared with the base
+panel; ICLS and Link 4 belong to the carrier, so the tab shows the base panel of the
+departure and goes through `PUT /control-points/{id}/radios`.
 
 ## 8b. Background work: status + event + commands (WEB-05.1)
 

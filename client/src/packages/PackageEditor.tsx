@@ -27,6 +27,7 @@ import { AddFlightButton } from "./AddFlightForm";
 import { AutoCreateButton } from "./AutoCreateForm";
 import { FlightSections } from "./FlightSections";
 import styles from "./PackageEditor.module.css";
+import { TransportEntry } from "./TransportEntry";
 import { KeyboardEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
@@ -237,6 +238,7 @@ function PackageBody({ pkg }: { pkg: PackageDetail }) {
           {pkg.can_auto_create && <AutoCreateButton packageId={pkg.id} />}
           <AddFlightButton packageId={pkg.id} onAdded={setSelectedId} />
         </div>
+        <TransportEntry pkg={pkg} />
         {pkg.flights.length === 0 ? (
           <p className={styles.hint}>
             No flight yet: add one or auto-create them. An empty package has no

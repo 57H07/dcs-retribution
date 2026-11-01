@@ -23,6 +23,8 @@ from game.commands.packageflights import (
     squadrons_for,
 )
 from game.commands.packages import coalition_of
+from game.commands.transfers import can_plan_transport_mission
+from game.theater.controlpoint import ControlPoint
 from game.utils import meters
 
 if TYPE_CHECKING:
@@ -184,6 +186,8 @@ class PackageDetailJs(BaseModel):
     #: Closest departure base of the flights and its distance to the target.
     closest_base: str | None
     closest_base_distance_nm: int | None
+    #: An empty package on a player base can become a Transport mission from there.
+    transport_origin_id: UUID | None
     flights: list[PackageEditorFlightJs]
 
     class Config:
@@ -215,6 +219,13 @@ class PackageDetailJs(BaseModel):
                 None
                 if closest is None
                 else round(meters(package.target.distance_to(closest)).nautical_miles)
+            ),
+            transport_origin_id=(
+                package.target.id
+                if not package.flights
+                and isinstance(package.target, ControlPoint)
+                and can_plan_transport_mission(package.target)
+                else None
             ),
             flights=[PackageEditorFlightJs.for_editor(f) for f in package.flights],
         )
