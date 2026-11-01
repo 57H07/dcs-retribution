@@ -173,6 +173,7 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     },
     setFrontLineStance: { invalidatesTags: [Tags.BASE] },
     setBaseRadios: { invalidatesTags: [Tags.BASE] },
+    attackDepartingConvoy: { invalidatesTags: PACKAGE_COMMAND_TAGS },
     createTransfer: {
       invalidatesTags: [
         Tags.TRANSFERS,
@@ -241,6 +242,13 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     addPredefinedWaypoint: { invalidatesTags: ROUTE_COMMAND_TAGS },
     setFlightRouteAltitude: { invalidatesTags: ROUTE_COMMAND_TAGS },
     recreateFlightRoute: { invalidatesTags: ROUTE_COMMAND_TAGS },
+    // Radios of a flight (WEB-04.5): the warnings look at every other frequency, those
+    // of the bases too.
+    getFlightRadios: { providesTags: [Tags.PACKAGES, Tags.BASE] },
+    setFlightFrequency: { invalidatesTags: [Tags.PACKAGES, Tags.BASE] },
+    setPackageFrequency: { invalidatesTags: [Tags.PACKAGES, Tags.BASE] },
+    setFlightTacan: { invalidatesTags: [Tags.PACKAGES, Tags.BASE] },
+    setFlightDatalink: { invalidatesTags: [Tags.PACKAGES] },
     // /debug/waypoint-geometries
     getDebugHoldZones: {
       providesTags: (result, error, arg) => [

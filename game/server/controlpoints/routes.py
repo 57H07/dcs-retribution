@@ -30,6 +30,7 @@ from game.commands.groundorders import (
     find_ground_unit_type,
     order_ground_units,
 )
+from game.commands.packages import create_package
 from game.commands.transfers import attackable_transport
 from game.squadrons import Squadron
 from game.theater import ControlPoint
@@ -43,6 +44,7 @@ from .groundforces import (
     FrontLineCheatJs,
     GroundForcesJs,
     GroundOrdersJs,
+    PlannedPackageJs,
     StanceJs,
     TransferOptionsJs,
 )
@@ -336,8 +338,8 @@ def get_departing_convoys(
 @router.post(
     "/{cp_id}/convoys/{destination_id}/package",
     operation_id="attack_departing_convoy",
-    status_code=status.HTTP_204_NO_CONTENT,
-    response_class=Response,
+    status_code=status.HTTP_201_CREATED,
+    response_model=PlannedPackageJs,
     responses=command_error_responses("the convoy is gone, or it is the player's"),
 )
 @locked
@@ -347,14 +349,20 @@ def attack_departing_convoy(
     kind: Literal["convoy", "cargo-ship"] = "convoy",
     game: Game = Depends(GameContext.require),
     qt: Optional[QtCallbacks] = Depends(QtContext.get_optional),
-) -> None:
-    """Opens the package editor on a convoy (the Qt dialog until WEB-04.1)."""
+) -> PlannedPackageJs:
+    """Plans an empty package against a convoy, for the package editor (WEB-04.5).
+
+    A convoy has no id of its own, so it has no `POST /packages` target kind.
+    """
     target = attackable_transport(
         game, _find(game, cp_id), _find(game, destination_id), kind
     )
-    if qt is None:
-        raise CommandError("The package editor is not available.", status_code=503)
-    qt.create_new_package(target)
+    # Here: the package routes import the event stream, which needs this module.
+    from ..packages.routes import _now, _refresh_qt
+
+    package = create_package(game, target, _now(game))
+    _refresh_qt(qt)
+    return PlannedPackageJs(id=package.id)
 
 
 @router.get(

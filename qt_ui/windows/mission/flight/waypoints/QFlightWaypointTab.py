@@ -145,9 +145,10 @@ class QFlightWaypointTab(QFrame):
     def on_delete_waypoint(self):
         waypoints = []
         selection = self.flight_waypoint_list.selectionModel()
-        for selected_row in selection.selectedIndexes():
-            if selected_row.row() > 0:
-                waypoints.append(self.flight.flight_plan.waypoints[selected_row.row()])
+        # One index per selected cell: a whole row counts once.
+        for row in sorted({index.row() for index in selection.selectedIndexes()}):
+            if row > 0:
+                waypoints.append(self.flight.flight_plan.waypoints[row])
         for waypoint in waypoints:
             self.delete_waypoint(waypoint)
         self.on_change()
