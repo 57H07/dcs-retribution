@@ -1,0 +1,121 @@
+/* "Airfield command" tab (WEB-02.2), after mockups/Base.dc.html. */
+.layout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.main {
+  flex: 1 1 560px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hint {
+  margin: 0;
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.mono {
+  font-family: var(--ui-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.over {
+  composes: mono;
+  color: var(--ui-color-hostile);
+}
+
+.pending,
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--ui-space-sm);
+}
+
+.quantity {
+  composes: mono;
+  min-width: 28px;
+  text-align: center;
+}
+
+.create {
+  align-self: flex-start;
+  border-style: dashed;
+}
+
+.incoming {
+  padding: 14px;
+  background: var(--ui-color-bg-panel);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-lg);
+}
+
+.incoming ul {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.title {
+  margin: 0;
+  color: var(--ui-color-text-strong);
+  font-family: var(--ui-font-display);
+  font-size: var(--ui-font-size-md);
+  font-weight: var(--ui-font-weight-bold);
+  letter-spacing: var(--ui-letter-spacing-display);
+  text-transform: uppercase;
+}
+
+.summary {
+  flex: 1 1 240px;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: var(--ui-color-bg-panel);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-lg);
+}
+
+.line,
+.total {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ui-space-md);
+}
+
+.total {
+  color: var(--ui-color-text-strong);
+  font-weight: var(--ui-font-weight-bold);
+}
+
+.separator {
+  border-top: 1px solid var(--ui-color-line);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ui-space-md);
+}

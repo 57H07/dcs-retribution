@@ -77,6 +77,11 @@ const BASE: Base = {
     { title: "CAP", units: [{ name: "MiG-29", count: 10 }] },
     { title: "Front line units", units: [] },
   ],
+  airfield: {
+    squadrons: [],
+    parking_after_delivery: { current: 18, total: 25 },
+    incoming: [],
+  },
 };
 
 const ENEMY: Base = {
@@ -128,7 +133,7 @@ describe("base screen", () => {
       await screen.findByRole("heading", { level: 1, name: "Krymsk" }),
     ).toBeInTheDocument();
     expect(screen.getByText("Airfield · 12 nm from front")).toBeVisible();
-    expect(screen.getByText("$1240M")).toBeVisible();
+    expect(screen.getAllByText("$1240M")[0]).toBeVisible();
     const tabs = screen.getAllByRole("tab").map((t) => t.textContent);
     expect(tabs).toEqual(["Airfield command", "Ground forces HQ"]);
     expect(
@@ -165,8 +170,8 @@ describe("base screen", () => {
     expect(airDefense).toHaveTextContent("SA-15 Krymsk · SHORAD1/2");
   });
 
-  it("hands purchases over to the Qt base menu for now", async () => {
-    const { calls } = renderBase();
+  it("hands ground units over to the Qt base menu for now", async () => {
+    const { calls } = renderBase("/bases/cp-1/ground-forces");
     await userEvent.click(
       await screen.findByRole("button", { name: "Open the base menu" }),
     );

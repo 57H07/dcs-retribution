@@ -1,6 +1,7 @@
 # Retribution v1.6.0
 
 ## Features/Improvements
+* **[UX]** Web base screen: aircraft orders per squadron (-/+, unit cost, owned/max, pending deliveries) with an order summary (total, budget and parking after delivery), cancelling pending orders, and creating a squadron at the base. The server enforces the same budget, parking and squadron size limits as the Qt base menu, which now uses the same rules (WEB-02.2).
 * **[Campaign]** Combat Search & Rescue (CSAR): ejected pilots go down on the map and can be rescued by CSAR helicopter flights (player or AI) before they go missing or are captured. Disabled by default for both sides, including in existing saves; enable it in the campaign settings. (taken over from `upstream#929` by Drexyl)
 * **[Campaign]** CSAR: optional automatic recovery of pilots who come down on land over friendly territory, away from enemy threat zones and front lines (both distances configurable). Off by default.
 * **[Campaign]** CSAR: optional bounty credited to a coalition's budget for each pilot its CSAR flights rescue, shown in the debriefing. Off by default (bounty 0).

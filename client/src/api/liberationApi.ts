@@ -69,6 +69,17 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     orderAllRepairs: {
       invalidatesTags: [Tags.BASE, Tags.INSPECTOR, Tags.TOP_BAR, Tags.REPORTS],
     },
+    // Aircraft orders and new squadrons (WEB-02.2).
+    orderAircraft: {
+      invalidatesTags: [Tags.BASE, Tags.INSPECTOR, Tags.TOP_BAR, Tags.REPORTS],
+    },
+    cancelAircraftOrder: {
+      invalidatesTags: [Tags.BASE, Tags.INSPECTOR, Tags.TOP_BAR, Tags.REPORTS],
+    },
+    getSquadronChoices: { providesTags: [Tags.BASE] },
+    createSquadron: {
+      invalidatesTags: [Tags.BASE, Tags.INSPECTOR, Tags.REPORTS],
+    },
     // /packages/ (WEB-01.2): also refetched on flight events (eventstream.tsx).
     listPackages: { providesTags: [Tags.PACKAGES] },
     deletePackage: { invalidatesTags: [Tags.PACKAGES, Tags.TOP_BAR] },

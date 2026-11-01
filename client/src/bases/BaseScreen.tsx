@@ -1,8 +1,8 @@
 // Base screen (WEB-02.1), after mockups/Base.dc.html: the Qt base menu with its
 // status (runway, parking, depots, air defense) and repairs on the side, and
-// its tabs. The engine decides everything (GET /control-points/{id}/base): which
-// tabs a base has, what can be repaired, at what cost, and whether it is
-// affordable; refusals come back as toasts.
+// its tabs (aircraft orders: AirfieldTab, WEB-02.2). The engine decides everything
+// (GET /control-points/{id}/base): which tabs a base has, what can be repaired, at
+// what cost, and whether it is affordable; refusals come back as toasts.
 import { commandErrorMessage } from "../api/commands";
 import {
   AirDefense,
@@ -30,14 +30,11 @@ import {
   TabsTrigger,
   useToast,
 } from "../ui";
+import { AirfieldTab } from "./AirfieldTab";
 import styles from "./BaseScreen.module.css";
+import { money } from "./money";
 import { ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-
-/** "$100M", "$2.5M": the money figures of the Qt base menu. */
-export function money(millions: number): string {
-  return `$${Number(millions.toFixed(1))}M`;
-}
 
 function turns(count: number): string {
   return count === 1 ? "1 turn" : `${count} turns`;
@@ -160,13 +157,9 @@ function BaseBody({ base, tab }: { base: Base; tab: string | undefined }) {
 }
 
 const PLACEHOLDERS: Record<
-  Exclude<BaseTabId, "intel">,
+  Exclude<BaseTabId, "intel" | "airfield">,
   { title: string; text: string }
 > = {
-  airfield: {
-    title: "Squadrons",
-    text: "Aircraft purchases and new squadrons are not in the web interface yet.",
-  },
   "ground-forces": {
     title: "Ground forces",
     text: "Ground unit purchases and transfers are not in the web interface yet.",
@@ -181,10 +174,13 @@ function TabBody({ tab, base }: { tab: BaseTabId; base: Base }) {
   if (tab === "intel") {
     return <IntelTab groups={base.intel} />;
   }
+  if (tab === "airfield") {
+    return <AirfieldTab base={base} />;
+  }
   return <Placeholder cpId={base.summary.id} {...PLACEHOLDERS[tab]} />;
 }
 
-/** Until WEB-02.2 and WEB-02.3: the Qt base menu does the rest. */
+/** Until WEB-02.3: the Qt base menu does the rest. */
 function Placeholder(props: { cpId: string; title: string; text: string }) {
   const qt = useQtCommands();
   return (

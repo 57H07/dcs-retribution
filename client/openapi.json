@@ -260,6 +260,234 @@
         }
       }
     },
+    "/control-points/{cp_id}/purchases/aircraft": {
+      "post": {
+        "summary": "Order Base Aircraft",
+        "description": "Applies a whole order: negative quantities cancel orders, then sell aircraft.",
+        "operationId": "order_aircraft",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AircraftOrdersJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "not a player base, empty order, or refused by the budget, parking or squadron limits (then nothing is ordered)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control-points/{cp_id}/purchases/aircraft/{squadron_id}": {
+      "delete": {
+        "summary": "Cancel Base Aircraft Order",
+        "description": "Cancels the pending deliveries of a squadron.",
+        "operationId": "cancel_aircraft_order",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          },
+          {
+            "name": "squadron_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Squadron Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "not a player base, nothing pending, or a pending sale that cannot be undone",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control-points/{cp_id}/squadron-choices": {
+      "get": {
+        "summary": "Get Squadron Choices",
+        "description": "What the \"create a squadron\" dialog offers at this base.",
+        "operationId": "get_squadron_choices",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SquadronChoiceJs"
+                  },
+                  "title": "Response Get Squadron Choices"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control-points/{cp_id}/squadrons": {
+      "post": {
+        "summary": "Create Base Squadron",
+        "description": "Adds an empty squadron to the base.",
+        "operationId": "create_squadron",
+        "parameters": [
+          {
+            "name": "cp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cp Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewSquadronJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "not a player base, or an aircraft, task or preset this base does not offer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/control-points/{cp_id}/destination-in-range": {
       "get": {
         "summary": "Destination In Range",
@@ -2684,6 +2912,69 @@
         ],
         "title": "AirDefense"
       },
+      "AircraftOrderLineJs": {
+        "properties": {
+          "squadron_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Squadron Id"
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "squadron_id",
+          "quantity"
+        ],
+        "title": "AircraftOrderLine"
+      },
+      "AircraftOrdersJs": {
+        "properties": {
+          "orders": {
+            "items": {
+              "$ref": "#/components/schemas/AircraftOrderLineJs"
+            },
+            "type": "array",
+            "title": "Orders"
+          }
+        },
+        "type": "object",
+        "required": [
+          "orders"
+        ],
+        "title": "AircraftOrders"
+      },
+      "AirfieldJs": {
+        "properties": {
+          "squadrons": {
+            "items": {
+              "$ref": "#/components/schemas/SquadronOrderRowJs"
+            },
+            "type": "array",
+            "title": "Squadrons"
+          },
+          "parking_after_delivery": {
+            "$ref": "#/components/schemas/CountJs"
+          },
+          "incoming": {
+            "items": {
+              "$ref": "#/components/schemas/IncomingSquadronJs"
+            },
+            "type": "array",
+            "title": "Incoming"
+          }
+        },
+        "type": "object",
+        "required": [
+          "squadrons",
+          "parking_after_delivery",
+          "incoming"
+        ],
+        "title": "Airfield"
+      },
       "BaseForcesJs": {
         "properties": {
           "id": {
@@ -2783,6 +3074,9 @@
             },
             "type": "array",
             "title": "Intel"
+          },
+          "airfield": {
+            "$ref": "#/components/schemas/AirfieldJs"
           }
         },
         "type": "object",
@@ -2794,7 +3088,8 @@
           "repairs",
           "repair_all_cost",
           "repair_all_affordable",
-          "intel"
+          "intel",
+          "airfield"
         ],
         "title": "Base"
       },
@@ -3644,6 +3939,34 @@
         ],
         "title": "IadsNetwork"
       },
+      "IncomingSquadronJs": {
+        "properties": {
+          "squadron": {
+            "type": "string",
+            "title": "Squadron"
+          },
+          "aircraft": {
+            "type": "string",
+            "title": "Aircraft"
+          },
+          "owned": {
+            "type": "integer",
+            "title": "Owned"
+          },
+          "origin": {
+            "type": "string",
+            "title": "Origin"
+          }
+        },
+        "type": "object",
+        "required": [
+          "squadron",
+          "aircraft",
+          "owned",
+          "origin"
+        ],
+        "title": "IncomingSquadron"
+      },
       "InstallPreferencesJs": {
         "properties": {
           "saved_game_dir": {
@@ -4175,6 +4498,35 @@
         "title": "NewPackage",
         "description": "What to plan a package against: opens the package editor on it."
       },
+      "NewSquadronJs": {
+        "properties": {
+          "aircraft": {
+            "type": "string",
+            "title": "Aircraft"
+          },
+          "primary_task": {
+            "type": "string",
+            "title": "Primary Task"
+          },
+          "preset": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preset"
+          }
+        },
+        "type": "object",
+        "required": [
+          "aircraft",
+          "primary_task"
+        ],
+        "title": "NewSquadron"
+      },
       "OfflineBasemapImageJs": {
         "properties": {
           "south_west": {
@@ -4645,6 +4997,111 @@
         ],
         "title": "SimSpeedJs",
         "description": "Mirror of `SimSpeedSetting` (whose values are tuples, unfit for OpenAPI)."
+      },
+      "SquadronChoiceJs": {
+        "properties": {
+          "aircraft": {
+            "type": "string",
+            "title": "Aircraft"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "tasks": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tasks"
+          },
+          "presets": {
+            "items": {
+              "$ref": "#/components/schemas/SquadronPresetJs"
+            },
+            "type": "array",
+            "title": "Presets"
+          }
+        },
+        "type": "object",
+        "required": [
+          "aircraft",
+          "display_name",
+          "tasks",
+          "presets"
+        ],
+        "title": "SquadronChoice"
+      },
+      "SquadronOrderRowJs": {
+        "properties": {
+          "squadron_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Squadron Id"
+          },
+          "squadron": {
+            "type": "string",
+            "title": "Squadron"
+          },
+          "aircraft": {
+            "type": "string",
+            "title": "Aircraft"
+          },
+          "unit_cost": {
+            "type": "number",
+            "title": "Unit Cost"
+          },
+          "owned": {
+            "type": "integer",
+            "title": "Owned"
+          },
+          "max_aircraft": {
+            "title": "Max Aircraft",
+            "type": "integer"
+          },
+          "pending": {
+            "type": "integer",
+            "title": "Pending"
+          },
+          "max_add": {
+            "type": "integer",
+            "title": "Max Add"
+          },
+          "max_remove": {
+            "type": "integer",
+            "title": "Max Remove"
+          }
+        },
+        "type": "object",
+        "required": [
+          "squadron_id",
+          "squadron",
+          "aircraft",
+          "unit_cost",
+          "owned",
+          "pending",
+          "max_add",
+          "max_remove"
+        ],
+        "title": "SquadronOrderRow"
+      },
+      "SquadronPresetJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "label"
+        ],
+        "title": "SquadronPreset"
       },
       "StatsJs": {
         "properties": {
