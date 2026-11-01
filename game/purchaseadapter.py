@@ -1,13 +1,14 @@
-from abc import abstractmethod
-from typing import TypeVar, Generic, Any
+from __future__ import annotations
 
-from game import Game
-from game.coalition import Coalition
-from game.dcs.aircrafttype import AircraftType
-from game.dcs.groundunittype import GroundUnitType
-from game.dcs.unittype import UnitType
-from game.squadrons import Squadron
-from game.theater import ControlPoint, ParkingType
+from abc import abstractmethod
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
+
+if TYPE_CHECKING:
+    from game import Game
+    from game.coalition import Coalition
+    from game.dcs.groundunittype import GroundUnitType
+    from game.dcs.unittype import UnitType
+    from game.theater import ControlPoint
 
 ItemType = TypeVar("ItemType")
 
@@ -87,58 +88,7 @@ class PurchaseAdapter(Generic[ItemType]):
     def unit_type_of(self, item: ItemType) -> UnitType[Any]: ...
 
 
-class AircraftPurchaseAdapter(PurchaseAdapter[Squadron]):
-    def __init__(self, control_point: ControlPoint) -> None:
-        super().__init__(control_point.coalition)
-        self.control_point = control_point
-
-    def pending_delivery_quantity(self, item: Squadron) -> int:
-        return item.pending_deliveries
-
-    def current_quantity_of(self, item: Squadron) -> int:
-        return item.owned_aircraft
-
-    def can_buy(self, item: Squadron) -> bool:
-        parking_type = ParkingType().from_squadron(item)
-        unclaimed_parking = self.control_point.unclaimed_parking(parking_type)
-        return (
-            super().can_buy(item)
-            and unclaimed_parking > 0
-            and item.has_aircraft_capacity_for(1)
-        )
-
-    def can_sell(self, item: Squadron) -> bool:
-        return item.untasked_aircraft > 0
-
-    def do_purchase(self, item: Squadron) -> None:
-        item.pending_deliveries += 1
-
-    def do_cancel_purchase(self, item: Squadron) -> None:
-        item.pending_deliveries -= 1
-
-    def do_sale(self, item: Squadron) -> None:
-        item.untasked_aircraft -= 1
-        item.pending_deliveries -= 1
-
-    def do_cancel_sale(self, item: Squadron) -> None:
-        item.untasked_aircraft += 1
-        item.pending_deliveries += 1
-
-    def price_of(self, item: Squadron) -> int:
-        return item.aircraft.price
-
-    def name_of(self, item: Squadron, multiline: bool = False) -> str:
-        if multiline:
-            separator = "<br />"
-        else:
-            separator = " "
-        return separator.join([item.aircraft.display_name, str(item)])
-
-    def unit_type_of(self, item: Squadron) -> AircraftType:
-        return item.aircraft
-
-
-class GroundUnitPurchaseAdapter(PurchaseAdapter[GroundUnitType]):
+class GroundUnitPurchaseAdapter(PurchaseAdapter["GroundUnitType"]):
     def __init__(
         self, control_point: ControlPoint, coalition: Coalition, game: Game
     ) -> None:

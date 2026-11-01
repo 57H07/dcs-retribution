@@ -8,6 +8,18 @@ allowed, which the server turns into a 4xx response (see `game/server/app.py`).
 Callers hold the global game lock (`game.gamelock`) while running a command.
 """
 
+from .aircraftorders import (
+    AircraftOrder,
+    AircraftPurchaseAdapter,
+    SquadronChoice,
+    cancel_aircraft_orders,
+    change_aircraft_order,
+    create_squadron,
+    max_aircraft_to_add,
+    max_aircraft_to_remove,
+    order_aircraft,
+    squadron_choices,
+)
 from .errors import CommandError
 from .mission import (
     MissionSim,
@@ -37,6 +49,8 @@ from .sim import SpeedControlledSim, set_sim_speed
 from .turn import skip_turn
 
 __all__ = [
+    "AircraftOrder",
+    "AircraftPurchaseAdapter",
     "CommandError",
     "RUNWAY_REPAIR_ID",
     "Repair",
@@ -46,17 +60,25 @@ __all__ = [
     "MissionSim",
     "ResultSim",
     "SpeedControlledSim",
+    "SquadronChoice",
     "abort_mission",
     "accept_results",
     "base_repairs",
+    "cancel_aircraft_orders",
+    "change_aircraft_order",
+    "create_squadron",
     "fix_past_tots",
     "fix_tots",
     "flights_missing_pilots",
     "generate_mission",
+    "max_aircraft_to_add",
+    "max_aircraft_to_remove",
     "max_player_count",
+    "order_aircraft",
     "order_all_repairs",
     "order_repair",
     "packages_starting_in_the_past",
     "set_sim_speed",
     "skip_turn",
+    "squadron_choices",
 ]

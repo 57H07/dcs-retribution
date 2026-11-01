@@ -7,9 +7,19 @@ from fastapi import APIRouter, Body, Depends, HTTPException, status
 from starlette.responses import Response
 
 from game import Game
-from game.commands import order_all_repairs, order_repair
+from game.commands import (
+    AircraftOrder,
+    cancel_aircraft_orders,
+    create_squadron,
+    order_aircraft,
+    order_all_repairs,
+    order_repair,
+    squadron_choices,
+)
+from game.squadrons import Squadron
 from game.theater import ControlPoint
 from game.theater.player import Player
+from .aircraftorders import AircraftOrdersJs, NewSquadronJs, SquadronChoiceJs
 from .base import BaseJs
 from .models import ControlPointJs
 from .summary import ControlPointSummaryJs
@@ -121,6 +131,101 @@ def order_all_base_repairs(
 
     with EventStream.event_context() as events:
         order_all_repairs(game, cp, events)
+    return BaseJs.for_control_point(game, cp)
+
+
+def _stationed_squadron(cp: ControlPoint, squadron_id: UUID) -> Squadron:
+    for squadron in cp.squadrons:
+        if squadron.id == squadron_id:
+            return squadron
+    raise HTTPException(
+        status.HTTP_404_NOT_FOUND,
+        detail=f"{cp.name} has no squadron with ID {squadron_id}",
+    )
+
+
+@router.post(
+    "/{cp_id}/purchases/aircraft",
+    operation_id="order_aircraft",
+    response_model=BaseJs,
+    responses=command_error_responses(
+        "not a player base, empty order, or refused by the budget, parking or "
+        "squadron limits (then nothing is ordered)"
+    ),
+)
+@locked
+def order_base_aircraft(
+    cp_id: UUID, body: AircraftOrdersJs, game: Game = Depends(GameContext.require)
+) -> BaseJs:
+    """Applies a whole order: negative quantities cancel orders, then sell aircraft."""
+    cp = _find(game, cp_id)
+    orders = [
+        AircraftOrder(_stationed_squadron(cp, line.squadron_id), line.quantity)
+        for line in body.orders
+    ]
+    from .. import EventStream
+
+    with EventStream.event_context() as events:
+        order_aircraft(cp, orders, events)
+    return BaseJs.for_control_point(game, cp)
+
+
+@router.delete(
+    "/{cp_id}/purchases/aircraft/{squadron_id}",
+    operation_id="cancel_aircraft_order",
+    response_model=BaseJs,
+    responses=command_error_responses(
+        "not a player base, nothing pending, or a pending sale that cannot be undone"
+    ),
+)
+@locked
+def cancel_base_aircraft_order(
+    cp_id: UUID, squadron_id: UUID, game: Game = Depends(GameContext.require)
+) -> BaseJs:
+    """Cancels the pending deliveries of a squadron."""
+    cp = _find(game, cp_id)
+    squadron = _stationed_squadron(cp, squadron_id)
+    from .. import EventStream
+
+    with EventStream.event_context() as events:
+        cancel_aircraft_orders(cp, squadron, events)
+    return BaseJs.for_control_point(game, cp)
+
+
+@router.get(
+    "/{cp_id}/squadron-choices",
+    operation_id="get_squadron_choices",
+    response_model=list[SquadronChoiceJs],
+)
+@locked
+def get_squadron_choices(
+    cp_id: UUID, game: Game = Depends(GameContext.require)
+) -> list[SquadronChoiceJs]:
+    """What the "create a squadron" dialog offers at this base."""
+    return [
+        SquadronChoiceJs.from_choice(choice)
+        for choice in squadron_choices(_find(game, cp_id))
+    ]
+
+
+@router.post(
+    "/{cp_id}/squadrons",
+    operation_id="create_squadron",
+    response_model=BaseJs,
+    responses=command_error_responses(
+        "not a player base, or an aircraft, task or preset this base does not offer"
+    ),
+)
+@locked
+def create_base_squadron(
+    cp_id: UUID, body: NewSquadronJs, game: Game = Depends(GameContext.require)
+) -> BaseJs:
+    """Adds an empty squadron to the base."""
+    cp = _find(game, cp_id)
+    from .. import EventStream
+
+    with EventStream.event_context() as events:
+        create_squadron(game, cp, body.aircraft, body.primary_task, body.preset, events)
     return BaseJs.for_control_point(game, cp)
 
 

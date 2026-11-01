@@ -6,13 +6,20 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
     QLabel,
+    QMessageBox,
     QScrollArea,
     QVBoxLayout,
     QWidget,
 )
 
 from game.dcs.aircrafttype import AircraftType
-from game.purchaseadapter import AircraftPurchaseAdapter
+from game.commands import (
+    AircraftPurchaseAdapter,
+    CommandError,
+    change_aircraft_order,
+)
+from game.gamelock import game_lock
+from game.server import EventStream
 from game.squadrons import Squadron
 from game.theater import ControlPoint, ParkingType
 from qt_ui.models import GameModel
@@ -89,6 +96,24 @@ class QAircraftRecruitmentMenu(UnitTransactionFrame[Squadron]):
                 "Can not be sold because either no aircraft are available or are "
                 "already assigned to a mission."
             )
+
+    def _change_order(self, item: Squadron, quantity: int, failure: str) -> None:
+        # Same rules as the web base screen (WEB-02.2).
+        try:
+            with game_lock(), EventStream.event_context() as events:
+                change_aircraft_order(self.cp, item, quantity, events)
+        except CommandError as ex:
+            QMessageBox.warning(
+                self, failure, ex.message, QMessageBox.StandardButton.Ok
+            )
+        finally:
+            self.post_transaction_update()
+
+    def buy(self, item: Squadron, quantity: int) -> None:
+        self._change_order(item, quantity, "Purchase failed")
+
+    def sell(self, item: Squadron, quantity: int) -> None:
+        self._change_order(item, -quantity, "Sale failed")
 
     def post_transaction_update(self) -> None:
         super().post_transaction_update()

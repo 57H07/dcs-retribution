@@ -87,7 +87,24 @@ class _Squadron:
     def __init__(self, in_maintenance: int, cost: int) -> None:
         self.id = uuid4()
         self.name = "40th TAB"
-        self.aircraft = SimpleNamespace(display_name="MiG-29")
+        self.aircraft = SimpleNamespace(
+            display_name="MiG-29",
+            price=25,
+            helicopter=False,
+            lha_capable=False,
+            flyable=True,
+        )
+        self.settings = SimpleNamespace(enable_squadron_aircraft_limits=True)
+        self.owned_aircraft = 2
+        self.pending_deliveries = 0
+        self.untasked_aircraft = 2
+        self.max_size = 12
+        self.destination = None
+        self.coalition = SimpleNamespace(
+            game=SimpleNamespace(
+                settings=SimpleNamespace(ground_start_ai_planes=False)
+            )
+        )
         self.aircraft_in_maintenance = in_maintenance
         self.maintenance_summary = [(1, 1), (in_maintenance - 1, 2)]
         self.expedited_repair_cost = cost
@@ -120,7 +137,11 @@ class _Cp:
         self.can_deploy_ground_units = True
         self.base = SimpleNamespace(total_armor=2, armor={_Type("T-72"): 2})
         self._aircraft = SimpleNamespace(
-            total_present=10, present={_Type("MiG-29", "CAP"): 10}
+            total=10, total_present=10, present={_Type("MiG-29", "CAP"): 10}
+        )
+        self.coalition = SimpleNamespace(
+            budget=0.0,
+            air_wing=SimpleNamespace(iter_squadrons=lambda: iter(self.squadrons)),
         )
         self.frontline_unit_count_limit = 24
         self.active_ammo_depots_count = 1
@@ -143,6 +164,9 @@ class _Cp:
 
     def allocated_aircraft(self, _type: Any) -> Any:
         return self._aircraft
+
+    def unclaimed_parking(self, _type: Any) -> int:
+        return 15
 
     def can_recruit_ground_units(self, _game: Any) -> bool:
         return True

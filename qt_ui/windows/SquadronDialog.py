@@ -21,7 +21,12 @@ from PySide6.QtWidgets import (
 from game.ato.flightplans.custom import CustomFlightPlan
 from game.ato.flighttype import FlightType
 from game.ato.flightwaypointtype import FlightWaypointType
-from game.purchaseadapter import AircraftPurchaseAdapter, TransactionError
+from game.commands import (
+    AircraftPurchaseAdapter,
+    CommandError,
+    change_aircraft_order,
+)
+from game.gamelock import game_lock
 from game.server import EventStream
 from game.sim import GameUpdateEvents
 from game.squadrons import Pilot, Squadron
@@ -436,29 +441,26 @@ class SquadronDialog(QDialog):
         self._refresh_aircraft_controls()
         GameUpdateSignal.get_instance().updateBudget(self.ato_model.game)
 
-    def buy_aircraft(self) -> None:
+    def _change_order(self, quantity: int, failure: str) -> None:
+        # Same rules as the web base screen (WEB-02.2).
         try:
-            self.purchase_adapter.buy(self.squadron, self._purchase_amount())
-        except TransactionError as ex:
-            logging.exception("Aircraft purchase failed")
+            with game_lock(), EventStream.event_context() as events:
+                change_aircraft_order(
+                    self.squadron.location, self.squadron, quantity, events
+                )
+        except CommandError as ex:
             QMessageBox.warning(
-                self, "Purchase failed", str(ex), QMessageBox.StandardButton.Ok
+                self, failure, ex.message, QMessageBox.StandardButton.Ok
             )
         finally:
             self._refresh_aircraft_controls()
             GameUpdateSignal.get_instance().updateBudget(self.ato_model.game)
 
+    def buy_aircraft(self) -> None:
+        self._change_order(self._purchase_amount(), "Purchase failed")
+
     def sell_aircraft(self) -> None:
-        try:
-            self.purchase_adapter.sell(self.squadron, self._purchase_amount())
-        except TransactionError as ex:
-            logging.exception("Aircraft sale failed")
-            QMessageBox.warning(
-                self, "Sale failed", str(ex), QMessageBox.StandardButton.Ok
-            )
-        finally:
-            self._refresh_aircraft_controls()
-            GameUpdateSignal.get_instance().updateBudget(self.ato_model.game)
+        self._change_order(-self._purchase_amount(), "Sale failed")
 
     def _instant_relocate(self, destination: ControlPoint) -> None:
         self.squadron.relocate_to(destination)
