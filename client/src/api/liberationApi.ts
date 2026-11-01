@@ -14,6 +14,7 @@ export enum Tags {
   REPORTS = "Reports",
   PACKAGES = "Packages",
   TRANSFERS = "Transfers",
+  BASE = "Base",
 }
 
 const LIST_ID = "LIST";
@@ -61,6 +62,14 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     // Map inspector (WEB-01.3): refetched after game changes (eventstream).
     getControlPointSummary: { providesTags: [Tags.INSPECTOR] },
     getTgoSummary: { providesTags: [Tags.INSPECTOR] },
+    // Base screen (WEB-02.1): refetched with the inspector (eventstream).
+    getBase: { providesTags: [Tags.BASE] },
+    orderRepair: {
+      invalidatesTags: [Tags.BASE, Tags.INSPECTOR, Tags.TOP_BAR, Tags.REPORTS],
+    },
+    orderAllRepairs: {
+      invalidatesTags: [Tags.BASE, Tags.INSPECTOR, Tags.TOP_BAR, Tags.REPORTS],
+    },
     // /packages/ (WEB-01.2): also refetched on flight events (eventstream.tsx).
     listPackages: { providesTags: [Tags.PACKAGES] },
     deletePackage: { invalidatesTags: [Tags.PACKAGES, Tags.TOP_BAR] },
@@ -98,6 +107,7 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     cancelTransfer: {
       invalidatesTags: [
         Tags.TRANSFERS,
+        Tags.BASE,
         Tags.PACKAGES,
         Tags.INSPECTOR,
         Tags.REPORTS,

@@ -21,6 +21,24 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/control-points/${queryArg.cpId}/summary`,
       }),
     }),
+    getBase: build.query<GetBaseApiResponse, GetBaseApiArg>({
+      query: (queryArg) => ({ url: `/control-points/${queryArg.cpId}/base` }),
+    }),
+    orderRepair: build.mutation<OrderRepairApiResponse, OrderRepairApiArg>({
+      query: (queryArg) => ({
+        url: `/control-points/${queryArg.cpId}/repairs/${queryArg.repairId}`,
+        method: "POST",
+      }),
+    }),
+    orderAllRepairs: build.mutation<
+      OrderAllRepairsApiResponse,
+      OrderAllRepairsApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/control-points/${queryArg.cpId}/repair-all`,
+        method: "POST",
+      }),
+    }),
     controlPointDestinationInRange: build.query<
       ControlPointDestinationInRangeApiResponse,
       ControlPointDestinationInRangeApiArg
@@ -538,6 +556,20 @@ export type GetControlPointSummaryApiResponse =
 export type GetControlPointSummaryApiArg = {
   cpId: string;
 };
+export type GetBaseApiResponse = /** status 200 Successful Response */ Base;
+export type GetBaseApiArg = {
+  cpId: string;
+};
+export type OrderRepairApiResponse = /** status 200 Successful Response */ Base;
+export type OrderRepairApiArg = {
+  cpId: string;
+  repairId: string;
+};
+export type OrderAllRepairsApiResponse =
+  /** status 200 Successful Response */ Base;
+export type OrderAllRepairsApiArg = {
+  cpId: string;
+};
 export type ControlPointDestinationInRangeApiResponse =
   /** status 200 Successful Response */ boolean;
 export type ControlPointDestinationInRangeApiArg = {
@@ -831,8 +863,9 @@ export type GetLogsApiArg = {
 };
 export type GetAboutApiResponse = /** status 200 Successful Response */ AboutJs;
 export type GetAboutApiArg = void;
-export type ListCareersApiResponse =
-  /** status 200 Successful Response */ CareerJs[] | null;
+export type ListCareersApiResponse = /** status 200 Successful Response */
+  | CareerJs[]
+  | null;
 export type ListCareersApiArg = void;
 export type GetNotesApiResponse =
   /** status 200 Successful Response */ NotesJs | null;
@@ -841,8 +874,9 @@ export type SetNotesApiResponse = /** status 200 Successful Response */ NotesJs;
 export type SetNotesApiArg = {
   notesJs: NotesJs;
 };
-export type ListInformationsApiResponse =
-  /** status 200 Successful Response */ InformationJs[] | null;
+export type ListInformationsApiResponse = /** status 200 Successful Response */
+  | InformationJs[]
+  | null;
 export type ListInformationsApiArg = void;
 export type ImportLayoutsApiResponse =
   /** status 200 Successful Response */ LayoutImportJs;
@@ -850,8 +884,9 @@ export type ImportLayoutsApiArg = void;
 export type GeneratePretenseCampaignApiResponse =
   /** status 200 Successful Response */ PretenseCampaignJs;
 export type GeneratePretenseCampaignApiArg = void;
-export type ListTransfersApiResponse =
-  /** status 200 Successful Response */ TransferJs[] | null;
+export type ListTransfersApiResponse = /** status 200 Successful Response */
+  | TransferJs[]
+  | null;
 export type ListTransfersApiArg = void;
 export type CancelTransferApiResponse =
   /** status 204 Successful Response */ void;
@@ -905,6 +940,47 @@ export type ControlPointSummary = {
   can_repair_runway: boolean;
   can_afford_runway_repair: boolean;
   runway_repair_cost: number;
+};
+export type BaseTab = {
+  id: "airfield" | "ground-forces" | "intel" | "convoys";
+  label: string;
+};
+export type AirDefense = {
+  id: string;
+  name: string;
+  category: string;
+  units: Count;
+  operational: boolean;
+};
+export type Repair = {
+  id: string;
+  kind: "runway" | "buildings" | "aircraft";
+  label: string;
+  cost: number;
+  turns: number;
+  in_progress: boolean;
+  affordable: boolean;
+};
+export type UnitCountJs = {
+  name: string;
+  count: number;
+};
+export type IntelGroup = {
+  title: string;
+  units: UnitCountJs[];
+};
+export type Base = {
+  summary: ControlPointSummary;
+  budget: number;
+  tabs: BaseTab[];
+  air_defenses: AirDefense[];
+  repairs: Repair[];
+  repair_all_cost: number;
+  repair_all_affordable: boolean;
+  intel: IntelGroup[];
+};
+export type CommandError = {
+  detail: string;
 };
 export type HoldZones = {
   homeBubble: LatLng[][];
@@ -1106,9 +1182,6 @@ export type Turn = {
   turn: number;
   campaign_state: CampaignStateJs;
 };
-export type CommandError = {
-  detail: string;
-};
 export type MissionChecks = {
   has_player_pilots: boolean;
   flights_missing_pilots: string[];
@@ -1252,10 +1325,6 @@ export type InstallPreferencesUpdate = {
   allow_empty_install_dir?: boolean;
 };
 export type QtDialog = "air-wing" | "debriefing";
-export type UnitCountJs = {
-  name: string;
-  count: number;
-};
 export type BaseForcesJs = {
   id: string;
   name: string;
@@ -1409,6 +1478,9 @@ export const {
   useListControlPointsQuery,
   useGetControlPointByIdQuery,
   useGetControlPointSummaryQuery,
+  useGetBaseQuery,
+  useOrderRepairMutation,
+  useOrderAllRepairsMutation,
   useControlPointDestinationInRangeQuery,
   useSetControlPointDestinationMutation,
   useClearControlPointDestinationMutation,

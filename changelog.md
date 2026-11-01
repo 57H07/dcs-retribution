@@ -1,6 +1,7 @@
 # Retribution v1.6.0
 
 ## Features/Improvements
+* **[UX]** Web UI: pending transfers, notes, info panel, pilot careers, logs and About are web screens; Import layouts and Generate a Pretense campaign run from the Tools menu without a Qt dialog (WEB-08.2).
 * **[Campaign]** Combat Search & Rescue (CSAR): ejected pilots go down on the map and can be rescued by CSAR helicopter flights (player or AI) before they go missing or are captured. Disabled by default for both sides, including in existing saves; enable it in the campaign settings. (taken over from `upstream#929` by Drexyl)
 * **[Campaign]** CSAR: optional automatic recovery of pilots who come down on land over friendly territory, away from enemy threat zones and front lines (both distances configurable). Off by default.
 * **[Campaign]** CSAR: optional bounty credited to a coalition's budget for each pilot its CSAR flights rescue, shown in the debriefing. Off by default (bounty 0).
@@ -84,6 +85,7 @@
 * **[UI]** Web Preferences screen and first start (full-window web interface): DCS Saved Games and installation folders (with a native folder picker), custom payloads, setup on every start, server port and web interface option, validated by the server as in the Qt window and saved to the same preferences file, with no campaign needed. The web first start replaces the Qt first start window when the web interface is on. (WEB-07.2)
 * **[UI]** Web interface: a Reports screen with Intel (aircraft and ground units by base and type), Stats (force counts per turn, with charts) and Finances (balance, income by base and building) tabs, each with an "Enemy info" switch where the Qt windows had one; the Stats menu and the top bar budget and force balance open its tabs. The Qt Info panel stays reachable from the Campaign menu. (WEB-08.1)
 * **[UI]** Web interface packages panel: friendly and enemy ATO tabs, a filter and package cards (task, target, TOT, flights, missing pilots) whose selection follows the map both ways; packages are deleted with `DELETE /packages/{id}` and listed with `GET /packages` under a stable id kept in saves (old saves get one on load). The Qt ATO window is no longer opened in web mode. (WEB-01.2)
+* **[UI]** Web interface base screen (`/bases/:id`): base status (runway, parking, depots, air defense), the Qt base menu tabs (Intel listed; aircraft, ground units and convoys still open the Qt base menu), and repairs with cost and delay: runway, destroyed buildings of the base and, with paid accelerated aircraft repair, aircraft in maintenance, one by one or all at once. The server enforces the budget and shows refusals as notifications; the Qt runway repair button uses the same command. (WEB-02.1)
 
 ## Fixes
 * **[CSAR]** Helicopters that DCS does not allow to fly Transport (SA342 Gazelles, AH-64, AH-1W, Ka-50) are no longer CSAR-capable; assigning one used to abort mission generation.

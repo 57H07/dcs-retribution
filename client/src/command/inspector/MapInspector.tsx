@@ -1,7 +1,6 @@
 // Contextual inspector of the command view (WEB-01.3, W12): a floating card
 // over the top-right of the map for the base or ground object clicked on the
-// map. Its actions open the base screen (/bases/:id), which is still the Qt
-// base menu until WEB-02 migrates it.
+// map. Its actions open the base screen (/bases/:id, WEB-02.1).
 import { commandErrorMessage } from "../../api/commands";
 import {
   ControlPointSummary,
@@ -213,7 +212,11 @@ function ControlPointInspector(props: { id: string; onClose: () => void }) {
   );
 }
 
-function ControlPointGauges({ summary }: { summary: ControlPointSummary }) {
+export function ControlPointGauges({
+  summary,
+}: {
+  summary: ControlPointSummary;
+}) {
   const tone: GaugeTone = summary.blue ? "friendly" : "hostile";
   return (
     <div className={styles.gauges}>
