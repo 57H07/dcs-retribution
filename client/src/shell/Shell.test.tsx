@@ -81,10 +81,36 @@ describe("app bar", () => {
     renderShell();
     await userEvent.click(screen.getByRole("button", { name: "Campaign" }));
     await userEvent.click(
-      await screen.findByRole("menuitem", { name: "Notes" }),
+      await screen.findByRole("menuitem", { name: "Air Wing" }),
     );
     await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0].path).toBe("/qt/dialogs/notes");
+    expect(calls[0].path).toBe("/qt/dialogs/air-wing");
+  });
+
+  it("opens the web Notes screen from the Campaign menu, without Qt", async () => {
+    const calls = recordFetch();
+    const { router } = renderShell();
+    await userEvent.click(screen.getByRole("button", { name: "Campaign" }));
+    await userEvent.click(
+      await screen.findByRole("menuitem", { name: "Notes" }),
+    );
+    expect(router.state.location.pathname).toBe("/notes");
+    expect(calls).toHaveLength(0);
+  });
+
+  it("imports layouts with the API command from the Tools menu", async () => {
+    const calls = recordFetch(200, { count: 12 });
+    renderShell();
+    await userEvent.click(screen.getByRole("button", { name: "Tools" }));
+    await userEvent.click(
+      await screen.findByRole("menuitem", { name: "Import layouts" }),
+    );
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]).toMatchObject({
+      method: "POST",
+      path: "/tools/import-layouts",
+    });
+    expect(await screen.findByText("Layouts imported")).toBeInTheDocument();
   });
 
   it("opens the web Preferences screen from the File menu", async () => {
@@ -128,9 +154,14 @@ describe("app bar", () => {
     const dialogs: string[] = [];
     const links: string[] = [];
     const paths: string[] = [];
+    const tools: string[] = [];
     let help = 0;
     let newPackage = 0;
     const menus = appMenus({
+      tools: {
+        importLayouts: () => tools.push("import-layouts"),
+        generatePretenseCampaign: () => tools.push("pretense-campaign"),
+      },
       qt: {
         openDialog: (d) => dialogs.push(d),
         openLink: (l) => links.push(l),
@@ -151,19 +182,10 @@ describe("app bar", () => {
     }
     // Qt File / Developer tools / Help menus, toolbars and QTopPanel buttons.
     expect(new Set(dialogs)).toEqual(
-      new Set([
-        "open-game",
-        "save-game",
-        "save-game-as",
-        "quit",
-        "transfers",
-        "notes",
-        "info-panel",
-        "pretense-campaign",
-        "import-layouts",
-        "logs",
-        "about",
-      ]),
+      new Set(["open-game", "save-game", "save-game-as", "quit"]),
+    );
+    expect(new Set(tools)).toEqual(
+      new Set(["pretense-campaign", "import-layouts"]),
     );
     expect(new Set(links)).toEqual(
       new Set([
@@ -186,6 +208,12 @@ describe("app bar", () => {
         "/reports",
         "/reports/stats",
         "/debrief",
+        "/transfers",
+        "/notes",
+        "/info",
+        "/career",
+        "/logs",
+        "/about",
       ]),
     );
     expect(help).toBe(1);

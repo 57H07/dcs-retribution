@@ -48,6 +48,7 @@ from typing import (
     TYPE_CHECKING,
     TypeVar,
 )
+from uuid import UUID, uuid4
 
 from dcs.mapping import Point
 
@@ -121,6 +122,15 @@ class TransferOrder:
     #: Deleting its flight cancels the transfer instead of leaving it to the AI. The
     #: class-level default keeps older saves loadable.
     player_requested: bool = field(default=False)
+
+    #: Stable API id (WEB-08.2), persisted in the save unlike the list index. Not
+    #: compared, so equality keeps meaning "same order".
+    id: UUID = field(default_factory=uuid4, init=False, compare=False)
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        # Save compat: transfers saved before WEB-08.2 had no id.
+        state.setdefault("id", uuid4())
+        self.__dict__.update(state)
 
     def __str__(self) -> str:
         """Returns the text that should be displayed for the transfer."""

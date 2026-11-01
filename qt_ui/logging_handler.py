@@ -1,38 +1,5 @@
-import logging
-import typing
+# The handler moved to game.applog (WEB-08.2) so that the server can read the log;
+# this name stays for custom resources/logging.yaml files that reference it.
+from game.applog import HookableInMemoryHandler
 
-LogHook = typing.Callable[[str], None]
-
-
-class HookableInMemoryHandler(logging.Handler):
-    """Hookable in-memory logging handler for logs window"""
-
-    _log: str
-    _hook: typing.Optional[typing.Callable[[str], None]]
-
-    def __init__(self, *args, **kwargs):
-        super(HookableInMemoryHandler, self).__init__(*args, **kwargs)
-        self._log = ""
-        self._hook = None
-
-    @property
-    def log(self) -> str:
-        return self._log
-
-    def emit(self, record):
-        msg = self.format(record)
-        self._log += msg + "\n"
-        if self._hook is not None:
-            self._hook(msg)
-
-    def write(self, m):
-        pass
-
-    def clearLog(self) -> None:
-        self._log = ""
-
-    def setHook(self, hook: typing.Callable[[str], None]) -> None:
-        self._hook = hook
-
-    def clearHook(self) -> None:
-        self._hook = None
+__all__ = ["HookableInMemoryHandler"]

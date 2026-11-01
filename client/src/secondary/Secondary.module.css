@@ -1,0 +1,192 @@
+/* Secondary screens (WEB-08.2): transfers, notes, info panel, career, logs and
+   about. The frame is the settings screen's; cards and tables follow the
+   reports screen. */
+.body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 20px 28px;
+  overflow-y: auto;
+}
+
+.body > * {
+  max-width: 1100px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-md);
+  margin-left: auto;
+}
+
+.state {
+  margin: 0;
+  color: var(--ui-color-text-secondary);
+}
+
+.help {
+  margin: 0;
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-lg);
+  padding: 14px 16px;
+  background: var(--ui-color-bg-card);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-md);
+}
+
+.cardMain {
+  flex: 1;
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-xs);
+}
+
+.cardTitle {
+  margin: 0;
+  color: var(--ui-color-text-strong);
+  font-family: var(--ui-font-display);
+  font-size: var(--ui-font-size-lg);
+  font-weight: var(--ui-font-weight-semibold);
+  letter-spacing: var(--ui-letter-spacing-display);
+}
+
+.cardDetail {
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.mono {
+  font-family: var(--ui-font-mono);
+}
+
+.count {
+  color: var(--ui-color-accent);
+  font-family: var(--ui-font-mono);
+}
+
+.textarea {
+  flex: 1;
+  min-height: 320px;
+  padding: 12px 14px;
+  resize: vertical;
+  background: var(--ui-color-bg-card);
+  color: var(--ui-color-text-primary);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-md);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-font-size-md);
+  line-height: 1.5;
+}
+
+.textarea:focus-visible {
+  outline: none;
+  border-color: var(--ui-color-accent);
+  box-shadow: var(--ui-shadow-focus);
+}
+
+.console {
+  flex: 1;
+  min-height: 0;
+  max-width: none;
+  margin: 0;
+  padding: 12px 14px;
+  overflow: auto;
+  background: var(--ui-color-bg-card);
+  color: var(--ui-color-text-primary);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-md);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-font-size-sm);
+  line-height: 1.45;
+  white-space: pre;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-md);
+}
+
+.sectionTitle {
+  margin: 0;
+  color: var(--ui-color-text-strong);
+  font-family: var(--ui-font-display);
+  font-size: var(--ui-font-size-lg);
+  font-weight: var(--ui-font-weight-semibold);
+  letter-spacing: var(--ui-letter-spacing-display);
+  text-transform: uppercase;
+}
+
+.totals {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--ui-space-md);
+  margin: 0;
+}
+
+.total {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  background: var(--ui-color-bg-card);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-md);
+}
+
+.total dt {
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.total dd {
+  margin: 0;
+  color: var(--ui-color-text-strong);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-font-size-xl);
+}
+
+.select {
+  min-height: var(--ui-size-control);
+  padding: 0 var(--ui-space-md);
+  background: var(--ui-color-bg-card);
+  color: var(--ui-color-text-primary);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-sm);
+  font: inherit;
+}
+
+.select:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-shadow-focus);
+}
+
+.prose {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.link {
+  color: var(--ui-color-accent);
+  overflow-wrap: anywhere;
+}

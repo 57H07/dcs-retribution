@@ -2,6 +2,7 @@
 // campaign state of QTopPanel, the campaign screens and every action of the Qt
 // menus and toolbars. The turn buttons sit at the bottom right of the map.
 import { CampaignStatus } from "../command/CampaignStatus";
+import { ToolCommands, useToolCommands } from "../secondary/useToolCommands";
 import { Button, IconButton, Menu, MenuEntry } from "../ui";
 import styles from "./AppBar.module.css";
 import { PATHS } from "./paths";
@@ -15,6 +16,7 @@ export interface AppBarProps {
 
 interface MenuContext {
   qt: QtCommands;
+  tools: ToolCommands;
   navigate: (path: string) => void;
   onNewPackage: () => void;
   onShowHelp: () => void;
@@ -23,6 +25,7 @@ interface MenuContext {
 /** The app bar menus, as data so that tests can check nothing is missing. */
 export function appMenus({
   qt,
+  tools,
   navigate,
   onNewPackage,
   onShowHelp,
@@ -50,14 +53,15 @@ export function appMenus({
       label: "Campaign",
       items: [
         { label: "Air Wing", onSelect: () => navigate(PATHS.airWing) },
-        { label: "Transfers", onSelect: () => qt.openDialog("transfers") },
+        { label: "Transfers", onSelect: () => navigate(PATHS.transfers) },
         { label: "New package", shortcut: "N", onSelect: onNewPackage },
         "separator",
         { label: "Settings", onSelect: () => navigate(PATHS.settings) },
         { label: "Stats", onSelect: () => navigate(PATHS.reportTab("stats")) },
-        { label: "Notes", onSelect: () => qt.openDialog("notes") },
+        { label: "Notes", onSelect: () => navigate(PATHS.notes) },
         { label: "Reports", onSelect: () => navigate(PATHS.reports) },
-        { label: "Info panel", onSelect: () => qt.openDialog("info-panel") },
+        { label: "Info panel", onSelect: () => navigate(PATHS.info) },
+        { label: "Pilot career", onSelect: () => navigate(PATHS.career) },
         { label: "Last debriefing", onSelect: () => navigate(PATHS.debrief) },
       ],
     },
@@ -66,11 +70,11 @@ export function appMenus({
       items: [
         {
           label: "Generate a Pretense campaign",
-          onSelect: () => qt.openDialog("pretense-campaign"),
+          onSelect: tools.generatePretenseCampaign,
         },
         {
           label: "Import layouts",
-          onSelect: () => qt.openDialog("import-layouts"),
+          onSelect: tools.importLayouts,
         },
       ],
     },
@@ -85,7 +89,7 @@ export function appMenus({
           onSelect: () => qt.openLink("forum-thread"),
         },
         { label: "Report an issue", onSelect: () => qt.openLink("issues") },
-        { label: "Show logs", onSelect: () => qt.openDialog("logs") },
+        { label: "Show logs", onSelect: () => navigate(PATHS.logs) },
         "separator",
         { label: "Discord server", onSelect: () => qt.openLink("discord") },
         { label: "GitHub repository", onSelect: () => qt.openLink("github") },
@@ -97,7 +101,7 @@ export function appMenus({
         "separator",
         {
           label: "About DCS Retribution",
-          onSelect: () => qt.openDialog("about"),
+          onSelect: () => navigate(PATHS.about),
         },
       ],
     },
@@ -106,6 +110,7 @@ export function appMenus({
 
 export function AppBar({ onNewPackage, onShowHelp }: AppBarProps) {
   const qt = useQtCommands();
+  const tools = useToolCommands();
   const navigate = useNavigate();
 
   return (
@@ -124,9 +129,11 @@ export function AppBar({ onNewPackage, onShowHelp }: AppBarProps) {
         Retribution
       </NavLink>
       <nav className={styles.menus} aria-label="Main menu">
-        {appMenus({ qt, navigate, onNewPackage, onShowHelp }).map((menu) => (
-          <Menu key={menu.label} label={menu.label} items={menu.items} />
-        ))}
+        {appMenus({ qt, tools, navigate, onNewPackage, onShowHelp }).map(
+          (menu) => (
+            <Menu key={menu.label} label={menu.label} items={menu.items} />
+          ),
+        )}
       </nav>
       <CampaignStatus
         onOpenFinances={() => navigate(PATHS.reportTab("finances"))}
@@ -136,7 +143,7 @@ export function AppBar({ onNewPackage, onShowHelp }: AppBarProps) {
         <Button variant="ghost" onClick={() => navigate(PATHS.airWing)}>
           Air Wing
         </Button>
-        <Button variant="ghost" onClick={() => qt.openDialog("transfers")}>
+        <Button variant="ghost" onClick={() => navigate(PATHS.transfers)}>
           Transfers
         </Button>
         <Button variant="ghost" onClick={() => navigate(PATHS.reports)}>

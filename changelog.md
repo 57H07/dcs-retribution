@@ -1,6 +1,7 @@
 # Retribution v1.6.0
 
 ## Features/Improvements
+* **[UX]** Web UI: pending transfers, notes, info panel, pilot careers, logs and About are web screens; Import layouts and Generate a Pretense campaign run from the Tools menu without a Qt dialog (WEB-08.2).
 * **[Campaign]** Combat Search & Rescue (CSAR): ejected pilots go down on the map and can be rescued by CSAR helicopter flights (player or AI) before they go missing or are captured. Disabled by default for both sides, including in existing saves; enable it in the campaign settings. (taken over from `upstream#929` by Drexyl)
 * **[Campaign]** CSAR: optional automatic recovery of pilots who come down on land over friendly territory, away from enemy threat zones and front lines (both distances configurable). Off by default.
 * **[Campaign]** CSAR: optional bounty credited to a coalition's budget for each pilot its CSAR flights rescue, shown in the debriefing. Off by default (bounty 0).

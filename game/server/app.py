@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from game.commands import CommandError
 
 from . import (
+    applog,
+    careers,
     controlpoints,
     debuggeometries,
     downedpilots,
@@ -24,6 +26,9 @@ from . import (
     tgos,
     waypoints,
     iadsnetwork,
+    journal,
+    tools,
+    transfers,
 )
 from .commanderrors import command_error_handler
 from .security import require_api_key
@@ -51,6 +56,12 @@ app.include_router(supplyroutes.router)
 app.include_router(tgos.router)
 app.include_router(waypoints.router)
 app.include_router(iadsnetwork.router)
+# WEB-08.2: transfers, notes, info panel, careers, logs, about, tools.
+app.include_router(applog.router)
+app.include_router(careers.router)
+app.include_router(journal.router)
+app.include_router(tools.router)
+app.include_router(transfers.router)
 
 
 origins = ["file://"]

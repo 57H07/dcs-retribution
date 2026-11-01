@@ -127,7 +127,9 @@ older target routes
 callback that emits a `QLiberationWindow` signal, so the dialog opens on the Qt
 main thread after the lock is released. A migrated screen removes its `QtDialog`
 value, its Qt slot and the dialog itself (W9), and replaces its `QtScreen`
-element in `client/src/shell/routes.tsx`.
+element in `client/src/shell/routes.tsx`. A tool with no file UI needs no dialog at
+all: `POST /tools/import-layouts` and `POST /tools/pretense-campaign` (WEB-08.2) are
+plain commands that answer once the work is done.
 
 A command may also hand over to a Qt window that is not migrated yet: `POST
 /game/mission/result/accept` (WEB-05.1) applies the mission result, then calls
