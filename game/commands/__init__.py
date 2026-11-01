@@ -27,11 +27,20 @@ from .missionresult import (
     accept_and_report,
     accept_results,
 )
+from .repairs import (
+    RUNWAY_REPAIR_ID,
+    Repair,
+    base_repairs,
+    order_all_repairs,
+    order_repair,
+)
 from .sim import SpeedControlledSim, set_sim_speed
 from .turn import skip_turn
 
 __all__ = [
     "CommandError",
+    "RUNWAY_REPAIR_ID",
+    "Repair",
     "MissionResultSnapshot",
     "MissionResultStatus",
     "MissionResultWaiter",
@@ -41,11 +50,14 @@ __all__ = [
     "abort_mission",
     "accept_and_report",
     "accept_results",
+    "base_repairs",
     "fix_past_tots",
     "fix_tots",
     "flights_missing_pilots",
     "generate_mission",
     "max_player_count",
+    "order_all_repairs",
+    "order_repair",
     "packages_starting_in_the_past",
     "set_sim_speed",
     "skip_turn",

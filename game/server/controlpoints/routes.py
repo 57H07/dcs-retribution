@@ -7,9 +7,13 @@ from fastapi import APIRouter, Body, Depends, HTTPException, status
 from starlette.responses import Response
 
 from game import Game
+from game.commands import order_all_repairs, order_repair
+from game.theater import ControlPoint
 from game.theater.player import Player
+from .base import BaseJs
 from .models import ControlPointJs
 from .summary import ControlPointSummaryJs
+from ..commanderrors import command_error_responses
 from ..dependencies import GameContext
 from ..leaflet import LeafletPoint
 
@@ -59,6 +63,65 @@ def get_control_point_summary(
             detail=f"Game has no control point with ID {cp_id}",
         )
     return ControlPointSummaryJs.for_control_point(game, cp)
+
+
+def _find(game: Game, cp_id: UUID) -> ControlPoint:
+    cp = game.theater.find_control_point_by_id(cp_id)
+    if cp is None:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            detail=f"Game has no control point with ID {cp_id}",
+        )
+    return cp
+
+
+@router.get("/{cp_id}/base", operation_id="get_base", response_model=BaseJs)
+@locked
+def get_base(cp_id: UUID, game: Game = Depends(GameContext.require)) -> BaseJs:
+    """What the base screen shows (WEB-02.1): status, air defense, repairs."""
+    return BaseJs.for_control_point(game, _find(game, cp_id))
+
+
+@router.post(
+    "/{cp_id}/repairs/{repair_id}",
+    operation_id="order_repair",
+    response_model=BaseJs,
+    responses=command_error_responses(
+        "not a player base, nothing to repair, or not enough budget"
+    ),
+)
+@locked
+def order_base_repair(
+    cp_id: UUID, repair_id: str, game: Game = Depends(GameContext.require)
+) -> BaseJs:
+    """Pays for one repair listed by `GET /control-points/{cp_id}/base`."""
+    cp = _find(game, cp_id)
+    from .. import EventStream
+
+    with EventStream.event_context() as events:
+        order_repair(game, cp, repair_id, events)
+    return BaseJs.for_control_point(game, cp)
+
+
+@router.post(
+    "/{cp_id}/repair-all",
+    operation_id="order_all_repairs",
+    response_model=BaseJs,
+    responses=command_error_responses(
+        "not a player base, nothing to repair, or not enough budget for all"
+    ),
+)
+@locked
+def order_all_base_repairs(
+    cp_id: UUID, game: Game = Depends(GameContext.require)
+) -> BaseJs:
+    """Pays for every orderable repair of the base, or for none."""
+    cp = _find(game, cp_id)
+    from .. import EventStream
+
+    with EventStream.event_context() as events:
+        order_all_repairs(game, cp, events)
+    return BaseJs.for_control_point(game, cp)
 
 
 @router.get(

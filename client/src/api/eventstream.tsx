@@ -171,7 +171,8 @@ export const handleStreamedEvents = (
     );
   }
   if (inspectorChanged(events)) {
-    dispatch(liberationApi.util.invalidateTags([Tags.INSPECTOR]));
+    // The base screen (WEB-02.1) shows the same base status, and the budget.
+    dispatch(liberationApi.util.invalidateTags([Tags.INSPECTOR, Tags.BASE]));
   }
 
   if (packagesChanged(events)) {
@@ -179,7 +180,8 @@ export const handleStreamedEvents = (
   }
 };
 
-/** Events after which the map inspector (WEB-01.3) refetches its summary. */
+/** Events after which the map inspector (WEB-01.3) and the base screen
+ * (WEB-02.1) refetch. */
 export function inspectorChanged(events: GameUpdateEvents): boolean {
   return (
     events.new_turn ||
