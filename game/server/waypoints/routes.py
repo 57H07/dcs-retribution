@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from dcs.mapping import LatLng, Point
+from game.commands.flightroute import move_waypoint, require_waypoint
 from game.gamelock import locked
 from fastapi import APIRouter, Depends, HTTPException, status
 from starlette.responses import Response
@@ -10,9 +11,10 @@ from game.ato import Flight
 from game.ato.flightwaypoint import FlightWaypoint
 from game.ato.flightwaypointtype import FlightWaypointType
 from game.server import GameContext
+from game.server.commanderrors import command_error_responses
+from game.server.dependencies import QtCallbacks, QtContext
 from game.server.leaflet import LeafletPoint
 from game.server.waypoints.models import FlightWaypointJs
-from game.sim import GameUpdateEvents
 from game.utils import meters
 
 router: APIRouter = APIRouter(prefix="/waypoints")
@@ -53,6 +55,7 @@ def all_waypoints_for_flight(
     operation_id="set_waypoint_position",
     status_code=status.HTTP_204_NO_CONTENT,
     response_class=Response,
+    responses=command_error_responses("This waypoint cannot be moved."),
 )
 @locked
 def set_position(
@@ -60,6 +63,7 @@ def set_position(
     waypoint_idx: int,
     position: LeafletPoint,
     game: Game = Depends(GameContext.require),
+    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> None:
     from game.server import EventStream
 
@@ -67,56 +71,17 @@ def set_position(
     if waypoint_idx == 0:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
-    waypoint = flight.flight_plan.waypoints[waypoint_idx - 1]
-    waypoint.position = Point.from_latlng(
-        LatLng(position.lat, position.lng), game.theater.terrain
+    waypoint = require_waypoint(flight, waypoint_idx - 1)
+    move_waypoint(
+        flight,
+        waypoint,
+        Point.from_latlng(LatLng(position.lat, position.lng), game.theater.terrain),
     )
-    package_model = (
-        GameContext.get_model()
-        .ato_model_for(flight.blue)
-        .find_matching_package_model(flight.package)
-    )
-    if package_model is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Could not find PackageModel owning {flight}",
-        )
-    events = GameUpdateEvents()
-    update_package_waypoints_if_primary_flight(waypoint, flight, events)
-    package_model.update_tot()
-    EventStream.put_nowait(events.update_flight(flight))
-
-
-def update_package_waypoints_if_primary_flight(
-    waypoint: FlightWaypoint,
-    flight: Flight,
-    events: GameUpdateEvents,
-) -> None:
-    wpts = flight.package.waypoints
-    if flight is flight.package.primary_flight and wpts:
-        if waypoint.waypoint_type is FlightWaypointType.JOIN:
-            wpts.join = waypoint.position
-        elif waypoint.waypoint_type is FlightWaypointType.SPLIT:
-            wpts.split = waypoint.position
-        elif waypoint.waypoint_type is FlightWaypointType.REFUEL:
-            wpts.refuel = waypoint.position
-        elif "INGRESS" in waypoint.waypoint_type.name:
-            wpts.ingress = waypoint.position
-            wpts.initial = wpts.get_initial_point(
-                waypoint.position, flight.package.target.position
-            )
-        else:
-            return
-        for f in flight.package.flights:
-            if f is flight:
-                continue
-            for wpt in f.flight_plan.iter_waypoints():
-                if wpt.waypoint_type == waypoint.waypoint_type or (
-                    "INGRESS" in wpt.waypoint_type.name
-                    and "INGRESS" in waypoint.waypoint_type.name
-                ):
-                    wpt.position = waypoint.position.new_in_same_map(
-                        waypoint.position.x, waypoint.position.y
-                    )
-                    events.update_flight(f)
-                    break
+    package = flight.package
+    if package.auto_asap:
+        now = GameContext.get_sim().current_time_in_sim_if_game_loaded
+        package.set_tot_asap(game.conditions.start_time if now is None else now)
+    with EventStream.event_context() as events:
+        events.update_flights_in_package(package)
+    if qt is not None and qt.packages_changed is not None:
+        qt.packages_changed()

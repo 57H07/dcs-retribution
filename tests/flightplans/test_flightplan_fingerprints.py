@@ -26,6 +26,7 @@ from game.commands.flightpayload import (
     set_member_pylon,
 )
 from game.data.weapons import Weapon
+from game.server.flightroute.models import FlightRouteJs
 from tests.flightplans.fingerprint import compare_to_reference, fingerprint_package
 from tests.flightplans.referencegame import repository_payloads_only
 from tests.flightplans.runner import FINGERPRINTS_FILE, SAVE_FILE
@@ -96,6 +97,16 @@ def test_saved_game_gives_the_same_fingerprints(reference_run: ReferenceRun) -> 
             fingerprint_package(reference_run.package(scenario))
             == reference_run.fingerprints[scenario]
         ), scenario
+
+
+def test_reading_a_route_changes_no_fingerprint(reference_run: ReferenceRun) -> None:
+    """The Route tab tries the rules of a layout on a copy (WEB-04.4)."""
+    game = reference_run.game
+    for scenario in scenario_names():
+        package = reference_run.package(scenario)
+        for flight in package.flights:
+            FlightRouteJs.for_flight(game, flight)
+        assert fingerprint_package(package) == reference_run.fingerprints[scenario]
 
 
 # The harness must catch a change of waypoint, time or loadout. Each check

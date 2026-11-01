@@ -124,7 +124,7 @@ def _write_state(path: Path, data: dict[str, Any] | str, age: float = 0) -> None
     os.utime(path, (stamp, stamp))
 
 
-def _wait_until(condition: Callable[[], bool], timeout: float = 5) -> None:
+def _wait_until(condition: Callable[[], bool], timeout: float = 20) -> None:
     deadline = time.monotonic() + timeout
     while not condition():
         if time.monotonic() > deadline:

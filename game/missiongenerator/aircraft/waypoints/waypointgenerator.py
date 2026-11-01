@@ -1,7 +1,5 @@
-import itertools
 import logging
 import random
-from collections.abc import Iterator
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -20,7 +18,6 @@ from game.ato.starttype import StartType
 from game.missiongenerator.aircraft.waypoints.cargostop import CargoStopBuilder
 from game.missiongenerator.missiondata import MissionData
 from game.settings import Settings
-from game.utils import pairwise
 from .airassaultingress import AirAssaultIngressBuilder
 from .antishipingress import AntiShipIngressBuilder
 from .armedreconingress import ArmedReconIngressBuilder
@@ -208,30 +205,9 @@ class WaypointGenerator:
         )
 
     def _estimate_min_fuel_for(self, waypoints: list[FlightWaypoint]) -> None:
-        if self.flight.unit_type.fuel_consumption is None:
-            return
-
-        consumption = self.flight.unit_type.fuel_consumption
-        min_fuel: float = consumption.min_safe
-
-        # The flight plan (in reverse) up to and including the arrival point.
-        main_flight_plan: Iterator[FlightWaypoint] = reversed(waypoints)
-        try:
-            while waypoint := next(main_flight_plan):
-                if waypoint.waypoint_type is FlightWaypointType.LANDING_POINT:
-                    waypoint.min_fuel = min_fuel
-                    main_flight_plan = itertools.chain([waypoint], main_flight_plan)
-                    break
-        except StopIteration:
-            # Some custom flight plan without a landing point. Skip it.
-            return
-
-        for b, a in pairwise(main_flight_plan):
-            for_leg = self.flight.flight_plan.fuel_consumption_between_points(a, b)
-            if for_leg is None:
-                continue
-            min_fuel += for_leg
-            a.min_fuel = min_fuel
+        estimates = self.flight.flight_plan.estimate_min_fuel(waypoints)
+        for waypoint, min_fuel in estimates.items():
+            waypoint.min_fuel = min_fuel
 
     def set_takeoff_time(self, waypoint: FlightWaypoint) -> timedelta:
         force_delay = False

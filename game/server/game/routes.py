@@ -35,7 +35,7 @@ def _require_game(game: Game | None) -> Game:
     return game
 
 
-@router.get("/", operation_id="get_game_state", response_model=GameJs)
+@router.get("/", operation_id="get_game_state", response_model=GameJs | None)
 @locked
 def game_state(game: Game | None = Depends(GameContext.get)) -> GameJs | None:
     if game is None:
