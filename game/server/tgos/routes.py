@@ -7,13 +7,43 @@ from fastapi import APIRouter, Body, Depends, HTTPException, status
 from starlette.responses import Response
 
 from game import Game
+from game.commands import (
+    TgoPurchase,
+    buy_ground_object_group,
+    disband_ground_object,
+    quote_purchase,
+    repair_ground_unit,
+    resolve_purchase,
+    rotate_ground_object,
+    set_hidden_on_mfd,
+)
+from game.utils import Heading
 from .models import TgoJs
+from .sheet import (
+    PurchaseQuoteJs,
+    TgoHeadingChangeJs,
+    TgoHiddenChangeJs,
+    TgoPurchaseJs,
+    TgoPurchaseOptionsJs,
+    TgoSheetJs,
+)
 from .summary import TgoSummaryJs
+from ..commanderrors import command_error_responses
 from ..dependencies import GameContext
 from ..leaflet import LeafletPoint
+from game.theater import TheaterGroundObject
 from game.theater.theatergroundobject import ShipGroundObject
 
 router: APIRouter = APIRouter(prefix="/tgos")
+
+
+def _find(game: Game, tgo_id: UUID) -> TheaterGroundObject:
+    try:
+        return game.db.tgos.get(tgo_id)
+    except KeyError:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, detail=f"Game has no TGO with ID {tgo_id}"
+        )
 
 
 @router.get("/", operation_id="list_tgos", response_model=list[TgoJs])
@@ -38,13 +68,159 @@ def get_tgo_summary(
     tgo_id: UUID, game: Game = Depends(GameContext.require)
 ) -> TgoSummaryJs:
     """What the map inspector shows about a ground object (WEB-01.3)."""
-    try:
-        tgo = game.db.tgos.get(tgo_id)
-    except KeyError:
-        raise HTTPException(
-            status.HTTP_404_NOT_FOUND, detail=f"Game has no TGO with ID {tgo_id}"
-        )
-    return TgoSummaryJs.for_tgo(game, tgo)
+    return TgoSummaryJs.for_tgo(game, _find(game, tgo_id))
+
+
+@router.get(
+    "/{tgo_id}/sheet",
+    operation_id="get_tgo_sheet",
+    response_model=TgoSheetJs,
+)
+@locked
+def get_tgo_sheet(
+    tgo_id: UUID, game: Game = Depends(GameContext.require)
+) -> TgoSheetJs:
+    """The ground object screen: units with their status and what can be done."""
+    return TgoSheetJs.for_tgo(game, _find(game, tgo_id))
+
+
+@router.post(
+    "/{tgo_id}/units/{unit_id}/repair",
+    operation_id="repair_tgo_unit",
+    response_model=TgoSheetJs,
+    responses=command_error_responses(
+        "nothing to repair on this unit, or not enough budget"
+    ),
+)
+@locked
+def repair_tgo_unit(
+    tgo_id: UUID, unit_id: int, game: Game = Depends(GameContext.require)
+) -> TgoSheetJs:
+    tgo = _find(game, tgo_id)
+    from .. import EventStream
+
+    with EventStream.event_context() as events:
+        repair_ground_unit(game, tgo, unit_id, events)
+    return TgoSheetJs.for_tgo(game, tgo)
+
+
+@router.put(
+    "/{tgo_id}/heading",
+    operation_id="set_tgo_heading",
+    response_model=TgoSheetJs,
+    responses=command_error_responses("not a player site, or a building site"),
+)
+@locked
+def set_tgo_heading(
+    tgo_id: UUID,
+    body: TgoHeadingChangeJs,
+    game: Game = Depends(GameContext.require),
+) -> TgoSheetJs:
+    tgo = _find(game, tgo_id)
+    from .. import EventStream
+
+    with EventStream.event_context() as events:
+        rotate_ground_object(tgo, Heading.from_degrees(body.degrees), events)
+    return TgoSheetJs.for_tgo(game, tgo)
+
+
+@router.put(
+    "/{tgo_id}/hidden-on-mfd",
+    operation_id="set_tgo_hidden_on_mfd",
+    response_model=TgoSheetJs,
+    responses=command_error_responses("not an enemy air defense site"),
+)
+@locked
+def set_tgo_hidden_on_mfd(
+    tgo_id: UUID,
+    body: TgoHiddenChangeJs,
+    game: Game = Depends(GameContext.require),
+) -> TgoSheetJs:
+    tgo = _find(game, tgo_id)
+    from .. import EventStream
+
+    with EventStream.event_context() as events:
+        set_hidden_on_mfd(tgo, body.hidden, events)
+    return TgoSheetJs.for_tgo(game, tgo)
+
+
+@router.delete(
+    "/{tgo_id}/group",
+    operation_id="disband_tgo_group",
+    response_model=TgoSheetJs,
+    responses=command_error_responses("the site cannot be sold, or is empty"),
+)
+@locked
+def disband_tgo_group(
+    tgo_id: UUID, game: Game = Depends(GameContext.require)
+) -> TgoSheetJs:
+    """Sells the whole group of a site."""
+    tgo = _find(game, tgo_id)
+    from .. import EventStream
+
+    with EventStream.event_context() as events:
+        disband_ground_object(game, tgo, events)
+    return TgoSheetJs.for_tgo(game, tgo)
+
+
+@router.get(
+    "/{tgo_id}/purchase-options",
+    operation_id="get_tgo_purchase_options",
+    response_model=TgoPurchaseOptionsJs,
+)
+@locked
+def get_tgo_purchase_options(
+    tgo_id: UUID, game: Game = Depends(GameContext.require)
+) -> TgoPurchaseOptionsJs:
+    """The force groups and layouts this site can be replaced with."""
+    return TgoPurchaseOptionsJs.for_tgo(_find(game, tgo_id))
+
+
+def _purchase(tgo: TheaterGroundObject, body: TgoPurchaseJs) -> TgoPurchase:
+    return resolve_purchase(
+        tgo,
+        body.force_group,
+        body.layout,
+        [choice.to_choice() for choice in body.choices],
+    )
+
+
+@router.post(
+    "/{tgo_id}/purchase/quote",
+    operation_id="quote_tgo_purchase",
+    response_model=PurchaseQuoteJs,
+    responses=command_error_responses("the layout does not take this purchase"),
+)
+@locked
+def quote_tgo_purchase(
+    tgo_id: UUID, body: TgoPurchaseJs, game: Game = Depends(GameContext.require)
+) -> PurchaseQuoteJs:
+    """What a purchase would cost: changes nothing."""
+    tgo = _find(game, tgo_id)
+    return PurchaseQuoteJs.for_quote(quote_purchase(game, tgo, _purchase(tgo, body)))
+
+
+@router.post(
+    "/{tgo_id}/purchase",
+    operation_id="buy_tgo_group",
+    response_model=TgoSheetJs,
+    responses=command_error_responses(
+        "the site cannot be bought, the layout does not take this purchase, or not "
+        "enough budget (then nothing changes)"
+    ),
+)
+@locked
+def buy_tgo_group(
+    tgo_id: UUID, body: TgoPurchaseJs, game: Game = Depends(GameContext.require)
+) -> TgoSheetJs:
+    """Replaces the group of a site."""
+    tgo = _find(game, tgo_id)
+    purchase = _purchase(tgo, body)
+    from .. import EventStream
+
+    with EventStream.event_context() as events:
+        buy_ground_object_group(game, tgo, purchase, events)
+    return TgoSheetJs.for_tgo(game, tgo)
 
 
 @router.get(

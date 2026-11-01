@@ -11,7 +11,7 @@ import {
   setHoveredEmitter,
 } from "../../api/mapSlice";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { useInspectTgo } from "../../maplayers/mapSelection";
+import { useInspectTgo, useIsInspectedTgo } from "../../maplayers/mapSelection";
 import SplitLines from "../splitlines/SplitLines";
 import { MovementPath, MovementPathHandle } from "../controlpoints/MovementPath";
 import { TgoTooltip, useTgoIcon } from "./shared";
@@ -24,6 +24,9 @@ import { Marker, Tooltip } from "react-leaflet";
 // (MobileControlPoint) so a ship drag reads the same way: the live
 // nautical-mile distance plus the destination coordinates, or an
 // out-of-range notice with how far the attempted move was.
+// Leaflet's default, restored when the tooltip is no longer hidden.
+const TOOLTIP_OPACITY = 0.9;
+
 function metersToNauticalMiles(meters: number): number {
   return meters * 0.000539957;
 }
@@ -108,6 +111,7 @@ function PrimaryMarker(props: PrimaryMarkerProps) {
   const [cancelTravel] = useClearTgoDestinationMutation();
 
   const inspect = useInspectTgo();
+  const inspected = useIsInspectedTgo(props.tgo.id);
   const [openNewPackageDialog] = useOpenNewTgoPackageDialogMutation();
   const dispatch = useAppDispatch();
   // Raised above other icons while this emitter (or its ring) is hovered,
@@ -126,6 +130,11 @@ function PrimaryMarker(props: PrimaryMarkerProps) {
   // carrier marker (MobileControlPoint) avoids this the same way.  The drag
   // handler overrides this content live via setTooltipContent.
   useEffect(() => {
+    // Hidden while the inspector card shows this site. Unlike TgoTooltip it stays
+    // bound: a drag needs it for the live distance (see the drag handler).
+    markerRef.current
+      ?.getTooltip()
+      ?.setOpacity(inspected ? 0 : TOOLTIP_OPACITY);
     markerRef.current?.setTooltipContent(
       props.tgo.destination
         ? destinationTooltipText(props.tgo, props.tgo.destination, true)
@@ -178,6 +187,7 @@ function PrimaryMarker(props: PrimaryMarkerProps) {
           mouseout: () => dispatch(setHoveredEmitter(null)),
           drag: (event) => {
             const dest = event.target.getLatLng() as LatLng;
+            markerRef.current?.getTooltip()?.setOpacity(TOOLTIP_OPACITY);
             backend
               .get(
                 `/tgos/${props.tgo.id}/destination-in-range?lat=${dest.lat}&lng=${dest.lng}`

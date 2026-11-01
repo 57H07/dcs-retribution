@@ -14,6 +14,8 @@ import { LogsScreen } from "../secondary/LogsScreen";
 import { NotesScreen } from "../secondary/NotesScreen";
 import { TransfersScreen } from "../secondary/TransfersScreen";
 import { SettingsScreen } from "../settings/SettingsScreen";
+import { TgoScreen } from "../tgos/TgoScreen";
+import { UnitInfoScreen } from "../tgos/UnitInfoScreen";
 import { QtScreen } from "./QtScreen";
 import { Shell } from "./Shell";
 import { Navigate, RouteObject } from "react-router-dom";
@@ -83,6 +85,9 @@ export const ROUTES: RouteObject[] = [
       { path: "career", element: <CareerScreen /> },
       { path: "logs", element: <LogsScreen /> },
       { path: "about", element: <AboutScreen /> },
+      // Ground object and unit info sheets (WEB-08.3).
+      { path: "tgos/:id", element: <TgoScreen /> },
+      { path: "units/:kind/:name", element: <UnitInfoScreen /> },
       { path: "*", element: <Navigate to="/" replace /> },
     ],
   },

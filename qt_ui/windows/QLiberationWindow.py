@@ -112,7 +112,7 @@ class QLiberationWindow(QMainWindow):
         QtContext.set_callbacks(
             QtCallbacks(
                 lambda target: self.new_package_signal.emit(target),
-                lambda tgo: self.tgo_info_signal.emit(tgo),
+                None if self.web_ui else lambda tgo: self.tgo_info_signal.emit(tgo),
                 lambda cp: self.control_point_info_signal.emit(cp),
                 lambda flight: self.select_flight_signal.emit(flight),
                 turn_passed=lambda state: self.turn_passed_signal.emit(state),

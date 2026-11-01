@@ -122,7 +122,8 @@ that codegen cannot handle (send a string or a list of strings instead).
 
 Until a screen has its web version, its client route opens the Qt dialog through
 a target route (`/qt/create-package/...`, `/qt/info/...`,
-`/qt/edit-package/...`). The route only calls a `QtCallbacks` callback that emits
+`/qt/edit-package/...`; `/qt/info/tgo/...` only serves the Qt map and answers 503 in
+web mode, where its callback is `None`). The route only calls a `QtCallbacks` callback that emits
 a `QLiberationWindow` signal, so the dialog opens on the Qt main thread after the
 lock is released. A migrated screen removes its route, its Qt slot and the dialog
 itself (W9), and replaces its `QtScreen` element in

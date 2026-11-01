@@ -1,4 +1,6 @@
-import type { BaseTab } from "../api/liberationApi";
+import type { BaseTab, UnitInfo } from "../api/liberationApi";
+
+export type UnitKind = UnitInfo["kind"];
 
 /** Tabs of the base screen (WEB-02.1); the server says which a base has. */
 export type BaseTabId = BaseTab["id"];
@@ -34,4 +36,9 @@ export const PATHS = {
   career: "/career",
   logs: "/logs",
   about: "/about",
+  // WEB-08.3
+  tgo: (id: string) => `/tgos/${id}`,
+  /** Unit info sheet; names hold spaces and sometimes slashes. */
+  unit: (kind: UnitKind, name: string) =>
+    `/units/${kind}/${encodeURIComponent(name)}`,
 };

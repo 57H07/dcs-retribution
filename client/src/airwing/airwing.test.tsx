@@ -110,6 +110,7 @@ const SQUADRON: AirWingSquadron = {
     squadron_id: "sq-1",
     squadron: "40th Brigade",
     aircraft: "MiG-29 9.13",
+    aircraft_id: "F-16C",
     unit_cost: 28,
     owned: 10,
     max_aircraft: 12,

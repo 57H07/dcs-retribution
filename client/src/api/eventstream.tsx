@@ -172,12 +172,14 @@ export const handleStreamedEvents = (
     );
   }
   if (inspectorChanged(events)) {
-    // The base screen (WEB-02.1) shows the same base status, and the budget;
-    // the air wing screen (WEB-03) what each base and budget allow.
+    // The base (WEB-02.1) and ground object (WEB-08.3) screens show the same
+    // status, and the budget; the air wing screen (WEB-03) what each base and
+    // budget allow.
     dispatch(
       liberationApi.util.invalidateTags([
         Tags.INSPECTOR,
         Tags.BASE,
+        Tags.TGO,
         Tags.AIR_WING,
       ]),
     );

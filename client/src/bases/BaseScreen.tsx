@@ -200,7 +200,8 @@ function AirDefensePanel({ defenses }: { defenses: AirDefense[] }) {
           {defenses.map((site) => (
             <li key={site.id} className={styles.row}>
               <span>
-                {site.name}
+                {/* Units, repairs and replacement: the site's sheet (WEB-08.3). */}
+                <Link to={PATHS.tgo(site.id)}>{site.name}</Link>
                 <span className={styles.muted}> · {site.category}</span>
               </span>
               <span
