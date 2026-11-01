@@ -1,10 +1,14 @@
-"""WEB-05.1: waiting for the mission result (state.json watch, load, abort, accept)."""
+"""WEB-05.1: waiting for the mission result (state.json watch, load, abort, accept).
+
+WEB-05.2: the after-action report and the web accept path.
+"""
 
 from __future__ import annotations
 
 import json
 import os
 import time
+from datetime import datetime
 from collections.abc import Callable, Iterator
 from pathlib import Path
 from types import SimpleNamespace
@@ -17,10 +21,12 @@ from game.commands import (
     MissionResultStatus,
     MissionResultWaiter,
     abort_mission,
+    accept_and_report,
     accept_results,
 )
 from game.commands import missionresult as missionresult_module
 from game.debriefing import SideLossCounts
+from game.debriefingreport import AfterActionReport, Tone
 from game.game import TurnState
 from game.native import NativeContext
 from game.polldebriefingfilethread import PollDebriefingFileThread
@@ -298,6 +304,7 @@ def _game() -> Any:
         ),
         released=released,
         turn=4,
+        informations=[],
         pass_turn=lambda: None,
         check_win_loss=lambda: TurnState.CONTINUE,
     )
@@ -331,6 +338,40 @@ def test_accept_processes_the_result_then_passes_the_turn(sim: _Sim) -> None:
     assert order == ["pass_turn"]
 
 
+def test_a_report_failure_does_not_block_the_results(
+    monkeypatch: pytest.MonkeyPatch, sim: _Sim
+) -> None:
+    def fail(*_: Any) -> Any:
+        raise ValueError("broken report")
+
+    order: list[str] = []
+    game = SimpleNamespace(
+        pass_turn=lambda: order.append("pass_turn"),
+        informations=[],
+        turn=3,
+        conditions=SimpleNamespace(start_time=datetime(2022, 5, 17)),
+    )
+    debriefing = _debriefing({"mission_ended": True})
+    debriefing.game = game
+    debriefing.player_country = "Ukraine"
+    debriefing.enemy_country = "Russia"
+    monkeypatch.setattr("game.commands.missionresult.build_report", fail)
+    report = accept_and_report(cast(Any, game), sim, debriefing)
+    assert order == ["pass_turn"]
+    assert report.applied
+    assert report.verdict == "Results applied"
+
+
+def test_reset_forgets_the_pending_and_last_results(
+    waiter: MissionResultWaiter, sim: _Sim
+) -> None:
+    waiter.finish(cast(Any, "report"))
+    waiter.start(sim, MIZ)
+    waiter.reset()
+    assert waiter.snapshot().status is MissionResultStatus.IDLE
+    assert waiter.last_report() is None
+
+
 def test_mission_result_event_reaches_the_client() -> None:
     events = GameUpdateEvents().update_mission_result()
     assert not events.empty
@@ -342,7 +383,7 @@ def test_mission_result_event_reaches_the_client() -> None:
 
 class _Qt:
     def __init__(self) -> None:
-        self.accepted: list[Any] = []
+        self.turns_passed: list[TurnState] = []
         self.game_changed = 0
 
     def callbacks(self) -> QtCallbacks:
@@ -357,8 +398,8 @@ class _Qt:
             ignore,
             ignore,
             ignore,
+            turn_passed=self.turns_passed.append,
             game_changed=changed,
-            results_accepted=self.accepted.append,
         )
 
 
@@ -507,12 +548,58 @@ def test_cancel_route_needs_a_campaign(
     assert body["detail"] == "No campaign is loaded."
 
 
+def _report(summary: str, applied: bool = False) -> AfterActionReport:
+    return AfterActionReport(
+        turn=4,
+        date="17 May 2022",
+        player_country="Ukraine",
+        enemy_country="Russia",
+        verdict="Tactical victory",
+        verdict_tone=Tone.GOOD,
+        summary=summary,
+        air_kills_friendly=5,
+        air_kills_enemy=2,
+        ground_kills_friendly=0,
+        ground_kills_enemy=0,
+        bases_captured=0,
+        bases_lost=0,
+        pilots_rescued=[],
+        rescue_bounty=0,
+        packages=[],
+        friendly_losses=[],
+        enemy_losses=[],
+        damaged_units=[],
+        events=[],
+        applied=applied,
+        budget_next_turn=1420.0 if applied else None,
+    )
+
+
+@pytest.fixture
+def fake_reports(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reports of the fake debriefings, named after their state data."""
+    from game.server.missionresult import routes
+
+    def build(debriefing: Any) -> AfterActionReport:
+        return _report(f"pending {debriefing.data}")
+
+    def complete(
+        report: AfterActionReport, debriefing: Any, messages: Any
+    ) -> AfterActionReport:
+        return _report(f"applied {debriefing.data}", applied=True)
+
+    monkeypatch.setattr(missionresult_module, "build_report", build)
+    monkeypatch.setattr(missionresult_module, "complete_report", complete)
+    monkeypatch.setattr(routes, "build_report", build)
+
+
 def test_accept_route(
     monkeypatch: pytest.MonkeyPatch,
     waiter: MissionResultWaiter,
     sim: _Sim,
     qt: _Qt,
     state_path: Path,
+    fake_reports: None,
 ) -> None:
     game = _game()
     _load_game(monkeypatch, game, sim)
@@ -534,7 +621,88 @@ def test_accept_route(
     assert body == {"turn": 4, "campaign_state": "continue"}
     assert ("process", {"mission_ended": True}) in sim.calls
     assert waiter.snapshot().status is MissionResultStatus.IDLE
-    assert [d.data for d in qt.accepted] == [{"mission_ended": True}]
+    # The Qt widgets refresh and the campaign end is checked, as after any turn.
+    assert qt.turns_passed == [TurnState.CONTINUE]
+    last = waiter.last_report()
+    assert last is not None and last.summary == "applied {'mission_ended': True}"
+
+
+def test_report_route(
+    monkeypatch: pytest.MonkeyPatch,
+    waiter: MissionResultWaiter,
+    sim: _Sim,
+    qt: _Qt,
+    state_path: Path,
+    fake_reports: None,
+) -> None:
+    _load_game(monkeypatch, _game(), sim)
+    status, body = _request("GET", "/game/mission/result/report")
+    assert status == 200
+    assert body == {"status": "none", "can_accept": False, "report": None}
+
+    # The mission is being played: its report so far, not acceptable yet.
+    waiter.start(sim, MIZ)
+    _write_state(state_path, {"mission_ended": False})
+    _wait_until(lambda: waiter.snapshot().status is MissionResultStatus.DETECTED)
+    status, body = _request("GET", "/game/mission/result/report")
+    assert (body["status"], body["can_accept"]) == ("pending", False)
+    assert body["report"]["summary"] == "pending {'mission_ended': False}"
+    assert body["report"]["applied"] is False
+    assert body["report"]["budget_next_turn"] is None
+
+    _write_state(state_path, {"mission_ended": True}, age=-5)
+    _wait_until(lambda: waiter.snapshot().mission_ended)
+    status, body = _request("GET", "/game/mission/result/report")
+    assert (body["status"], body["can_accept"]) == ("pending", True)
+    assert body["report"]["verdict"] == "Tactical victory"
+    assert body["report"]["verdict_tone"] == "good"
+
+    # Accepted: the report of the applied result stays available.
+    assert _request("POST", "/game/mission/result/accept")[0] == 200
+    status, body = _request("GET", "/game/mission/result/report")
+    assert (body["status"], body["can_accept"]) == ("accepted", False)
+    assert body["report"]["summary"] == "applied {'mission_ended': True}"
+    assert body["report"]["applied"] is True
+    assert body["report"]["budget_next_turn"] == 1420.0
+
+
+def test_web_accept_applies_the_result_as_the_qt_path(
+    monkeypatch: pytest.MonkeyPatch, sim: _Sim
+) -> None:
+    """Both front ends apply a result with the same `accept_results` (WEB-05.2):
+    the Qt waiting window calls it, and the web path only frames it with the
+    report, read before and completed after."""
+    from qt_ui.windows import QWaitingForMissionResultWindow as qt_window
+
+    assert qt_window.accept_results is accept_results
+
+    order: list[str] = []
+    applied: list[Any] = []
+
+    def apply(game: Any, sim_: Any, debriefing: Any) -> None:
+        order.append("accept_results")
+        applied.append((game, sim_, debriefing))
+        game.informations.append("logged while applying")
+
+    def build(debriefing: Any) -> str:
+        order.append("build_report")
+        return "report"
+
+    def complete(report: str, debriefing: Any, messages: list[str]) -> Any:
+        order.append("complete_report")
+        return (report, messages)
+
+    monkeypatch.setattr(missionresult_module, "accept_results", apply)
+    monkeypatch.setattr(missionresult_module, "build_report", build)
+    monkeypatch.setattr(missionresult_module, "complete_report", complete)
+    game = SimpleNamespace(informations=["older message"])
+    debriefing = _debriefing({"mission_ended": True})
+
+    result = accept_and_report(cast(Any, game), sim, debriefing)
+
+    assert order == ["build_report", "accept_results", "complete_report"]
+    assert applied == [(game, sim, debriefing)]
+    assert result == ("report", ["logged while applying"])
 
 
 def test_routes_are_serialized_except_the_file_dialog() -> None:
@@ -543,4 +711,5 @@ def test_routes_are_serialized_except_the_file_dialog() -> None:
     assert getattr(routes.mission_result, "takes_game_lock", False)
     assert getattr(routes.cancel, "takes_game_lock", False)
     assert getattr(routes.accept, "takes_game_lock", False)
+    assert getattr(routes.report, "takes_game_lock", False)
     assert getattr(routes.load_file, "locks_game_itself", False)

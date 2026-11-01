@@ -1,6 +1,3 @@
-import logging
-from typing import Callable, Dict, TypeVar
-
 from PySide6.QtGui import QIcon, QPixmap, QCloseEvent
 from PySide6.QtWidgets import (
     QDialog,
@@ -14,52 +11,22 @@ from PySide6.QtWidgets import (
 )
 
 from game.debriefing import DamagedUnitReport, Debriefing
+from game.debriefingreport import loss_lines
 from game.gamelock import game_lock
 from game.theater import Player
 from qt_ui.windows.GameUpdateSignal import GameUpdateSignal
-
-T = TypeVar("T")
 
 
 class LossGrid(QGridLayout):
     def __init__(self, debriefing: Debriefing, player: Player) -> None:
         super().__init__()
-
-        self.add_loss_rows(
-            debriefing.air_losses.by_type(player), lambda u: u.display_name
-        )
-        self.add_loss_rows(
-            debriefing.front_line_losses_by_type(player), lambda u: str(u)
-        )
-        self.add_loss_rows(
-            debriefing.motorpool_losses_by_type(player),
-            lambda u: f"{u} from motorpool",
-        )
-        self.add_loss_rows(
-            debriefing.convoy_losses_by_type(player), lambda u: f"{u} from convoy"
-        )
-        self.add_loss_rows(
-            debriefing.cargo_ship_losses_by_type(player),
-            lambda u: f"{u} from cargo ship",
-        )
-        self.add_loss_rows(
-            debriefing.airlift_losses_by_type(player), lambda u: f"{u} from airlift"
-        )
-        self.add_loss_rows(debriefing.ground_object_losses_by_type(player), lambda u: u)
-        self.add_loss_rows(debriefing.scenery_losses_by_type(player), lambda u: u)
-
-        # TODO: Display dead ground object units and runways.
-
-    def add_loss_rows(self, losses: Dict[T, int], make_name: Callable[[T], str]):
-        for unit_type, count in losses.items():
+        # The lines are computed in game/debriefingreport.py, shared with the web
+        # after-action report (WEB-05.2).
+        for line in loss_lines(debriefing, player):
             row = self.rowCount()
-            try:
-                name = make_name(unit_type)
-            except AttributeError:
-                logging.exception(f"Could not make unit name for {unit_type}")
-                name = unit_type.id
-            self.addWidget(QLabel(name), row, 0)
-            self.addWidget(QLabel(str(count)), row, 1)
+            self.addWidget(QLabel(line.name), row, 0)
+            self.addWidget(QLabel(str(line.count)), row, 1)
+        # TODO: Display dead ground object units and runways.
 
 
 class ScrollingCasualtyReportContainer(QGroupBox):

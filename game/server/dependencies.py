@@ -7,7 +7,6 @@ from game.theater import ControlPoint, MissionTarget, TheaterGroundObject
 if TYPE_CHECKING:
     from game import Game
     from game.ato import Flight, Package
-    from game.debriefing import Debriefing
     from game.game import TurnState
     from game.server.qt.models import QtDialog
     from qt_ui.models import GameModel
@@ -63,7 +62,6 @@ class QtCallbacks:
         edit_package: Callable[[Package], None] | None = None,
         game_changed: Callable[[], None] | None = None,
         packages_changed: Callable[[], None] | None = None,
-        results_accepted: Callable[[Debriefing], None] | None = None,
     ) -> None:
         self.create_new_package = create_new_package
         self.show_tgo_info = show_tgo_info
@@ -84,9 +82,6 @@ class QtCallbacks:
         # Resyncs the Qt ATO models and radio allocations after an API command
         # removed a package (WEB-01.2). Same contract as turn_passed: emit a signal.
         self.packages_changed = packages_changed
-        # Shows the Qt debriefing window once the web UI accepted a mission result
-        # (WEB-05.1), until WEB-05.2 migrates it. Same contract: emit a signal.
-        self.results_accepted = results_accepted
 
 
 class QtContext:

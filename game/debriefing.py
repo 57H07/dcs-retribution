@@ -386,13 +386,13 @@ class Debriefing:
         self.game = game
         self.unit_map = unit_map
 
-        self.player_country = game.blue.faction.country.name
-        self.enemy_country = game.red.faction.country.name
+        self.player_country: str = game.blue.faction.country.name
+        self.enemy_country: str = game.red.faction.country.name
 
-        self.air_losses = self.dead_aircraft()
-        self.ground_losses = self.dead_ground_units()
-        self.base_captures = self.base_capture_events()
-        self.pilot_kills = self.attribute_kills()
+        self.air_losses: AirLosses = self.dead_aircraft()
+        self.ground_losses: GroundLosses = self.dead_ground_units()
+        self.base_captures: List[BaseCaptureEvent] = self.base_capture_events()
+        self.pilot_kills: List[PilotKill] = self.attribute_kills()
         self.damaged_units = self.persistent_damaged_units(
             self.state_data, game.settings.persistent_damage
         )

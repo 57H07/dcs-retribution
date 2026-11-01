@@ -1,6 +1,8 @@
 # Retribution v1.6.0
 
 ## Features/Improvements
+* **[UI] The web interface is now on by default (W10).** The full-window web interface replaces the Qt main window at the next start. To go back to the Qt interface, turn off "Web interface" in Preferences and restart, or start Retribution with `RETRIBUTION_WEB_UI=0`. A preferences file that already says `"web_ui": false` keeps the Qt interface. (WEB-05.2)
+* **[UI]** Web after-action report (`/debrief`, the "Last debriefing" menu): verdict, air kills and ground units destroyed (friendly : enemy), pilots rescued, prisoners and still down, next-turn budget, the result of each package, the event log and the casualty lists of both sides. The waiting screen opens it when the mission ends; "Accept results" applies them exactly as the Qt path does (same `accept_results`), then the report shows what they decided (prisoners, budget, the engine's timestamped log) until "Continue". The report is built by `game/debriefingreport.py`, which the Qt debriefing window now shares for its casualty lists. (WEB-05.2)
 * **[UX]** Web UI: pending transfers, notes, info panel, pilot careers, logs and About are web screens; Import layouts and Generate a Pretense campaign run from the Tools menu without a Qt dialog (WEB-08.2).
 * **[Campaign]** Combat Search & Rescue (CSAR): ejected pilots go down on the map and can be rescued by CSAR helicopter flights (player or AI) before they go missing or are captured. Disabled by default for both sides, including in existing saves; enable it in the campaign settings. (taken over from `upstream#929` by Drexyl)
 * **[Campaign]** CSAR: optional automatic recovery of pilots who come down on land over friendly territory, away from enemy threat zones and front lines (both distances configurable). Off by default.
@@ -89,6 +91,9 @@
 * **[UI]** Web interface base screen (`/bases/:id`): base status (runway, parking, depots, air defense), the Qt base menu tabs (Intel listed; aircraft, ground units and convoys still open the Qt base menu), and repairs with cost and delay: runway, destroyed buildings of the base and, with paid accelerated aircraft repair, aircraft in maintenance, one by one or all at once. The server enforces the budget and shows refusals as notifications; the Qt runway repair button uses the same command. (WEB-02.1)
 
 ## Fixes
+
+* **[UI]** The end-of-campaign dialog said "Victory!" even after a defeat.
+* **[UI]** Loading another campaign now forgets a pending mission result, so it cannot be accepted against the wrong game.
 * **[CSAR]** Helicopters that DCS does not allow to fly Transport (SA342 Gazelles, AH-64, AH-1W, Ka-50) are no longer CSAR-capable; assigning one used to abort mission generation.
 * **[UI]** The main window no longer crashes when a game is loaded (`QTopPanel.game` had lost its `@property`).
 * **[Engine]** Loading a save no longer deletes aircraft. Fixed wing aircraft could take the parking that helicopters and VTOL aircraft count on (turn 0 fill, deliveries, purchases), overfilling bases such as Incirlik, and every load then silently trimmed the helicopter/VTOL squadrons (e.g. AV-8B 8 -> 0). Fixed wing room now also respects the base's total parking; an existing overfilled base keeps its aircraft and is reported in the log.

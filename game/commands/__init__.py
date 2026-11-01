@@ -24,6 +24,7 @@ from .missionresult import (
     MissionResultWaiter,
     ResultSim,
     abort_mission,
+    accept_and_report,
     accept_results,
 )
 from .repairs import (
@@ -47,6 +48,7 @@ __all__ = [
     "ResultSim",
     "SpeedControlledSim",
     "abort_mission",
+    "accept_and_report",
     "accept_results",
     "base_repairs",
     "fix_past_tots",
