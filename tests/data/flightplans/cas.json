@@ -1,0 +1,102 @@
+{
+  "target": "Front line Golan South/Golan North",
+  "target_type": "FrontLine",
+  "primary_task": "CAS",
+  "auto_asap": true,
+  "tot": "2010-06-01T16:10:51",
+  "flights": [
+    {
+      "task": "CAS",
+      "aircraft": "AH-1W SuperCobra",
+      "squadron": "160th Squadron",
+      "departure": "Golan South",
+      "arrival": "Golan South",
+      "divert": null,
+      "count": 2,
+      "start_type": "Cold",
+      "flight_plan": "CasFlightPlan",
+      "startup": "2010-06-01T16:00:00",
+      "takeoff": "2010-06-01T16:04:30",
+      "tot": "2010-06-01T16:10:51",
+      "landing": "2010-06-01T16:47:07",
+      "waypoints": [
+        {
+          "type": "TAKEOFF",
+          "name": "TAKEOFF",
+          "x": -239830,
+          "y": -20281,
+          "alt_ft": 0,
+          "alt_type": "RADIO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "INGRESS_CAS",
+          "name": "INGRESS",
+          "x": -236240,
+          "y": -17043,
+          "alt_ft": 200,
+          "alt_type": "RADIO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "CAS",
+          "name": "FLOT START",
+          "x": -229046,
+          "y": -3169,
+          "alt_ft": 200,
+          "alt_type": "RADIO",
+          "tot": "2010-06-01T16:10:51",
+          "depart": null
+        },
+        {
+          "type": "CAS",
+          "name": "FLOT END",
+          "x": -225768,
+          "y": -40640,
+          "alt_ft": 200,
+          "alt_type": "RADIO",
+          "tot": null,
+          "depart": "2010-06-01T16:40:51"
+        },
+        {
+          "type": "LANDING_POINT",
+          "name": "LANDING",
+          "x": -239830,
+          "y": -20281,
+          "alt_ft": 0,
+          "alt_type": "RADIO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "BULLSEYE",
+          "name": "BULLSEYE",
+          "x": -213950,
+          "y": -19133,
+          "alt_ft": 0,
+          "alt_type": "BARO",
+          "tot": null,
+          "depart": null
+        }
+      ],
+      "loadouts": [
+        {
+          "name": "CAS",
+          "pylons": {
+            "1": "{88D18A5E-99C8-4B04-B40B-1C02F2018B6E}",
+            "4": "{88D18A5E-99C8-4B04-B40B-1C02F2018B6E}"
+          }
+        },
+        {
+          "name": "CAS",
+          "pylons": {
+            "1": "{88D18A5E-99C8-4B04-B40B-1C02F2018B6E}",
+            "4": "{88D18A5E-99C8-4B04-B40B-1C02F2018B6E}"
+          }
+        }
+      ]
+    }
+  ]
+}
