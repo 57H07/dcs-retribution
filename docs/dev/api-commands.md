@@ -166,6 +166,12 @@ A squadron change creates another `Flight`, as in Qt: `PUT .../squadron` answers
 `flight_id` next to the package, and the editor moves to it. Only a flight that has not
 started changes (`require_not_started`), except its name and callsign.
 
+The Route tab (WEB-04.4, `game/commands/flightroute.py`, `/flights/{id}/route`) follows
+the same pattern with waypoints addressed by their place in the plan. Where Qt asked
+before a destructive change, the read model says so (`delete_degrades`), the client asks,
+and the command refuses without the flag (`allow_degrade`). To answer "would this work?"
+without duplicating a layout's rules, `_probe` runs them on a copy with its own lists.
+
 The Payload tab (WEB-04.3, `game/commands/flightpayload.py`, `game/server/flightpayload/`,
 `GET /packages/{id}/flights/{id}/payload`) works the same way. Its read model separates what
 is stored from what flies: with the date restriction on, a read shows the degraded loadout

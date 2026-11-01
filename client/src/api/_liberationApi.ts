@@ -312,6 +312,109 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({ url: `/downed-pilots/${queryArg.pilotId}` }),
     }),
+    getFlightRoute: build.query<
+      GetFlightRouteApiResponse,
+      GetFlightRouteApiArg
+    >({
+      query: (queryArg) => ({ url: `/flights/${queryArg.flightId}/route` }),
+    }),
+    moveFlightWaypoint: build.mutation<
+      MoveFlightWaypointApiResponse,
+      MoveFlightWaypointApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/flights/${queryArg.flightId}/route/waypoints/${queryArg.index}/position`,
+        method: "PUT",
+        body: queryArg.leafletPoint,
+      }),
+    }),
+    setFlightWaypointAltitude: build.mutation<
+      SetFlightWaypointAltitudeApiResponse,
+      SetFlightWaypointAltitudeApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/flights/${queryArg.flightId}/route/waypoints/${queryArg.index}/altitude`,
+        method: "PUT",
+        body: queryArg.waypointAltitudeJs,
+      }),
+    }),
+    renameFlightWaypoint: build.mutation<
+      RenameFlightWaypointApiResponse,
+      RenameFlightWaypointApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/flights/${queryArg.flightId}/route/waypoints/${queryArg.index}/name`,
+        method: "PUT",
+        body: queryArg.waypointNameJs,
+      }),
+    }),
+    deleteFlightWaypoint: build.mutation<
+      DeleteFlightWaypointApiResponse,
+      DeleteFlightWaypointApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/flights/${queryArg.flightId}/route/waypoints/${queryArg.index}`,
+        method: "DELETE",
+        params: { allow_degrade: queryArg.allowDegrade },
+      }),
+    }),
+    insertFlightNavWaypoint: build.mutation<
+      InsertFlightNavWaypointApiResponse,
+      InsertFlightNavWaypointApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/flights/${queryArg.flightId}/route/waypoints/${queryArg.index}/nav`,
+        method: "POST",
+      }),
+    }),
+    addFlightRtbWaypoint: build.mutation<
+      AddFlightRtbWaypointApiResponse,
+      AddFlightRtbWaypointApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/flights/${queryArg.flightId}/route/rtb`,
+        method: "POST",
+        params: { allow_degrade: queryArg.allowDegrade },
+      }),
+    }),
+    listPredefinedWaypoints: build.query<
+      ListPredefinedWaypointsApiResponse,
+      ListPredefinedWaypointsApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/flights/${queryArg.flightId}/route/predefined-waypoints`,
+      }),
+    }),
+    addPredefinedWaypoint: build.mutation<
+      AddPredefinedWaypointApiResponse,
+      AddPredefinedWaypointApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/flights/${queryArg.flightId}/route/predefined-waypoints`,
+        method: "POST",
+        body: queryArg.newPredefinedWaypointJs,
+      }),
+    }),
+    setFlightRouteAltitude: build.mutation<
+      SetFlightRouteAltitudeApiResponse,
+      SetFlightRouteAltitudeApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/flights/${queryArg.flightId}/route/altitude`,
+        method: "PUT",
+        body: queryArg.waypointAltitudeJs,
+      }),
+    }),
+    recreateFlightRoute: build.mutation<
+      RecreateFlightRouteApiResponse,
+      RecreateFlightRouteApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/flights/${queryArg.flightId}/route/recreate`,
+        method: "POST",
+        body: queryArg.recreateRouteJs,
+      }),
+    }),
     getFlightPayload: build.query<
       GetFlightPayloadApiResponse,
       GetFlightPayloadApiArg
@@ -1427,6 +1530,74 @@ export type GetDownedPilotByIdApiResponse =
 export type GetDownedPilotByIdApiArg = {
   pilotId: string;
 };
+export type GetFlightRouteApiResponse =
+  /** status 200 Successful Response */ FlightRoute;
+export type GetFlightRouteApiArg = {
+  flightId: string;
+};
+export type MoveFlightWaypointApiResponse =
+  /** status 200 Successful Response */ FlightRoute;
+export type MoveFlightWaypointApiArg = {
+  flightId: string;
+  index: number;
+  leafletPoint: LatLng;
+};
+export type SetFlightWaypointAltitudeApiResponse =
+  /** status 200 Successful Response */ FlightRoute;
+export type SetFlightWaypointAltitudeApiArg = {
+  flightId: string;
+  index: number;
+  waypointAltitudeJs: WaypointAltitude;
+};
+export type RenameFlightWaypointApiResponse =
+  /** status 200 Successful Response */ FlightRoute;
+export type RenameFlightWaypointApiArg = {
+  flightId: string;
+  index: number;
+  waypointNameJs: WaypointName;
+};
+export type DeleteFlightWaypointApiResponse =
+  /** status 200 Successful Response */ FlightRoute;
+export type DeleteFlightWaypointApiArg = {
+  flightId: string;
+  index: number;
+  allowDegrade?: boolean;
+};
+export type InsertFlightNavWaypointApiResponse =
+  /** status 200 Successful Response */ FlightRoute;
+export type InsertFlightNavWaypointApiArg = {
+  flightId: string;
+  index: number;
+};
+export type AddFlightRtbWaypointApiResponse =
+  /** status 200 Successful Response */ FlightRoute;
+export type AddFlightRtbWaypointApiArg = {
+  flightId: string;
+  allowDegrade?: boolean;
+};
+export type ListPredefinedWaypointsApiResponse =
+  /** status 200 Successful Response */ PredefinedWaypoint[];
+export type ListPredefinedWaypointsApiArg = {
+  flightId: string;
+};
+export type AddPredefinedWaypointApiResponse =
+  /** status 200 Successful Response */ FlightRoute;
+export type AddPredefinedWaypointApiArg = {
+  flightId: string;
+  newPredefinedWaypointJs: NewPredefinedWaypoint;
+};
+export type SetFlightRouteAltitudeApiResponse =
+  /** status 200 Successful Response */ FlightRoute;
+export type SetFlightRouteAltitudeApiArg = {
+  flightId: string;
+  waypointAltitudeJs: WaypointAltitude;
+};
+export type RecreateFlightRouteApiResponse =
+  /** status 200 Successful Response */ FlightRoute;
+export type RecreateFlightRouteApiArg = {
+  flightId: string;
+  recreateRouteJs: RecreateRoute;
+};
 export type GetFlightPayloadApiResponse =
   /** status 200 Successful Response */ FlightPayload;
 export type GetFlightPayloadApiArg = {
@@ -2433,6 +2604,52 @@ export type DownedPilot = {
   turns_remaining: number;
   sidc: string;
 };
+export type FlightRouteWaypoint = {
+  index: number;
+  name: string;
+  type: string;
+  position: LatLng;
+  altitude_ft: number;
+  altitude_reference: string;
+  time?: string;
+  time_kind?: string;
+  is_tot: boolean;
+  min_fuel_lb?: number;
+  is_movable: boolean;
+  include_in_path: boolean;
+  can_delete: boolean;
+  delete_degrades: boolean;
+  can_insert_after: boolean;
+  threat?: string;
+};
+export type FlightRoute = {
+  flight_id: string;
+  blue: boolean;
+  recreate_tasks: string[];
+  is_custom: boolean;
+  bulk_altitude_ft: number;
+  min_altitude_ft: number;
+  max_altitude_ft: number;
+  waypoints: FlightRouteWaypoint[];
+};
+export type WaypointAltitude = {
+  altitude_ft: number;
+};
+export type WaypointName = {
+  name: string;
+};
+export type PredefinedWaypoint = {
+  name: string;
+  description: string;
+  has_siblings: boolean;
+};
+export type NewPredefinedWaypoint = {
+  name: string;
+  same_location?: boolean;
+};
+export type RecreateRoute = {
+  task: string;
+};
 export type PayloadWeapon = {
   clsid: string;
   name: string;
@@ -3430,6 +3647,17 @@ export const {
   useGetDebugJoinZonesQuery,
   useListDownedPilotsQuery,
   useGetDownedPilotByIdQuery,
+  useGetFlightRouteQuery,
+  useMoveFlightWaypointMutation,
+  useSetFlightWaypointAltitudeMutation,
+  useRenameFlightWaypointMutation,
+  useDeleteFlightWaypointMutation,
+  useInsertFlightNavWaypointMutation,
+  useAddFlightRtbWaypointMutation,
+  useListPredefinedWaypointsQuery,
+  useAddPredefinedWaypointMutation,
+  useSetFlightRouteAltitudeMutation,
+  useRecreateFlightRouteMutation,
   useGetFlightPayloadQuery,
   useSetFlightFuelMutation,
   useSetSameLoadoutMutation,

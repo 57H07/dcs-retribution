@@ -1,0 +1,114 @@
+/* Route tab (WEB-04.4), after mockups/Package.dc.html. */
+.tab {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.mapPanel,
+.tablePanel {
+  min-width: 0;
+  background: var(--ui-color-bg-panel);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-lg);
+  overflow: hidden;
+}
+
+.mapPanel {
+  flex: 1 1 380px;
+  display: flex;
+  min-height: 360px;
+}
+
+.tablePanel {
+  flex: 1 1 520px;
+  overflow-x: auto;
+}
+
+.map {
+  flex: 1;
+  min-height: 360px;
+}
+
+/* The div icon of a waypoint: a numbered ring in the accent colour. */
+.marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ui-color-bg-canvas);
+  border: 2px solid var(--ui-color-accent);
+  border-radius: 50%;
+  color: var(--ui-color-text-primary);
+  font-family: var(--ui-font-mono);
+  font-size: 11px;
+}
+
+.markerSelected {
+  background: var(--ui-color-accent);
+  color: var(--ui-color-bg-canvas);
+}
+
+.markerFixed {
+  border-style: dotted;
+}
+
+.control {
+  display: inline-flex;
+}
+
+.nameCell {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-sm);
+}
+
+.name {
+  width: 100%;
+  min-width: 110px;
+  height: var(--ui-size-control);
+  padding: 0 var(--ui-space-md);
+  background: var(--ui-color-bg-canvas);
+  border: 1px solid var(--ui-color-line-strong);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-color-text-primary);
+  font: inherit;
+}
+
+.altitude input {
+  width: 72px;
+  text-align: right;
+}
+
+.tot {
+  color: var(--ui-color-accent);
+}
+
+.threat,
+.threats {
+  color: var(--ui-color-accent-hover);
+}
+
+.threats {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-md);
+}
+
+.group {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-sm);
+}

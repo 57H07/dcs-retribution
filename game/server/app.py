@@ -11,6 +11,7 @@ from . import (
     debuggeometries,
     downedpilots,
     eventstream,
+    flightroute,
     flightpayload,
     flights,
     frontlines,
@@ -44,6 +45,7 @@ app.include_router(controlpoints.router)
 app.include_router(debuggeometries.router)
 app.include_router(downedpilots.router)
 app.include_router(eventstream.router)
+app.include_router(flightroute.router)
 app.include_router(flightpayload.router)
 app.include_router(flights.router)
 app.include_router(frontlines.router)

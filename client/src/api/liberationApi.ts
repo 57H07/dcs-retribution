@@ -30,6 +30,8 @@ const PACKAGE_COMMAND_TAGS = [
   Tags.INSPECTOR,
 ];
 
+/** What a change to a route touches: its times are on these screens. */
+const ROUTE_COMMAND_TAGS = [Tags.PACKAGES, Tags.TIMELINE];
 /** What a change to the aircraft and pilots of a flight touches. */
 const FLIGHT_CREW_COMMAND_TAGS = [...PACKAGE_COMMAND_TAGS, Tags.AIR_WING];
 
@@ -231,6 +233,17 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     removePackageFlight: { invalidatesTags: PACKAGE_COMMAND_TAGS },
     getAutoCreateOptions: { providesTags: [Tags.PACKAGES, Tags.BASE] },
     autoCreatePackage: { invalidatesTags: PACKAGE_COMMAND_TAGS },
+    // Route tab of a flight (WEB-04.4): also refetched on flight events.
+    getFlightRoute: { providesTags: [Tags.PACKAGES] },
+    moveFlightWaypoint: { invalidatesTags: ROUTE_COMMAND_TAGS },
+    setFlightWaypointAltitude: { invalidatesTags: ROUTE_COMMAND_TAGS },
+    renameFlightWaypoint: { invalidatesTags: [Tags.PACKAGES] },
+    deleteFlightWaypoint: { invalidatesTags: ROUTE_COMMAND_TAGS },
+    insertFlightNavWaypoint: { invalidatesTags: ROUTE_COMMAND_TAGS },
+    addFlightRtbWaypoint: { invalidatesTags: ROUTE_COMMAND_TAGS },
+    addPredefinedWaypoint: { invalidatesTags: ROUTE_COMMAND_TAGS },
+    setFlightRouteAltitude: { invalidatesTags: ROUTE_COMMAND_TAGS },
+    recreateFlightRoute: { invalidatesTags: ROUTE_COMMAND_TAGS },
     // General and Pilots tabs of a flight (WEB-04.2).
     getFlightSettings: {
       providesTags: [Tags.PACKAGES, Tags.BASE, Tags.AIR_WING],

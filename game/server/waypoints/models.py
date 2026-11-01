@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 from game.ato import Flight, FlightWaypoint
 from game.ato.flightwaypointtype import FlightWaypointType
+from game.commands.flightroute import is_flown, is_movable
 from game.server.leaflet import LeafletPoint
 
 
@@ -39,22 +40,6 @@ class FlightWaypointJs(BaseModel):
     def for_waypoint(
         waypoint: FlightWaypoint, flight: Flight, waypoint_idx: int
     ) -> FlightWaypointJs:
-        # Target *points* are the exact location of a unit, whereas the target area is
-        # only the center of the objective. Allow moving the latter since its exact
-        # location isn't very important.
-        #
-        # Landing, and divert should be changed in the flight settings UI, takeoff
-        # cannot be changed because that's where the plane is.
-        #
-        # Moving the bullseye reference only makes it wrong.
-        is_movable = waypoint.waypoint_type not in {
-            FlightWaypointType.BULLSEYE,
-            FlightWaypointType.DIVERT,
-            FlightWaypointType.LANDING_POINT,
-            FlightWaypointType.TAKEOFF,
-            FlightWaypointType.TARGET_POINT,
-        }
-
         # We don't need a marker for the departure waypoint (and it's likely
         # coincident with the landing waypoint, so hard to see). We do want to draw
         # the path from it though.
@@ -75,18 +60,13 @@ class FlightWaypointJs(BaseModel):
             FlightWaypointType.TAKEOFF,
         }
 
-        include_in_path = waypoint.waypoint_type not in {
-            FlightWaypointType.BULLSEYE,
-            FlightWaypointType.DIVERT,
-        }
-
         return FlightWaypointJs(
             name=waypoint.name,
             position=waypoint.position.latlng(),
             altitude_ft=waypoint.alt.feet,
             altitude_reference=waypoint.alt_type,
-            is_movable=is_movable,
+            is_movable=is_movable(waypoint),
             should_mark=should_mark,
-            include_in_path=include_in_path,
+            include_in_path=is_flown(waypoint),
             timing=timing_info(flight, waypoint_idx),
         )
