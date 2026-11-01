@@ -64,6 +64,10 @@ class QLiberationMap(QWebEngineView):
         self.setPage(self.page)
         theme_signals().theme_changed.connect(self.apply_theme)
 
+    def show_screen(self, path: str) -> None:
+        """Opens a screen of the web shell, which is hash-routed (WEB-00.3)."""
+        self.page.runJavaScript(f'window.location.hash = "#{path}";')
+
     def apply_theme(self, variant: str) -> None:
         """Restyles the loaded map without reloading it (GFX-01.2).
 

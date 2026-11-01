@@ -379,6 +379,8 @@ class AirWingJs(BaseModel):
     bases: list[AirWingBaseJs]
     #: One row per aircraft: unallocated first, then the ATO.
     inventory: list[InventoryRowJs]
+    #: The cheat that opens `/air-wing-config/campaign`.
+    adjustments_enabled: bool
 
     class Config:
         title = "AirWing"
@@ -392,6 +394,7 @@ class AirWingJs(BaseModel):
             by_base.setdefault(squadron.location, []).append(squadron)
         return AirWingJs(
             blue=player.is_blue,
+            adjustments_enabled=game.settings.enable_air_wing_adjustments,
             squadron_count=len(squadrons),
             aircraft_count=sum(s.owned_aircraft for s in squadrons),
             pilot_count=sum(len(s.living_pilots) for s in squadrons),

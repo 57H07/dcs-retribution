@@ -1,6 +1,5 @@
 from __future__ import unicode_literals, annotations
 
-from datetime import datetime
 from typing import List, Optional, Tuple
 
 from PySide6 import QtWidgets, QtGui
@@ -16,55 +15,11 @@ from PySide6.QtWidgets import (
 )
 
 from game.campaignloader import Campaign
+from game.commands.newgame import TIME_PERIODS
 from game.liberation_install import get_dcs_install_directory
 from qt_ui.widgets.QLiberationCalendar import QLiberationCalendar
 from qt_ui.windows.newgame.WizardPages.QFactionSelection import FactionSelection
 from qt_ui.windows.newgame.jinja_env import jinja_env
-
-"""
-Possible time periods for new games
-
-    `Name`: daytime(day, month, year),
-
-`Identifier` is the name that will appear in the menu
-The object is a python datetime object
-"""
-TIME_PERIODS = {
-    "WW2 - Winter [1944]": datetime(1944, 1, 1),
-    "WW2 - Spring [1944]": datetime(1944, 4, 1),
-    "WW2 - Summer [1944]": datetime(1944, 6, 1),
-    "WW2 - Fall [1944]": datetime(1944, 10, 1),
-    "Early Cold War - Winter [1952]": datetime(1952, 1, 1),
-    "Early Cold War - Spring [1952]": datetime(1952, 4, 1),
-    "Early Cold War - Summer [1952]": datetime(1952, 6, 1),
-    "Early Cold War - Fall [1952]": datetime(1952, 10, 1),
-    "Cold War - Winter [1970]": datetime(1970, 1, 1),
-    "Cold War - Spring [1970]": datetime(1970, 4, 1),
-    "Cold War - Summer [1970]": datetime(1970, 6, 1),
-    "Cold War - Fall [1970]": datetime(1970, 10, 1),
-    "Late Cold War - Winter [1985]": datetime(1985, 1, 1),
-    "Late Cold War - Spring [1985]": datetime(1985, 4, 1),
-    "Late Cold War - Summer [1985]": datetime(1985, 6, 1),
-    "Late Cold War - Fall [1985]": datetime(1985, 10, 1),
-    "Gulf War - Winter [1990]": datetime(1990, 1, 1),
-    "Gulf War - Spring [1990]": datetime(1990, 4, 1),
-    "Gulf War - Summer [1990]": datetime(1990, 6, 1),
-    "Mid-90s - Winter [1995]": datetime(1995, 1, 1),
-    "Mid-90s - Spring [1995]": datetime(1995, 4, 1),
-    "Mid-90s - Summer [1995]": datetime(1995, 6, 1),
-    "Mid-90s - Fall [1995]": datetime(1995, 10, 1),
-    "Gulf War - Fall [1990]": datetime(1990, 10, 1),
-    "Modern - Winter [2010]": datetime(2010, 1, 1),
-    "Modern - Spring [2010]": datetime(2010, 4, 1),
-    "Modern - Summer [2010]": datetime(2010, 6, 1),
-    "Modern - Fall [2010]": datetime(2010, 10, 1),
-    "Georgian War [2008]": datetime(2008, 8, 7),
-    "Syrian War [2011]": datetime(2011, 3, 15),
-    "6 days war [1967]": datetime(1967, 6, 5),
-    "Yom Kippour War [1973]": datetime(1973, 10, 6),
-    "First Lebanon War [1982]": datetime(1982, 6, 6),
-    "Arab-Israeli War [1948]": datetime(1948, 5, 15),
-}
 
 
 class TheaterConfiguration(QtWidgets.QWizardPage):

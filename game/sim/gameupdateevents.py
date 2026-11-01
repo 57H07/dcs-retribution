@@ -44,6 +44,7 @@ class GameUpdateEvents:
     new_turn: bool = False
     budget_updated: bool = False
     mission_result_updated: bool = False
+    new_game_updated: bool = False
     shutting_down: bool = False
 
     @property
@@ -167,6 +168,11 @@ class GameUpdateEvents:
     def update_mission_result(self) -> GameUpdateEvents:
         """The mission waiting for its result changed status (WEB-05.1)."""
         self.mission_result_updated = True
+        return self
+
+    def update_new_game(self) -> GameUpdateEvents:
+        """The new campaign being generated changed status (WEB-06)."""
+        self.new_game_updated = True
         return self
 
     def shut_down(self) -> GameUpdateEvents:

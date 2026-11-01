@@ -17,16 +17,13 @@ from dcs.payloads import PayloadDirectories
 
 from game import Game, VERSION, logging_config, persistency
 from game.ato import FlightType
-from game.campaignloader.campaign import Campaign, DEFAULT_BUDGET
+from game.commands import newgame
 from game.data.weapons import Pylon, Weapon, WeaponGroup
 from game.dcs.aircrafttype import AircraftType
-from game.factions import FACTIONS
 from game.persistency import base_path
 from game.profiling import logged_duration
 from game.server import EventStream, Server
-from game.settings import Settings
 from game.sim import GameUpdateEvents
-from game.theater.start_generator import GameGenerator, GeneratorSettings, ModSettings
 from pydcs_extensions import load_mods
 from game import liberation_install
 from qt_ui import (
@@ -264,6 +261,13 @@ def parse_args() -> argparse.Namespace:
         help="Fill every squadron to its aircraft limit on turn 0.",
     )
 
+    new_game.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Same parameters and seed, same campaign.",
+    )
+
     lint_weapons = subparsers.add_parser("lint-weapons")
     lint_weapons.add_argument("aircraft", help="Name of the aircraft variant to lint.")
 
@@ -272,20 +276,8 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def create_game(
-    campaign_path: Path,
-    blue: str,
-    red: str,
-    supercarrier: bool,
-    auto_procurement: bool,
-    inverted: bool,
-    cheats: bool,
-    start_date: datetime,
-    restrict_weapons_by_date: bool,
-    advanced_iads: bool,
-    use_new_squadron_rules: bool,
-    squadrons_start_full: bool,
-) -> Game:
+def create_game(args: argparse.Namespace) -> Game:
+    """The CLI `new-game`, on the same code as both wizards."""
     first_start = liberation_install.init()
     if first_start:
         sys.exit(
@@ -301,74 +293,23 @@ def create_game(
     # for loadouts) without saving the generated campaign and reloading it the normal
     # way.
     inject_custom_payloads(persistency.base_path())
-    campaign = Campaign.from_file(campaign_path)
-    theater = campaign.load_theater(advanced_iads)
-    generator = GameGenerator(
-        FACTIONS[blue],
-        FACTIONS[red],
-        theater,
-        campaign.load_air_wing_config(theater),
-        Settings(
-            supercarrier=supercarrier,
-            automate_runway_repair=auto_procurement,
-            automate_front_line_reinforcements=auto_procurement,
-            automate_aircraft_reinforcements=auto_procurement,
-            automate_building_repairs=auto_procurement,
-            automate_ground_object_repairs=auto_procurement,
-            enable_frontline_cheats=cheats,
-            enable_base_capture_cheat=cheats,
-            enable_transfer_cheat=cheats,
-            restrict_weapons_by_date=restrict_weapons_by_date,
-            enable_squadron_aircraft_limits=use_new_squadron_rules,
-        ),
-        GeneratorSettings(
-            start_date=start_date,
-            start_time=campaign.recommended_start_time,
-            player_budget=DEFAULT_BUDGET,
-            enemy_budget=DEFAULT_BUDGET,
-            inverted=inverted,
-            advanced_iads=theater.iads_network.advanced_iads,
-            no_carrier=False,
-            no_lha=False,
-            no_player_navy=False,
-            no_enemy_navy=False,
-            tgo_config=campaign.load_ground_forces_config(),
-            carrier_config=campaign.load_carrier_config(),
-            squadrons_start_full=squadrons_start_full,
-        ),
-        ModSettings(
-            a4_skyhawk=False,
-            a6a_intruder=False,
-            a7e_corsair2=False,
-            ea6b_prowler=False,
-            e7a_wedgetail=False,
-            fa_18efg=False,
-            fa18ef_tanker=False,
-            f4bc_phantom=False,
-            f9f_panther=False,
-            f22_raptor=False,
-            f84g_thunderjet=False,
-            f100_supersabre=False,
-            f104_starfighter=False,
-            f105_thunderchief=False,
-            hercules=False,
-            oh_6=False,
-            oh_6_vietnamassetpack=False,
-            uh_60l=False,
-            jas39_gripen=False,
-            sk_60=False,
-            su15_flagon=False,
-            su30_flanker_h=False,
-            su35s_flanker_m=False,
-            su57_felon=False,
-            coldwarassets=False,
-            frenchpack=False,
-            high_digit_sams=False,
-        ),
+    return newgame.create_game(
+        newgame.cli_parameters(
+            args.campaign,
+            args.blue,
+            args.red,
+            args.supercarrier,
+            args.auto_procurement,
+            args.inverted,
+            args.cheats,
+            args.date,
+            args.restrict_weapons_by_date,
+            args.advanced_iads,
+            args.use_new_squadron_rules,
+            args.squadrons_start_full,
+            args.seed,
+        )
     )
-    game = generator.generate()
-    game.begin_turn_0(squadrons_start_full=squadrons_start_full)
-    return game
 
 
 def set_ignore_empty_install_directory(value: bool) -> None:
@@ -489,20 +430,7 @@ def main():
 
     if args.subcommand == "new-game":
         with logged_duration("New game creation"):
-            game = create_game(
-                args.campaign,
-                args.blue,
-                args.red,
-                args.supercarrier,
-                args.auto_procurement,
-                args.inverted,
-                args.cheats,
-                args.date,
-                args.restrict_weapons_by_date,
-                args.advanced_iads,
-                args.use_new_squadron_rules,
-                args.squadrons_start_full,
-            )
+            game = create_game(args)
     if args.subcommand == "lint-weapons":
         lint_weapon_data_for_aircraft(AircraftType.named(args.aircraft))
         return
