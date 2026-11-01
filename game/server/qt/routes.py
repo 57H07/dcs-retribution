@@ -56,7 +56,8 @@ def show_tgo_info(
     game: Game = Depends(GameContext.require),
     qt: QtCallbacks = Depends(QtContext.get),
 ) -> None:
-    qt.show_tgo_info(game.db.tgos.get(tgo_id))
+    """Opens the Qt site dialog of the Qt map; refused in web mode (WEB-08.3)."""
+    _require_callback(qt.show_tgo_info)(game.db.tgos.get(tgo_id))
 
 
 @router.post(

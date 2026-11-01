@@ -123,7 +123,8 @@ that codegen cannot handle (send a string or a list of strings instead).
 Until a screen has its web version, its client route opens the Qt dialog:
 `POST /qt/dialogs/{dialog}` (`QtDialog` in `game/server/qt/models.py`) and the
 older target routes
-(`/qt/create-package/...`, `/qt/info/...`). The route only calls a `QtCallbacks`
+(`/qt/create-package/...`, `/qt/info/...`; `/qt/info/tgo/...` only serves the Qt map
+and answers 503 in web mode, where its callback is `None`). The route only calls a `QtCallbacks`
 callback that emits a `QLiberationWindow` signal, so the dialog opens on the Qt
 main thread after the lock is released. A migrated screen removes its `QtDialog`
 value, its Qt slot and the dialog itself (W9), and replaces its `QtScreen`

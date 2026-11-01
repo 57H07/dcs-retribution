@@ -24,6 +24,7 @@ from . import (
     reports,
     supplyroutes,
     tgos,
+    unitinfo,
     waypoints,
     iadsnetwork,
     journal,
@@ -54,6 +55,7 @@ app.include_router(qt.router)
 app.include_router(reports.router)
 app.include_router(supplyroutes.router)
 app.include_router(tgos.router)
+app.include_router(unitinfo.router)
 app.include_router(waypoints.router)
 app.include_router(iadsnetwork.router)
 # WEB-08.2: transfers, notes, info panel, careers, logs, about, tools.

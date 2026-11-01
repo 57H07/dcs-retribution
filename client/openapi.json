@@ -2133,6 +2133,7 @@
     "/qt/info/tgo/{tgo_id}": {
       "post": {
         "summary": "Show Tgo Info",
+        "description": "Opens the Qt site dialog of the Qt map; refused in web mode (WEB-08.3).",
         "operationId": "open_tgo_info_dialog",
         "parameters": [
           {
@@ -2602,6 +2603,440 @@
         }
       }
     },
+    "/tgos/{tgo_id}/sheet": {
+      "get": {
+        "summary": "Get Tgo Sheet",
+        "description": "The ground object screen: units with their status and what can be done.",
+        "operationId": "get_tgo_sheet",
+        "parameters": [
+          {
+            "name": "tgo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Tgo Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgoSheetJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tgos/{tgo_id}/units/{unit_id}/repair": {
+      "post": {
+        "summary": "Repair Tgo Unit",
+        "operationId": "repair_tgo_unit",
+        "parameters": [
+          {
+            "name": "tgo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Tgo Id"
+            }
+          },
+          {
+            "name": "unit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Unit Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgoSheetJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "nothing to repair on this unit, or not enough budget",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tgos/{tgo_id}/heading": {
+      "put": {
+        "summary": "Set Tgo Heading",
+        "operationId": "set_tgo_heading",
+        "parameters": [
+          {
+            "name": "tgo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Tgo Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TgoHeadingChangeJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgoSheetJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "not a player site, or a building site",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tgos/{tgo_id}/hidden-on-mfd": {
+      "put": {
+        "summary": "Set Tgo Hidden On Mfd",
+        "operationId": "set_tgo_hidden_on_mfd",
+        "parameters": [
+          {
+            "name": "tgo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Tgo Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TgoHiddenChangeJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgoSheetJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "not an enemy air defense site",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tgos/{tgo_id}/group": {
+      "delete": {
+        "summary": "Disband Tgo Group",
+        "description": "Sells the whole group of a site.",
+        "operationId": "disband_tgo_group",
+        "parameters": [
+          {
+            "name": "tgo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Tgo Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgoSheetJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "the site cannot be sold, or is empty",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tgos/{tgo_id}/purchase-options": {
+      "get": {
+        "summary": "Get Tgo Purchase Options",
+        "description": "The force groups and layouts this site can be replaced with.",
+        "operationId": "get_tgo_purchase_options",
+        "parameters": [
+          {
+            "name": "tgo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Tgo Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgoPurchaseOptionsJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tgos/{tgo_id}/purchase/quote": {
+      "post": {
+        "summary": "Quote Tgo Purchase",
+        "description": "What a purchase would cost: changes nothing.",
+        "operationId": "quote_tgo_purchase",
+        "parameters": [
+          {
+            "name": "tgo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Tgo Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TgoPurchaseJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseQuoteJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "the layout does not take this purchase",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tgos/{tgo_id}/purchase": {
+      "post": {
+        "summary": "Buy Tgo Group",
+        "description": "Replaces the group of a site.",
+        "operationId": "buy_tgo_group",
+        "parameters": [
+          {
+            "name": "tgo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Tgo Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TgoPurchaseJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgoSheetJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "the site cannot be bought, the layout does not take this purchase, or not enough budget (then nothing changes)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tgos/{tgo_id}/destination-in-range": {
       "get": {
         "summary": "Tgo Destination In Range",
@@ -2724,6 +3159,110 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/unit-info": {
+      "get": {
+        "summary": "Get Unit Info",
+        "operationId": "get_unit_info",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "aircraft",
+                "ground",
+                "ship"
+              ],
+              "type": "string",
+              "title": "Kind"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnitInfoJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/unit-info/banner": {
+      "get": {
+        "summary": "Get Unit Banner",
+        "description": "The picture of a unit type, loaded by URL by the sheet (`<img>`).",
+        "operationId": "get_unit_banner",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "aircraft",
+                "ground",
+                "ship"
+              ],
+              "type": "string",
+              "title": "Kind"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "image/jpeg": {},
+              "image/png": {}
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -4966,6 +5505,47 @@
         ],
         "title": "LayoutImportJs"
       },
+      "LayoutSlotJs": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "group_name": {
+            "type": "string",
+            "title": "Group Name"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/SlotOptionJs"
+            },
+            "type": "array",
+            "title": "Options"
+          },
+          "amount": {
+            "type": "integer",
+            "title": "Amount"
+          },
+          "max_amount": {
+            "type": "integer",
+            "title": "Max Amount"
+          },
+          "optional": {
+            "type": "boolean",
+            "title": "Optional"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "group_name",
+          "options",
+          "amount",
+          "max_amount",
+          "optional"
+        ],
+        "title": "LayoutSlot"
+      },
       "LeafletPoint": {
         "properties": {
           "lat": {
@@ -5647,6 +6227,76 @@
         ],
         "title": "PretenseCampaignJs"
       },
+      "PurchaseForceGroupJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "layouts": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseLayoutJs"
+            },
+            "type": "array",
+            "title": "Layouts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "layouts"
+        ],
+        "title": "PurchaseForceGroup"
+      },
+      "PurchaseLayoutJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "slots": {
+            "items": {
+              "$ref": "#/components/schemas/LayoutSlotJs"
+            },
+            "type": "array",
+            "title": "Slots"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "slots"
+        ],
+        "title": "PurchaseLayout"
+      },
+      "PurchaseQuoteJs": {
+        "properties": {
+          "price": {
+            "type": "integer",
+            "title": "Price"
+          },
+          "credit": {
+            "type": "integer",
+            "title": "Credit"
+          },
+          "cost": {
+            "type": "integer",
+            "title": "Cost"
+          },
+          "affordable": {
+            "type": "boolean",
+            "title": "Affordable"
+          }
+        },
+        "type": "object",
+        "required": [
+          "price",
+          "credit",
+          "cost",
+          "affordable"
+        ],
+        "title": "PurchaseQuote"
+      },
       "QtDialog": {
         "type": "string",
         "enum": [
@@ -5982,6 +6632,52 @@
         "title": "SimSpeedJs",
         "description": "Mirror of `SimSpeedSetting` (whose values are tuples, unfit for OpenAPI)."
       },
+      "SlotChoiceJs": {
+        "properties": {
+          "slot": {
+            "type": "integer",
+            "title": "Slot"
+          },
+          "unit_type": {
+            "type": "string",
+            "title": "Unit Type"
+          },
+          "amount": {
+            "type": "integer",
+            "title": "Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slot",
+          "unit_type",
+          "amount"
+        ],
+        "title": "SlotChoice"
+      },
+      "SlotOptionJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "price": {
+            "type": "integer",
+            "title": "Price"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "price"
+        ],
+        "title": "SlotOption"
+      },
       "SquadronChoiceJs": {
         "properties": {
           "aircraft": {
@@ -6031,6 +6727,10 @@
             "type": "string",
             "title": "Aircraft"
           },
+          "aircraft_id": {
+            "type": "string",
+            "title": "Aircraft Id"
+          },
           "unit_cost": {
             "type": "number",
             "title": "Unit Cost"
@@ -6061,6 +6761,7 @@
           "squadron_id",
           "squadron",
           "aircraft",
+          "aircraft_id",
           "unit_cost",
           "owned",
           "pending",
@@ -6147,6 +6848,78 @@
           "active_transports"
         ],
         "title": "SupplyRoute"
+      },
+      "TgoHeadingChangeJs": {
+        "properties": {
+          "degrees": {
+            "type": "integer",
+            "title": "Degrees"
+          }
+        },
+        "type": "object",
+        "required": [
+          "degrees"
+        ],
+        "title": "TgoHeadingChange"
+      },
+      "TgoHeadingJs": {
+        "properties": {
+          "degrees": {
+            "type": "integer",
+            "title": "Degrees"
+          },
+          "can_adjust": {
+            "type": "boolean",
+            "title": "Can Adjust"
+          },
+          "to_conflict": {
+            "type": "integer",
+            "title": "To Conflict"
+          }
+        },
+        "type": "object",
+        "required": [
+          "degrees",
+          "can_adjust",
+          "to_conflict"
+        ],
+        "title": "TgoHeading"
+      },
+      "TgoHiddenChangeJs": {
+        "properties": {
+          "hidden": {
+            "type": "boolean",
+            "title": "Hidden"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hidden"
+        ],
+        "title": "TgoHiddenChange"
+      },
+      "TgoIncomeJs": {
+        "properties": {
+          "per_building": {
+            "type": "number",
+            "title": "Per Building"
+          },
+          "available": {
+            "type": "number",
+            "title": "Available"
+          },
+          "receiving": {
+            "type": "number",
+            "title": "Receiving"
+          }
+        },
+        "type": "object",
+        "required": [
+          "per_building",
+          "available",
+          "receiving"
+        ],
+        "title": "TgoIncome"
       },
       "TgoJs": {
         "properties": {
@@ -6235,6 +7008,98 @@
         ],
         "title": "Tgo"
       },
+      "TgoPurchaseJs": {
+        "properties": {
+          "force_group": {
+            "type": "string",
+            "title": "Force Group"
+          },
+          "layout": {
+            "type": "string",
+            "title": "Layout"
+          },
+          "choices": {
+            "items": {
+              "$ref": "#/components/schemas/SlotChoiceJs"
+            },
+            "type": "array",
+            "title": "Choices"
+          }
+        },
+        "type": "object",
+        "required": [
+          "force_group",
+          "layout",
+          "choices"
+        ],
+        "title": "TgoPurchase"
+      },
+      "TgoPurchaseOptionsJs": {
+        "properties": {
+          "force_groups": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseForceGroupJs"
+            },
+            "type": "array",
+            "title": "Force Groups"
+          }
+        },
+        "type": "object",
+        "required": [
+          "force_groups"
+        ],
+        "title": "TgoPurchaseOptions"
+      },
+      "TgoSheetJs": {
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/TgoSummaryJs"
+          },
+          "budget": {
+            "type": "number",
+            "title": "Budget"
+          },
+          "is_building_site": {
+            "type": "boolean",
+            "title": "Is Building Site"
+          },
+          "units": {
+            "items": {
+              "$ref": "#/components/schemas/TgoUnitJs"
+            },
+            "type": "array",
+            "title": "Units"
+          },
+          "income": {
+            "$ref": "#/components/schemas/TgoIncomeJs"
+          },
+          "heading": {
+            "$ref": "#/components/schemas/TgoHeadingJs"
+          },
+          "hidden_on_mfd": {
+            "title": "Hidden On Mfd",
+            "type": "boolean"
+          },
+          "can_buy": {
+            "type": "boolean",
+            "title": "Can Buy"
+          },
+          "disband_value": {
+            "type": "integer",
+            "title": "Disband Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "summary",
+          "budget",
+          "is_building_site",
+          "units",
+          "can_buy",
+          "disband_value"
+        ],
+        "title": "TgoSheet"
+      },
       "TgoSummaryJs": {
         "properties": {
           "id": {
@@ -6292,6 +7157,66 @@
           "dead"
         ],
         "title": "TgoSummary"
+      },
+      "TgoUnitJs": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "info_kind": {
+            "title": "Info Kind",
+            "type": "string",
+            "enum": [
+              "ground",
+              "ship"
+            ]
+          },
+          "info_name": {
+            "title": "Info Name",
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "operational",
+              "inoperative",
+              "repairing",
+              "destroyed"
+            ],
+            "title": "State"
+          },
+          "turns_remaining": {
+            "type": "integer",
+            "title": "Turns Remaining"
+          },
+          "repair_cost": {
+            "title": "Repair Cost",
+            "type": "number"
+          },
+          "repair_turns": {
+            "type": "integer",
+            "title": "Repair Turns"
+          },
+          "repair_affordable": {
+            "type": "boolean",
+            "title": "Repair Affordable"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "state",
+          "turns_remaining",
+          "repair_turns",
+          "repair_affordable"
+        ],
+        "title": "TgoUnit"
       },
       "ThanksJs": {
         "properties": {
@@ -6708,6 +7633,67 @@
           "count"
         ],
         "title": "UnitCountJs"
+      },
+      "UnitInfoJs": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "aircraft",
+              "ground",
+              "ship"
+            ],
+            "title": "Kind"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "manufacturer": {
+            "type": "string",
+            "title": "Manufacturer"
+          },
+          "country_of_origin": {
+            "type": "string",
+            "title": "Country Of Origin"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "year_introduced": {
+            "type": "string",
+            "title": "Year Introduced"
+          },
+          "tasks": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tasks"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "name",
+          "display_name",
+          "manufacturer",
+          "country_of_origin",
+          "role",
+          "year_introduced",
+          "tasks",
+          "description"
+        ],
+        "title": "UnitInfo"
       },
       "ValidationError": {
         "properties": {

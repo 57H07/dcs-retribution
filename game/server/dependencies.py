@@ -54,7 +54,8 @@ class QtCallbacks:
     def __init__(
         self,
         create_new_package: Callable[[MissionTarget], None],
-        show_tgo_info: Callable[[TheaterGroundObject], None],
+        # None in web mode: the web UI has its own ground object screen (WEB-08.3).
+        show_tgo_info: Callable[[TheaterGroundObject], None] | None,
         show_control_point_info: Callable[[ControlPoint], None],
         select_flight: Callable[[Flight], None],
         turn_passed: Callable[[TurnState], None] | None = None,

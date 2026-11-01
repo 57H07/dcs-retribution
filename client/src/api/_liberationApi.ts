@@ -474,6 +474,72 @@ const injectedRtkApi = api.injectEndpoints({
     getTgoSummary: build.query<GetTgoSummaryApiResponse, GetTgoSummaryApiArg>({
       query: (queryArg) => ({ url: `/tgos/${queryArg.tgoId}/summary` }),
     }),
+    getTgoSheet: build.query<GetTgoSheetApiResponse, GetTgoSheetApiArg>({
+      query: (queryArg) => ({ url: `/tgos/${queryArg.tgoId}/sheet` }),
+    }),
+    repairTgoUnit: build.mutation<
+      RepairTgoUnitApiResponse,
+      RepairTgoUnitApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/tgos/${queryArg.tgoId}/units/${queryArg.unitId}/repair`,
+        method: "POST",
+      }),
+    }),
+    setTgoHeading: build.mutation<
+      SetTgoHeadingApiResponse,
+      SetTgoHeadingApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/tgos/${queryArg.tgoId}/heading`,
+        method: "PUT",
+        body: queryArg.tgoHeadingChangeJs,
+      }),
+    }),
+    setTgoHiddenOnMfd: build.mutation<
+      SetTgoHiddenOnMfdApiResponse,
+      SetTgoHiddenOnMfdApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/tgos/${queryArg.tgoId}/hidden-on-mfd`,
+        method: "PUT",
+        body: queryArg.tgoHiddenChangeJs,
+      }),
+    }),
+    disbandTgoGroup: build.mutation<
+      DisbandTgoGroupApiResponse,
+      DisbandTgoGroupApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/tgos/${queryArg.tgoId}/group`,
+        method: "DELETE",
+      }),
+    }),
+    getTgoPurchaseOptions: build.query<
+      GetTgoPurchaseOptionsApiResponse,
+      GetTgoPurchaseOptionsApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/tgos/${queryArg.tgoId}/purchase-options`,
+      }),
+    }),
+    quoteTgoPurchase: build.mutation<
+      QuoteTgoPurchaseApiResponse,
+      QuoteTgoPurchaseApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/tgos/${queryArg.tgoId}/purchase/quote`,
+        method: "POST",
+        body: queryArg.tgoPurchaseJs,
+      }),
+    }),
+    buyTgoGroup: build.mutation<BuyTgoGroupApiResponse, BuyTgoGroupApiArg>({
+      query: (queryArg) => ({
+        url: `/tgos/${queryArg.tgoId}/purchase`,
+        method: "POST",
+        body: queryArg.tgoPurchaseJs,
+      }),
+    }),
     tgoDestinationInRange: build.query<
       TgoDestinationInRangeApiResponse,
       TgoDestinationInRangeApiArg
@@ -500,6 +566,18 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/tgos/${queryArg.tgoId}/cancel-travel`,
         method: "PUT",
+      }),
+    }),
+    getUnitInfo: build.query<GetUnitInfoApiResponse, GetUnitInfoApiArg>({
+      query: (queryArg) => ({
+        url: `/unit-info`,
+        params: { kind: queryArg.kind, name: queryArg.name },
+      }),
+    }),
+    getUnitBanner: build.query<GetUnitBannerApiResponse, GetUnitBannerApiArg>({
+      query: (queryArg) => ({
+        url: `/unit-info/banner`,
+        params: { kind: queryArg.kind, name: queryArg.name },
       }),
     }),
     listAllWaypointsForFlight: build.query<
@@ -887,6 +965,51 @@ export type GetTgoSummaryApiResponse =
 export type GetTgoSummaryApiArg = {
   tgoId: string;
 };
+export type GetTgoSheetApiResponse =
+  /** status 200 Successful Response */ TgoSheet;
+export type GetTgoSheetApiArg = {
+  tgoId: string;
+};
+export type RepairTgoUnitApiResponse =
+  /** status 200 Successful Response */ TgoSheet;
+export type RepairTgoUnitApiArg = {
+  tgoId: string;
+  unitId: number;
+};
+export type SetTgoHeadingApiResponse =
+  /** status 200 Successful Response */ TgoSheet;
+export type SetTgoHeadingApiArg = {
+  tgoId: string;
+  tgoHeadingChangeJs: TgoHeadingChange;
+};
+export type SetTgoHiddenOnMfdApiResponse =
+  /** status 200 Successful Response */ TgoSheet;
+export type SetTgoHiddenOnMfdApiArg = {
+  tgoId: string;
+  tgoHiddenChangeJs: TgoHiddenChange;
+};
+export type DisbandTgoGroupApiResponse =
+  /** status 200 Successful Response */ TgoSheet;
+export type DisbandTgoGroupApiArg = {
+  tgoId: string;
+};
+export type GetTgoPurchaseOptionsApiResponse =
+  /** status 200 Successful Response */ TgoPurchaseOptions;
+export type GetTgoPurchaseOptionsApiArg = {
+  tgoId: string;
+};
+export type QuoteTgoPurchaseApiResponse =
+  /** status 200 Successful Response */ PurchaseQuote;
+export type QuoteTgoPurchaseApiArg = {
+  tgoId: string;
+  tgoPurchaseJs: TgoPurchase;
+};
+export type BuyTgoGroupApiResponse =
+  /** status 200 Successful Response */ TgoSheet;
+export type BuyTgoGroupApiArg = {
+  tgoId: string;
+  tgoPurchaseJs: TgoPurchase;
+};
 export type TgoDestinationInRangeApiResponse =
   /** status 200 Successful Response */ boolean;
 export type TgoDestinationInRangeApiArg = {
@@ -904,6 +1027,18 @@ export type ClearTgoDestinationApiResponse =
   /** status 204 Successful Response */ void;
 export type ClearTgoDestinationApiArg = {
   tgoId: string;
+};
+export type GetUnitInfoApiResponse =
+  /** status 200 Successful Response */ UnitInfo;
+export type GetUnitInfoApiArg = {
+  kind: "aircraft" | "ground" | "ship";
+  name: string;
+};
+export type GetUnitBannerApiResponse =
+  /** status 200 Successful Response */ Blob;
+export type GetUnitBannerApiArg = {
+  kind: "aircraft" | "ground" | "ship";
+  name: string;
 };
 export type ListAllWaypointsForFlightApiResponse =
   /** status 200 Successful Response */ Waypoint[];
@@ -1042,6 +1177,7 @@ export type SquadronOrderRow = {
   squadron_id: string;
   squadron: string;
   aircraft: string;
+  aircraft_id: string;
   unit_cost: number;
   owned: number;
   max_aircraft?: number;
@@ -1568,6 +1704,95 @@ export type TgoSummary = {
   units: Count;
   dead: boolean;
 };
+export type TgoUnit = {
+  id: number;
+  name: string;
+  info_kind?: "ground" | "ship";
+  info_name?: string;
+  state: "operational" | "inoperative" | "repairing" | "destroyed";
+  turns_remaining: number;
+  repair_cost?: number;
+  repair_turns: number;
+  repair_affordable: boolean;
+};
+export type TgoIncome = {
+  per_building: number;
+  available: number;
+  receiving: number;
+};
+export type TgoHeading = {
+  degrees: number;
+  can_adjust: boolean;
+  to_conflict: number;
+};
+export type TgoSheet = {
+  summary: TgoSummary;
+  budget: number;
+  is_building_site: boolean;
+  units: TgoUnit[];
+  income?: TgoIncome;
+  heading?: TgoHeading;
+  hidden_on_mfd?: boolean;
+  can_buy: boolean;
+  disband_value: number;
+};
+export type TgoHeadingChange = {
+  degrees: number;
+};
+export type TgoHiddenChange = {
+  hidden: boolean;
+};
+export type SlotOption = {
+  id: string;
+  name: string;
+  price: number;
+};
+export type LayoutSlot = {
+  id: number;
+  group_name: string;
+  options: SlotOption[];
+  amount: number;
+  max_amount: number;
+  optional: boolean;
+};
+export type PurchaseLayout = {
+  name: string;
+  slots: LayoutSlot[];
+};
+export type PurchaseForceGroup = {
+  name: string;
+  layouts: PurchaseLayout[];
+};
+export type TgoPurchaseOptions = {
+  force_groups: PurchaseForceGroup[];
+};
+export type PurchaseQuote = {
+  price: number;
+  credit: number;
+  cost: number;
+  affordable: boolean;
+};
+export type SlotChoice = {
+  slot: number;
+  unit_type: string;
+  amount: number;
+};
+export type TgoPurchase = {
+  force_group: string;
+  layout: string;
+  choices: SlotChoice[];
+};
+export type UnitInfo = {
+  kind: "aircraft" | "ground" | "ship";
+  name: string;
+  display_name: string;
+  manufacturer: string;
+  country_of_origin: string;
+  role: string;
+  year_introduced: string;
+  tasks: string[];
+  description: string;
+};
 export type LogTailJs = {
   lines: string[];
   total: number;
@@ -1725,9 +1950,19 @@ export const {
   useListTgosQuery,
   useGetTgoByIdQuery,
   useGetTgoSummaryQuery,
+  useGetTgoSheetQuery,
+  useRepairTgoUnitMutation,
+  useSetTgoHeadingMutation,
+  useSetTgoHiddenOnMfdMutation,
+  useDisbandTgoGroupMutation,
+  useGetTgoPurchaseOptionsQuery,
+  useQuoteTgoPurchaseMutation,
+  useBuyTgoGroupMutation,
   useTgoDestinationInRangeQuery,
   useSetTgoDestinationMutation,
   useClearTgoDestinationMutation,
+  useGetUnitInfoQuery,
+  useGetUnitBannerQuery,
   useListAllWaypointsForFlightQuery,
   useSetWaypointPositionMutation,
   useGetIadsNetworkQuery,

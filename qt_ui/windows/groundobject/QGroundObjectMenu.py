@@ -13,12 +13,19 @@ from PySide6.QtWidgets import (
     QWidget,
     QCheckBox,
 )
+from game.commands import (
+    CommandError,
+    disband_ground_object,
+    repair_ground_unit,
+    resale_value,
+    rotate_ground_object,
+    set_hidden_on_mfd,
+)
 from game.config import REWARDS
 from game.data.building_data import FORTIFICATION_BUILDINGS
+from game.gamelock import game_lock
 from game.server import EventStream
-from game.sim.gameupdateevents import GameUpdateEvents
 from game.theater import ControlPoint, TheaterGroundObject, Player
-from game.theater.repairs import buy_repair
 from game.theater.grounddamage import accelerated_repair_cost
 from game.theater.theatergroup import TheaterUnit
 from game.theater.theatergroundobject import (
@@ -263,7 +270,8 @@ class QGroundObjectMenu(QDialog):
         self.hiddenBox.setLayout(self.hiddenBoxLayout)
 
     def update_hidden_on_mfd(self, state: bool) -> None:
-        self.ground_object.hide_on_mfd = bool(state)
+        with game_lock(), EventStream.event_context() as events:
+            set_hidden_on_mfd(self.ground_object, bool(state), events)
 
     def do_refresh_layout(self):
         try:
@@ -296,48 +304,36 @@ class QGroundObjectMenu(QDialog):
     def update_total_value(self):
         if not self.ground_object.purchasable:
             return
-        self.total_value = self.ground_object.value + self.pending_repair_value()
+        self.total_value = resale_value(self.ground_object)
         if self.sell_all_button is not None:
             self.sell_all_button.setText("Disband (+$" + str(self.total_value) + "M)")
 
-    def pending_repair_value(self) -> int:
-        total = 0
-        for unit in self.ground_object.units:
-            if unit.alive:
-                continue
-            if unit.repair_turns_remaining is None:
-                continue
-            if unit.unit_type is None:
-                continue
-            total += unit.unit_type.price
-        return total
-
     def repair_unit(self, unit, price):
-        if buy_repair(self.game, unit, price, GameUpdateEvents()):
-            GameUpdateSignal.get_instance().updateGame(self.game)
-        self.update_game()
+        self._repair(unit)
 
     def repair_building(self, unit, price):
-        if buy_repair(self.game, unit, price, GameUpdateEvents()):
-            GameUpdateSignal.get_instance().updateGame(self.game)
-        self.update_game()
+        self._repair(unit)
 
     def repair_inoperative_unit(self, unit: TheaterUnit, price: int) -> None:
-        if self.game.blue.budget >= price:
-            self.game.blue.budget -= price
-            unit.end_inoperative(GameUpdateEvents())
-            logging.info(f"Repaired inoperative unit: {unit.unit_name}")
+        self._repair(unit)
+
+    def _repair(self, unit: TheaterUnit) -> None:
+        try:
+            with game_lock(), EventStream.event_context() as events:
+                repair_ground_unit(self.game, self.ground_object, unit.id, events)
+        except CommandError as refusal:
+            logging.info(refusal.message)
         self.update_game()
 
     def rotate_tgo(self, heading: Heading) -> None:
-        self.ground_object.rotate(heading)
+        player = Player.BLUE if self.game_model.is_ownfor else Player.RED
+        with game_lock(), EventStream.event_context() as events:
+            rotate_ground_object(self.ground_object, heading, events, player)
         self.heading_image.set_heading(heading)
 
     def sell_all(self):
-        self.update_total_value()
-        coalition = self.ground_object.coalition
-        coalition.budget += self.total_value
-        self.ground_object.groups = []
+        with game_lock(), EventStream.event_context() as events:
+            disband_ground_object(self.game, self.ground_object, events)
         self.update_game()
 
     def buy_group(self) -> None:
@@ -348,19 +344,7 @@ class QGroundObjectMenu(QDialog):
             self.update_game()
 
     def update_game(self) -> None:
-        events = GameUpdateEvents()
-        events.update_tgo(self.ground_object)
-        self.game.theater.iads_network.update_tgo(self.ground_object, events)
-        if any(
-            package.target == self.ground_object
-            for package in self.game.ato_for(player=Player.RED).packages
-        ):
-            # Replan if the tgo was a target of the redfor
-            coalition = self.ground_object.coalition
-            self.game.initialize_turn(
-                events, for_red=coalition.player, for_blue=coalition.player.opponent
-            )
-        EventStream.put_nowait(events)
+        """The commands published their changes: refreshes the Qt widgets."""
         GameUpdateSignal.get_instance().updateGame(self.game)
         # Refresh the dialog
         self.do_refresh_layout()

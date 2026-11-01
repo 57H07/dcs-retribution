@@ -171,8 +171,11 @@ export const handleStreamedEvents = (
     );
   }
   if (inspectorChanged(events)) {
-    // The base screen (WEB-02.1) shows the same base status, and the budget.
-    dispatch(liberationApi.util.invalidateTags([Tags.INSPECTOR, Tags.BASE]));
+    // The base (WEB-02.1) and ground object (WEB-08.3) screens show the same
+    // status, and the budget.
+    dispatch(
+      liberationApi.util.invalidateTags([Tags.INSPECTOR, Tags.BASE, Tags.TGO]),
+    );
   }
 
   if (packagesChanged(events)) {

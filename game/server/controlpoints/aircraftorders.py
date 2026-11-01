@@ -26,6 +26,8 @@ class SquadronOrderRowJs(BaseModel):
     squadron_id: UUID
     squadron: str
     aircraft: str
+    #: Opens the aircraft's unit info sheet (WEB-08.3).
+    aircraft_id: str
     unit_cost: float
     owned: int
     #: Most aircraft the squadron may hold; None without the limits setting.
@@ -47,6 +49,7 @@ class SquadronOrderRowJs(BaseModel):
             squadron_id=squadron.id,
             squadron=squadron.name,
             aircraft=squadron.aircraft.display_name,
+            aircraft_id=squadron.aircraft.variant_id,
             unit_cost=squadron.aircraft.price,
             owned=squadron.owned_aircraft,
             max_aircraft=squadron.max_size if limited else None,

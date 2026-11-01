@@ -21,12 +21,20 @@ from dcs.unittype import UnitType
 
 from game import Game
 from game.armedforces.forcegroup import ForceGroup
+from game.commands import (
+    CommandError,
+    PurchaseLine,
+    TgoPurchase,
+    buy_ground_object_group,
+)
 from game.data.groups import GroupRole, GroupTask
+from game.gamelock import game_lock
 from game.layout.layout import (
     LayoutException,
     TgoLayout,
     TgoLayoutUnitGroup,
 )
+from game.server import EventStream
 from game.theater import TheaterGroundObject
 from game.theater.theatergroundobject import (
     EwrGroundObject,
@@ -220,30 +228,28 @@ class QGroundObjectTemplateLayout(QGroupBox):
             self.buy_button.setToolTip("Not enough money to buy this group")
 
     def buy_group(self) -> None:
-        if not self.affordable:
-            # Something went wrong. Buy button should be disabled!
-            logging.error("Not enough money to buy the group")
-            return
-
-        # Change the heading of the new group to head to the conflict
-        self.ground_object.heading = (
-            self.game.theater.heading_to_conflict_from(self.ground_object.position)
-            or self.ground_object.heading
+        purchase = TgoPurchase(
+            self.layout_model.force_group,
+            [
+                PurchaseLine(
+                    group_name,
+                    group.layout,
+                    group.dcs_unit_type,
+                    group.amount,
+                    group.unit_price,
+                )
+                for group_name, groups in self.layout_model.groups.items()
+                for group in groups
+                if group.enabled
+            ],
         )
-        coalition = self.ground_object.coalition
-        coalition.budget -= self.cost if self.game.turn else 0
-        self.ground_object.groups = []
-        for group_name, groups in self.layout_model.groups.items():
-            for group in groups:
-                if group.enabled:
-                    self.layout_model.force_group.create_theater_group_for_tgo(
-                        self.ground_object,
-                        group.layout,
-                        f"{self.ground_object.name} ({group_name})",
-                        self.game,
-                        group.dcs_unit_type,  # Forced Type
-                        group.amount,  # Forced Amount
-                    )
+        try:
+            with game_lock(), EventStream.event_context() as events:
+                buy_ground_object_group(self.game, self.ground_object, purchase, events)
+        except CommandError as refusal:
+            # Something went wrong. Buy button should be disabled!
+            logging.error(refusal.message)
+            return
         self.close_dialog_signal.emit()
 
 

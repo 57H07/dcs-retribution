@@ -15,9 +15,19 @@ export enum Tags {
   PACKAGES = "Packages",
   TRANSFERS = "Transfers",
   BASE = "Base",
+  TGO = "Tgo",
 }
 
 const LIST_ID = "LIST";
+
+/** What repairing, selling or buying at a ground object changes. */
+const TGO_CHANGES = [
+  Tags.TGO,
+  Tags.BASE,
+  Tags.INSPECTOR,
+  Tags.TOP_BAR,
+  Tags.REPORTS,
+];
 
 function providesList<R extends { id: string | number }[], T extends string>(
   resultsWithIds: R | undefined,
@@ -90,6 +100,13 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     createSquadron: {
       invalidatesTags: [Tags.BASE, Tags.INSPECTOR, Tags.REPORTS],
     },
+    // Ground object sheet (WEB-08.3): refetched with the inspector (eventstream).
+    getTgoSheet: { providesTags: [Tags.TGO] },
+    repairTgoUnit: { invalidatesTags: TGO_CHANGES },
+    setTgoHeading: { invalidatesTags: [Tags.TGO] },
+    setTgoHiddenOnMfd: { invalidatesTags: [Tags.TGO] },
+    disbandTgoGroup: { invalidatesTags: TGO_CHANGES },
+    buyTgoGroup: { invalidatesTags: TGO_CHANGES },
     // /packages/ (WEB-01.2): also refetched on flight events (eventstream.tsx).
     listPackages: { providesTags: [Tags.PACKAGES] },
     deletePackage: { invalidatesTags: [Tags.PACKAGES, Tags.TOP_BAR] },

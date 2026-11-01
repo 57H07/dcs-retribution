@@ -64,7 +64,13 @@ function ShellLayout() {
       <AppBar onNewPackage={newPackage} onShowHelp={() => setHelpOpen(true)} />
       <main className={styles.content}>
         <CommandView
-          map={<LiberationMap onSelect={setSelection} layerToolbar />}
+          map={
+            <LiberationMap
+              onSelect={setSelection}
+              selection={selection}
+              layerToolbar
+            />
+          }
           inspector={
             <MapInspector
               selection={selection}

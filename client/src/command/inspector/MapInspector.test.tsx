@@ -61,6 +61,7 @@ function renderInspector(selection: MapSelection | null, onClose = vi.fn()) {
         element: <MapInspector selection={selection} onClose={onClose} />,
       },
       { path: "/bases/:id", element: <p>Base screen</p> },
+      { path: "/tgos/:id", element: <p>Site screen</p> },
     ],
     { initialEntries: ["/"] },
   );
@@ -153,7 +154,7 @@ describe("map inspector", () => {
     );
   });
 
-  it("shows a ground object and opens its Qt details", async () => {
+  it("shows a ground object and opens its sheet", async () => {
     const calls = recordFetch(204, undefined, {
       [`/tgos/${TGO_ID}/summary`]: site(),
     });
@@ -163,10 +164,19 @@ describe("map inspector", () => {
     expect(card()).toHaveTextContent("5/8");
 
     await userEvent.click(screen.getByRole("button", { name: "Details" }));
-    await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0].path).toBe(`/qt/info/tgo/${TGO_ID}`);
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe(`/tgos/${TGO_ID}`),
+    );
+    // No Qt dialog (/qt/info/tgo) in the web shell.
+    expect(calls).toHaveLength(0);
+  });
 
-    await userEvent.click(screen.getByRole("button", { name: "Krasnodar" }));
+  it("leads to the base of a ground object", async () => {
+    recordFetch(204, undefined, { [`/tgos/${TGO_ID}/summary`]: site() });
+    const { router } = renderInspector({ kind: "tgo", id: TGO_ID });
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Krasnodar" }),
+    );
     await waitFor(() =>
       expect(router.state.location.pathname).toBe("/bases/cp-2"),
     );
