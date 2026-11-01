@@ -1,12 +1,13 @@
 // Tab frame of a flight in the package editor (mockups/Package.dc.html). Each tab is
-// a slot that a lot fills: General and Pilots are done (WEB-04.2), Payload WEB-04.3,
-// Route WEB-04.4, Radios & TACAN WEB-04.5. Until then the Qt editor keeps those features:
+// a slot that a lot fills: General and Pilots (WEB-04.2) and Radios & TACAN (WEB-04.5)
+// are done, Payload is WEB-04.3, Route WEB-04.4. Until then the Qt editor keeps those:
 // replace a tab's <QtEditorSlot> with its screen and remove the slot with the last.
 import { PackageEditorFlight } from "../api/liberationApi";
 import { useQtCommands } from "../shell/useQtCommands";
 import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from "../ui";
 import { FlightGeneralTab } from "./FlightGeneralTab";
 import { FlightPilotsTab } from "./FlightPilotsTab";
+import { FlightRadiosTab } from "./FlightRadiosTab";
 import styles from "./PackageEditor.module.css";
 import { ReactNode } from "react";
 
@@ -63,7 +64,7 @@ export function FlightSections({
         <FlightPilotsTab packageId={packageId} flightId={flight.id} />
       </TabsContent>
       <TabsContent value="radios" className={styles.section}>
-        <QtEditorSlot flight={flight} what="Radios and TACAN" />
+        <FlightRadiosTab flightId={flight.id} />
       </TabsContent>
     </Tabs>
   );

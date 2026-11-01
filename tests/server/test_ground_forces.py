@@ -736,13 +736,20 @@ def test_transfer_route_refusals(served: dict[str, Any]) -> None:
     assert not list(game.blue.transfers)
 
 
-def test_attack_convoy_route_opens_the_package_editor(served: dict[str, Any]) -> None:
-    origin, destination, _ = _enemy_convoy(served["game"])
-    status, _ = _request(
+def test_attack_convoy_route_plans_a_package_for_the_web_editor(
+    served: dict[str, Any],
+) -> None:
+    game = served["game"]
+    origin, destination, _ = _enemy_convoy(game)
+    status, body = _request(
         "POST", f"/control-points/{origin.id}/convoys/{destination.id}/package"
     )
-    assert status == 204
-    assert isinstance(served["created"][0], Convoy)
+    assert status == 201
+    assert served["created"] == []
+    package = game.blue.ato.packages[-1]
+    assert body["id"] == str(package.id)
+    assert isinstance(package.target, Convoy)
+    game.blue.ato.remove_package(package)
 
 
 def test_radios_route(served: dict[str, Any]) -> None:

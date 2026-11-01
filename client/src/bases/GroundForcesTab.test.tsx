@@ -121,7 +121,10 @@ function renderBase(
     options.answers ?? {},
   );
   const router = createMemoryRouter(
-    [{ path: "/bases/:id/:tab", element: <BaseScreen /> }],
+    [
+      { path: "/bases/:id/:tab", element: <BaseScreen /> },
+      { path: "/packages/:id", element: <p>Package editor</p> },
+    ],
     { initialEntries: [options.path ?? "/bases/cp-1/ground-forces"] },
   );
   render(
@@ -283,6 +286,12 @@ describe("departing convoys", () => {
       path: "/bases/cp-1/convoys",
       blue: false,
       convoys: [CONVOY],
+      answers: {
+        "/control-points/cp-1/convoys/cp-2/package": {
+          status: 201,
+          body: { id: "pkg-9" },
+        },
+      },
     });
     const card = await screen.findByRole("listitem", {
       name: "Convoy 12 to Sochi",
@@ -294,6 +303,7 @@ describe("departing convoys", () => {
       method: "POST",
       path: "/control-points/cp-1/convoys/cp-2/package",
     });
+    expect(await screen.findByText("Package editor")).toBeInTheDocument();
   });
 
   it("says when no convoy leaves", async () => {

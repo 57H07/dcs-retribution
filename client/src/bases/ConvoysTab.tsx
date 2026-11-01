@@ -1,14 +1,17 @@
 // "Departing convoys" tab (WEB-02.3): the Qt DepartingConvoysMenu. The convoys and
-// cargo ships leaving this enemy base, and a package against one of them.
+// cargo ships leaving this enemy base, and a package against one of them, which opens
+// in the package editor.
 import { commandErrorMessage } from "../api/commands";
 import {
   DepartingConvoy,
   useAttackDepartingConvoyMutation,
   useGetDepartingConvoysQuery,
 } from "../api/liberationApi";
+import { PATHS } from "../shell/paths";
 import { Button, useToast } from "../ui";
 import styles from "./AirfieldTab.module.css";
 import { Refusal, refusalOf } from "./orders";
+import { useNavigate } from "react-router-dom";
 
 export function ConvoysTab({ cpId }: { cpId: string }) {
   const { data, error, isLoading } = useGetDepartingConvoysQuery({ cpId });
@@ -37,23 +40,25 @@ export function ConvoysTab({ cpId }: { cpId: string }) {
 function ConvoyCard(props: { cpId: string; convoy: DepartingConvoy }) {
   const { cpId, convoy } = props;
   const toast = useToast();
+  const navigate = useNavigate();
   const [attack, { isLoading }] = useAttackDepartingConvoyMutation();
   const title = `${convoy.name} to ${convoy.destination}`;
 
   const onAttack = async () => {
-    const refusal = refusalOf(
-      await attack({
-        cpId,
-        destinationId: convoy.destination_id,
-        kind: convoy.kind,
-      }),
-    );
+    const result = await attack({
+      cpId,
+      destinationId: convoy.destination_id,
+      kind: convoy.kind,
+    });
+    const refusal = refusalOf(result);
     if (refusal !== null) {
       toast({
         title: "Could not plan the attack",
         description: commandErrorMessage(refusal),
         tone: "danger",
       });
+    } else if ("data" in result) {
+      navigate(PATHS.package(result.data.id));
     }
   };
 
