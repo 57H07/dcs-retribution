@@ -1,4 +1,3 @@
-import logging
 from typing import Iterable, List, Optional
 
 from PySide6.QtCore import Signal, Qt, QModelIndex
@@ -16,16 +15,20 @@ from PySide6.QtWidgets import (
 
 from game import Game
 from game.ato.flight import Flight
-from game.ato.flightplans.custom import CustomFlightPlan
-from game.ato.flightplans.formationattack import FormationAttackFlightPlan
-from game.ato.flightplans.planningerror import PlanningError
-from game.ato.flightplans.waypointbuilder import WaypointBuilder
 from game.ato.flighttype import FlightType
 from game.ato.flightwaypoint import FlightWaypoint
-from game.ato.flightwaypointtype import FlightWaypointType
-from game.utils import feet
-from game.ato.loadouts import Loadout
 from game.ato.package import Package
+from game.commands import CommandError
+from game.commands.flightroute import (
+    add_rtb_waypoint,
+    default_bulk_altitude,
+    delete_waypoint,
+    deletion_degrades,
+    insert_nav_after,
+    recreate_route,
+    set_en_route_altitude,
+)
+from game.gamelock import game_lock
 from game.theater import Player
 from qt_ui.windows.mission.flight.waypoints.QFlightWaypointList import (
     QFlightWaypointList,
@@ -37,33 +40,6 @@ from qt_ui.windows.mission.flight.waypoints.QPredefinedWaypointSelectionWindow i
 
 class QFlightWaypointTab(QFrame):
     loadout_changed = Signal()
-
-    # Waypoint types whose altitude the bulk setter must not touch. Their altitude is
-    # tied to something other than the en-route cruise band, so overwriting it with a
-    # cruise MSL would break the flight plan:
-    #   * Takeoff / pattern / landing points are tied to the airfield.
-    #   * Divert and cargo-stop points are alternate landing fields.
-    #   * Target points carry the target's own elevation (used for attack geometry).
-    #   * Pickup / dropoff zones are ground-level helo landing zones.
-    #   * Refuel / recovery-tanker points are tied to the tanker's orbit altitude.
-    #   * Bullseye is a fixed map reference, not a flown waypoint.
-    BULK_ALTITUDE_SKIP_TYPES = frozenset(
-        {
-            FlightWaypointType.TAKEOFF,
-            FlightWaypointType.DESCENT_POINT,
-            FlightWaypointType.LANDING_POINT,
-            FlightWaypointType.DIVERT,
-            FlightWaypointType.CARGO_STOP,
-            FlightWaypointType.TARGET_POINT,
-            FlightWaypointType.TARGET_GROUP_LOC,
-            FlightWaypointType.TARGET_SHIP,
-            FlightWaypointType.PICKUP_ZONE,
-            FlightWaypointType.DROPOFF_ZONE,
-            FlightWaypointType.REFUEL,
-            FlightWaypointType.RECOVERY_TANKER,
-            FlightWaypointType.BULLSEYE,
-        }
-    )
 
     def __init__(self, game: Game, package: Package, flight: Flight):
         super(QFlightWaypointTab, self).__init__()
@@ -96,7 +72,7 @@ class QFlightWaypointTab(QFrame):
         self.bulk_altitude.setMinimum(0)
         self.bulk_altitude.setMaximum(40000)
         self.bulk_altitude.setSingleStep(1000)
-        self.bulk_altitude.setValue(self._default_bulk_altitude())
+        self.bulk_altitude.setValue(default_bulk_altitude(self.flight))
         self.bulk_altitude.setSuffix(" ft")
         self.bulk_altitude.setToolTip(
             "Apply this MSL altitude to every en-route waypoint. Takeoff, landing, "
@@ -158,25 +134,12 @@ class QFlightWaypointTab(QFrame):
             return
         index: QModelIndex = selected[0]
         self.flight_waypoint_list.setCurrentIndex(index)
-        wpt: FlightWaypoint = self.flight_waypoint_list.model.data(
-            index, Qt.ItemDataRole.UserRole
-        )
-        next_wpt: Optional[FlightWaypoint] = None
-        if index.row() + 1 < self.flight_waypoint_list.model.rowCount():
-            next_wpt = self.flight_waypoint_list.model.data(
-                index.siblingAtRow(index.row() + 1), Qt.ItemDataRole.UserRole
-            )
-        if not self.flight.flight_plan.layout.add_waypoint(wpt, next_wpt):
-            QMessageBox.critical(
-                QWidget(),
-                "Failed to add NAV waypoint",
-                "Could not insert a new waypoint given the currently selected waypoint.\n"
-                "Please select a different waypoint to insert the new NAV waypoint.",
-            )
+        try:
+            with game_lock():
+                insert_nav_after(self.flight, index.row())
+        except CommandError as ex:
+            QMessageBox.critical(QWidget(), "Failed to add NAV waypoint", str(ex))
         else:
-            self.flight_waypoint_list.model.insertRow(
-                self.flight_waypoint_list.model.rowCount()
-            )
             self.on_change()
 
     def on_delete_waypoint(self):
@@ -190,29 +153,10 @@ class QFlightWaypointTab(QFrame):
         self.on_change()
 
     def delete_waypoint(self, waypoint: FlightWaypoint) -> None:
-        # Need to degrade to a custom flight plan and remove the waypoint.
-        # If the waypoint is a target waypoint and is not the last target
-        # waypoint, we don't need to degrade.
-        fp = self.flight.flight_plan
-        if isinstance(fp, FormationAttackFlightPlan):
-            is_target = waypoint in fp.target_area_waypoint.targets
-            count = len(fp.target_area_waypoint.targets)
-            if is_target and count > 1:
-                fp.target_area_waypoint.targets.remove(waypoint)
-                return
-        model = self.flight_waypoint_list.model
-        if fp.layout.delete_waypoint(waypoint):
-            model.removeRow(model.rowCount() - 1)
+        if deletion_degrades(self.flight, waypoint) and not self.confirm_degrade():
             return
-
-        if not self.flight.flight_plan.is_custom:
-            confirmed = self.confirm_degrade()
-            if not confirmed:
-                return
-        model.removeRow(model.rowCount() - 1)
-        self.degrade_to_custom_flight_plan()
-        assert isinstance(self.flight.flight_plan, CustomFlightPlan)
-        self.flight.flight_plan.layout.custom_waypoints.remove(waypoint)
+        with game_lock():
+            delete_waypoint(self.flight, waypoint, allow_degrade=True)
 
     def confirm_degrade(self, parent: Optional[QWidget] = None) -> bool:
         result = QMessageBox.warning(
@@ -236,24 +180,14 @@ class QFlightWaypointTab(QFrame):
     def on_waypoints_added(self, waypoints: Iterable[FlightWaypoint]) -> None:
         if not waypoints:
             return
-        self.flight.flight_plan.layout.custom_waypoints.extend(waypoints)
-        self.add_rows(len(list(waypoints)))
-
-    def add_rows(self, count: int) -> None:
-        rc = self.flight_waypoint_list.model.rowCount()
-        self.flight_waypoint_list.model.insertRows(rc, count)
+        with game_lock():
+            self.flight.flight_plan.layout.custom_waypoints.extend(waypoints)
         self.on_change()
 
     def on_rtb_waypoint(self):
-        rtb = WaypointBuilder(self.flight).land(self.flight.arrival)
-        self.degrade_to_custom_flight_plan()
-        assert isinstance(self.flight.flight_plan, CustomFlightPlan)
-        self.flight.flight_plan.layout.custom_waypoints.append(rtb)
-        self.add_rows(1)
-
-    def degrade_to_custom_flight_plan(self) -> None:
-        if not isinstance(self.flight.flight_plan, CustomFlightPlan):
-            self.flight.degrade_to_custom_flight_plan()
+        with game_lock():
+            add_rtb_waypoint(self.flight, allow_degrade=True)
+        self.on_change()
 
     def confirm_recreate(self, task: FlightType) -> None:
         result = QMessageBox.question(
@@ -266,53 +200,25 @@ class QFlightWaypointTab(QFrame):
             QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.Yes,
         )
-        original_task = self.flight.flight_type
         if result == QMessageBox.StandardButton.Yes:
-            self.flight.set_flight_type(task)
             try:
-                self.flight.recreate_flight_plan(dump_debug_info=True)
-            except PlanningError as ex:
-                self.flight.set_flight_type(original_task)
-                logging.exception("Could not recreate flight")
+                with game_lock():
+                    recreate_route(self.flight.coalition.game, self.flight, task)
+            except CommandError as ex:
                 QMessageBox.critical(
                     self,
                     "Could not recreate flight",
                     str(ex),
                     QMessageBox.StandardButton.Ok,
                 )
-            for member in self.flight.iter_members():
-                if not member.loadout.is_custom:
-                    member.loadout = Loadout.default_for(self.flight)
-                    self.loadout_changed.emit()
+            self.loadout_changed.emit()
             self.flight_waypoint_list.update_list()
             self.on_change()
 
-    def _is_bulk_editable(self, waypoint: FlightWaypoint) -> bool:
-        # Skip pattern waypoints and any AGL/ground-referenced point (takeoff and
-        # landing are RADIO, alt 0) so the bulk set only moves the en-route legs.
-        if waypoint.waypoint_type in self.BULK_ALTITUDE_SKIP_TYPES:
-            return False
-        return waypoint.alt_type != "RADIO"
-
-    def _default_bulk_altitude(self) -> int:
-        # Seed the spinner with the highest en-route altitude already planned so the
-        # control opens on a sensible value rather than zero.
-        altitudes = [
-            round(wpt.alt.feet)
-            for wpt in self.flight.flight_plan.waypoints
-            if self._is_bulk_editable(wpt)
-        ]
-        return max(altitudes, default=0)
-
     def on_apply_bulk_altitude(self) -> None:
-        altitude = feet(self.bulk_altitude.value())
-        changed = False
-        for waypoint in self.flight.flight_plan.waypoints:
-            if self._is_bulk_editable(waypoint):
-                waypoint.alt = altitude
-                changed = True
-        if changed:
-            self.on_change()
+        with game_lock():
+            set_en_route_altitude(self.flight, self.bulk_altitude.value())
+        self.on_change()
 
     def on_change(self):
         self.flight_waypoint_list.update_list()

@@ -26,7 +26,9 @@ from game.utils import Distance, meters, nautical_miles
 
 if TYPE_CHECKING:
     from game import Game
+    from game.settings import Settings
     from game.theater.player import Player
+    from game.theater.theatergroup import TheaterGroup
 
 
 ThreatPoly = Union[MultiPolygon, Polygon]
@@ -243,10 +245,7 @@ class ThreatZones:
         settings = theater.controlpoints[0].coalition.game.settings
         for tgo in air_defenses:
             for group in tgo.groups:
-                # cap threat-range, otherwise it can cause issues wrt NavMesh calculations
-                threat_range = min(
-                    group.max_threat_range(), nautical_miles(settings.max_threat_range)
-                )
+                threat_range = cls.air_defense_range(group, settings)
                 # Any system with a shorter range than this is not worth
                 # even avoiding.
                 if threat_range > nautical_miles(3):
@@ -265,6 +264,11 @@ class ThreatZones:
             air_defenses=unary_union(air_defense_threats),
             radar_sam_threats=unary_union(radar_sam_threats),
         )
+
+    @staticmethod
+    def air_defense_range(group: TheaterGroup, settings: Settings) -> Distance:
+        # cap threat-range, otherwise it can cause issues wrt NavMesh calculations
+        return min(group.max_threat_range(), nautical_miles(settings.max_threat_range))
 
     @staticmethod
     def dcs_to_shapely_point(point: DcsPoint) -> ShapelyPoint:

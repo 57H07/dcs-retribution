@@ -1,5 +1,3 @@
-from typing import Optional
-
 from PySide6.QtCore import QItemSelectionModel, QPoint, QModelIndex
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
@@ -13,8 +11,9 @@ from PySide6.QtWidgets import (
 
 from game.ato.flight import Flight
 from game.ato.flightwaypoint import FlightWaypoint
-from game.ato.flightwaypointtype import FlightWaypointType
 from game.ato.package import Package
+from game.commands.flightroute import MAX_ALTITUDE_FT, waypoint_times
+from game.gamelock import game_lock
 from game.utils import Distance
 from qt_ui.windows.mission.flight.waypoints.QFlightWaypointItem import QWaypointItem
 
@@ -27,7 +26,7 @@ class AltitudeEditorDelegate(QStyledItemDelegate):
     ) -> QDoubleSpinBox:
         editor = QDoubleSpinBox(parent)
         editor.setMinimum(0)
-        editor.setMaximum(40000)
+        editor.setMaximum(MAX_ALTITUDE_FT)
         editor.setDecimals(0)
         editor.setSingleStep(1000)
         return editor
@@ -36,7 +35,6 @@ class AltitudeEditorDelegate(QStyledItemDelegate):
 class QFlightWaypointList(QTableView):
     def __init__(self, package: Package, flight: Flight):
         super().__init__()
-        self._last_waypoint: Optional[FlightWaypoint] = None
         self.package = package
         self.flight = flight
 
@@ -68,8 +66,9 @@ class QFlightWaypointList(QTableView):
             self.model.setHorizontalHeaderLabels(HEADER_LABELS)
 
             waypoints = self.flight.flight_plan.waypoints
+            times = waypoint_times(self.flight)
             for row, waypoint in enumerate(waypoints):
-                self._add_waypoint_row(row, self.flight, waypoint)
+                self._add_waypoint_row(row, waypoint, str(times[row] or ""))
             self.selectionModel().setCurrentIndex(
                 self.model.index(current_index, 0),
                 QItemSelectionModel.SelectionFlag.Select,
@@ -90,8 +89,8 @@ class QFlightWaypointList(QTableView):
     def _add_waypoint_row(
         self,
         row: int,
-        flight: Flight,
         waypoint: FlightWaypoint,
+        tot: str,
     ) -> None:
         self.model.insertRow(self.model.rowCount())
 
@@ -107,50 +106,16 @@ class QFlightWaypointList(QTableView):
         altitude_type_item.setEditable(False)
         self.model.setItem(row, 2, altitude_type_item)
 
-        tot = self.tot_text(flight, waypoint)
         tot_item = QStandardItem(tot)
         tot_item.setEditable(False)
         self.model.setItem(row, 3, tot_item)
 
     def on_changed(self) -> None:
-        for i in range(self.model.rowCount()):
-            # waypoints materializes a fresh list each access; resolve once per row so the
-            # altitude and name edits land on the same waypoint object.
-            waypoint = self.flight.flight_plan.waypoints[i]
-            altitude_feet = float(self.model.item(i, 1).text())
-            waypoint.alt = Distance.from_feet(altitude_feet)
-            waypoint.apply_name_edit(self.model.item(i, 0).text())
-
-    def tot_text(
-        self,
-        flight: Flight,
-        waypoint: FlightWaypoint,
-    ) -> str:
-        if waypoint.waypoint_type == FlightWaypointType.TAKEOFF:
-            self.update_last_tot(flight.flight_plan.takeoff_time())
-            self._last_waypoint = waypoint
-            return self.takeoff_text(flight)
-        prefix = ""
-        time = flight.flight_plan.tot_for_waypoint(waypoint)
-        if time is None:
-            prefix = "Depart "
-            time = flight.flight_plan.depart_time_for_waypoint(waypoint)
-        if time is None and self._last_waypoint is not None:
-            prefix = ""
-            timedelta = flight.flight_plan.travel_time_between_waypoints(
-                self._last_waypoint, waypoint
-            )
-            time = self._last_tot + timedelta
-        elif time is None:
-            return ""
-        self.update_last_tot(time)
-        self._last_waypoint = waypoint
-        return f"{prefix}{time:%H:%M:%S}"
-
-    @staticmethod
-    def takeoff_text(flight: Flight) -> str:
-        return f"{flight.flight_plan.takeoff_time():%H:%M:%S}"
-
-    def update_last_tot(self, time) -> None:
-        if time is not None:
-            self._last_tot = time
+        with game_lock():
+            for i in range(self.model.rowCount()):
+                # waypoints materializes a fresh list each access; resolve once per row
+                # so the altitude and name edits land on the same waypoint object.
+                waypoint = self.flight.flight_plan.waypoints[i]
+                altitude_feet = float(self.model.item(i, 1).text())
+                waypoint.alt = Distance.from_feet(altitude_feet)
+                waypoint.apply_name_edit(self.model.item(i, 0).text())

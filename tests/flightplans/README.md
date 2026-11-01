@@ -71,6 +71,12 @@ the same.
 | `add_flight` | `QFlightCreator.create_flight`, `QPackageDialog.add_flight` | `FlightRoster`, `Flight(...)` with `Settings.start_type_for`, `add_flight`, `recreate_flight_plan`, `set_tot_asap` |
 | `default_loadout` | `QFlightCreator._init_loadout_selector` | First name from `Loadout.default_loadout_names_for` that exists, else the first loadout |
 
+The route commands (`game/commands/flightroute.py`, WEB-04.4) are changes the player
+asks for after planning, so no scenario goes through them. `recreate_route` keeps the
+sequence of `QFlightWaypointTab.confirm_recreate`: `set_flight_type`, then
+`recreate_flight_plan(dump_debug_info=True)`. `test_reading_a_route_changes_no_fingerprint`
+checks that the read model of the Route tab leaves the plans alone.
+
 ## Determinism
 
 - **RNGs:** `seed_all` seeds `random` and Faker (pilot names use its own generator)

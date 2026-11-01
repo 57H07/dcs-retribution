@@ -71,7 +71,7 @@ const WaypointMarker = (props: WaypointMarkerProps) => {
     <Marker
       position={waypoint.position}
       icon={WAYPOINT_ICON}
-      draggable
+      draggable={waypoint.is_movable}
       eventHandlers={{
         dragstart: (e) => {
           const m: LMarker = e.target;

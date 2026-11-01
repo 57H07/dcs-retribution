@@ -1824,6 +1824,687 @@
         }
       }
     },
+    "/flights/{flight_id}/route": {
+      "get": {
+        "summary": "Get Route",
+        "operationId": "get_flight_route",
+        "parameters": [
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightRouteJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded, or no such flight.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/flights/{flight_id}/route/waypoints/{index}/position": {
+      "put": {
+        "summary": "Put Position",
+        "operationId": "move_flight_waypoint",
+        "parameters": [
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          },
+          {
+            "name": "index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Index"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeafletPoint"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightRouteJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This waypoint cannot be moved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/flights/{flight_id}/route/waypoints/{index}/altitude": {
+      "put": {
+        "summary": "Put Altitude",
+        "operationId": "set_flight_waypoint_altitude",
+        "parameters": [
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          },
+          {
+            "name": "index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Index"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WaypointAltitudeJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightRouteJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The altitude is out of range.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/flights/{flight_id}/route/waypoints/{index}/name": {
+      "put": {
+        "summary": "Put Name",
+        "operationId": "rename_flight_waypoint",
+        "parameters": [
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          },
+          {
+            "name": "index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Index"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WaypointNameJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightRouteJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No such waypoint.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/flights/{flight_id}/route/waypoints/{index}": {
+      "delete": {
+        "summary": "Delete Route Waypoint",
+        "operationId": "delete_flight_waypoint",
+        "parameters": [
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          },
+          {
+            "name": "index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Index"
+            }
+          },
+          {
+            "name": "allow_degrade",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Allow Degrade"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightRouteJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The first waypoint stays, and a change that makes the plan custom needs allow_degrade.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/flights/{flight_id}/route/waypoints/{index}/nav": {
+      "post": {
+        "summary": "Post Nav",
+        "description": "Inserts a NAV point after this waypoint, halfway to the next one.",
+        "operationId": "insert_flight_nav_waypoint",
+        "parameters": [
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          },
+          {
+            "name": "index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Index"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightRouteJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A NAV point cannot follow this waypoint.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/flights/{flight_id}/route/rtb": {
+      "post": {
+        "summary": "Post Rtb",
+        "operationId": "add_flight_rtb_waypoint",
+        "parameters": [
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          },
+          {
+            "name": "allow_degrade",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Allow Degrade"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightRouteJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A change that makes the plan custom needs allow_degrade.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/flights/{flight_id}/route/predefined-waypoints": {
+      "get": {
+        "summary": "Get Predefined",
+        "description": "What \"Add waypoint\" offers.",
+        "operationId": "list_predefined_waypoints",
+        "parameters": [
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PredefinedWaypointJs"
+                  },
+                  "title": "Response List Predefined Waypoints"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded, or no such flight.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Post Predefined",
+        "operationId": "add_predefined_waypoint",
+        "parameters": [
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewPredefinedWaypointJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightRouteJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This waypoint is no longer available.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/flights/{flight_id}/route/altitude": {
+      "put": {
+        "summary": "Put Route Altitude",
+        "description": "One altitude for all en-route waypoints.",
+        "operationId": "set_flight_route_altitude",
+        "parameters": [
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WaypointAltitudeJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightRouteJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The altitude is out of range.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/flights/{flight_id}/route/recreate": {
+      "post": {
+        "summary": "Post Recreate",
+        "description": "Plans the route again, which resets the player's changes to it.",
+        "operationId": "recreate_flight_route",
+        "parameters": [
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecreateRouteJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightRouteJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The route cannot be planned for this task.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/flights/": {
       "get": {
         "summary": "List Flights",
@@ -4885,6 +5566,16 @@
           "204": {
             "description": "Successful Response"
           },
+          "409": {
+            "description": "This waypoint cannot be moved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -6894,6 +7585,146 @@
         ],
         "title": "FlightOptions"
       },
+      "FlightRouteJs": {
+        "properties": {
+          "flight_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Flight Id"
+          },
+          "blue": {
+            "type": "boolean",
+            "title": "Blue"
+          },
+          "recreate_tasks": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Recreate Tasks"
+          },
+          "is_custom": {
+            "type": "boolean",
+            "title": "Is Custom"
+          },
+          "bulk_altitude_ft": {
+            "type": "integer",
+            "title": "Bulk Altitude Ft"
+          },
+          "min_altitude_ft": {
+            "type": "integer",
+            "title": "Min Altitude Ft"
+          },
+          "max_altitude_ft": {
+            "type": "integer",
+            "title": "Max Altitude Ft"
+          },
+          "waypoints": {
+            "items": {
+              "$ref": "#/components/schemas/FlightRouteWaypointJs"
+            },
+            "type": "array",
+            "title": "Waypoints"
+          }
+        },
+        "type": "object",
+        "required": [
+          "flight_id",
+          "blue",
+          "recreate_tasks",
+          "is_custom",
+          "bulk_altitude_ft",
+          "min_altitude_ft",
+          "max_altitude_ft",
+          "waypoints"
+        ],
+        "title": "FlightRoute",
+        "description": "The Route tab of a flight (WEB-04.4). Commands answer it whole."
+      },
+      "FlightRouteWaypointJs": {
+        "properties": {
+          "index": {
+            "type": "integer",
+            "title": "Index"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "position": {
+            "$ref": "#/components/schemas/LeafletPoint"
+          },
+          "altitude_ft": {
+            "type": "integer",
+            "title": "Altitude Ft"
+          },
+          "altitude_reference": {
+            "type": "string",
+            "title": "Altitude Reference"
+          },
+          "time": {
+            "title": "Time",
+            "type": "string",
+            "format": "date-time"
+          },
+          "time_kind": {
+            "title": "Time Kind",
+            "type": "string"
+          },
+          "is_tot": {
+            "type": "boolean",
+            "title": "Is Tot"
+          },
+          "min_fuel_lb": {
+            "title": "Min Fuel Lb",
+            "type": "integer"
+          },
+          "is_movable": {
+            "type": "boolean",
+            "title": "Is Movable"
+          },
+          "include_in_path": {
+            "type": "boolean",
+            "title": "Include In Path"
+          },
+          "can_delete": {
+            "type": "boolean",
+            "title": "Can Delete"
+          },
+          "delete_degrades": {
+            "type": "boolean",
+            "title": "Delete Degrades"
+          },
+          "can_insert_after": {
+            "type": "boolean",
+            "title": "Can Insert After"
+          },
+          "threat": {
+            "title": "Threat",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "index",
+          "name",
+          "type",
+          "position",
+          "altitude_ft",
+          "altitude_reference",
+          "is_tot",
+          "is_movable",
+          "include_in_path",
+          "can_delete",
+          "delete_degrades",
+          "can_insert_after"
+        ],
+        "title": "FlightRouteWaypoint"
+      },
       "FlightSquadronOptionJs": {
         "properties": {
           "id": {
@@ -8407,6 +9238,24 @@
         ],
         "title": "NewPilot"
       },
+      "NewPredefinedWaypointJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "same_location": {
+            "type": "boolean",
+            "title": "Same Location",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "NewPredefinedWaypoint"
+      },
       "NewSquadronJs": {
         "properties": {
           "aircraft": {
@@ -9026,6 +9875,29 @@
         ],
         "title": "Player"
       },
+      "PredefinedWaypointJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "has_siblings": {
+            "type": "boolean",
+            "title": "Has Siblings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "has_siblings"
+        ],
+        "title": "PredefinedWaypoint"
+      },
       "PretenseCampaignJs": {
         "properties": {
           "path": {
@@ -9121,6 +9993,19 @@
           "affordable"
         ],
         "title": "PurchaseQuote"
+      },
+      "RecreateRouteJs": {
+        "properties": {
+          "task": {
+            "type": "string",
+            "title": "Task"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task"
+        ],
+        "title": "RecreateRoute"
       },
       "RepairJs": {
         "properties": {
@@ -10959,6 +11844,32 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "WaypointAltitudeJs": {
+        "properties": {
+          "altitude_ft": {
+            "type": "number",
+            "title": "Altitude Ft"
+          }
+        },
+        "type": "object",
+        "required": [
+          "altitude_ft"
+        ],
+        "title": "WaypointAltitude"
+      },
+      "WaypointNameJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "WaypointName"
       },
       "WeatherJs": {
         "properties": {

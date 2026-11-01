@@ -159,6 +159,12 @@ them: an escort cannot come first, the last escorted flight cannot leave. Qt dia
 stay in Qt mode and call the same functions (`game/commands/packageflights.py`), which
 `tests/flightplans` (W16) drives against unchanged references.
 
+The Route tab (WEB-04.4, `game/commands/flightroute.py`, `/flights/{id}/route`) follows
+the same pattern with waypoints addressed by their place in the plan. Where Qt asked
+before a destructive change, the read model says so (`delete_degrades`), the client asks,
+and the command refuses without the flag (`allow_degrade`). To answer "would this work?"
+without duplicating a layout's rules, `_probe` runs them on a copy with its own lists.
+
 ## 8b. Background work: status + event + commands (WEB-05.1)
 
 Work that waits on something outside the API (DCS writing `state.json`) runs on

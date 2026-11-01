@@ -139,6 +139,38 @@ class FlightPlan(ABC, Generic[LayoutT]):
             return self.flight.unit_type.fuel_consumption.combat
         return self.flight.unit_type.fuel_consumption.cruise
 
+    def estimate_min_fuel(
+        self, waypoints: list[FlightWaypoint]
+    ) -> dict[FlightWaypoint, float]:
+        """The fuel in pounds needed at each waypoint to land with a safe reserve.
+
+        Only the waypoints up to and including the last landing point have one: none
+        without fuel data for the aircraft or a landing point.
+        """
+        consumption = self.flight.unit_type.fuel_consumption
+        if consumption is None:
+            return {}
+
+        # The flight plan (in reverse) up to and including the arrival point.
+        remaining = list(reversed(waypoints))
+        for position, waypoint in enumerate(remaining):
+            if waypoint.waypoint_type is FlightWaypointType.LANDING_POINT:
+                remaining = remaining[position:]
+                break
+        else:
+            # Some custom flight plan without a landing point.
+            return {}
+
+        min_fuel: float = consumption.min_safe
+        estimates = {remaining[0]: min_fuel}
+        for b, a in zip(remaining, remaining[1:]):
+            for_leg = self.fuel_consumption_between_points(a, b)
+            if for_leg is None:
+                continue
+            min_fuel += for_leg
+            estimates[a] = min_fuel
+        return estimates
+
     @property
     def tot_waypoint(self) -> FlightWaypoint:
         """The waypoint that is associated with the package TOT, or None.

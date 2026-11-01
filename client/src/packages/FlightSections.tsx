@@ -6,6 +6,7 @@ import { PackageEditorFlight } from "../api/liberationApi";
 import { useQtCommands } from "../shell/useQtCommands";
 import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from "../ui";
 import styles from "./PackageEditor.module.css";
+import { RouteTab } from "./route/RouteTab";
 import { ReactNode } from "react";
 
 export const FLIGHT_SECTIONS = [
@@ -54,7 +55,7 @@ export function FlightSections({ flight, actions }: FlightSectionsProps) {
         <QtEditorSlot flight={flight} what="Editing a flight" />
       </TabsContent>
       <TabsContent value="route" className={styles.section}>
-        <QtEditorSlot flight={flight} what="The route" />
+        <RouteTab flightId={flight.id} />
       </TabsContent>
       <TabsContent value="payload" className={styles.section}>
         <QtEditorSlot flight={flight} what="The payload" />
