@@ -300,8 +300,8 @@ describe("package editor", () => {
     ).toBeInTheDocument();
   });
 
-  it("lays out the flight tabs, with the Qt editor until they are filled", async () => {
-    const { calls } = renderEditor();
+  it("lays out the flight tabs", async () => {
+    renderEditor();
     for (const name of [
       "General",
       "Route",
@@ -311,13 +311,9 @@ describe("package editor", () => {
     ]) {
       expect(await screen.findByRole("tab", { name })).toBeInTheDocument();
     }
-    expect(screen.getByText("VFA-25")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("tab", { name: "Pilots" }));
-    await userEvent.click(
-      screen.getByRole("button", { name: "Open the Qt editor" }),
-    );
-    await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0].path).toBe("/qt/edit-package/flight/f-1");
+    expect(
+      screen.queryByRole("button", { name: "Open the Qt editor" }),
+    ).not.toBeInTheDocument();
   });
 
   it("says what to do with an empty package, with auto-create", async () => {

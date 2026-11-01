@@ -2,11 +2,14 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
+    QMessageBox,
     QPushButton,
     QWidget,
 )
 
-from game.radio.CallsignContainer import CallsignContainer, Callsign
+from game.commands import CommandError
+from game.commands.flightsettings import reset_callsign, set_callsign
+from game.radio.CallsignContainer import CallsignContainer
 from qt_ui.models import GameModel
 from qt_ui.theme_manager import set_style_class
 from qt_ui.windows.QCallsignDialog import QCallsignDialog
@@ -56,12 +59,16 @@ class QCallsignWidget(QWidget):
     def assign_callsign(self) -> None:
         name = self.callsign_dialog.callsign_name_input.currentText()
         nr = self.callsign_dialog.callsign_nr_input.value()
-        self.ct.callsign = Callsign(name, nr)
+        try:
+            set_callsign(self.ct, name, nr)
+        except CommandError as ex:
+            QMessageBox.critical(self, "Could not set the callsign", str(ex))
+            return
         self.callsign.setText(self._get_label_text())
         self.callsign_changed.emit(self)
 
     def reset_callsign(self) -> None:
-        self.ct.callsign = None
+        reset_callsign(self.ct)
         self.callsign.setText(self._get_label_text())
         self._reset_color_and_tooltip()
         self.callsign_changed.emit(self)

@@ -32,6 +32,8 @@ const PACKAGE_COMMAND_TAGS = [
 
 /** What a change to a route touches: its times are on these screens. */
 const ROUTE_COMMAND_TAGS = [Tags.PACKAGES, Tags.TIMELINE];
+/** What a change to the aircraft and pilots of a flight touches. */
+const FLIGHT_CREW_COMMAND_TAGS = [...PACKAGE_COMMAND_TAGS, Tags.AIR_WING];
 
 /** What repairing, selling or buying at a ground object changes. */
 const TGO_CHANGES = [
@@ -242,6 +244,20 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     addPredefinedWaypoint: { invalidatesTags: ROUTE_COMMAND_TAGS },
     setFlightRouteAltitude: { invalidatesTags: ROUTE_COMMAND_TAGS },
     recreateFlightRoute: { invalidatesTags: ROUTE_COMMAND_TAGS },
+    // General and Pilots tabs of a flight (WEB-04.2).
+    getFlightSettings: {
+      providesTags: [Tags.PACKAGES, Tags.BASE, Tags.AIR_WING],
+    },
+    setFlightSquadron: { invalidatesTags: FLIGHT_CREW_COMMAND_TAGS },
+    setFlightSize: { invalidatesTags: FLIGHT_CREW_COMMAND_TAGS },
+    setFlightPilot: { invalidatesTags: FLIGHT_CREW_COMMAND_TAGS },
+    setFlightSlotPlayer: { invalidatesTags: FLIGHT_CREW_COMMAND_TAGS },
+    setFlightStartType: { invalidatesTags: PACKAGE_COMMAND_TAGS },
+    setFlightDivert: { invalidatesTags: PACKAGE_COMMAND_TAGS },
+    setFlightTotOffset: { invalidatesTags: PACKAGE_COMMAND_TAGS },
+    setFlightCustomName: { invalidatesTags: [Tags.PACKAGES, Tags.TIMELINE] },
+    setFlightCallsign: { invalidatesTags: [Tags.PACKAGES] },
+    resetFlightCallsign: { invalidatesTags: [Tags.PACKAGES] },
     // Payload tab (WEB-04.3): follows the flight's size, pilots and events.
     getFlightPayload: { providesTags: [Tags.PACKAGES] },
     setFlightFuel: { invalidatesTags: [Tags.PACKAGES] },

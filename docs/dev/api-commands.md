@@ -159,6 +159,13 @@ them: an escort cannot come first, the last escorted flight cannot leave. Qt dia
 stay in Qt mode and call the same functions (`game/commands/packageflights.py`), which
 `tests/flightplans` (W16) drives against unchanged references.
 
+The tabs of a flight follow the same pattern. General and Pilots (WEB-04.2) read
+`GET /packages/{id}/flights/{id}/settings` and send one `PUT` per field
+(`game/commands/flightsettings.py`, routes in `game/server/packages/flightsettingsroutes.py`).
+A squadron change creates another `Flight`, as in Qt: `PUT .../squadron` answers the new
+`flight_id` next to the package, and the editor moves to it. Only a flight that has not
+started changes (`require_not_started`), except its name and callsign.
+
 The Route tab (WEB-04.4, `game/commands/flightroute.py`, `/flights/{id}/route`) follows
 the same pattern with waypoints addressed by their place in the plan. Where Qt asked
 before a destructive change, the read model says so (`delete_degrades`), the client asks,

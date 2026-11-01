@@ -1,0 +1,134 @@
+/* General and Pilots tabs of a flight (WEB-04.2). */
+.tab {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hint {
+  margin: 0;
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  margin: 0;
+}
+
+.facts dt {
+  color: var(--ui-color-text-secondary);
+}
+
+.facts dd {
+  margin: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  align-items: start;
+  gap: 16px 24px;
+}
+
+.fieldBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.field select {
+  max-width: none;
+  width: 100%;
+}
+
+.input {
+  height: var(--ui-size-control);
+  padding: 0 var(--ui-space-md);
+  background: var(--ui-color-bg-canvas);
+  border: 1px solid var(--ui-color-line-strong);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-color-text-primary);
+  font: inherit;
+}
+
+.input:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-shadow-focus);
+}
+
+.callsign,
+.offset {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.callsign .field {
+  flex: 1 1 140px;
+}
+
+.offset {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.legend {
+  padding: 0 0 4px;
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-sm);
+  min-height: var(--ui-size-control);
+}
+
+.slots {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.slot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--ui-color-bg-panel);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-md);
+}
+
+.slot select {
+  flex: 1 1 200px;
+  max-width: 360px;
+}
+
+.slotNumber {
+  min-width: 16px;
+  color: var(--ui-color-text-secondary);
+  font-family: var(--ui-font-mono);
+  font-variant-numeric: tabular-nums;
+}
