@@ -1,0 +1,264 @@
+/* Air Wing screen (WEB-03), after mockups/AirWing.dc.html. */
+.tabs.tabs {
+  max-width: none;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-lg);
+}
+
+.hint {
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-sm);
+  color: var(--ui-color-text-strong);
+  font-size: var(--ui-font-size-sm);
+}
+
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-md);
+}
+
+.squadrons {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.list {
+  flex: 1 1 300px;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.base {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.baseName,
+.label,
+.panelTitle {
+  margin: 0;
+  color: var(--ui-color-text-secondary);
+  font-family: var(--ui-font-display);
+  font-size: var(--ui-font-size-sm);
+  font-weight: var(--ui-font-weight-semibold);
+  letter-spacing: var(--ui-letter-spacing-display);
+  text-transform: uppercase;
+}
+
+.sheet {
+  flex: 999 1 560px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.sheetHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.identity {
+  flex: 1;
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-xs);
+}
+
+.sheetTitle {
+  margin: 0;
+  font-family: var(--ui-font-display);
+  font-size: 28px;
+  font-weight: var(--ui-font-weight-bold);
+  letter-spacing: var(--ui-letter-spacing-display);
+  text-transform: uppercase;
+}
+
+.sheetActions,
+.order,
+.stepper,
+.rowActions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-sm);
+}
+
+.rowActions {
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+}
+
+.quantity {
+  min-width: 28px;
+  font-family: var(--ui-font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.figure,
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-md);
+  padding: 14px;
+  background: var(--ui-color-bg-panel);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-md);
+}
+
+.big {
+  font-family: var(--ui-font-mono);
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+}
+
+.small {
+  color: var(--ui-color-text-secondary);
+  font-size: 15px;
+}
+
+.nextTurn {
+  font-weight: var(--ui-font-weight-semibold);
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-md);
+}
+
+.fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-xl);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-xs);
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.tasks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-sm) var(--ui-space-lg);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.tasks legend {
+  margin-bottom: var(--ui-space-sm);
+  padding: 0;
+}
+
+.task {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-xs);
+}
+
+.pilotName,
+.pilotLink {
+  font-weight: var(--ui-font-weight-semibold);
+}
+
+.pilotLink {
+  color: var(--ui-color-friendly);
+}
+
+.status {
+  white-space: nowrap;
+  color: var(--ui-color-text-secondary);
+}
+
+.status[data-status="ready"] {
+  color: var(--ui-color-success);
+}
+
+.status[data-status="down"] {
+  color: var(--ui-color-accent);
+}
+
+.status[data-status="prisoner"],
+.status[data-status="dead"] {
+  color: var(--ui-color-danger);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-lg);
+}
+
+.input {
+  min-height: var(--ui-size-control);
+  padding: 0 var(--ui-space-md);
+  background: var(--ui-color-bg-card);
+  color: var(--ui-color-text-primary);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-sm);
+  font: inherit;
+}
+
+.input:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-shadow-focus);
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ui-space-md);
+}
+
+.destinations {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.destination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-lg);
+}
+
+.warning {
+  display: block;
+  color: var(--ui-color-accent);
+  font-size: var(--ui-font-size-sm);
+}

@@ -4,12 +4,9 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 
 from game import Game
-from game.commands import CommandError
 from game.gamelock import locked
 from game.server.eventstream import EventStream
 from game.theater.player import Player
-from .models import QtDialog
-from ..commanderrors import command_error_responses
 from ..dependencies import GameContext, QtCallbacks, QtContext
 
 T = TypeVar("T")
@@ -56,7 +53,8 @@ def show_tgo_info(
     game: Game = Depends(GameContext.require),
     qt: QtCallbacks = Depends(QtContext.get),
 ) -> None:
-    qt.show_tgo_info(game.db.tgos.get(tgo_id))
+    """Opens the Qt site dialog of the Qt map; refused in web mode (WEB-08.3)."""
+    _require_callback(qt.show_tgo_info)(game.db.tgos.get(tgo_id))
 
 
 @router.post(
@@ -158,29 +156,6 @@ def _require_callback(callback: Callable[[T], None] | None) -> Callable[[T], Non
             detail="The Qt window is not available.",
         )
     return callback
-
-
-@router.post(
-    "/dialogs/{dialog}",
-    operation_id="open_qt_dialog",
-    status_code=status.HTTP_204_NO_CONTENT,
-    response_class=Response,
-    responses=command_error_responses("when the dialog needs a campaign and none is"),
-)
-@locked
-def open_qt_dialog(
-    dialog: QtDialog,
-    game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks = Depends(QtContext.get),
-) -> None:
-    """Opens a Qt screen that the web UI does not have yet (WEB-00.3).
-
-    Only queues the dialog onto the Qt main thread: never waits for it.
-    """
-    open_dialog = _require_callback(qt.open_dialog)
-    if dialog.needs_game and game is None:
-        raise CommandError("No campaign is loaded.")
-    open_dialog(dialog)
 
 
 @router.post(

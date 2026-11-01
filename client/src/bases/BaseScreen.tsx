@@ -1,6 +1,7 @@
 // Base screen (WEB-02.1), after mockups/Base.dc.html: the Qt base menu with its
-// status (runway, parking, depots, air defense) and repairs on the side, and
-// its tabs (aircraft orders: AirfieldTab, WEB-02.2). The engine decides everything
+// status (runway, parking, depots, air defense), repairs, actions and radios on the
+// side, and its tabs (aircraft orders: AirfieldTab, WEB-02.2; ground forces and
+// convoys: GroundForcesTab and ConvoysTab, WEB-02.3). The engine decides everything
 // (GET /control-points/{id}/base): which tabs a base has, what can be repaired, at
 // what cost, and whether it is affordable; refusals come back as toasts.
 import { commandErrorMessage } from "../api/commands";
@@ -18,7 +19,6 @@ import {
   distanceText,
 } from "../command/inspector/MapInspector";
 import { BaseTabId, PATHS } from "../shell/paths";
-import { useQtCommands } from "../shell/useQtCommands";
 import settings from "../settings/SettingsScreen.module.css";
 import {
   Button,
@@ -31,7 +31,10 @@ import {
   useToast,
 } from "../ui";
 import { AirfieldTab } from "./AirfieldTab";
+import { BaseActionPanels } from "./BaseActionsPanels";
 import styles from "./BaseScreen.module.css";
+import { ConvoysTab } from "./ConvoysTab";
+import { GroundForcesTab } from "./GroundForcesTab";
 import { money } from "./money";
 import { ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -130,6 +133,7 @@ function BaseBody({ base, tab }: { base: Base; tab: string | undefined }) {
       <aside className={styles.side}>
         <StatusPanel base={base} />
         {base.summary.blue && <RepairsPanel base={base} />}
+        <BaseActionPanels cpId={cpId} baseName={base.summary.name} />
         <AirDefensePanel defenses={base.air_defenses} />
       </aside>
       <Tabs
@@ -156,20 +160,6 @@ function BaseBody({ base, tab }: { base: Base; tab: string | undefined }) {
   );
 }
 
-const PLACEHOLDERS: Record<
-  Exclude<BaseTabId, "intel" | "airfield">,
-  { title: string; text: string }
-> = {
-  "ground-forces": {
-    title: "Ground forces",
-    text: "Ground unit purchases and transfers are not in the web interface yet.",
-  },
-  convoys: {
-    title: "Departing convoys",
-    text: "Departing convoys are not in the web interface yet.",
-  },
-};
-
 function TabBody({ tab, base }: { tab: BaseTabId; base: Base }) {
   if (tab === "intel") {
     return <IntelTab groups={base.intel} />;
@@ -177,21 +167,10 @@ function TabBody({ tab, base }: { tab: BaseTabId; base: Base }) {
   if (tab === "airfield") {
     return <AirfieldTab base={base} />;
   }
-  return <Placeholder cpId={base.summary.id} {...PLACEHOLDERS[tab]} />;
-}
-
-/** Until WEB-02.3: the Qt base menu does the rest. */
-function Placeholder(props: { cpId: string; title: string; text: string }) {
-  const qt = useQtCommands();
-  return (
-    <section className={styles.placeholder} aria-label={props.title}>
-      <h2 className={styles.panelTitle}>{props.title}</h2>
-      <p>{props.text}</p>
-      <Button onClick={() => qt.openBase(props.cpId)}>
-        Open the base menu
-      </Button>
-    </section>
-  );
+  if (tab === "ground-forces") {
+    return <GroundForcesTab base={base} />;
+  }
+  return <ConvoysTab cpId={base.summary.id} />;
 }
 
 function Panel(props: { title: string; children: ReactNode }) {
@@ -221,7 +200,8 @@ function AirDefensePanel({ defenses }: { defenses: AirDefense[] }) {
           {defenses.map((site) => (
             <li key={site.id} className={styles.row}>
               <span>
-                {site.name}
+                {/* Units, repairs and replacement: the site's sheet (WEB-08.3). */}
+                <Link to={PATHS.tgo(site.id)}>{site.name}</Link>
                 <span className={styles.muted}> · {site.category}</span>
               </span>
               <span

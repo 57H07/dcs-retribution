@@ -212,6 +212,7 @@ describe("info panel screen", () => {
 });
 
 const CAREER: CareerJs = {
+  pilot_id: "pilot-1",
   pilot: "Maverick",
   squadron: "VF-1 Wolfpack",
   status: "Active",

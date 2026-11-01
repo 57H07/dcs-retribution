@@ -89,6 +89,7 @@ class _Squadron:
         self.name = "40th TAB"
         self.aircraft = SimpleNamespace(
             display_name="MiG-29",
+            variant_id="MiG-29",
             price=25,
             helicopter=False,
             lha_capable=False,

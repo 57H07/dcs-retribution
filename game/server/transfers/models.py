@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -48,3 +48,24 @@ class TransferJs(BaseModel):
             units=units,
             transport=transfer.description,
         )
+
+
+class NewTransferLineJs(BaseModel):
+    unit_id: str
+    count: int
+
+    class Config:
+        title = "NewTransferLine"
+
+
+class NewTransferJs(BaseModel):
+    origin_id: UUID
+    destination_id: UUID
+    units: list[NewTransferLineJs]
+    #: Asks for an airlift instead of a convoy or a ship.
+    airlift: bool = False
+    #: Makes it a player Transport mission flown by this squadron (needs `airlift`).
+    squadron_id: Optional[UUID] = None
+
+    class Config:
+        title = "NewTransfer"

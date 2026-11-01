@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from game.commands import CommandError
 
 from . import (
+    airwing,
     applog,
     careers,
     controlpoints,
@@ -24,6 +25,7 @@ from . import (
     reports,
     supplyroutes,
     tgos,
+    unitinfo,
     waypoints,
     iadsnetwork,
     journal,
@@ -36,6 +38,7 @@ from .settings import ServerSettings
 
 app = FastAPI(dependencies=[Depends(require_api_key)])
 app.add_exception_handler(CommandError, command_error_handler)
+app.include_router(airwing.router)
 app.include_router(controlpoints.router)
 app.include_router(debuggeometries.router)
 app.include_router(downedpilots.router)
@@ -54,6 +57,7 @@ app.include_router(qt.router)
 app.include_router(reports.router)
 app.include_router(supplyroutes.router)
 app.include_router(tgos.router)
+app.include_router(unitinfo.router)
 app.include_router(waypoints.router)
 app.include_router(iadsnetwork.router)
 # WEB-08.2: transfers, notes, info panel, careers, logs, about, tools.

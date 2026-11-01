@@ -9,7 +9,6 @@ import {
   TgoSummary,
   useGetControlPointSummaryQuery,
   useGetTgoSummaryQuery,
-  useOpenTgoInfoDialogMutation,
 } from "../../api/liberationApi";
 import { MapSelection } from "../../maplayers/mapSelection";
 import { PATHS } from "../../shell/paths";
@@ -187,7 +186,10 @@ function ControlPointInspector(props: { id: string; onClose: () => void }) {
             <Button disabled={!data.can_buy_aircraft} onClick={openBase}>
               Buy aircraft
             </Button>
-            <Button disabled={!data.can_buy_ground_units} onClick={openBase}>
+            <Button
+              disabled={!data.can_buy_ground_units}
+              onClick={() => navigate(PATHS.baseTab(data.id, "ground-forces"))}
+            >
               Ground units
             </Button>
             {data.can_repair_runway && (
@@ -259,7 +261,6 @@ function TgoInspector(props: { id: string; onClose: () => void }) {
     tgoId: props.id,
   });
   const navigate = useNavigate();
-  const [openInfoDialog] = useOpenTgoInfoDialogMutation();
   if (!data) {
     return (
       <Pending
@@ -289,10 +290,7 @@ function TgoInspector(props: { id: string; onClose: () => void }) {
     >
       <TgoGauges summary={data} />
       <div className={styles.actions}>
-        {/* The Qt site dialog (units, repair, buy) until it is migrated. */}
-        <Button onClick={() => openInfoDialog({ tgoId: data.id })}>
-          Details
-        </Button>
+        <Button onClick={() => navigate(PATHS.tgo(data.id))}>Details</Button>
         <Button onClick={() => navigate(PATHS.base(data.control_point_id))}>
           {data.control_point_name}
         </Button>
@@ -301,7 +299,7 @@ function TgoInspector(props: { id: string; onClose: () => void }) {
   );
 }
 
-function TgoGauges({ summary }: { summary: TgoSummary }) {
+export function TgoGauges({ summary }: { summary: TgoSummary }) {
   return (
     <div className={styles.gauges}>
       <CountGauge

@@ -14,23 +14,13 @@ import {
   useOrderAircraftMutation,
 } from "../api/liberationApi";
 import settings from "../settings/SettingsScreen.module.css";
+import { PATHS } from "../shell/paths";
 import { Button, IconButton, Modal, ModalClose, Table, useToast } from "../ui";
 import styles from "./AirfieldTab.module.css";
 import { money } from "./money";
+import { refusalOf, signed } from "./orders";
 import { useState } from "react";
-
-type Refusal = Parameters<typeof commandErrorMessage>[0];
-type Result = { error?: unknown } | { data: unknown };
-
-function refusalOf(result: Result): Refusal | null {
-  return "error" in result && result.error !== undefined
-    ? (result.error as Refusal)
-    : null;
-}
-
-function signed(quantity: number): string {
-  return quantity > 0 ? `+${quantity}` : `${quantity}`;
-}
+import { Link } from "react-router-dom";
 
 function owned(row: SquadronOrderRow): string {
   return row.max_aircraft != null
@@ -107,7 +97,15 @@ export function AirfieldTab({ base }: { base: Base }) {
           caption={`Squadrons at ${base.summary.name}`}
           columns={[
             { key: "squadron", header: "Squadron", cell: (r) => r.squadron },
-            { key: "aircraft", header: "Aircraft", cell: (r) => r.aircraft },
+            {
+              key: "aircraft",
+              header: "Aircraft",
+              cell: (r) => (
+                <Link to={PATHS.unit("aircraft", r.aircraft_id)}>
+                  {r.aircraft}
+                </Link>
+              ),
+            },
             {
               key: "cost",
               header: "Unit cost",

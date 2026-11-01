@@ -13,7 +13,6 @@ describe("web shell routes", () => {
   });
 
   it.each([
-    ["/air-wing", "/qt/dialogs/air-wing"],
     ["/new-game", "/native/new-game"],
   ])(
     "%s opens its Qt screen once and returns to the command view",

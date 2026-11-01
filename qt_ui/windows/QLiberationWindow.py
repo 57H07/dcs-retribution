@@ -31,7 +31,6 @@ from game.commands.tools import generate_pretense_campaign, import_layouts
 from game.server import EventStream, GameContext
 from game.server.dependencies import QtCallbacks, QtContext, UiOptions
 from game.server.missionresult.waiter import MissionResultContext
-from game.server.qt.models import QtDialog
 from game.commands import CommandError
 from game.native import (
     ExternalLink,
@@ -54,7 +53,6 @@ from qt_ui.uncaughtexceptionhandler import UncaughtExceptionHandler
 from qt_ui.widgets.QTopPanel import QTopPanel
 from qt_ui.widgets.ato import QAirTaskingOrderPanel
 from qt_ui.widgets.map.QLiberationMap import QLiberationMap
-from qt_ui.windows.AirWingDialog import AirWingDialog
 from qt_ui.windows.GameUpdateSignal import GameUpdateSignal
 from qt_ui.windows.QDebriefingWindow import QDebriefingWindow
 from qt_ui.windows.basemenu.QBaseMenu2 import QBaseMenu2
@@ -77,8 +75,7 @@ class QLiberationWindow(QMainWindow):
     select_flight_signal = Signal(Flight)
     # Emitted from an API worker thread: queued onto the Qt main thread.
     turn_passed_signal = Signal(TurnState)
-    # WEB-00.3: Qt screens opened by the web shell, from API worker threads too.
-    open_dialog_signal = Signal(object)
+    # WEB-00.3: the package editor opened by the web shell, from API worker threads.
     edit_package_signal = Signal(object)
     # WEB-07.1: a web command changed the game in depth (cheats, settings).
     game_changed_signal = Signal()
@@ -107,7 +104,6 @@ class QLiberationWindow(QMainWindow):
         self.tgo_info_signal.connect(self.open_tgo_info_dialog)
         self.control_point_info_signal.connect(self.open_control_point_info_dialog)
         self.select_flight_signal.connect(self.on_select_flight)
-        self.open_dialog_signal.connect(self.open_dialog)
         self.edit_package_signal.connect(self.open_edit_package_dialog)
         self.game_changed_signal.connect(
             lambda: GameUpdateSignal.get_instance().updateGame(self.game)
@@ -116,11 +112,10 @@ class QLiberationWindow(QMainWindow):
         QtContext.set_callbacks(
             QtCallbacks(
                 lambda target: self.new_package_signal.emit(target),
-                lambda tgo: self.tgo_info_signal.emit(tgo),
+                None if self.web_ui else lambda tgo: self.tgo_info_signal.emit(tgo),
                 lambda cp: self.control_point_info_signal.emit(cp),
                 lambda flight: self.select_flight_signal.emit(flight),
                 turn_passed=lambda state: self.turn_passed_signal.emit(state),
-                open_dialog=lambda dialog: self.open_dialog_signal.emit(dialog),
                 edit_package=lambda package: self.edit_package_signal.emit(package),
                 game_changed=lambda: self.game_changed_signal.emit(),
                 packages_changed=lambda: self.packages_changed_signal.emit(),
@@ -634,24 +629,10 @@ class QLiberationWindow(QMainWindow):
         self.debriefing.show()
         self.game_model.init_comms_registry()
 
-    def open_dialog(self, dialog: QtDialog) -> None:
-        """Opens a Qt screen for the web shell (WEB-00.3), on the Qt main thread."""
-        handlers: dict[QtDialog, Callable[[], object]] = {
-            QtDialog.AIR_WING: self.open_air_wing,
-        }
-        # The game may have been unloaded between the request and this slot.
-        if dialog.needs_game and self.game is None:
-            return
-        handlers[dialog]()
-
     def on_turn_passed(self, state: TurnState) -> None:
         """Refresh the Qt widgets once the web UI passed the turn."""
         GameUpdateSignal.get_instance().updateGame(self.game)
         GameUpdateSignal.get_instance().gameStateChanged(state)
-
-    def open_air_wing(self) -> None:
-        self.dialog = AirWingDialog(self.game_model, self)
-        self.dialog.show()
 
     def open_link(self, link: ExternalLink) -> None:
         self.native_bridge.open_url(link.url)

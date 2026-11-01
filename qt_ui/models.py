@@ -19,23 +19,32 @@ from game.ato.flighttype import FlightType
 from game.ato.package import Package
 from game.commands.packageflights import plan_flight_in_package
 from game.commands.packages import cancel_or_abort_package
-from game.commands.transfers import cancel_transfer
+from game.commands.baseradios import tacan_channels_in_use
+from game.commands.squadrons import (
+    create_player_pilot,
+    set_auto_assignable,
+    set_pilot_on_leave,
+    set_pilot_player,
+)
+from game.commands.transfers import (
+    cancel_transfer,
+    check_transfer,
+    place_transfer,
+)
 from game.dcs.beacons import Beacons
 from game.game import Game
+from game.gamelock import game_lock
 from game.radio.RadioFrequencyContainer import RadioFrequencyContainer
 from game.radio.radios import RadioFrequency
 from game.radio.tacan import TacanChannel
 from game.server import EventStream
 from game.sim.gameupdateevents import GameUpdateEvents
 from game.squadrons.squadron import Pilot, Squadron
-from game.squadrons.pilot import PilotStatus
 from game.theater import NavalControlPoint, Player
 from game.theater.missiontarget import MissionTarget
 from game.transfers import (
     PendingTransfers,
-    PlayerAirliftError,
     TransferOrder,
-    player_airlift_problem,
 )
 from qt_ui.simcontroller import SimController
 from qt_ui.uiconstants import AIRCRAFT_ICONS
@@ -438,25 +447,21 @@ class TransferModel(QAbstractListModel):
         """Returns the icon that should be displayed for the transfer."""
         return None
 
-    def new_transfer(self, transfer: TransferOrder, now: datetime) -> None:
-        """Updates the game with the new unit transfer."""
+    def place_transfer(
+        self,
+        transfer: TransferOrder,
+        squadron: Optional[Squadron],
+        now: datetime.datetime,
+    ) -> None:
+        """Places a unit transfer, or a player Transport mission with a squadron.
+
+        Raises CommandError (and changes nothing) if it is not allowed.
+        """
+        game = self.game_model.game
+        check_transfer(game, transfer, squadron)
         self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
         # TODO: Needs to regenerate base inventory tab.
-        self.transfers.new_transfer(transfer, now)
-        self.endInsertRows()
-
-    def new_player_airlift(
-        self, transfer: TransferOrder, squadron: Squadron, now: datetime.datetime
-    ) -> None:
-        """Creates a player Transport mission flown by the given squadron.
-
-        Raises PlayerAirliftError (and changes nothing) if the squadron cannot fly it.
-        """
-        problem = player_airlift_problem(squadron, transfer, transfer.destination)
-        if problem is not None:
-            raise PlayerAirliftError(problem)
-        self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
-        self.transfers.new_player_airlift(transfer, squadron, now)
+        place_transfer(game, transfer, squadron, now)
         self.endInsertRows()
 
     def cancel_transfer_at_index(self, index: QModelIndex) -> None:
@@ -578,36 +583,35 @@ class SquadronModel(QAbstractListModel):
     def toggle_ai_state(self, index: QModelIndex) -> None:
         pilot = self.pilot_at_index(index)
         self.beginResetModel()
-        pilot.player = not pilot.player
-        self.endResetModel()
+        try:
+            with game_lock(), EventStream.event_context() as events:
+                set_pilot_player(self.squadron, pilot, not pilot.player, events)
+        finally:
+            self.endResetModel()
 
     def create_player_pilot(self, name: str) -> Pilot:
         self.beginResetModel()
-        pilot = self.squadron.create_player_pilot(name)
-        self.endResetModel()
-        return pilot
+        try:
+            with game_lock():
+                return create_player_pilot(self.squadron, name)
+        finally:
+            self.endResetModel()
 
     def toggle_leave_state(self, index: QModelIndex) -> None:
         pilot = self.pilot_at_index(index)
-        # send_on_leave/return_from_leave only accept Active/OnLeave pilots and
-        # raise otherwise, so downed/recovering/captive pilots are a no-op here.
-        if not (pilot.on_leave or pilot.status is PilotStatus.Active):
-            return
         self.beginResetModel()
-        if pilot.on_leave:
-            self.squadron.return_from_leave(pilot)
-        else:
-            self.squadron.send_on_leave(pilot)
-        self.endResetModel()
+        try:
+            with game_lock():
+                set_pilot_on_leave(self.squadron, pilot, not pilot.on_leave)
+        finally:
+            self.endResetModel()
 
     def is_auto_assignable(self, task: FlightType) -> bool:
         return task in self.squadron.auto_assignable_mission_types
 
     def set_auto_assignable(self, task: FlightType, auto_assignable: bool) -> None:
-        if auto_assignable:
-            self.squadron.auto_assignable_mission_types.add(task)
-        else:
-            self.squadron.auto_assignable_mission_types.remove(task)
+        with game_lock():
+            set_auto_assignable(self.squadron, task, auto_assignable)
 
 
 class GameModel:
@@ -699,20 +703,7 @@ class GameModel:
         """
         if self.game is None:
             return []
-        channels: set[TacanChannel] = set()
-        for p in self.ato_model.ato.packages:
-            for f in p.flights:
-                if f is not exclude and f.tacan is not None:
-                    channels.add(f.tacan)
-        for cp in self.game.theater.control_points_for(True):
-            if cp is not exclude and isinstance(cp, NavalControlPoint):
-                if cp.tacan is not None:
-                    channels.add(cp.tacan)
-        for beacon in Beacons.iter_theater(self.game.theater):
-            if beacon.occupies_tacan_channel:
-                if (channel := beacon.tacan_channel) is not None:
-                    channels.add(channel)
-        return list(channels)
+        return tacan_channels_in_use(self.game, exclude)
 
     def release_freq(self, freq: RadioFrequency):
         if freq:

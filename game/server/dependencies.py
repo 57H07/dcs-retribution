@@ -8,7 +8,6 @@ if TYPE_CHECKING:
     from game import Game
     from game.ato import Flight, Package
     from game.game import TurnState
-    from game.server.qt.models import QtDialog
     from qt_ui.models import GameModel
     from qt_ui.simcontroller import SimController
 
@@ -54,11 +53,11 @@ class QtCallbacks:
     def __init__(
         self,
         create_new_package: Callable[[MissionTarget], None],
-        show_tgo_info: Callable[[TheaterGroundObject], None],
+        # None in web mode: the web UI has its own ground object screen (WEB-08.3).
+        show_tgo_info: Callable[[TheaterGroundObject], None] | None,
         show_control_point_info: Callable[[ControlPoint], None],
         select_flight: Callable[[Flight], None],
         turn_passed: Callable[[TurnState], None] | None = None,
-        open_dialog: Callable[[QtDialog], None] | None = None,
         edit_package: Callable[[Package], None] | None = None,
         game_changed: Callable[[], None] | None = None,
         packages_changed: Callable[[], None] | None = None,
@@ -71,9 +70,8 @@ class QtCallbacks:
         # an API worker thread with the game lock held: it must only queue work onto
         # the Qt main thread (emit a signal), never block on it.
         self.turn_passed = turn_passed
-        # Open a not-yet-migrated Qt screen or the package editor
-        # for the web UI (WEB-00.3). Same contract as turn_passed: emit a signal.
-        self.open_dialog = open_dialog
+        # Opens the package editor for the web UI (WEB-00.3). Same contract as
+        # turn_passed: emit a signal.
         self.edit_package = edit_package
         # Reloads every Qt widget after an API command changed the game in depth
         # (Qt: GameUpdateSignal.updateGame), e.g. a cheat or an expensive setting

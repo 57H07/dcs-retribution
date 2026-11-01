@@ -70,6 +70,7 @@ function ShellLayout() {
             <LiberationMap
               onSelect={setSelection}
               onNewPackage={planPackage}
+              selection={selection}
               layerToolbar
             />
           }

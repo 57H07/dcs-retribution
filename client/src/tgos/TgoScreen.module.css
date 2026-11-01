@@ -1,0 +1,138 @@
+/* Ground object and unit info sheets (WEB-08.3). The frame, sections and text are
+   those of the secondary screens. */
+.budget {
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.status {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ui-space-lg);
+  padding: 14px 16px;
+  background: var(--ui-color-bg-card);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-md);
+}
+
+.statusText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-md);
+}
+
+.units {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.unit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-lg);
+  min-height: 42px;
+  padding: 4px 12px;
+  border-bottom: 1px solid var(--ui-color-line);
+}
+
+.unitName {
+  flex: 1;
+  min-width: 200px;
+  color: var(--ui-color-text-strong);
+}
+
+.damaged {
+  margin: 0;
+  color: var(--ui-color-hostile, #e05c5c);
+  font-size: var(--ui-font-size-sm);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--ui-space-md);
+}
+
+.buy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-lg);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-xs);
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-md);
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-md);
+}
+
+.groupName {
+  padding: 0 4px;
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.slot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-md);
+}
+
+.slot > select {
+  flex: 1;
+  min-width: 220px;
+}
+
+.buyActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ui-space-md);
+}
+
+.banner {
+  display: block;
+  width: 100%;
+  max-width: 720px;
+  max-height: 360px;
+  object-fit: cover;
+  border-radius: var(--ui-radius-md);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--ui-space-sm) var(--ui-space-lg);
+  margin: 0;
+}
+
+.factValue {
+  margin: 0;
+  color: var(--ui-color-text-strong);
+}
+
+.description {
+  margin: 0;
+  max-width: 720px;
+  color: var(--ui-color-text-primary, inherit);
+  line-height: 1.5;
+  white-space: pre-line;
+}
