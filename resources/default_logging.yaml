@@ -23,7 +23,7 @@ handlers:
     backupCount: 1
     encoding: utf8
   in_memory:
-    class: qt_ui.logging_handler.HookableInMemoryHandler
+    class: game.applog.HookableInMemoryHandler
     level: DEBUG
     formatter: default
 root:

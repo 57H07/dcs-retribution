@@ -13,6 +13,7 @@ lock is never held while waiting for DCS.
 
 from __future__ import annotations
 
+import dataclasses
 import logging
 import threading
 from collections.abc import Callable
@@ -22,7 +23,12 @@ from pathlib import Path
 from typing import Protocol, TYPE_CHECKING
 
 from game.ato.flightstate import Uninitialized
-from game.debriefingreport import AfterActionReport, build_report, complete_report
+from game.debriefingreport import (
+    AfterActionReport,
+    build_report,
+    complete_report,
+    minimal_report,
+)
 from game.polldebriefingfilethread import STATE_FILE, STATE_FILE_ERRORS
 from game.profiling import logged_duration
 from game.sim.gameupdateevents import GameUpdateEvents
@@ -146,6 +152,12 @@ class MissionResultWaiter:
             self._error = None
         self._on_change()
 
+    def reset(self) -> None:
+        """Another campaign was loaded: forget its pending and last results."""
+        with self._lock:
+            self._last_report = None
+        self.stop()
+
     def finish(self, report: AfterActionReport) -> None:
         """The results were accepted: stop, and keep their report for review."""
         with self._lock:
@@ -257,7 +269,19 @@ def accept_and_report(
     pilots still down, budget, the messages logged meanwhile). The caller holds the
     game lock.
     """
-    report = build_report(debriefing)
+    # The report must never stand between the player and their results.
+    report: AfterActionReport | None
+    try:
+        report = build_report(debriefing)
+    except Exception:
+        logging.exception("Could not build the after-action report")
+        report = None
     logged_before = len(game.informations)
     accept_results(game, sim, debriefing)
-    return complete_report(report, debriefing, game.informations[logged_before:])
+    if report is None:
+        return minimal_report(debriefing)
+    try:
+        return complete_report(report, debriefing, game.informations[logged_before:])
+    except Exception:
+        logging.exception("Could not complete the after-action report")
+        return dataclasses.replace(report, applied=True)

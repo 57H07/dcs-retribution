@@ -1,0 +1,325 @@
+{
+  "target": "GOPHER",
+  "target_type": "BuildingGroundObject",
+  "primary_task": "Strike",
+  "auto_asap": true,
+  "tot": "2010-06-01T16:28:13",
+  "flights": [
+    {
+      "task": "Strike",
+      "aircraft": "F-15E Strike Eagle (AI)",
+      "squadron": "69th Squadron",
+      "departure": "Ramat David",
+      "arrival": "Ramat David",
+      "divert": null,
+      "count": 2,
+      "start_type": "Cold",
+      "flight_plan": "StrikeFlightPlan",
+      "startup": "2010-06-01T16:00:00",
+      "takeoff": "2010-06-01T16:10:30",
+      "tot": "2010-06-01T16:28:13",
+      "landing": "2010-06-01T16:38:31",
+      "waypoints": [
+        {
+          "type": "TAKEOFF",
+          "name": "TAKEOFF",
+          "x": -259121,
+          "y": -75105,
+          "alt_ft": 0,
+          "alt_type": "RADIO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "LOITER",
+          "name": "HOLD",
+          "x": -216315,
+          "y": -92738,
+          "alt_ft": 19000,
+          "alt_type": "BARO",
+          "tot": null,
+          "depart": "2010-06-01T16:21:37"
+        },
+        {
+          "type": "JOIN",
+          "name": "JOIN",
+          "x": -250852,
+          "y": -71252,
+          "alt_ft": 19000,
+          "alt_type": "BARO",
+          "tot": "2010-06-01T16:24:16",
+          "depart": null
+        },
+        {
+          "type": "NAV",
+          "name": "NAV",
+          "x": -265292,
+          "y": -82631,
+          "alt_ft": 19000,
+          "alt_type": "BARO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "INGRESS_STRIKE",
+          "name": "INGRESS",
+          "x": -250760,
+          "y": -71151,
+          "alt_ft": 19000,
+          "alt_type": "BARO",
+          "tot": "2010-06-01T16:24:17",
+          "depart": null
+        },
+        {
+          "type": "TARGET_POINT",
+          "name": ".Ammunition depot #0",
+          "x": -203571,
+          "y": -33869,
+          "alt_ft": 0,
+          "alt_type": "RADIO",
+          "tot": "2010-06-01T16:28:13",
+          "depart": null
+        },
+        {
+          "type": "TARGET_POINT",
+          "name": "Hangar B #1",
+          "x": -203610,
+          "y": -33912,
+          "alt_ft": 0,
+          "alt_type": "RADIO",
+          "tot": "2010-06-01T16:28:13",
+          "depart": null
+        },
+        {
+          "type": "TARGET_POINT",
+          "name": "Hangar B #2",
+          "x": -203628,
+          "y": -33878,
+          "alt_ft": 0,
+          "alt_type": "RADIO",
+          "tot": "2010-06-01T16:28:13",
+          "depart": null
+        },
+        {
+          "type": "SPLIT",
+          "name": "SPLIT",
+          "x": -249171,
+          "y": -71673,
+          "alt_ft": 19000,
+          "alt_type": "BARO",
+          "tot": "2010-06-01T16:34:19",
+          "depart": null
+        },
+        {
+          "type": "REFUEL",
+          "name": "REFUEL",
+          "x": -252851,
+          "y": -72139,
+          "alt_ft": 19000,
+          "alt_type": "BARO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "LANDING_POINT",
+          "name": "LANDING",
+          "x": -259121,
+          "y": -75105,
+          "alt_ft": 0,
+          "alt_type": "RADIO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "BULLSEYE",
+          "name": "BULLSEYE",
+          "x": -213950,
+          "y": -19133,
+          "alt_ft": 0,
+          "alt_type": "BARO",
+          "tot": null,
+          "depart": null
+        }
+      ],
+      "loadouts": [
+        {
+          "name": "STRIKE",
+          "pylons": {
+            "1": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "2": "{E1F29B21-F291-4589-9FD8-3272EEC69506}",
+            "3": "{6CEB49FC-DED8-4DED-B053-E1F033FF72D3}",
+            "9": "{GBU-31}",
+            "13": "{GBU-31}",
+            "17": "{6CEB49FC-DED8-4DED-B053-E1F033FF72D3}",
+            "18": "{E1F29B21-F291-4589-9FD8-3272EEC69506}",
+            "19": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}"
+          }
+        },
+        {
+          "name": "STRIKE",
+          "pylons": {
+            "1": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "2": "{E1F29B21-F291-4589-9FD8-3272EEC69506}",
+            "3": "{6CEB49FC-DED8-4DED-B053-E1F033FF72D3}",
+            "9": "{GBU-31}",
+            "13": "{GBU-31}",
+            "17": "{6CEB49FC-DED8-4DED-B053-E1F033FF72D3}",
+            "18": "{E1F29B21-F291-4589-9FD8-3272EEC69506}",
+            "19": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}"
+          }
+        }
+      ]
+    },
+    {
+      "task": "Escort",
+      "aircraft": "F-15C Eagle",
+      "squadron": "106th Squadron",
+      "departure": "Ramat David",
+      "arrival": "Ramat David",
+      "divert": null,
+      "count": 2,
+      "start_type": "Cold",
+      "flight_plan": "EscortFlightPlan",
+      "startup": "2010-06-01T16:02:24",
+      "takeoff": "2010-06-01T16:12:54",
+      "tot": "2010-06-01T16:28:13",
+      "landing": "2010-06-01T16:38:31",
+      "waypoints": [
+        {
+          "type": "TAKEOFF",
+          "name": "TAKEOFF",
+          "x": -259121,
+          "y": -75105,
+          "alt_ft": 0,
+          "alt_type": "RADIO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "LOITER",
+          "name": "HOLD",
+          "x": -216315,
+          "y": -92738,
+          "alt_ft": 20000,
+          "alt_type": "BARO",
+          "tot": null,
+          "depart": "2010-06-01T16:21:37"
+        },
+        {
+          "type": "JOIN",
+          "name": "JOIN",
+          "x": -250852,
+          "y": -71252,
+          "alt_ft": 20000,
+          "alt_type": "BARO",
+          "tot": "2010-06-01T16:24:16",
+          "depart": null
+        },
+        {
+          "type": "INGRESS_ESCORT",
+          "name": "INGRESS",
+          "x": -250760,
+          "y": -71151,
+          "alt_ft": 20000,
+          "alt_type": "BARO",
+          "tot": "2010-06-01T16:24:17",
+          "depart": null
+        },
+        {
+          "type": "CUSTOM",
+          "name": "ESCORT HOLD",
+          "x": -213833,
+          "y": -41977,
+          "alt_ft": 20000,
+          "alt_type": "BARO",
+          "tot": "2010-06-01T16:27:21",
+          "depart": null
+        },
+        {
+          "type": "TARGET_GROUP_LOC",
+          "name": "TARGET",
+          "x": -203571,
+          "y": -33869,
+          "alt_ft": 20000,
+          "alt_type": "BARO",
+          "tot": "2010-06-01T16:28:13",
+          "depart": null
+        },
+        {
+          "type": "SPLIT",
+          "name": "SPLIT",
+          "x": -249171,
+          "y": -71673,
+          "alt_ft": 20000,
+          "alt_type": "BARO",
+          "tot": "2010-06-01T16:34:19",
+          "depart": null
+        },
+        {
+          "type": "REFUEL",
+          "name": "REFUEL",
+          "x": -252851,
+          "y": -72139,
+          "alt_ft": 20000,
+          "alt_type": "BARO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "LANDING_POINT",
+          "name": "LANDING",
+          "x": -259121,
+          "y": -75105,
+          "alt_ft": 0,
+          "alt_type": "RADIO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "BULLSEYE",
+          "name": "BULLSEYE",
+          "x": -213950,
+          "y": -19133,
+          "alt_ft": 0,
+          "alt_type": "BARO",
+          "tot": null,
+          "depart": null
+        }
+      ],
+      "loadouts": [
+        {
+          "name": "CAP",
+          "pylons": {
+            "1": "{6CEB49FC-DED8-4DED-B053-E1F033FF72D3}",
+            "2": "{E1F29B21-F291-4589-9FD8-3272EEC69506}",
+            "3": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "4": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "5": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "6": "{E1F29B21-F291-4589-9FD8-3272EEC69506}",
+            "7": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "8": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "9": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "10": "{E1F29B21-F291-4589-9FD8-3272EEC69506}",
+            "11": "{6CEB49FC-DED8-4DED-B053-E1F033FF72D3}"
+          }
+        },
+        {
+          "name": "CAP",
+          "pylons": {
+            "1": "{6CEB49FC-DED8-4DED-B053-E1F033FF72D3}",
+            "2": "{E1F29B21-F291-4589-9FD8-3272EEC69506}",
+            "3": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "4": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "5": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "6": "{E1F29B21-F291-4589-9FD8-3272EEC69506}",
+            "7": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "8": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "9": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "10": "{E1F29B21-F291-4589-9FD8-3272EEC69506}",
+            "11": "{6CEB49FC-DED8-4DED-B053-E1F033FF72D3}"
+          }
+        }
+      ]
+    }
+  ]
+}

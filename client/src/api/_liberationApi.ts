@@ -493,6 +493,58 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({ url: `/iads-network/for-tgo/${queryArg.tgoId}` }),
     }),
+    getLogs: build.query<GetLogsApiResponse, GetLogsApiArg>({
+      query: (queryArg) => ({
+        url: `/logs`,
+        params: { lines: queryArg.lines },
+      }),
+    }),
+    getAbout: build.query<GetAboutApiResponse, GetAboutApiArg>({
+      query: () => ({ url: `/about` }),
+    }),
+    listCareers: build.query<ListCareersApiResponse, ListCareersApiArg>({
+      query: () => ({ url: `/careers/` }),
+    }),
+    getNotes: build.query<GetNotesApiResponse, GetNotesApiArg>({
+      query: () => ({ url: `/notes` }),
+    }),
+    setNotes: build.mutation<SetNotesApiResponse, SetNotesApiArg>({
+      query: (queryArg) => ({
+        url: `/notes`,
+        method: "PUT",
+        body: queryArg.notesJs,
+      }),
+    }),
+    listInformations: build.query<
+      ListInformationsApiResponse,
+      ListInformationsApiArg
+    >({
+      query: () => ({ url: `/informations` }),
+    }),
+    importLayouts: build.mutation<
+      ImportLayoutsApiResponse,
+      ImportLayoutsApiArg
+    >({
+      query: () => ({ url: `/tools/import-layouts`, method: "POST" }),
+    }),
+    generatePretenseCampaign: build.mutation<
+      GeneratePretenseCampaignApiResponse,
+      GeneratePretenseCampaignApiArg
+    >({
+      query: () => ({ url: `/tools/pretense-campaign`, method: "POST" }),
+    }),
+    listTransfers: build.query<ListTransfersApiResponse, ListTransfersApiArg>({
+      query: () => ({ url: `/transfers/` }),
+    }),
+    cancelTransfer: build.mutation<
+      CancelTransferApiResponse,
+      CancelTransferApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/transfers/${queryArg.transferId}`,
+        method: "DELETE",
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -812,6 +864,43 @@ export type GetIadsConnectionsForTgoApiResponse =
   /** status 200 Successful Response */ IadsConnection[];
 export type GetIadsConnectionsForTgoApiArg = {
   tgoId: string;
+};
+export type GetLogsApiResponse =
+  /** status 200 Successful Response */ LogTailJs;
+export type GetLogsApiArg = {
+  lines?: number;
+};
+export type GetAboutApiResponse = /** status 200 Successful Response */ AboutJs;
+export type GetAboutApiArg = void;
+export type ListCareersApiResponse = /** status 200 Successful Response */
+  | CareerJs[]
+  | null;
+export type ListCareersApiArg = void;
+export type GetNotesApiResponse =
+  /** status 200 Successful Response */ NotesJs | null;
+export type GetNotesApiArg = void;
+export type SetNotesApiResponse = /** status 200 Successful Response */ NotesJs;
+export type SetNotesApiArg = {
+  notesJs: NotesJs;
+};
+export type ListInformationsApiResponse = /** status 200 Successful Response */
+  | InformationJs[]
+  | null;
+export type ListInformationsApiArg = void;
+export type ImportLayoutsApiResponse =
+  /** status 200 Successful Response */ LayoutImportJs;
+export type ImportLayoutsApiArg = void;
+export type GeneratePretenseCampaignApiResponse =
+  /** status 200 Successful Response */ PretenseCampaignJs;
+export type GeneratePretenseCampaignApiArg = void;
+export type ListTransfersApiResponse = /** status 200 Successful Response */
+  | TransferJs[]
+  | null;
+export type ListTransfersApiArg = void;
+export type CancelTransferApiResponse =
+  /** status 204 Successful Response */ void;
+export type CancelTransferApiArg = {
+  transferId: string;
 };
 export type LatLng = {
   lat: number;
@@ -1308,15 +1397,7 @@ export type InstallPreferencesUpdate = {
   web_ui: boolean;
   allow_empty_install_dir?: boolean;
 };
-export type QtDialog =
-  | "notes"
-  | "logs"
-  | "about"
-  | "import-layouts"
-  | "pretense-campaign"
-  | "air-wing"
-  | "transfers"
-  | "info-panel";
+export type QtDialog = "air-wing";
 export type BaseForcesJs = {
   id: string;
   name: string;
@@ -1381,6 +1462,90 @@ export type TgoSummary = {
   distance_to_front_nm?: number;
   units: Count;
   dead: boolean;
+};
+export type LogTailJs = {
+  lines: string[];
+  total: number;
+  available: boolean;
+};
+export type ThanksJs = {
+  name: string;
+  reason: string;
+};
+export type AttributionJs = {
+  text: string;
+  url: string;
+};
+export type AboutJs = {
+  version: string;
+  source_url: string;
+  authors: string;
+  contributors: string[];
+  special_thanks: ThanksJs[];
+  attributions: AttributionJs[];
+};
+export type CareerTotalJs = {
+  label: string;
+  value: string;
+};
+export type AwardJs = {
+  name: string;
+  kind: string;
+  date: string;
+  turn: number;
+  description: string;
+};
+export type LogbookEntryJs = {
+  turn: number;
+  date: string;
+  squadron: string;
+  aircraft: string;
+  task: string;
+  combat: boolean;
+  flight_time: string;
+  air_kills: number;
+  ground_kills: number;
+  naval_kills: number;
+  rescues: number;
+  loss: string;
+};
+export type CareerJs = {
+  pilot: string;
+  squadron: string;
+  status: string;
+  alive: boolean;
+  rank?: string;
+  totals: CareerTotalJs[];
+  awards: AwardJs[];
+  history: LogbookEntryJs[];
+};
+export type NotesJs = {
+  text: string;
+};
+export type InformationJs = {
+  turn: number;
+  title: string;
+  text: string;
+  timestamp?: string;
+};
+export type LayoutImportJs = {
+  count: number;
+};
+export type PretenseCampaignJs = {
+  path: string;
+};
+export type TransferUnitJs = {
+  name: string;
+  count: number;
+};
+export type TransferJs = {
+  id: string;
+  origin: string;
+  destination: string;
+  position: string;
+  size: number;
+  units: TransferUnitJs[];
+  transport: string;
 };
 export const {
   useListControlPointsQuery,
@@ -1458,4 +1623,14 @@ export const {
   useSetWaypointPositionMutation,
   useGetIadsNetworkQuery,
   useGetIadsConnectionsForTgoQuery,
+  useGetLogsQuery,
+  useGetAboutQuery,
+  useListCareersQuery,
+  useGetNotesQuery,
+  useSetNotesMutation,
+  useListInformationsQuery,
+  useImportLayoutsMutation,
+  useGeneratePretenseCampaignMutation,
+  useListTransfersQuery,
+  useCancelTransferMutation,
 } = injectedRtkApi;

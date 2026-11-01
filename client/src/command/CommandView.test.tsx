@@ -104,15 +104,18 @@ describe("top bar", () => {
     await waitFor(() =>
       expect(router.state.location.pathname).toBe("/reports/intel"),
     );
+    // Transfers is a web screen (WEB-08.2).
     await userEvent.click(screen.getByRole("button", { name: "Transfers" }));
-    await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls.map((c) => c.path)).toEqual(["/qt/dialogs/transfers"]);
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe("/transfers"),
+    );
+    await userEvent.click(screen.getByRole("link", { name: /Command view/ }));
     await userEvent.click(screen.getByRole("button", { name: "Settings" }));
     // Settings is a web screen (WEB-07.1).
     await waitFor(() =>
       expect(router.state.location.pathname).toBe("/settings"),
     );
-    expect(calls).toHaveLength(1);
+    expect(calls).toHaveLength(0);
   });
 });
 

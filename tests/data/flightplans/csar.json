@@ -1,0 +1,87 @@
+{
+  "target": "Downed pilot: מיכאל מזרחי (F-16CM Fighting Falcon (Block 50))",
+  "target_type": "DownedPilot",
+  "primary_task": "CSAR",
+  "auto_asap": true,
+  "tot": "2010-06-01T16:08:03",
+  "flights": [
+    {
+      "task": "CSAR",
+      "aircraft": "UH-1H Iroquois",
+      "squadron": "Squadron 003",
+      "departure": "Golan South",
+      "arrival": "Golan South",
+      "divert": null,
+      "count": 1,
+      "start_type": "Warm",
+      "flight_plan": "CsarFlightPlan",
+      "startup": "2010-06-01T16:00:00",
+      "takeoff": "2010-06-01T16:02:30",
+      "tot": "2010-06-01T16:08:03",
+      "landing": "2010-06-01T16:10:47",
+      "waypoints": [
+        {
+          "type": "TAKEOFF",
+          "name": "TAKEOFF",
+          "x": -239830,
+          "y": -20281,
+          "alt_ft": 0,
+          "alt_type": "RADIO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "INGRESS_CSAR",
+          "name": "INGRESS",
+          "x": -242951,
+          "y": -20290,
+          "alt_ft": 200,
+          "alt_type": "RADIO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "CSAR_PICKUP",
+          "name": "CSARPICKUP",
+          "x": -233721,
+          "y": -20264,
+          "alt_ft": 200,
+          "alt_type": "RADIO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "LANDING_POINT",
+          "name": "LANDING",
+          "x": -239830,
+          "y": -20281,
+          "alt_ft": 0,
+          "alt_type": "RADIO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "BULLSEYE",
+          "name": "BULLSEYE",
+          "x": -213950,
+          "y": -19133,
+          "alt_ft": 0,
+          "alt_type": "BARO",
+          "tot": null,
+          "depart": null
+        }
+      ],
+      "loadouts": [
+        {
+          "name": "CAS",
+          "pylons": {
+            "1": "M134_L",
+            "2": "XM158_MK5",
+            "5": "XM158_MK5",
+            "6": "M134_R"
+          }
+        }
+      ]
+    }
+  ]
+}

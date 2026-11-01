@@ -19,6 +19,11 @@ class ShipUnitType(UnitType[Type[ShipType]]):
         list
     )
 
+    def __hash__(self) -> int:
+        # Not the generated hash: it covers dcs_unit_type, a class hashed by address,
+        # which made set iteration order differ from run to run.
+        return hash(self.variant_id)
+
     def __setstate__(self, state: dict[str, Any]) -> None:
         # Save compat: the `name` field has been renamed `variant_id`.
         if "name" in state:

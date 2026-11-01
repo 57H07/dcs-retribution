@@ -393,6 +393,34 @@ def build_report(debriefing: Debriefing) -> AfterActionReport:
     )
 
 
+def minimal_report(debriefing: Debriefing) -> AfterActionReport:
+    """What is left to show when the full report could not be built."""
+    game = debriefing.game
+    return AfterActionReport(
+        turn=game.turn,
+        date=game.conditions.start_time.strftime("%d %B %Y"),
+        player_country=debriefing.player_country,
+        enemy_country=debriefing.enemy_country,
+        verdict="Results applied",
+        verdict_tone=Tone.NEUTRAL,
+        summary="The detailed report could not be built; see the log.",
+        air_kills_friendly=0,
+        air_kills_enemy=0,
+        ground_kills_friendly=0,
+        ground_kills_enemy=0,
+        bases_captured=0,
+        bases_lost=0,
+        pilots_rescued=[],
+        rescue_bounty=0,
+        packages=[],
+        friendly_losses=[],
+        enemy_losses=[],
+        damaged_units=[],
+        events=[],
+        applied=True,
+    )
+
+
 def complete_report(
     report: AfterActionReport,
     debriefing: Debriefing,

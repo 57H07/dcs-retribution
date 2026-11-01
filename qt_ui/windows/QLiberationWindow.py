@@ -1,6 +1,5 @@
 import logging
 import traceback
-from datetime import datetime
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -27,11 +26,11 @@ from game import Game, VERSION, persistency, Migrator
 from game.ato import Flight, Package
 from game.debriefing import Debriefing
 from game.game import TurnState
-from game.layout import LAYOUTS
-from game.persistency import pre_pretense_backups_dir
-from game.pretense.pretensemissiongenerator import PretenseMissionGenerator
+from game import about
+from game.commands.tools import generate_pretense_campaign, import_layouts
 from game.server import EventStream, GameContext
 from game.server.dependencies import QtCallbacks, QtContext, UiOptions
+from game.server.missionresult.waiter import MissionResultContext
 from game.server.qt.models import QtDialog
 from game.commands import CommandError
 from game.native import (
@@ -57,7 +56,6 @@ from qt_ui.widgets.ato import QAirTaskingOrderPanel
 from qt_ui.widgets.map.QLiberationMap import QLiberationMap
 from qt_ui.windows.AirWingDialog import AirWingDialog
 from qt_ui.windows.GameUpdateSignal import GameUpdateSignal
-from qt_ui.windows.PendingTransfersDialog import PendingTransfersDialog
 from qt_ui.windows.QDebriefingWindow import QDebriefingWindow
 from qt_ui.windows.basemenu.QBaseMenu2 import QBaseMenu2
 from qt_ui.windows.groundobject.QGroundObjectMenu import QGroundObjectMenu
@@ -144,7 +142,10 @@ class QLiberationWindow(QMainWindow):
         self.ato_panel: QAirTaskingOrderPanel | None = (
             None if self.web_ui else QAirTaskingOrderPanel(self.game_model)
         )
-        self.info_panel = QInfoPanel(self.game)
+        # The web info panel screen replaces it in the web shell (WEB-08.2).
+        self.info_panel: QInfoPanel | None = (
+            None if self.web_ui else QInfoPanel(self.game)
+        )
         self.liberation_map = QLiberationMap(
             self.game_model, ui_flags.dev_ui_webserver, self, web_shell=self.web_ui
         )
@@ -195,6 +196,7 @@ class QLiberationWindow(QMainWindow):
         hbox.addWidget(self.ato_panel)
         hbox.addWidget(vbox)
         vbox.addWidget(self.liberation_map)
+        assert self.info_panel is not None
         vbox.addWidget(self.info_panel)
 
         # Will make the ATO sidebar as small as necessary to fit the content. In
@@ -213,22 +215,13 @@ class QLiberationWindow(QMainWindow):
         self.setCentralWidget(central_widget)
 
     def _init_web_ui(self, ui_flags: UiFlags) -> None:
-        """The map fills the window; the Qt panels move to windows opened on demand.
+        """The map fills the window: the web shell has its own screens.
 
-        The web top bar replaces QTopPanel (WEB-01.1) and the web packages panel the
-        ATO panel (WEB-01.2): they are not created at all.
+        The web top bar replaces QTopPanel (WEB-01.1), the web packages panel the
+        ATO panel (WEB-01.2) and the web info panel screen QInfoPanel (WEB-08.2):
+        they are not created at all.
         """
-        self.reports_window = self._panel_window("Reports", self.info_panel)
         self.setCentralWidget(self.liberation_map)
-
-    def _panel_window(self, title: str, panel: QWidget) -> QWidget:
-        window = QWidget(self, Qt.WindowType.Window)
-        window.setWindowTitle(title)
-        layout = QVBoxLayout(window)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(panel)
-        window.resize(500, 700)
-        return window
 
     def _hide_qt_chrome(self) -> None:
         self.menuBar().hide()
@@ -246,6 +239,10 @@ class QLiberationWindow(QMainWindow):
 
     def connectSignals(self):
         GameUpdateSignal.get_instance().gameupdated.connect(self.setGame)
+        # A mission result belongs to the campaign that generated it.
+        GameUpdateSignal.get_instance().game_loaded.connect(
+            lambda _: MissionResultContext.get().reset()
+        )
         self.turn_passed_signal.connect(self.on_turn_passed)
         GameUpdateSignal.get_instance().debriefingReceived.connect(self.onDebriefing)
         GameUpdateSignal.get_instance().game_state_changed.connect(self.onEndGame)
@@ -428,23 +425,13 @@ class QLiberationWindow(QMainWindow):
         wizard.accepted.connect(lambda: self.onGameGenerated(wizard.generatedGame))
 
     def newPretenseCampaign(self):
-        output = persistency.mission_path_for("pretense_campaign.miz")
         try:
-            PretenseMissionGenerator(
-                self.game, self.game.conditions.start_time
-            ).generate_miz(output)
-        except Exception as e:
-            now = datetime.now()
-            date_time = now.strftime("%Y-%d-%mT%H_%M_%S")
-            path = pre_pretense_backups_dir()
-            tgt = path / f"pre-pretense-backup_{date_time}.retribution"
-            path /= f".pre-pretense-backup.retribution"
-            if path.exists():
-                with open(path, "rb") as source:
-                    with open(tgt, "wb") as target:
-                        target.write(source.read())
-            raise e
-
+            output = generate_pretense_campaign(self.game)
+        except CommandError as error:
+            QMessageBox.critical(
+                QApplication.focusWidget(), "Pretense campaign", str(error)
+            )
+            return
         title = "Pretense campaign generated"
         msg = f"A Pretense campaign mission has been successfully generated in {output}"
         QMessageBox.information(QApplication.focusWidget(), title, msg, QMessageBox.Ok)
@@ -559,8 +546,8 @@ class QLiberationWindow(QMainWindow):
         if self.top_panel is not None:
             self.top_panel.setControls(False)
 
-        title = "Victory!" if TurnState.WIN else "Defeat!"
-        msgvar = "won" if TurnState.WIN else "lost"
+        title = "Victory!" if state == TurnState.WIN else "Defeat!"
+        msgvar = "won" if state == TurnState.WIN else "lost"
         msg = f"You have {msgvar} the campaign, do you wish to start a new one?"
         result = QMessageBox.information(
             QApplication.focusWidget(),
@@ -597,103 +584,26 @@ class QLiberationWindow(QMainWindow):
             self.enable_game_actions(self.game is not None)
 
     def showAboutDialog(self):
-        contributors = [
-            "shdwp",
-            "Khopa",
-            "ColonelPanic",
-            "RndName",
-            "Roach",
-            "Malakhit",
-            "Wrycu",
-            "calvinmorrow",
-            "JohanAberg",
-            "Deus",
-            "SiKruger",
-            "Mustang-25",
-            "bgreman",
-            "magwo",
-            "SnappyComebacks",
-            "kavinsky",
-            "Schneefl0cke",
-            "pbzweihander",
-            "Raskil",
-            "nosv1",
-            "jake-lewis",
-            "teamMOYA",
-            "benedikt-wegmann",
-            "movq",
-            "bbirchnz",
-            "eddiwood",
-            "root0fall",
-            "calvinmorrow",
-            "UKayeF",
-            "Captain Cody",
-            "steveveepee",
-            "pedromagueija",
-            "parithon",
-            "TheCandianVendingMachine",
-            "bwRavencl",
-            "davidp57",
-            "Plob",
-            "Hawkmoon",
-            "alrik11es",
-            "Starfire13",
-            "Hornet2041/Lion",
-            "SgtFuzzle17",
-            "Doc_of_Mur",
-            "NickJZX",
-            "Sith1144",
-            "Raffson",
-            "MetalStormGhost",
-            "HolyOrangeJuice (WRL)",
-            "Adecarcer",
-            "pande4360",
-            "zhexu14",
-            "ColonelAkirNakesh",
-            "Nosajthedevil",
-            "kivipe",
-            "Turbolious",
-            "ingax01",
-            "M-Chimiste",
-            "tmz42",
-            "Drexyl",
-            "Druss99",
-            "Biggus22",
-            "StillClock1",
-        ]
+        # The credits live in game.about, shared with the web About screen.
         text = (
-            "<h3>DCS Retribution " + VERSION + "</h3>" + "<b>Source code : </b>"
-            "<a href='https://github.com/dcs-retribution/dcs-retribution'>"
-            "https://github.com/dcs-retribution/dcs-retribution </a>"
-            + "<h4>Authors</h4>"
-            + "<p>DCS Retribution is an (independent) fork of DCS Liberation, "
-            "which was originally developed by <b>shdwp</b>. "
-            "DCS Liberation 2.0 is a partial rewrite based on this work by <b>Khopa</b>. "
-            "DCS Retribution was forked during development of "
-            "DCS Liberation v6.0.0 in 2022 by <b>Raffson</> & <b>MetalStormGhost</>."
+            f"<h3>DCS Retribution {VERSION}</h3><b>Source code : </b>"
+            f"<a href='{about.SOURCE_URL}'>{about.SOURCE_URL}</a>"
+            f"<h4>Authors</h4><p>{about.AUTHORS}</p>"
             "<h4>Contributors</h4>"
-            + ", ".join(contributors)
+            + ", ".join(about.CONTRIBUTORS)
             + "<h4>Special Thanks  :</h4>"
-            "<b>rp-</b> <i>for the pydcs framework</i><br/>"
-            "<b>Grimes (mrSkortch)</b> & <b>Speed</b> <i>for the MIST framework</i><br/>"
-            "<b>Ciribob </b> <i>for the JTACAutoLase.lua script</i><br/>"
-            "<b>Walder </b> <i>for the Skynet-IADS script</i><br/>"
-            "<b>Anubis Yinepu </b> <i>for the Hercules Cargo script</i><br/>"
-            '<a href="https://www.flaticon.com/free-icons/bug" title="bug icons">Bug icons created by Freepik - Flaticon</a><br />'
-            'Contains information from <a href="https://osmdata.openstreetmap.de/">OpenStreetMap © OpenStreetMap contributors</a>, which is made available here under the <a href="https://opendatacommons.org/licenses/odbl/1-0/">Open Database License (ODbL)</a>.<br />'
-            '<a href="https://download.geofabrik.de/index.html/">OpenStreetMap Data Extracts from Geofabrik</a><br />'
-            '<a href="https://www.earthdata.nasa.gov/">NASA EarthData</a><br />'
-            + "<h4>Splash Screen  :</h4>"
-            + "Artwork by Andriy Dankovych (CC BY-SA)"
-            " <a href='https://www.facebook.com/AndriyDankovych'>"
-            "[https://www.facebook.com/AndriyDankovych]</a>"
+            + "".join(
+                f"<b>{t.name}</b> <i>{t.reason}</i><br/>" for t in about.SPECIAL_THANKS
+            )
+            + "".join(
+                f'<a href="{a.url}">{a.text}</a><br/>' for a in about.ATTRIBUTIONS
+            )
         )
-        about = QMessageBox()
-        about.setWindowTitle("About DCS Retribution")
-        about.setIcon(QMessageBox.Icon.Information)
-        about.setText(text)
-        logging.info(about.textFormat())
-        about.exec()
+        box = QMessageBox()
+        box.setWindowTitle("About DCS Retribution")
+        box.setIcon(QMessageBox.Icon.Information)
+        box.setText(text)
+        box.exec()
 
     def showLiberationDialog(self):
         self.subwindow = QLiberationPreferencesWindow()
@@ -712,7 +622,7 @@ class QLiberationWindow(QMainWindow):
         self.dialog.show()
 
     def import_templates(self):
-        LAYOUTS.import_templates()
+        import_layouts()
 
     def showLogsDialog(self):
         self.dialog = QLogsWindow(self)
@@ -727,14 +637,7 @@ class QLiberationWindow(QMainWindow):
     def open_dialog(self, dialog: QtDialog) -> None:
         """Opens a Qt screen for the web shell (WEB-00.3), on the Qt main thread."""
         handlers: dict[QtDialog, Callable[[], object]] = {
-            QtDialog.NOTES: self.showNotesDialog,
-            QtDialog.LOGS: self.showLogsDialog,
-            QtDialog.ABOUT: self.showAboutDialog,
-            QtDialog.IMPORT_LAYOUTS: self.import_templates,
-            QtDialog.PRETENSE_CAMPAIGN: self.newPretenseCampaign,
             QtDialog.AIR_WING: self.open_air_wing,
-            QtDialog.TRANSFERS: self.open_transfers,
-            QtDialog.INFO_PANEL: lambda: self._show_panel("reports_window"),
         }
         # The game may have been unloaded between the request and this slot.
         if dialog.needs_game and self.game is None:
@@ -749,19 +652,6 @@ class QLiberationWindow(QMainWindow):
     def open_air_wing(self) -> None:
         self.dialog = AirWingDialog(self.game_model, self)
         self.dialog.show()
-
-    def open_transfers(self) -> None:
-        self.dialog = PendingTransfersDialog(self.game_model)
-        self.dialog.show()
-
-    def _show_panel(self, name: str) -> None:
-        # Without the web shell the panel is already part of the main window.
-        window: QWidget | None = getattr(self, name, None)
-        if window is None:
-            return
-        window.show()
-        window.raise_()
-        window.activateWindow()
 
     def open_link(self, link: ExternalLink) -> None:
         self.native_bridge.open_url(link.url)

@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import os
 import time
+from datetime import datetime
 from collections.abc import Callable, Iterator
 from pathlib import Path
 from types import SimpleNamespace
@@ -335,6 +336,40 @@ def test_accept_processes_the_result_then_passes_the_turn(sim: _Sim) -> None:
     accept_results(cast(Any, game), sim, debriefing)
     assert sim.calls == [("process", {"mission_ended": True})]
     assert order == ["pass_turn"]
+
+
+def test_a_report_failure_does_not_block_the_results(
+    monkeypatch: pytest.MonkeyPatch, sim: _Sim
+) -> None:
+    def fail(*_: Any) -> Any:
+        raise ValueError("broken report")
+
+    order: list[str] = []
+    game = SimpleNamespace(
+        pass_turn=lambda: order.append("pass_turn"),
+        informations=[],
+        turn=3,
+        conditions=SimpleNamespace(start_time=datetime(2022, 5, 17)),
+    )
+    debriefing = _debriefing({"mission_ended": True})
+    debriefing.game = game
+    debriefing.player_country = "Ukraine"
+    debriefing.enemy_country = "Russia"
+    monkeypatch.setattr("game.commands.missionresult.build_report", fail)
+    report = accept_and_report(cast(Any, game), sim, debriefing)
+    assert order == ["pass_turn"]
+    assert report.applied
+    assert report.verdict == "Results applied"
+
+
+def test_reset_forgets_the_pending_and_last_results(
+    waiter: MissionResultWaiter, sim: _Sim
+) -> None:
+    waiter.finish(cast(Any, "report"))
+    waiter.start(sim, MIZ)
+    waiter.reset()
+    assert waiter.snapshot().status is MissionResultStatus.IDLE
+    assert waiter.last_report() is None
 
 
 def test_mission_result_event_reaches_the_client() -> None:
