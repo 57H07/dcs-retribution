@@ -101,9 +101,7 @@ class _Squadron:
         self.max_size = 12
         self.destination = None
         self.coalition = SimpleNamespace(
-            game=SimpleNamespace(
-                settings=SimpleNamespace(ground_start_ai_planes=False)
-            )
+            game=SimpleNamespace(settings=SimpleNamespace(ground_start_ai_planes=False))
         )
         self.aircraft_in_maintenance = in_maintenance
         self.maintenance_summary = [(1, 1), (in_maintenance - 1, 2)]

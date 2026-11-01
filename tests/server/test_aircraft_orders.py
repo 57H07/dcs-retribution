@@ -436,7 +436,9 @@ def test_create_squadron_claims_its_preset() -> None:
     claimed = _def(VIPER, "Taken")
     claimed.claimed = True
     cp.coalition.air_wing.squadron_defs[VIPER] = [preset, claimed]
-    game: Any = SimpleNamespace(db=SimpleNamespace(flights=Database()), settings=settings)
+    game: Any = SimpleNamespace(
+        db=SimpleNamespace(flights=Database()), settings=settings
+    )
     viper = next(c for c in squadron_choices(cp) if c.aircraft == VIPER)
     assert [d.name for d in viper.presets] == ["Triple Nickel"]
 
@@ -473,7 +475,9 @@ def test_create_squadron_refuses_what_the_base_does_not_offer(
     aircraft: str | None, task: str, message: str
 ) -> None:
     cp, settings = _base()
-    game: Any = SimpleNamespace(db=SimpleNamespace(flights=Database()), settings=settings)
+    game: Any = SimpleNamespace(
+        db=SimpleNamespace(flights=Database()), settings=settings
+    )
     with pytest.raises(CommandError) as error:
         create_squadron(
             game, cp, aircraft or VIPER.variant_id, task, None, GameUpdateEvents()
