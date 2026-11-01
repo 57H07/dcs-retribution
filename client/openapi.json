@@ -2512,6 +2512,1145 @@
         }
       }
     },
+    "/packages/{package_id}/flights/{flight_id}/payload": {
+      "get": {
+        "summary": "Get Flight Payload",
+        "operationId": "get_flight_payload",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightPayloadJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded, or no such flight.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/payload/fuel": {
+      "put": {
+        "summary": "Put Flight Fuel",
+        "operationId": "set_flight_fuel",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlightFuelJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightPayloadJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The engine refuses this change of the payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/payload/same-loadout": {
+      "put": {
+        "summary": "Put Same Loadout",
+        "operationId": "set_same_loadout",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SameForAllJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightPayloadJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The engine refuses this change of the payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/payload/same-livery": {
+      "put": {
+        "summary": "Put Same Livery",
+        "operationId": "set_same_livery",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SameForAllJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightPayloadJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The engine refuses this change of the payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/payload/backup": {
+      "post": {
+        "summary": "Post Backup",
+        "description": "Backs up the payload file of the aircraft, if it has one.",
+        "operationId": "backup_flight_payloads",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayloadFileJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The file cannot be copied.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/payload/members/{member_index}/loadout": {
+      "put": {
+        "summary": "Put Member Loadout",
+        "operationId": "set_member_loadout",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          },
+          {
+            "name": "member_index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Member Index"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemberLoadoutNameJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightPayloadJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The engine refuses this change of the payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/payload/members/{member_index}/custom": {
+      "put": {
+        "summary": "Put Member Custom",
+        "description": "On: starts from what the member flies. Off: back to the task's default.",
+        "operationId": "set_member_custom_loadout",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          },
+          {
+            "name": "member_index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Member Index"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemberCustomLoadoutJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightPayloadJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The engine refuses this change of the payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/payload/members/{member_index}/pylons/{number}": {
+      "put": {
+        "summary": "Put Member Pylon",
+        "operationId": "set_member_pylon",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          },
+          {
+            "name": "member_index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Member Index"
+            }
+          },
+          {
+            "name": "number",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemberPylonWeaponJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightPayloadJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The engine refuses this change of the payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/payload/members/{member_index}/pylons/{number}/settings": {
+      "put": {
+        "summary": "Put Weapon Setting",
+        "operationId": "set_member_weapon_setting",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          },
+          {
+            "name": "member_index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Member Index"
+            }
+          },
+          {
+            "name": "number",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayloadValueJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightPayloadJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The engine refuses this change of the payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Weapon Settings",
+        "description": "Back to the defaults of the weapon.",
+        "operationId": "reset_member_weapon_settings",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          },
+          {
+            "name": "member_index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Member Index"
+            }
+          },
+          {
+            "name": "number",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightPayloadJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The engine refuses this change of the payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/payload/members/{member_index}/tgp-laser-code": {
+      "put": {
+        "summary": "Put Tgp Laser Code",
+        "operationId": "set_member_tgp_laser_code",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          },
+          {
+            "name": "member_index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Member Index"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TgpLaserCodeJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightPayloadJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The engine refuses this change of the payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/payload/members/{member_index}/weapon-laser-code": {
+      "put": {
+        "summary": "Put Weapon Laser Code",
+        "operationId": "set_member_weapon_laser_code",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          },
+          {
+            "name": "member_index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Member Index"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeaponLaserCodeChoiceJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightPayloadJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The engine refuses this change of the payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/payload/members/{member_index}/livery": {
+      "put": {
+        "summary": "Put Member Livery",
+        "operationId": "set_member_livery",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          },
+          {
+            "name": "member_index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Member Index"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemberLiveryJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightPayloadJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The engine refuses this change of the payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/payload/members/{member_index}/properties": {
+      "put": {
+        "summary": "Put Member Property",
+        "operationId": "set_member_property",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          },
+          {
+            "name": "member_index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Member Index"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayloadValueJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightPayloadJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The engine refuses this change of the payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/payload/members/{member_index}/save": {
+      "post": {
+        "summary": "Post Save Payload",
+        "description": "Saves the custom loadout as a named payload of the aircraft.",
+        "operationId": "save_member_payload",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          },
+          {
+            "name": "member_index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Member Index"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SavePayloadJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayloadFileJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The loadout is not custom, or the file cannot be written.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/flights/": {
       "get": {
         "summary": "List Flights",
@@ -8007,6 +9146,19 @@
         "type": "object",
         "title": "FlightFrequency"
       },
+      "FlightFuelJs": {
+        "properties": {
+          "fuel": {
+            "type": "integer",
+            "title": "Fuel"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fuel"
+        ],
+        "title": "FlightFuel"
+      },
       "FlightJs": {
         "properties": {
           "id": {
@@ -8064,6 +9216,81 @@
           "start_types"
         ],
         "title": "FlightOptions"
+      },
+      "FlightPayloadJs": {
+        "properties": {
+          "aircraft": {
+            "type": "string",
+            "title": "Aircraft"
+          },
+          "fuel": {
+            "type": "integer",
+            "title": "Fuel"
+          },
+          "fuel_max": {
+            "type": "integer",
+            "title": "Fuel Max"
+          },
+          "same_loadout": {
+            "type": "boolean",
+            "title": "Same Loadout"
+          },
+          "same_livery": {
+            "type": "boolean",
+            "title": "Same Livery"
+          },
+          "restrict_weapons_by_date": {
+            "type": "boolean",
+            "title": "Restrict Weapons By Date"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "loadouts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Loadouts"
+          },
+          "pylons": {
+            "items": {
+              "$ref": "#/components/schemas/PayloadPylonOptionsJs"
+            },
+            "type": "array",
+            "title": "Pylons"
+          },
+          "properties": {
+            "items": {
+              "$ref": "#/components/schemas/PayloadPropertyJs"
+            },
+            "type": "array",
+            "title": "Properties"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/MemberPayloadJs"
+            },
+            "type": "array",
+            "title": "Members"
+          }
+        },
+        "type": "object",
+        "required": [
+          "aircraft",
+          "fuel",
+          "fuel_max",
+          "same_loadout",
+          "same_livery",
+          "restrict_weapons_by_date",
+          "date",
+          "loadouts",
+          "pylons",
+          "properties",
+          "members"
+        ],
+        "title": "FlightPayload"
       },
       "FlightRadiosJs": {
         "properties": {
@@ -9614,6 +10841,187 @@
         ],
         "title": "MapZones"
       },
+      "MemberCustomLoadoutJs": {
+        "properties": {
+          "custom": {
+            "type": "boolean",
+            "title": "Custom"
+          }
+        },
+        "type": "object",
+        "required": [
+          "custom"
+        ],
+        "title": "MemberCustomLoadout"
+      },
+      "MemberLiveryJs": {
+        "properties": {
+          "livery_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Livery Id"
+          },
+          "use_livery_set": {
+            "type": "boolean",
+            "title": "Use Livery Set",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "MemberLivery"
+      },
+      "MemberLoadoutNameJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "MemberLoadoutName"
+      },
+      "MemberPayloadJs": {
+        "properties": {
+          "index": {
+            "type": "integer",
+            "title": "Index"
+          },
+          "pilot": {
+            "title": "Pilot",
+            "type": "string"
+          },
+          "is_player": {
+            "type": "boolean",
+            "title": "Is Player"
+          },
+          "loadout": {
+            "type": "string",
+            "title": "Loadout"
+          },
+          "custom": {
+            "type": "boolean",
+            "title": "Custom"
+          },
+          "pylons": {
+            "items": {
+              "$ref": "#/components/schemas/MemberPylonJs"
+            },
+            "type": "array",
+            "title": "Pylons"
+          },
+          "tgp_laser_code": {
+            "title": "Tgp Laser Code",
+            "type": "integer"
+          },
+          "weapon_laser_code": {
+            "title": "Weapon Laser Code",
+            "type": "integer"
+          },
+          "weapon_laser_codes": {
+            "items": {
+              "$ref": "#/components/schemas/WeaponLaserCodeJs"
+            },
+            "type": "array",
+            "title": "Weapon Laser Codes"
+          },
+          "liveries": {
+            "items": {
+              "$ref": "#/components/schemas/LiveryChoiceJs"
+            },
+            "type": "array",
+            "title": "Liveries"
+          },
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Properties"
+          }
+        },
+        "type": "object",
+        "required": [
+          "index",
+          "is_player",
+          "loadout",
+          "custom",
+          "pylons",
+          "weapon_laser_codes",
+          "liveries",
+          "properties"
+        ],
+        "title": "MemberPayload"
+      },
+      "MemberPylonJs": {
+        "properties": {
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "weapon": {
+            "$ref": "#/components/schemas/PayloadWeaponJs"
+          },
+          "replaced_weapon": {
+            "title": "Replaced Weapon",
+            "type": "string"
+          },
+          "settings": {
+            "items": {
+              "$ref": "#/components/schemas/WeaponSettingJs"
+            },
+            "type": "array",
+            "title": "Settings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "number",
+          "settings"
+        ],
+        "title": "MemberPylon"
+      },
+      "MemberPylonWeaponJs": {
+        "properties": {
+          "clsid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clsid"
+          }
+        },
+        "type": "object",
+        "title": "MemberPylonWeapon"
+      },
       "MissionChecksJs": {
         "properties": {
           "has_player_pilots": {
@@ -10358,6 +11766,166 @@
         "title": "PackageTot",
         "description": "A time of day: the date is the one of the current TOT."
       },
+      "PayloadFileJs": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "title": "PayloadFile",
+        "description": "Where the file went, for the player to find it. None: nothing to back up."
+      },
+      "PayloadOptionJs": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label"
+        ],
+        "title": "PayloadOption"
+      },
+      "PayloadPropertyJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "control": {
+            "type": "string",
+            "title": "Control"
+          },
+          "section": {
+            "title": "Section",
+            "type": "string"
+          },
+          "minimum": {
+            "title": "Minimum",
+            "type": "integer"
+          },
+          "maximum": {
+            "title": "Maximum",
+            "type": "integer"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/PayloadOptionJs"
+            },
+            "type": "array",
+            "title": "Options"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "control",
+          "options"
+        ],
+        "title": "PayloadProperty"
+      },
+      "PayloadPylonOptionsJs": {
+        "properties": {
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "weapons": {
+            "items": {
+              "$ref": "#/components/schemas/PayloadWeaponJs"
+            },
+            "type": "array",
+            "title": "Weapons"
+          }
+        },
+        "type": "object",
+        "required": [
+          "number",
+          "weapons"
+        ],
+        "title": "PayloadPylonOptions"
+      },
+      "PayloadValueJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "PayloadValue"
+      },
+      "PayloadWeaponJs": {
+        "properties": {
+          "clsid": {
+            "type": "string",
+            "title": "Clsid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "clsid",
+          "name"
+        ],
+        "title": "PayloadWeapon"
+      },
       "PilotJs": {
         "properties": {
           "id": {
@@ -10775,6 +12343,32 @@
           "state"
         ],
         "title": "Runway"
+      },
+      "SameForAllJs": {
+        "properties": {
+          "same": {
+            "type": "boolean",
+            "title": "Same"
+          }
+        },
+        "type": "object",
+        "required": [
+          "same"
+        ],
+        "title": "SameForAll"
+      },
+      "SavePayloadJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "SavePayload"
       },
       "SetDestinationJs": {
         "properties": {
@@ -11905,6 +13499,19 @@
         ],
         "title": "TgoUnit"
       },
+      "TgpLaserCodeJs": {
+        "properties": {
+          "assigned": {
+            "type": "boolean",
+            "title": "Assigned"
+          }
+        },
+        "type": "object",
+        "required": [
+          "assigned"
+        ],
+        "title": "TgpLaserCode"
+      },
       "ThanksJs": {
         "properties": {
           "name": {
@@ -12548,6 +14155,109 @@
           "name"
         ],
         "title": "WaypointName"
+      },
+      "WeaponLaserCodeChoiceJs": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          }
+        },
+        "type": "object",
+        "title": "WeaponLaserCodeChoice"
+      },
+      "WeaponLaserCodeJs": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "integer"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label"
+        ],
+        "title": "WeaponLaserCode"
+      },
+      "WeaponSettingJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "control": {
+            "type": "string",
+            "title": "Control"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "read_only": {
+            "type": "boolean",
+            "title": "Read Only"
+          },
+          "minimum": {
+            "title": "Minimum",
+            "type": "number"
+          },
+          "maximum": {
+            "title": "Maximum",
+            "type": "number"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/PayloadOptionJs"
+            },
+            "type": "array",
+            "title": "Options"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "control",
+          "value",
+          "read_only",
+          "options"
+        ],
+        "title": "WeaponSetting"
       },
       "WeatherJs": {
         "properties": {

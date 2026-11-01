@@ -165,6 +165,11 @@ before a destructive change, the read model says so (`delete_degrades`), the cli
 and the command refuses without the flag (`allow_degrade`). To answer "would this work?"
 without duplicating a layout's rules, `_probe` runs them on a copy with its own lists.
 
+The Payload tab (WEB-04.3, `game/commands/flightpayload.py`, `game/server/flightpayload/`,
+`GET /packages/{id}/flights/{id}/payload`) works the same way. Its read model separates what
+is stored from what flies: with the date restriction on, a read shows the degraded loadout
+and never writes it, and turning on the custom loadout starts from what was shown.
+
 The Radios & TACAN tab (WEB-04.5, `game/commands/flightradios.py`,
 `game/server/packages/radioroutes.py`) follows the same pattern with its own read model
 (`GET /packages/{id}/flights/{id}/radios`). The warnings of frequencies (guard, double

@@ -20,9 +20,15 @@ import pytest
 
 from game import Game, persistency
 from game.ato import Package
+from game.commands.flightpayload import (
+    pylon_options,
+    set_member_custom,
+    set_member_pylon,
+)
 from game.data.weapons import Weapon
 from game.server.flightroute.models import FlightRouteJs
 from tests.flightplans.fingerprint import compare_to_reference, fingerprint_package
+from tests.flightplans.referencegame import repository_payloads_only
 from tests.flightplans.runner import FINGERPRINTS_FILE, SAVE_FILE
 from tests.flightplans.scenarios import scenario_names
 
@@ -145,3 +151,29 @@ def test_fingerprint_catches_a_loadout_change(reference_run: ReferenceRun) -> No
         loadout.pylons.clear()
         loadout.pylons.update(original)
     assert fingerprint_package(package) == before
+
+
+def test_payload_editor_round_trip_gives_back_the_reference(
+    reference_run: ReferenceRun, tmp_path: Path
+) -> None:
+    """WEB-04.3: a pylon edit shows, and leaving custom gives the planned loadout back."""
+    game = reference_run.game
+    package = reference_run.package("dead")
+    before = fingerprint_package(package)
+    flight = package.flights[0]
+    member = flight.roster.members[0]
+    # The loadouts the references were planned with, as in the child process.
+    with repository_payloads_only(tmp_path):
+        number, weapon = next(
+            (number, weapon)
+            for number, weapons in pylon_options(game, flight).items()
+            for weapon in weapons
+            if member.loadout.pylons.get(number) != weapon
+        )
+
+        set_member_custom(game, flight, member, True)
+        set_member_pylon(game, flight, member, number, weapon.clsid)
+        assert fingerprint_package(package) != before
+
+        set_member_custom(game, flight, member, False)
+        assert fingerprint_package(package) == before

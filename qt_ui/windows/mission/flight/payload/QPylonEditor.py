@@ -10,7 +10,9 @@ from game import Game
 from game.ato.flight import Flight
 from game.ato.flightmember import FlightMember
 from game.ato.loadouts import Loadout
+from game.commands.flightpayload import equip_pylon
 from game.data.weapons import Pylon, Weapon
+from game.gamelock import game_lock
 from .QWeaponSettingsDialog import QWeaponSettingsDialog
 
 
@@ -84,18 +86,18 @@ class QPylonEditor(QWidget):
         if dialog.exec():
             # Save the settings
             settings_dict = dialog.get_settings_dict()
-            self.flight_member.loadout.pylon_settings[self.pylon.number] = settings_dict
+            with game_lock():
+                self.flight_member.loadout.pylon_settings[self.pylon.number] = (
+                    settings_dict
+                )
             logging.info(
                 f"Updated settings for pylon {self.pylon.number}: {settings_dict}"
             )
 
     def on_pylon_change(self) -> None:
         selected: Optional[Weapon] = self.weapon_combo.currentData()
-        self.flight_member.loadout.pylons[self.pylon.number] = selected
-
-        # Clear settings when weapon changes
-        if self.pylon.number in self.flight_member.loadout.pylon_settings:
-            del self.flight_member.loadout.pylon_settings[self.pylon.number]
+        with game_lock():
+            equip_pylon(self.flight_member.loadout, self.pylon.number, selected)
 
         self.update_settings_button_visibility()
 
