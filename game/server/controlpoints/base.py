@@ -1,8 +1,9 @@
 """Base screen (WEB-02.1): status, air defense, intel and repairs of one base.
 
 Same content as the Qt base menu (`qt_ui/windows/basemenu/`): its tabs, the
-intel summary of its header, its runway repair button, and the building and
-aircraft repairs of `game.commands.repairs`.
+intel summary of its header, its runway repair button, the building and aircraft
+repairs of `game.commands.repairs`, and the squadron orders of
+`game.commands.aircraftorders` (WEB-02.2).
 """
 
 from __future__ import annotations
@@ -14,6 +15,7 @@ from pydantic import BaseModel
 
 from game.commands.repairs import Repair, RepairKind, base_repairs
 from game.theater.controlpoint import Fob
+from .aircraftorders import AirfieldJs
 from .summary import ALL_PARKING, ControlPointSummaryJs, CountJs
 from ..reports.models import UnitCountJs
 from ..tgos.summary import readable
@@ -96,6 +98,8 @@ class BaseJs(BaseModel):
     #: At least one orderable repair, and the budget covers them all.
     repair_all_affordable: bool
     intel: list[IntelGroupJs]
+    #: The "Airfield command" tab: squadrons and their orders (WEB-02.2).
+    airfield: AirfieldJs
 
     class Config:
         title = "Base"
@@ -117,6 +121,7 @@ class BaseJs(BaseModel):
             repair_all_cost=repair_all_cost,
             repair_all_affordable=bool(orderable) and repair_all_cost <= budget,
             intel=intel(cp),
+            airfield=AirfieldJs.for_control_point(cp),
         )
 
 

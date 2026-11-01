@@ -39,6 +39,43 @@ const injectedRtkApi = api.injectEndpoints({
         method: "POST",
       }),
     }),
+    orderAircraft: build.mutation<
+      OrderAircraftApiResponse,
+      OrderAircraftApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/control-points/${queryArg.cpId}/purchases/aircraft`,
+        method: "POST",
+        body: queryArg.aircraftOrdersJs,
+      }),
+    }),
+    cancelAircraftOrder: build.mutation<
+      CancelAircraftOrderApiResponse,
+      CancelAircraftOrderApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/control-points/${queryArg.cpId}/purchases/aircraft/${queryArg.squadronId}`,
+        method: "DELETE",
+      }),
+    }),
+    getSquadronChoices: build.query<
+      GetSquadronChoicesApiResponse,
+      GetSquadronChoicesApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/control-points/${queryArg.cpId}/squadron-choices`,
+      }),
+    }),
+    createSquadron: build.mutation<
+      CreateSquadronApiResponse,
+      CreateSquadronApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/control-points/${queryArg.cpId}/squadrons`,
+        method: "POST",
+        body: queryArg.newSquadronJs,
+      }),
+    }),
     controlPointDestinationInRange: build.query<
       ControlPointDestinationInRangeApiResponse,
       ControlPointDestinationInRangeApiArg
@@ -576,6 +613,29 @@ export type OrderAllRepairsApiResponse =
 export type OrderAllRepairsApiArg = {
   cpId: string;
 };
+export type OrderAircraftApiResponse =
+  /** status 200 Successful Response */ Base;
+export type OrderAircraftApiArg = {
+  cpId: string;
+  aircraftOrdersJs: AircraftOrders;
+};
+export type CancelAircraftOrderApiResponse =
+  /** status 200 Successful Response */ Base;
+export type CancelAircraftOrderApiArg = {
+  cpId: string;
+  squadronId: string;
+};
+export type GetSquadronChoicesApiResponse =
+  /** status 200 Successful Response */ SquadronChoice[];
+export type GetSquadronChoicesApiArg = {
+  cpId: string;
+};
+export type CreateSquadronApiResponse =
+  /** status 200 Successful Response */ Base;
+export type CreateSquadronApiArg = {
+  cpId: string;
+  newSquadronJs: NewSquadron;
+};
 export type ControlPointDestinationInRangeApiResponse =
   /** status 200 Successful Response */ boolean;
 export type ControlPointDestinationInRangeApiArg = {
@@ -978,6 +1038,28 @@ export type IntelGroup = {
   title: string;
   units: UnitCountJs[];
 };
+export type SquadronOrderRow = {
+  squadron_id: string;
+  squadron: string;
+  aircraft: string;
+  unit_cost: number;
+  owned: number;
+  max_aircraft?: number;
+  pending: number;
+  max_add: number;
+  max_remove: number;
+};
+export type IncomingSquadron = {
+  squadron: string;
+  aircraft: string;
+  owned: number;
+  origin: string;
+};
+export type Airfield = {
+  squadrons: SquadronOrderRow[];
+  parking_after_delivery: Count;
+  incoming: IncomingSquadron[];
+};
 export type Base = {
   summary: ControlPointSummary;
   budget: number;
@@ -987,9 +1069,32 @@ export type Base = {
   repair_all_cost: number;
   repair_all_affordable: boolean;
   intel: IntelGroup[];
+  airfield: Airfield;
 };
 export type CommandError = {
   detail: string;
+};
+export type AircraftOrderLine = {
+  squadron_id: string;
+  quantity: number;
+};
+export type AircraftOrders = {
+  orders: AircraftOrderLine[];
+};
+export type SquadronPreset = {
+  name: string;
+  label: string;
+};
+export type SquadronChoice = {
+  aircraft: string;
+  display_name: string;
+  tasks: string[];
+  presets: SquadronPreset[];
+};
+export type NewSquadron = {
+  aircraft: string;
+  primary_task: string;
+  preset?: string | null;
 };
 export type HoldZones = {
   homeBubble: LatLng[][];
@@ -1554,6 +1659,10 @@ export const {
   useGetBaseQuery,
   useOrderRepairMutation,
   useOrderAllRepairsMutation,
+  useOrderAircraftMutation,
+  useCancelAircraftOrderMutation,
+  useGetSquadronChoicesQuery,
+  useCreateSquadronMutation,
   useControlPointDestinationInRangeQuery,
   useSetControlPointDestinationMutation,
   useClearControlPointDestinationMutation,
