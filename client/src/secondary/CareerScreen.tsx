@@ -10,6 +10,7 @@ import { Table, TableColumn } from "../ui";
 import { QueryBody, ScreenFrame } from "./ScreenFrame";
 import styles from "./Secondary.module.css";
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 const AWARD_COLUMNS: TableColumn<AwardJs>[] = [
   { key: "name", header: "Award", cell: (a) => a.name },
@@ -131,7 +132,14 @@ function Career({ career }: { career: CareerJs }) {
 }
 
 function Careers({ careers }: { careers: CareerJs[] }) {
-  const [index, setIndex] = useState(0);
+  // The air wing screen links a pilot's career: /career?pilot=<id>.
+  const [params] = useSearchParams();
+  const [index, setIndex] = useState(() =>
+    Math.max(
+      careers.findIndex((career) => career.pilot_id === params.get("pilot")),
+      0,
+    ),
+  );
   if (careers.length === 0) {
     return (
       <p className={styles.state}>

@@ -1,6 +1,85 @@
 import { baseApi as api } from "./baseApi";
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
+    getAirWing: build.query<GetAirWingApiResponse, GetAirWingApiArg>({
+      query: (queryArg) => ({
+        url: `/air-wing`,
+        params: { enemy: queryArg.enemy },
+      }),
+    }),
+    setSquadronPrimaryTask: build.mutation<
+      SetSquadronPrimaryTaskApiResponse,
+      SetSquadronPrimaryTaskApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/squadrons/${queryArg.squadronId}/primary-task`,
+        method: "PUT",
+        body: queryArg.primaryTaskJs,
+      }),
+    }),
+    setSquadronAutoAssign: build.mutation<
+      SetSquadronAutoAssignApiResponse,
+      SetSquadronAutoAssignApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/squadrons/${queryArg.squadronId}/auto-assign`,
+        method: "PUT",
+        body: queryArg.autoAssignJs,
+      }),
+    }),
+    getSquadronLiveries: build.query<
+      GetSquadronLiveriesApiResponse,
+      GetSquadronLiveriesApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/squadrons/${queryArg.squadronId}/liveries`,
+      }),
+    }),
+    setSquadronLivery: build.mutation<
+      SetSquadronLiveryApiResponse,
+      SetSquadronLiveryApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/squadrons/${queryArg.squadronId}/livery`,
+        method: "PUT",
+        body: queryArg.setLiveryJs,
+      }),
+    }),
+    getSquadronDestinations: build.query<
+      GetSquadronDestinationsApiResponse,
+      GetSquadronDestinationsApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/squadrons/${queryArg.squadronId}/destinations`,
+      }),
+    }),
+    setSquadronDestination: build.mutation<
+      SetSquadronDestinationApiResponse,
+      SetSquadronDestinationApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/squadrons/${queryArg.squadronId}/destination`,
+        method: "PUT",
+        body: queryArg.setDestinationJs,
+      }),
+    }),
+    createPlayerPilot: build.mutation<
+      CreatePlayerPilotApiResponse,
+      CreatePlayerPilotApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/squadrons/${queryArg.squadronId}/pilots`,
+        method: "POST",
+        body: queryArg.newPilotJs,
+      }),
+    }),
+    updatePilot: build.mutation<UpdatePilotApiResponse, UpdatePilotApiArg>({
+      query: (queryArg) => ({
+        url: `/squadrons/${queryArg.squadronId}/pilots/${queryArg.pilotId}`,
+        method: "PATCH",
+        body: queryArg.pilotUpdateJs,
+      }),
+    }),
     listControlPoints: build.query<
       ListControlPointsApiResponse,
       ListControlPointsApiArg
@@ -527,12 +606,6 @@ const injectedRtkApi = api.injectEndpoints({
         method: "POST",
       }),
     }),
-    openQtDialog: build.mutation<OpenQtDialogApiResponse, OpenQtDialogApiArg>({
-      query: (queryArg) => ({
-        url: `/qt/dialogs/${queryArg.dialog}`,
-        method: "POST",
-      }),
-    }),
     openEditPackageDialog: build.mutation<
       OpenEditPackageDialogApiResponse,
       OpenEditPackageDialogApiArg
@@ -697,6 +770,57 @@ const injectedRtkApi = api.injectEndpoints({
   overrideExisting: false,
 });
 export { injectedRtkApi as _liberationApi };
+export type GetAirWingApiResponse =
+  /** status 200 Successful Response */ AirWing | null;
+export type GetAirWingApiArg = {
+  enemy?: boolean;
+};
+export type SetSquadronPrimaryTaskApiResponse =
+  /** status 204 Successful Response */ void;
+export type SetSquadronPrimaryTaskApiArg = {
+  squadronId: string;
+  primaryTaskJs: PrimaryTask;
+};
+export type SetSquadronAutoAssignApiResponse =
+  /** status 204 Successful Response */ void;
+export type SetSquadronAutoAssignApiArg = {
+  squadronId: string;
+  autoAssignJs: AutoAssign;
+};
+export type GetSquadronLiveriesApiResponse =
+  /** status 200 Successful Response */ LiveryChoice[];
+export type GetSquadronLiveriesApiArg = {
+  squadronId: string;
+};
+export type SetSquadronLiveryApiResponse =
+  /** status 204 Successful Response */ void;
+export type SetSquadronLiveryApiArg = {
+  squadronId: string;
+  setLiveryJs: SetLivery;
+};
+export type GetSquadronDestinationsApiResponse =
+  /** status 200 Successful Response */ SquadronTransferOptions;
+export type GetSquadronDestinationsApiArg = {
+  squadronId: string;
+};
+export type SetSquadronDestinationApiResponse =
+  /** status 204 Successful Response */ void;
+export type SetSquadronDestinationApiArg = {
+  squadronId: string;
+  setDestinationJs: SetDestination;
+};
+export type CreatePlayerPilotApiResponse =
+  /** status 204 Successful Response */ void;
+export type CreatePlayerPilotApiArg = {
+  squadronId: string;
+  newPilotJs: NewPilot;
+};
+export type UpdatePilotApiResponse = /** status 204 Successful Response */ void;
+export type UpdatePilotApiArg = {
+  squadronId: string;
+  pilotId: string;
+  pilotUpdateJs: PilotUpdate;
+};
 export type ListControlPointsApiResponse =
   /** status 200 Successful Response */ ControlPoint[];
 export type ListControlPointsApiArg = void;
@@ -1029,11 +1153,6 @@ export type OpenControlPointInfoDialogApiResponse =
 export type OpenControlPointInfoDialogApiArg = {
   cpId: string;
 };
-export type OpenQtDialogApiResponse =
-  /** status 204 Successful Response */ void;
-export type OpenQtDialogApiArg = {
-  dialog: QtDialog;
-};
 export type OpenEditPackageDialogApiResponse =
   /** status 204 Successful Response */ void;
 export type OpenEditPackageDialogApiArg = {
@@ -1142,6 +1261,147 @@ export type CancelTransferApiResponse =
 export type CancelTransferApiArg = {
   transferId: string;
 };
+export type SquadronRepair = {
+  repair_id: string;
+  cost: number;
+  affordable: boolean;
+};
+export type AllowedTask = {
+  task: string;
+  auto_assign: boolean;
+};
+export type SquadronOrderRow = {
+  squadron_id: string;
+  squadron: string;
+  aircraft: string;
+  unit_cost: number;
+  owned: number;
+  max_aircraft?: number;
+  pending: number;
+  max_add: number;
+  max_remove: number;
+};
+export type AirWingPilot = {
+  id: string;
+  name: string;
+  player: boolean;
+  alive: boolean;
+  status: string;
+  status_text: string;
+  return_turn?: number;
+  note: string;
+  skill: string;
+  sorties: number;
+  kills: number;
+  player_refusal?: string;
+  leave_refusal?: string;
+  on_leave: boolean;
+};
+export type AirWingSquadron = {
+  id: string;
+  name: string;
+  nickname?: string;
+  aircraft: string;
+  sidc: string;
+  base_id: string;
+  base: string;
+  destination?: string;
+  owned: number;
+  max_aircraft?: number;
+  initial: number;
+  purchased: number;
+  destroyed: number;
+  available: number;
+  untasked_crewed: number;
+  in_maintenance: number;
+  maintenance_text: string;
+  repair?: SquadronRepair;
+  pilots_ready: number;
+  pilots_alive: number;
+  sorties: number;
+  kills: number;
+  next_turn: string[];
+  primary_task: string;
+  tasks: AllowedTask[];
+  order?: SquadronOrderRow;
+  parking_room: number;
+  new_pilot_refusal?: string;
+  pilots: AirWingPilot[];
+};
+export type AirWingBase = {
+  id: string;
+  name: string;
+  squadrons: AirWingSquadron[];
+};
+export type InventoryRow = {
+  key: string;
+  base: string;
+  aircraft: string;
+  task: string;
+  target: string;
+  pilot: string;
+  crew: string;
+  allocated: boolean;
+};
+export type AirWing = {
+  blue: boolean;
+  squadron_count: number;
+  aircraft_count: number;
+  pilot_count: number;
+  bases: AirWingBase[];
+  inventory: InventoryRow[];
+};
+export type ValidationError = {
+  loc: (string | number)[];
+  msg: string;
+  type: string;
+};
+export type HttpValidationError = {
+  detail?: ValidationError[];
+};
+export type CommandError = {
+  detail: string;
+};
+export type PrimaryTask = {
+  task: string;
+};
+export type AutoAssign = {
+  task: string;
+  enabled: boolean;
+};
+export type LiveryChoice = {
+  label: string;
+  livery_id?: string;
+  use_livery_set: boolean;
+  selected: boolean;
+};
+export type SetLivery = {
+  livery_id?: string | null;
+  use_livery_set?: boolean;
+};
+export type SquadronTransferDestination = {
+  id: string;
+  name: string;
+  room: number;
+  refusal?: string;
+  overflow: string[];
+  selected: boolean;
+};
+export type SquadronTransferOptions = {
+  room_here: number;
+  destinations: SquadronTransferDestination[];
+};
+export type SetDestination = {
+  destination_id?: string | null;
+};
+export type NewPilot = {
+  name: string;
+};
+export type PilotUpdate = {
+  player?: boolean | null;
+  on_leave?: boolean | null;
+  name?: string | null;
+};
 export type LatLng = {
   lat: number;
   lng: number;
@@ -1155,14 +1415,6 @@ export type ControlPoint = {
   destination?: LatLng;
   sidc: string;
   cut_off?: boolean;
-};
-export type ValidationError = {
-  loc: (string | number)[];
-  msg: string;
-  type: string;
-};
-export type HttpValidationError = {
-  detail?: ValidationError[];
 };
 export type Runway = {
   state: "operational" | "damaged" | "repairing";
@@ -1218,17 +1470,6 @@ export type IntelGroup = {
   title: string;
   units: UnitCountJs[];
 };
-export type SquadronOrderRow = {
-  squadron_id: string;
-  squadron: string;
-  aircraft: string;
-  unit_cost: number;
-  owned: number;
-  max_aircraft?: number;
-  pending: number;
-  max_add: number;
-  max_remove: number;
-};
 export type IncomingSquadron = {
   squadron: string;
   aircraft: string;
@@ -1250,9 +1491,6 @@ export type Base = {
   repair_all_affordable: boolean;
   intel: IntelGroup[];
   airfield: Airfield;
-};
-export type CommandError = {
-  detail: string;
 };
 export type AircraftOrderLine = {
   squadron_id: string;
@@ -1781,7 +2019,6 @@ export type InstallPreferencesUpdate = {
   web_ui: boolean;
   allow_empty_install_dir?: boolean;
 };
-export type QtDialog = "air-wing";
 export type BaseForcesJs = {
   id: string;
   name: string;
@@ -1894,6 +2131,7 @@ export type LogbookEntryJs = {
   loss: string;
 };
 export type CareerJs = {
+  pilot_id: string;
   pilot: string;
   squadron: string;
   status: string;
@@ -1943,6 +2181,15 @@ export type NewTransfer = {
   squadron_id?: string | null;
 };
 export const {
+  useGetAirWingQuery,
+  useSetSquadronPrimaryTaskMutation,
+  useSetSquadronAutoAssignMutation,
+  useGetSquadronLiveriesQuery,
+  useSetSquadronLiveryMutation,
+  useGetSquadronDestinationsQuery,
+  useSetSquadronDestinationMutation,
+  useCreatePlayerPilotMutation,
+  useUpdatePilotMutation,
   useListControlPointsQuery,
   useGetControlPointByIdQuery,
   useGetControlPointSummaryQuery,
@@ -2017,7 +2264,6 @@ export const {
   useOpenNewDownedPilotPackageDialogMutation,
   useSelectFlightMutation,
   useOpenControlPointInfoDialogMutation,
-  useOpenQtDialogMutation,
   useOpenEditPackageDialogMutation,
   useGetIntelReportQuery,
   useGetStatsReportQuery,

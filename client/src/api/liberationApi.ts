@@ -15,6 +15,7 @@ export enum Tags {
   PACKAGES = "Packages",
   TRANSFERS = "Transfers",
   BASE = "Base",
+  AIR_WING = "AirWing",
 }
 
 const LIST_ID = "LIST";
@@ -74,21 +75,71 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     // Base screen (WEB-02.1): refetched with the inspector (eventstream).
     getBase: { providesTags: [Tags.BASE] },
     orderRepair: {
-      invalidatesTags: [Tags.BASE, Tags.INSPECTOR, Tags.TOP_BAR, Tags.REPORTS],
+      invalidatesTags: [
+        Tags.BASE,
+        Tags.AIR_WING,
+        Tags.INSPECTOR,
+        Tags.TOP_BAR,
+        Tags.REPORTS,
+      ],
     },
     orderAllRepairs: {
-      invalidatesTags: [Tags.BASE, Tags.INSPECTOR, Tags.TOP_BAR, Tags.REPORTS],
+      invalidatesTags: [
+        Tags.BASE,
+        Tags.AIR_WING,
+        Tags.INSPECTOR,
+        Tags.TOP_BAR,
+        Tags.REPORTS,
+      ],
     },
     // Aircraft orders and new squadrons (WEB-02.2).
     orderAircraft: {
-      invalidatesTags: [Tags.BASE, Tags.INSPECTOR, Tags.TOP_BAR, Tags.REPORTS],
+      invalidatesTags: [
+        Tags.BASE,
+        Tags.AIR_WING,
+        Tags.INSPECTOR,
+        Tags.TOP_BAR,
+        Tags.REPORTS,
+      ],
     },
     cancelAircraftOrder: {
-      invalidatesTags: [Tags.BASE, Tags.INSPECTOR, Tags.TOP_BAR, Tags.REPORTS],
+      invalidatesTags: [
+        Tags.BASE,
+        Tags.AIR_WING,
+        Tags.INSPECTOR,
+        Tags.TOP_BAR,
+        Tags.REPORTS,
+      ],
     },
     getSquadronChoices: { providesTags: [Tags.BASE] },
     createSquadron: {
-      invalidatesTags: [Tags.BASE, Tags.INSPECTOR, Tags.REPORTS],
+      invalidatesTags: [
+        Tags.BASE,
+        Tags.AIR_WING,
+        Tags.INSPECTOR,
+        Tags.REPORTS,
+      ],
+    },
+    // Air wing screen (WEB-03): refetched after game changes (eventstream).
+    getAirWing: { providesTags: [Tags.AIR_WING] },
+    setSquadronPrimaryTask: { invalidatesTags: [Tags.AIR_WING] },
+    setSquadronAutoAssign: { invalidatesTags: [Tags.AIR_WING] },
+    getSquadronLiveries: { providesTags: [Tags.AIR_WING] },
+    setSquadronLivery: { invalidatesTags: [Tags.AIR_WING] },
+    getSquadronDestinations: { providesTags: [Tags.AIR_WING] },
+    setSquadronDestination: {
+      invalidatesTags: [
+        Tags.AIR_WING,
+        Tags.BASE,
+        Tags.INSPECTOR,
+        Tags.PACKAGES,
+        Tags.TOP_BAR,
+        Tags.TIMELINE,
+      ],
+    },
+    createPlayerPilot: { invalidatesTags: [Tags.AIR_WING, Tags.REPORTS] },
+    updatePilot: {
+      invalidatesTags: [Tags.AIR_WING, Tags.PACKAGES, Tags.TOP_BAR, Tags.REPORTS],
     },
     // Ground forces, convoys, transfers and base actions (WEB-02.3).
     getGroundForces: { providesTags: [Tags.BASE] },

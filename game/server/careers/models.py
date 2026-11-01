@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -73,6 +74,8 @@ class LogbookEntryJs(BaseModel):
 class CareerJs(BaseModel):
     """A player pilot's logbook, rank, decorations and missions."""
 
+    #: Links to this career: /career?pilot=<id>.
+    pilot_id: UUID
     pilot: str
     squadron: str
     status: str
@@ -89,6 +92,7 @@ class CareerJs(BaseModel):
         pilot = career.pilot
         record = career.logbook
         return CareerJs(
+            pilot_id=pilot.id,
             pilot=pilot.name,
             squadron=str(career.squadron),
             status=pilot.status.value,
