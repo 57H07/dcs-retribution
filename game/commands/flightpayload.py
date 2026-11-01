@@ -15,7 +15,6 @@ Two facts the editor must keep straight:
 from __future__ import annotations
 
 import logging
-import re
 from dataclasses import dataclass, replace
 from pathlib import Path
 from shutil import copyfile
@@ -29,7 +28,12 @@ from game.ato.flightmember import FlightMember
 from game.ato.loadouts import Loadout
 from game.data.weapons import Pylon, Weapon
 from game.persistency import payloads_dir
-from game.radio.datalink import DataLinkKey
+from game.radio.datalink import (
+    DataLinkKey,
+    OWNSHIP_CALLSIGN,
+    VOICE_CALLSIGN_LABEL,
+    VOICE_CALLSIGN_NUMBER,
+)
 from .errors import CommandError
 from .packageflights import default_loadout
 from .squadrons import LiveryChoice, livery_choices
@@ -48,6 +52,18 @@ MAX_WEAPON_SETTING_VALUE = 1000000000000
 WEAPON_SETTING_CONTROLS = frozenset({"comboList", "spinbox", "doubleSpinbox"})
 
 PropertyValue = Union[bool, float, int, str, None]
+
+#: These options belong to the Radios tab and its rules (WEB-04.5).
+DATALINK_PROPERTY_IDS = frozenset(
+    {
+        DataLinkKey.LINK16.value,
+        DataLinkKey.SADL.value,
+        DataLinkKey.IDM.value,
+        OWNSHIP_CALLSIGN,
+        VOICE_CALLSIGN_LABEL,
+        VOICE_CALLSIGN_NUMBER,
+    }
+)
 
 
 def require_member(flight: Flight, index: int) -> FlightMember:
@@ -462,6 +478,8 @@ def property_controls(flight: Flight) -> list[PropertyControl]:
             continue
         if not flight.unit_type.should_show_prop(prop.identifier):
             continue
+        if prop.identifier in DATALINK_PROPERTY_IDS:
+            continue
         if prop.control in ("groupbox", "label"):
             section = prop.label
         elif _has_control_data(prop):
@@ -497,50 +515,6 @@ def property_value(
     return value
 
 
-def _is_octal(value: str) -> bool:
-    return re.match(r"^[0-7]+$", value) is not None
-
-
-def _valid_idm_originator(value: str) -> bool:
-    if len(value) == 1:
-        return value.isalnum()
-    first, second = value[0], value[1]
-    return (
-        first in ("1", "2")
-        and second.isalnum()
-        or first == "3"
-        and (re.match(r"^[A-I]$", second) is not None or second.isdigit())
-    )
-
-
-def _datalink_text(flight: Flight, prop_id: str, text: str) -> Optional[str]:
-    """The text as a datalink wants it (see `PropertyEditBox`), or None if invalid."""
-    link = DataLinkKey.from_aircraft_type(flight.unit_type)
-    if link is DataLinkKey.Unknown:
-        return text
-    text = text.upper()
-    if not text:
-        return text
-    if link is DataLinkKey.IDM:
-        if prop_id == DataLinkKey.IDM.value:
-            text = text[:2]
-            return text if _valid_idm_originator(text) else None
-        text = text[:5]
-        return text if re.match(r"^[A-Z0-9/*\-+.]+$", text) else None
-    length = 5 if link is DataLinkKey.LINK16 else 4
-    if "VoiceCallsign" in prop_id:
-        length = 2
-    text = text[:length]
-    if not (
-        ("Label" in prop_id and text.isalpha())
-        or ("Number" in prop_id and text.isdigit())
-        or (prop_id == link.value and _is_octal(text))
-    ):
-        return None
-    # A track number is written in full.
-    return text.zfill(length) if length > 2 else text
-
-
 def set_member_property(
     game: Game,
     flight: Flight,
@@ -566,13 +540,9 @@ def set_member_property(
     elif prop.control == "editbox":
         if not isinstance(value, str):
             raise invalid
-        text = _datalink_text(flight, prop_id, value)
-        if text is None:
-            raise invalid
-        if not text:
+        if not value:
             member.properties.pop(prop_id, None)
             return
-        value = text
     else:
         assert prop.minimum is not None and prop.maximum is not None
         if (
@@ -661,5 +631,6 @@ def save_member_payload(flight: Flight, member: FlightMember, name: str) -> Path
                 aircraft.add_to_payload_cache(payload_file)
     except (OSError, KeyError, SyntaxError) as ex:
         raise CommandError(f"Could not save the payload: {ex}", status_code=500) from ex
+    assert aircraft.payloads is not None
     aircraft.payloads[name] = table
     return payload_file

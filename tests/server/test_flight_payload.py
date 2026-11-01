@@ -12,6 +12,7 @@ from types import SimpleNamespace
 from typing import Any, Iterator
 
 import pytest
+from dcs.planes import F_14B
 from dcs.unittype import FlyingType
 
 from game import Game
@@ -19,6 +20,8 @@ from game.ato import Flight, FlightType, Package
 from game.commands import CommandError, flightpayload
 from game.commands.flightpayload import (
     CLEAN_CLSID,
+    DATALINK_PROPERTY_IDS,
+    PropertyValue,
     effective_loadout,
     named_loadouts,
     property_controls,
@@ -40,6 +43,7 @@ from game.commands.flightpayload import (
 from game.commands.packageflights import add_flight, default_loadout
 from game.commands.packages import create_package
 from game.data.weapons import Pylon, Weapon
+from game.radio.datalink import DataLinkKey
 from game.server import GameContext
 from game.server.dependencies import QtContext
 from game.server.eventstream import EventStream
@@ -228,8 +232,9 @@ def test_custom_starts_from_the_same_weapons_and_can_go_back(game: Game) -> None
 
     set_member_custom(game, flight, first, False)
 
-    assert not first.loadout.is_custom and not first.use_custom_loadout
-    assert first.loadout.name == default
+    back = first.loadout
+    assert (back.is_custom, first.use_custom_loadout) == (False, False)
+    assert back.name == default
     assert first.loadout.pylons == pylons
     assert second.loadout is first.loadout
 
@@ -530,49 +535,88 @@ def test_livery_follows_the_shared_setting(game: Game) -> None:
     assert second.livery == one.livery_id
 
 
+def _f14_flight() -> Any:
+    """What the option rules read of a player flight of F-14s."""
+    return SimpleNamespace(
+        unit_type=SimpleNamespace(
+            iter_props=lambda: F_14B.properties.values(),
+            should_show_prop=lambda _: True,
+        ),
+        client_count=1,
+    )
+
+
 def test_options_are_checked_by_control(game: Game) -> None:
-    flight = _sead(game)
-    member = flight.roster.members[0]
-    controls = {c.prop.control: c.prop for c in property_controls(flight)}
-    invalid = {"checkbox": "x", "comboList": "no such value", "spinbox": -(10**9)}
-    assert controls
+    flight = _f14_flight()
+    member = _sead(game).roster.members[0]
+    controls = {c.prop.identifier: c.prop for c in property_controls(flight)}
+    assert controls["INSAlignmentStored"].control == "checkbox"
+    assert controls["M61BURST"].control == "comboList"
+    assert controls["TacanChannel"].control == "spinbox"
 
-    for control, prop in controls.items():
-        if control in invalid:
-            with pytest.raises(CommandError, match="invalid value"):
-                set_member_property(
-                    game, flight, member, prop.identifier, invalid[control]
-                )
+    invalid: list[tuple[str, PropertyValue]] = [
+        ("INSAlignmentStored", "x"),
+        ("M61BURST", "no such value"),
+        ("TacanChannel", -(10**9)),
+        ("TacanChannel", True),
+    ]
+    for identifier, value in invalid:
+        with pytest.raises(CommandError, match="invalid value"):
+            set_member_property(game, flight, member, identifier, value)
+    assert member.properties == {}
 
-    if (prop := controls.get("checkbox")) is not None:
-        set_member_property(game, flight, member, prop.identifier, not prop.default)
-        assert member.properties[prop.identifier] is (not prop.default)
-    if (prop := controls.get("comboList")) is not None:
-        assert prop.values is not None
-        value = list(prop.values)[-1]
-        set_member_property(game, flight, member, prop.identifier, value)
-        assert member.properties[prop.identifier] == value
+    set_member_property(game, flight, member, "INSAlignmentStored", True)
+    assert member.properties["INSAlignmentStored"] is True
+    burst = controls["M61BURST"].values
+    assert burst is not None
+    last = list(burst)[-1]
+    set_member_property(game, flight, member, "M61BURST", last)
+    assert member.properties["M61BURST"] == last
+    minimum = controls["TacanChannel"].minimum
+    set_member_property(game, flight, member, "TacanChannel", minimum)
+    assert member.properties["TacanChannel"] == minimum
     with pytest.raises(CommandError, match="does not have"):
         set_member_property(game, flight, member, "nope", 1)
 
 
-def test_datalink_text_is_checked_and_filled() -> None:
-    fake = SimpleNamespace(
-        unit_type=SimpleNamespace(dcs_unit_type=SimpleNamespace(properties={}))
-    )
-    link16 = SimpleNamespace(
-        unit_type=SimpleNamespace(
-            dcs_unit_type=SimpleNamespace(properties={"STN_L16": None})
-        )
-    )
-    text: Any = flightpayload._datalink_text
-    assert text(fake, "anything", "free text") == "free text"
-    assert text(link16, "STN_L16", "17") == "00017"
-    assert text(link16, "STN_L16", "89") is None
-    assert text(link16, "VoiceCallsignLabel", "ab") == "AB"
-    assert text(link16, "VoiceCallsignLabel", "1") is None
-    assert text(link16, "VoiceCallsignNumber", "123") == "12"
-    assert text(link16, "STN_L16", "") == ""
+def test_a_player_flight_shows_its_other_options(game: Game) -> None:
+    flight = _sead(game)
+    assert all(not c.prop.player_only for c in property_controls(flight))
+    _set_player(flight)
+    pilot = flight.roster.members[0].pilot
+    assert pilot is not None
+    try:
+        assert property_controls(flight)
+    finally:
+        pilot.player = False
+
+
+def test_datalink_options_are_left_to_the_radios_tab(game: Game) -> None:
+    flight = _sead(game)
+    member = flight.roster.members[0]
+    properties = flight.unit_type.dcs_unit_type.properties
+    assert DataLinkKey.LINK16.value in properties
+
+    shown = {c.prop.identifier for c in property_controls(flight)}
+
+    assert not shown & DATALINK_PROPERTY_IDS
+    with pytest.raises(CommandError, match="does not have"):
+        set_member_property(game, flight, member, DataLinkKey.LINK16.value, "00017")
+    payload = FlightPayloadJs.for_flight(game, flight)
+    assert not {p.id for p in payload.properties} & DATALINK_PROPERTY_IDS
+    assert not set(payload.members[0].properties) & DATALINK_PROPERTY_IDS
+
+
+def test_f14_options_come_through() -> None:
+    controls = property_controls(_f14_flight())
+
+    assert {c.prop.identifier for c in controls} >= {
+        "M61BURST",
+        "ALE39Loadout",
+        "INSAlignmentStored",
+        "TacanChannel",
+        "KY28Key",
+    }
 
 
 # --- payload files -------------------------------------------------------------------
@@ -609,7 +653,9 @@ def test_saved_payload_joins_the_named_loadouts(
         loadouts = named_loadouts(flight.unit_type)
         assert "Mine" in loadouts
         expected = {n: w for n, w in member.loadout.pylons.items() if w is not None}
-        expected[number] = Weapon.with_clsid(CLEAN_CLSID)
+        clean = Weapon.with_clsid(CLEAN_CLSID)
+        assert clean is not None
+        expected[number] = clean
         assert loadouts["Mine"].pylons == expected
         # A second save goes through the existing file, after a backup.
         path = save_member_payload(flight, member, "Mine 2")
@@ -619,6 +665,7 @@ def test_saved_payload_joins_the_named_loadouts(
         assert flightpayload.backup_payload_file(flight) is not None
     finally:
         if saved:
+            assert aircraft.payloads is not None
             aircraft.payloads.pop("Mine", None)
             aircraft.payloads.pop("Mine 2", None)
         FlyingType._payload_cache = cache_before
