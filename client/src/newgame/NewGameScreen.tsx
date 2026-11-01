@@ -121,8 +121,7 @@ function Wizard({ options }: { options: NewGameOptions }) {
     { campaignId: campaign?.id ?? "" },
     { skip: campaign === undefined },
   );
-  const data: CampaignDefaults | undefined =
-    defaults.currentData ?? undefined;
+  const data: CampaignDefaults | undefined = defaults.currentData ?? undefined;
   const [start, startState] = useStartNewGameGenerationMutation();
   const run = useCommand();
 
@@ -158,11 +157,11 @@ function Wizard({ options }: { options: NewGameOptions }) {
       />
     );
   } else if (ready && stepIndex === 3) {
-    body = <GeneratorStep options={options} state={state} onChange={setState} />;
-  } else if (ready && stepIndex === 4) {
     body = (
-      <SummaryStep campaign={campaign} options={options} state={state} />
+      <GeneratorStep options={options} state={state} onChange={setState} />
     );
+  } else if (ready && stepIndex === 4) {
+    body = <SummaryStep campaign={campaign} options={options} state={state} />;
   }
 
   const footer = (

@@ -249,11 +249,15 @@ describe("RichText", () => {
 
 describe("new campaign wizard", () => {
   it("goes through the five steps and sends the full request", async () => {
-    const calls = recordFetch(200, {
-      status: "generating",
-      step_index: 0,
-      step_count: 2,
-    }, gets("idle"));
+    const calls = recordFetch(
+      200,
+      {
+        status: "generating",
+        step_index: 0,
+        step_count: 2,
+      },
+      gets("idle"),
+    );
     const user = userEvent.setup();
     renderScreen();
 
@@ -268,7 +272,9 @@ describe("new campaign wizard", () => {
     expect(screen.getByText("1 : 1")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Next · Factions" }));
-    const player = await screen.findByRole("region", { name: "Player faction" });
+    const player = await screen.findByRole("region", {
+      name: "Player faction",
+    });
     await user.click(await within(player).findByLabelText("F-15C"));
 
     await user.click(

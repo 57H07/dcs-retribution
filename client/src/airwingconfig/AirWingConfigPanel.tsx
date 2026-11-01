@@ -235,7 +235,6 @@ function SquadronEditor({
         <div className={styles.field}>
           <span className={styles.label}>&nbsp;</span>
           <Button
-           
             onClick={() =>
               run(
                 reroll({ target, squadronId: squadron.id }),
@@ -324,7 +323,6 @@ function SquadronEditor({
       <div className={styles.buttons}>
         <ReplaceWithPreset target={target} squadron={squadron} />
         <Button
-         
           variant="danger"
           onClick={() =>
             run(
@@ -352,7 +350,8 @@ function AddSquadron({
   const [add] = useAddConfigSquadronMutation();
   const run = useCommand();
   const options = side.aircraft_options;
-  const option = options.find((o) => o.aircraft_id === aircraftId) ?? options[0];
+  const option =
+    options.find((o) => o.aircraft_id === aircraftId) ?? options[0];
   const chosenTask =
     task !== undefined && option?.primary_tasks.includes(task)
       ? task
@@ -364,11 +363,7 @@ function AddSquadron({
       open={open}
       onOpenChange={setOpen}
       title="Add new squadron"
-      trigger={
-        <Button disabled={options.length === 0}>
-          Add squadron
-        </Button>
-      }
+      trigger={<Button disabled={options.length === 0}>Add squadron</Button>}
       footer={
         <>
           <ModalClose asChild>
@@ -500,18 +495,13 @@ function SideSquadrons({
       <div className={styles.buttons}>
         <AddSquadron target={target} side={side} />
         <Button
-         
           onClick={() =>
-            file(
-              load({ target, side: sideId }) as never,
-              "Air wing loaded",
-            )
+            file(load({ target, side: sideId }) as never, "Air wing loaded")
           }
         >
           Load config
         </Button>
         <Button
-         
           onClick={() =>
             file(save({ target, side: sideId }) as never, "Air wing saved")
           }

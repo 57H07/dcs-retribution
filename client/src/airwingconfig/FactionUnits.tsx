@@ -30,7 +30,8 @@ function AddUnit({
   onAdd: (unit: string) => void;
 }) {
   const [picked, setPicked] = useState<string>();
-  const unit = picked !== undefined && units.includes(picked) ? picked : units[0];
+  const unit =
+    picked !== undefined && units.includes(picked) ? picked : units[0];
   return (
     <div className={styles.addUnit}>
       <select
@@ -47,7 +48,6 @@ function AddUnit({
         ))}
       </select>
       <Button
-       
         disabled={unit === undefined}
         aria-label={`Add to ${label}`}
         onClick={() => unit !== undefined && onAdd(unit)}

@@ -91,14 +91,24 @@ function SquadronsView({ airWing }: { airWing: AirWing }) {
 }
 
 const INVENTORY_COLUMNS: TableColumn<InventoryRow>[] = [
-  { key: "base", header: "Base", cell: (r) => r.base, sortValue: (r) => r.base },
+  {
+    key: "base",
+    header: "Base",
+    cell: (r) => r.base,
+    sortValue: (r) => r.base,
+  },
   {
     key: "aircraft",
     header: "Type",
     cell: (r) => r.aircraft,
     sortValue: (r) => r.aircraft,
   },
-  { key: "task", header: "Task", cell: (r) => r.task, sortValue: (r) => r.task },
+  {
+    key: "task",
+    header: "Task",
+    cell: (r) => r.task,
+    sortValue: (r) => r.task,
+  },
   {
     key: "target",
     header: "Target",

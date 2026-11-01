@@ -4,10 +4,10 @@ import styles from "./NewGame.module.css";
 import { FactionDraft, WizardState, startDate } from "./wizardState";
 
 function changeCount(draft: FactionDraft): number {
-  return [...Object.values(draft.removed), ...Object.values(draft.added)].reduce(
-    (total, units) => total + units.length,
-    0,
-  );
+  return [
+    ...Object.values(draft.removed),
+    ...Object.values(draft.added),
+  ].reduce((total, units) => total + units.length, 0);
 }
 
 function factionText(draft: FactionDraft): string {
