@@ -116,8 +116,13 @@ function withCallsign(channel: string, callsign?: string | null): string {
   return callsign != null ? `${channel} (${callsign})` : channel;
 }
 
-function RadiosPanel(props: { cpId: string; radios: BaseRadios }) {
-  const { radios } = props;
+/** Also on the radio tab of a flight leaving this base (WEB-04.5). */
+export function RadiosPanel(props: {
+  cpId: string;
+  radios: BaseRadios;
+  title?: string;
+}) {
+  const { radios, title = "Radios" } = props;
   const [open, setOpen] = useState(false);
   const rows: [string, string][] = [];
   if (radios.has_frequency) {
@@ -142,8 +147,8 @@ function RadiosPanel(props: { cpId: string; radios: BaseRadios }) {
     rows.push(["Link 4", mhz != null ? `${mhz} MHz` : "Auto"]);
   }
   return (
-    <section className={styles.panel} aria-label="Radios">
-      <h2 className={styles.panelTitle}>Radios</h2>
+    <section className={styles.panel} aria-label={title}>
+      <h2 className={styles.panelTitle}>{title}</h2>
       <ul className={styles.list}>
         {rows.map(([label, value]) => (
           <li key={label} className={styles.row}>

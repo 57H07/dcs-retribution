@@ -5,6 +5,7 @@
 import { PackageEditorFlight } from "../api/liberationApi";
 import { useQtCommands } from "../shell/useQtCommands";
 import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from "../ui";
+import { FlightRadiosTab } from "./FlightRadiosTab";
 import styles from "./PackageEditor.module.css";
 import { PayloadTab } from "./PayloadTab";
 import { ReactNode } from "react";
@@ -69,7 +70,7 @@ export function FlightSections({
         <QtEditorSlot flight={flight} what="Pilots" />
       </TabsContent>
       <TabsContent value="radios" className={styles.section}>
-        <QtEditorSlot flight={flight} what="Radios and TACAN" />
+        <FlightRadiosTab flightId={flight.id} />
       </TabsContent>
     </Tabs>
   );

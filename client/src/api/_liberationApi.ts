@@ -753,6 +753,54 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.autoCreateRequestJs,
       }),
     }),
+    getFlightRadios: build.query<
+      GetFlightRadiosApiResponse,
+      GetFlightRadiosApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/radios`,
+      }),
+    }),
+    setFlightFrequency: build.mutation<
+      SetFlightFrequencyApiResponse,
+      SetFlightFrequencyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/radios/frequency`,
+        method: "PUT",
+        body: queryArg.flightFrequencyJs,
+      }),
+    }),
+    setPackageFrequency: build.mutation<
+      SetPackageFrequencyApiResponse,
+      SetPackageFrequencyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/radios/package-frequency`,
+        method: "PUT",
+        body: queryArg.packageFrequencyJs,
+      }),
+    }),
+    setFlightTacan: build.mutation<
+      SetFlightTacanApiResponse,
+      SetFlightTacanApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/radios/tacan`,
+        method: "PUT",
+        body: queryArg.flightTacanJs,
+      }),
+    }),
+    setFlightDatalink: build.mutation<
+      SetFlightDatalinkApiResponse,
+      SetFlightDatalinkApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/radios/datalink/${queryArg.memberIndex}`,
+        method: "PUT",
+        body: queryArg.datalinkValueJs,
+      }),
+    }),
     getInstallPreferences: build.query<
       GetInstallPreferencesApiResponse,
       GetInstallPreferencesApiArg
@@ -1196,7 +1244,7 @@ export type GetDepartingConvoysApiArg = {
   cpId: string;
 };
 export type AttackDepartingConvoyApiResponse =
-  /** status 204 Successful Response */ void;
+  /** status 201 Successful Response */ PlannedPackage;
 export type AttackDepartingConvoyApiArg = {
   cpId: string;
   destinationId: string;
@@ -1576,6 +1624,41 @@ export type AutoCreatePackageApiResponse =
 export type AutoCreatePackageApiArg = {
   packageId: string;
   autoCreateRequestJs: AutoCreateRequest;
+};
+export type GetFlightRadiosApiResponse =
+  /** status 200 Successful Response */ FlightRadios;
+export type GetFlightRadiosApiArg = {
+  packageId: string;
+  flightId: string;
+};
+export type SetFlightFrequencyApiResponse =
+  /** status 200 Successful Response */ FlightRadios;
+export type SetFlightFrequencyApiArg = {
+  packageId: string;
+  flightId: string;
+  flightFrequencyJs: FlightFrequency;
+};
+export type SetPackageFrequencyApiResponse =
+  /** status 200 Successful Response */ FlightRadios;
+export type SetPackageFrequencyApiArg = {
+  packageId: string;
+  flightId: string;
+  packageFrequencyJs: PackageFrequency;
+};
+export type SetFlightTacanApiResponse =
+  /** status 200 Successful Response */ FlightRadios;
+export type SetFlightTacanApiArg = {
+  packageId: string;
+  flightId: string;
+  flightTacanJs: FlightTacan;
+};
+export type SetFlightDatalinkApiResponse =
+  /** status 200 Successful Response */ FlightRadios;
+export type SetFlightDatalinkApiArg = {
+  packageId: string;
+  flightId: string;
+  memberIndex: number;
+  datalinkValueJs: DatalinkValue;
 };
 export type GetInstallPreferencesApiResponse =
   /** status 200 Successful Response */ InstallPreferencesState;
@@ -2081,6 +2164,9 @@ export type DepartingConvoy = {
   destination: string;
   size: number;
   units: UnitCountJs[];
+};
+export type PlannedPackage = {
+  id: string;
 };
 export type TransferDestination = {
   id: string;
@@ -2643,6 +2729,7 @@ export type PackageDetail = {
   can_auto_create: boolean;
   closest_base?: string;
   closest_base_distance_nm?: number;
+  transport_origin_id?: string;
   flights: PackageEditorFlight[];
 };
 export type PackageTargetKind =
@@ -2711,6 +2798,63 @@ export type AutoCreateFlight = {
 };
 export type AutoCreateRequest = {
   flights: AutoCreateFlight[];
+};
+export type RadioRange = {
+  min_mhz: number;
+  max_mhz: number;
+  step_mhz: number;
+  modulation: string;
+};
+export type DatalinkField = {
+  identifier: string;
+  label: string;
+  max_length: number;
+};
+export type DatalinkMember = {
+  index: number;
+  pilot?: string;
+  values: {
+    [key: string]: string;
+  };
+};
+export type FlightDatalink = {
+  name: string;
+  fields: DatalinkField[];
+  members: DatalinkMember[];
+};
+export type FlightRadios = {
+  frequency_mhz?: number;
+  modulation?: string;
+  ranges: RadioRange[];
+  warnings: string[];
+  package_frequency_mhz?: number;
+  package_min_mhz: number;
+  package_max_mhz: number;
+  package_warnings: string[];
+  has_tacan: boolean;
+  tacan_channel?: number;
+  tacan_band?: string;
+  tacan_callsign?: string;
+  tacan_warnings: string[];
+  datalink?: FlightDatalink;
+  departure_id: string;
+  departure: string;
+};
+export type FlightFrequency = {
+  mhz?: number | null;
+  modulation?: string | null;
+};
+export type PackageFrequency = {
+  mhz?: number | null;
+};
+export type FlightTacan = {
+  channel?: number | null;
+  band?: string | null;
+  callsign?: string | null;
+};
+export type DatalinkValue = {
+  identifier: string;
+  value: string;
 };
 export type InstallPreferences = {
   saved_game_dir: string;
@@ -3085,6 +3229,11 @@ export const {
   useRemovePackageFlightMutation,
   useGetAutoCreateOptionsQuery,
   useAutoCreatePackageMutation,
+  useGetFlightRadiosQuery,
+  useSetFlightFrequencyMutation,
+  useSetPackageFrequencyMutation,
+  useSetFlightTacanMutation,
+  useSetFlightDatalinkMutation,
   useGetInstallPreferencesQuery,
   useSetInstallPreferencesMutation,
   useOpenNewFrontLinePackageDialogMutation,

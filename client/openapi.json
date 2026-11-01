@@ -1171,7 +1171,7 @@
     "/control-points/{cp_id}/convoys/{destination_id}/package": {
       "post": {
         "summary": "Attack Departing Convoy",
-        "description": "Opens the package editor on a convoy (the Qt dialog until WEB-04.1).",
+        "description": "Plans an empty package against a convoy, for the package editor (WEB-04.5).\n\nA convoy has no id of its own, so it has no `POST /packages` target kind.",
         "operationId": "attack_departing_convoy",
         "parameters": [
           {
@@ -1210,8 +1210,15 @@
           }
         ],
         "responses": {
-          "204": {
-            "description": "Successful Response"
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlannedPackageJs"
+                }
+              }
+            }
           },
           "409": {
             "description": "the convoy is gone, or it is the player's",
@@ -4694,6 +4701,356 @@
         }
       }
     },
+    "/packages/{package_id}/flights/{flight_id}/radios": {
+      "get": {
+        "summary": "Get Flight Radios",
+        "operationId": "get_flight_radios",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightRadiosJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded, or no such flight.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/radios/frequency": {
+      "put": {
+        "summary": "Put Flight Frequency",
+        "operationId": "set_flight_frequency",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlightFrequencyJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightRadiosJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The radio of the flight cannot tune it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/radios/package-frequency": {
+      "put": {
+        "summary": "Put Package Frequency",
+        "description": "Sets the frequency of the package this flight belongs to.",
+        "operationId": "set_package_frequency",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PackageFrequencyJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightRadiosJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The frequency is out of limits.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/radios/tacan": {
+      "put": {
+        "summary": "Put Flight Tacan",
+        "operationId": "set_flight_tacan",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlightTacanJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightRadiosJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Not a tanker with a beacon, or a value out of limits.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/radios/datalink/{member_index}": {
+      "put": {
+        "summary": "Put Flight Datalink",
+        "operationId": "set_flight_datalink",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          },
+          {
+            "name": "member_index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Member Index"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatalinkValueJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightRadiosJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No such member or setting, or an invalid value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/preferences/": {
       "get": {
         "summary": "Get Preferences",
@@ -7751,6 +8108,72 @@
         ],
         "title": "DamagedUnitLine"
       },
+      "DatalinkFieldJs": {
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "title": "Identifier"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "max_length": {
+            "type": "integer",
+            "title": "Max Length"
+          }
+        },
+        "type": "object",
+        "required": [
+          "identifier",
+          "label",
+          "max_length"
+        ],
+        "title": "DatalinkField"
+      },
+      "DatalinkMemberJs": {
+        "properties": {
+          "index": {
+            "type": "integer",
+            "title": "Index"
+          },
+          "pilot": {
+            "title": "Pilot",
+            "type": "string"
+          },
+          "values": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "index",
+          "values"
+        ],
+        "title": "DatalinkMember"
+      },
+      "DatalinkValueJs": {
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "title": "Identifier"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "identifier",
+          "value"
+        ],
+        "title": "DatalinkValue"
+      },
       "DebriefingJs": {
         "properties": {
           "status": {
@@ -7975,6 +8398,63 @@
         ],
         "title": "FlightAircraftOption"
       },
+      "FlightDatalinkJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/DatalinkFieldJs"
+            },
+            "type": "array",
+            "title": "Fields"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/DatalinkMemberJs"
+            },
+            "type": "array",
+            "title": "Members"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "fields",
+          "members"
+        ],
+        "title": "FlightDatalink"
+      },
+      "FlightFrequencyJs": {
+        "properties": {
+          "mhz": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mhz"
+          },
+          "modulation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modulation"
+          }
+        },
+        "type": "object",
+        "title": "FlightFrequency"
+      },
       "FlightFuelJs": {
         "properties": {
           "fuel": {
@@ -8121,6 +8601,100 @@
         ],
         "title": "FlightPayload"
       },
+      "FlightRadiosJs": {
+        "properties": {
+          "frequency_mhz": {
+            "title": "Frequency Mhz",
+            "type": "number"
+          },
+          "modulation": {
+            "title": "Modulation",
+            "type": "string"
+          },
+          "ranges": {
+            "items": {
+              "$ref": "#/components/schemas/RadioRangeJs"
+            },
+            "type": "array",
+            "title": "Ranges"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "package_frequency_mhz": {
+            "title": "Package Frequency Mhz",
+            "type": "number"
+          },
+          "package_min_mhz": {
+            "type": "number",
+            "title": "Package Min Mhz"
+          },
+          "package_max_mhz": {
+            "type": "number",
+            "title": "Package Max Mhz"
+          },
+          "package_warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Package Warnings"
+          },
+          "has_tacan": {
+            "type": "boolean",
+            "title": "Has Tacan"
+          },
+          "tacan_channel": {
+            "title": "Tacan Channel",
+            "type": "integer"
+          },
+          "tacan_band": {
+            "title": "Tacan Band",
+            "type": "string"
+          },
+          "tacan_callsign": {
+            "title": "Tacan Callsign",
+            "type": "string"
+          },
+          "tacan_warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tacan Warnings"
+          },
+          "datalink": {
+            "$ref": "#/components/schemas/FlightDatalinkJs"
+          },
+          "departure_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Departure Id"
+          },
+          "departure": {
+            "type": "string",
+            "title": "Departure"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ranges",
+          "warnings",
+          "package_min_mhz",
+          "package_max_mhz",
+          "package_warnings",
+          "has_tacan",
+          "tacan_warnings",
+          "departure_id",
+          "departure"
+        ],
+        "title": "FlightRadios",
+        "description": "What the Radios & TACAN tab shows: each command answers it whole."
+      },
       "FlightSquadronOptionJs": {
         "properties": {
           "id": {
@@ -8158,6 +8732,45 @@
           "max_size"
         ],
         "title": "FlightSquadronOption"
+      },
+      "FlightTacanJs": {
+        "properties": {
+          "channel": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel"
+          },
+          "band": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Band"
+          },
+          "callsign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Callsign"
+          }
+        },
+        "type": "object",
+        "title": "FlightTacan"
       },
       "FlightTaskOptionJs": {
         "properties": {
@@ -9989,6 +10602,11 @@
             "title": "Closest Base Distance Nm",
             "type": "integer"
           },
+          "transport_origin_id": {
+            "title": "Transport Origin Id",
+            "type": "string",
+            "format": "uuid"
+          },
           "flights": {
             "items": {
               "$ref": "#/components/schemas/PackageEditorFlightJs"
@@ -10138,6 +10756,23 @@
           "departure"
         ],
         "title": "PackageFlight"
+      },
+      "PackageFrequencyJs": {
+        "properties": {
+          "mhz": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mhz"
+          }
+        },
+        "type": "object",
+        "title": "PackageFrequency"
       },
       "PackageJs": {
         "properties": {
@@ -10585,6 +11220,21 @@
         "title": "PilotUpdate",
         "description": "What changes for the pilot; a missing field stays as it is."
       },
+      "PlannedPackageJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "PlannedPackage",
+        "description": "The package planned against a convoy: the client opens it in the editor."
+      },
       "Player": {
         "type": "string",
         "enum": [
@@ -10689,6 +11339,34 @@
           "affordable"
         ],
         "title": "PurchaseQuote"
+      },
+      "RadioRangeJs": {
+        "properties": {
+          "min_mhz": {
+            "type": "number",
+            "title": "Min Mhz"
+          },
+          "max_mhz": {
+            "type": "number",
+            "title": "Max Mhz"
+          },
+          "step_mhz": {
+            "type": "number",
+            "title": "Step Mhz"
+          },
+          "modulation": {
+            "type": "string",
+            "title": "Modulation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "min_mhz",
+          "max_mhz",
+          "step_mhz",
+          "modulation"
+        ],
+        "title": "RadioRange"
       },
       "RepairJs": {
         "properties": {
