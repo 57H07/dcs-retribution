@@ -7,6 +7,7 @@ import { useQtCommands } from "../shell/useQtCommands";
 import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from "../ui";
 import { FlightRadiosTab } from "./FlightRadiosTab";
 import styles from "./PackageEditor.module.css";
+import { PayloadTab } from "./PayloadTab";
 import { ReactNode } from "react";
 
 export const FLIGHT_SECTIONS = [
@@ -18,12 +19,17 @@ export const FLIGHT_SECTIONS = [
 ] as const;
 
 export interface FlightSectionsProps {
+  packageId: string;
   flight: PackageEditorFlight;
   /** Right of the tabs: what acts on the whole flight. */
   actions?: ReactNode;
 }
 
-export function FlightSections({ flight, actions }: FlightSectionsProps) {
+export function FlightSections({
+  packageId,
+  flight,
+  actions,
+}: FlightSectionsProps) {
   return (
     <Tabs className={styles.sections} defaultValue="general">
       <div className={styles.sectionsHeader}>
@@ -58,7 +64,7 @@ export function FlightSections({ flight, actions }: FlightSectionsProps) {
         <QtEditorSlot flight={flight} what="The route" />
       </TabsContent>
       <TabsContent value="payload" className={styles.section}>
-        <QtEditorSlot flight={flight} what="The payload" />
+        <PayloadTab packageId={packageId} flightId={flight.id} />
       </TabsContent>
       <TabsContent value="pilots" className={styles.section}>
         <QtEditorSlot flight={flight} what="Pilots" />

@@ -312,6 +312,152 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({ url: `/downed-pilots/${queryArg.pilotId}` }),
     }),
+    getFlightPayload: build.query<
+      GetFlightPayloadApiResponse,
+      GetFlightPayloadApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload`,
+      }),
+    }),
+    setFlightFuel: build.mutation<
+      SetFlightFuelApiResponse,
+      SetFlightFuelApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/fuel`,
+        method: "PUT",
+        body: queryArg.flightFuelJs,
+      }),
+    }),
+    setSameLoadout: build.mutation<
+      SetSameLoadoutApiResponse,
+      SetSameLoadoutApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/same-loadout`,
+        method: "PUT",
+        body: queryArg.sameForAllJs,
+      }),
+    }),
+    setSameLivery: build.mutation<
+      SetSameLiveryApiResponse,
+      SetSameLiveryApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/same-livery`,
+        method: "PUT",
+        body: queryArg.sameForAllJs,
+      }),
+    }),
+    backupFlightPayloads: build.mutation<
+      BackupFlightPayloadsApiResponse,
+      BackupFlightPayloadsApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/backup`,
+        method: "POST",
+      }),
+    }),
+    setMemberLoadout: build.mutation<
+      SetMemberLoadoutApiResponse,
+      SetMemberLoadoutApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/members/${queryArg.memberIndex}/loadout`,
+        method: "PUT",
+        body: queryArg.memberLoadoutNameJs,
+      }),
+    }),
+    setMemberCustomLoadout: build.mutation<
+      SetMemberCustomLoadoutApiResponse,
+      SetMemberCustomLoadoutApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/members/${queryArg.memberIndex}/custom`,
+        method: "PUT",
+        body: queryArg.memberCustomLoadoutJs,
+      }),
+    }),
+    setMemberPylon: build.mutation<
+      SetMemberPylonApiResponse,
+      SetMemberPylonApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/members/${queryArg.memberIndex}/pylons/${queryArg["number"]}`,
+        method: "PUT",
+        body: queryArg.memberPylonWeaponJs,
+      }),
+    }),
+    setMemberWeaponSetting: build.mutation<
+      SetMemberWeaponSettingApiResponse,
+      SetMemberWeaponSettingApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/members/${queryArg.memberIndex}/pylons/${queryArg["number"]}/settings`,
+        method: "PUT",
+        body: queryArg.payloadValueJs,
+      }),
+    }),
+    resetMemberWeaponSettings: build.mutation<
+      ResetMemberWeaponSettingsApiResponse,
+      ResetMemberWeaponSettingsApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/members/${queryArg.memberIndex}/pylons/${queryArg["number"]}/settings`,
+        method: "DELETE",
+      }),
+    }),
+    setMemberTgpLaserCode: build.mutation<
+      SetMemberTgpLaserCodeApiResponse,
+      SetMemberTgpLaserCodeApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/members/${queryArg.memberIndex}/tgp-laser-code`,
+        method: "PUT",
+        body: queryArg.tgpLaserCodeJs,
+      }),
+    }),
+    setMemberWeaponLaserCode: build.mutation<
+      SetMemberWeaponLaserCodeApiResponse,
+      SetMemberWeaponLaserCodeApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/members/${queryArg.memberIndex}/weapon-laser-code`,
+        method: "PUT",
+        body: queryArg.weaponLaserCodeChoiceJs,
+      }),
+    }),
+    setMemberLivery: build.mutation<
+      SetMemberLiveryApiResponse,
+      SetMemberLiveryApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/members/${queryArg.memberIndex}/livery`,
+        method: "PUT",
+        body: queryArg.memberLiveryJs,
+      }),
+    }),
+    setMemberProperty: build.mutation<
+      SetMemberPropertyApiResponse,
+      SetMemberPropertyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/members/${queryArg.memberIndex}/properties`,
+        method: "PUT",
+        body: queryArg.payloadValueJs,
+      }),
+    }),
+    saveMemberPayload: build.mutation<
+      SaveMemberPayloadApiResponse,
+      SaveMemberPayloadApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/members/${queryArg.memberIndex}/save`,
+        method: "POST",
+        body: queryArg.savePayloadJs,
+      }),
+    }),
     listFlights: build.query<ListFlightsApiResponse, ListFlightsApiArg>({
       query: (queryArg) => ({
         url: `/flights/`,
@@ -1174,6 +1320,121 @@ export type GetDownedPilotByIdApiResponse =
 export type GetDownedPilotByIdApiArg = {
   pilotId: string;
 };
+export type GetFlightPayloadApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type GetFlightPayloadApiArg = {
+  packageId: string;
+  flightId: string;
+};
+export type SetFlightFuelApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type SetFlightFuelApiArg = {
+  packageId: string;
+  flightId: string;
+  flightFuelJs: FlightFuel;
+};
+export type SetSameLoadoutApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type SetSameLoadoutApiArg = {
+  packageId: string;
+  flightId: string;
+  sameForAllJs: SameForAll;
+};
+export type SetSameLiveryApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type SetSameLiveryApiArg = {
+  packageId: string;
+  flightId: string;
+  sameForAllJs: SameForAll;
+};
+export type BackupFlightPayloadsApiResponse =
+  /** status 200 Successful Response */ PayloadFile;
+export type BackupFlightPayloadsApiArg = {
+  packageId: string;
+  flightId: string;
+};
+export type SetMemberLoadoutApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type SetMemberLoadoutApiArg = {
+  packageId: string;
+  flightId: string;
+  memberIndex: number;
+  memberLoadoutNameJs: MemberLoadoutName;
+};
+export type SetMemberCustomLoadoutApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type SetMemberCustomLoadoutApiArg = {
+  packageId: string;
+  flightId: string;
+  memberIndex: number;
+  memberCustomLoadoutJs: MemberCustomLoadout;
+};
+export type SetMemberPylonApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type SetMemberPylonApiArg = {
+  packageId: string;
+  flightId: string;
+  memberIndex: number;
+  number: number;
+  memberPylonWeaponJs: MemberPylonWeapon;
+};
+export type SetMemberWeaponSettingApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type SetMemberWeaponSettingApiArg = {
+  packageId: string;
+  flightId: string;
+  memberIndex: number;
+  number: number;
+  payloadValueJs: PayloadValue;
+};
+export type ResetMemberWeaponSettingsApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type ResetMemberWeaponSettingsApiArg = {
+  packageId: string;
+  flightId: string;
+  memberIndex: number;
+  number: number;
+};
+export type SetMemberTgpLaserCodeApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type SetMemberTgpLaserCodeApiArg = {
+  packageId: string;
+  flightId: string;
+  memberIndex: number;
+  tgpLaserCodeJs: TgpLaserCode;
+};
+export type SetMemberWeaponLaserCodeApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type SetMemberWeaponLaserCodeApiArg = {
+  packageId: string;
+  flightId: string;
+  memberIndex: number;
+  weaponLaserCodeChoiceJs: WeaponLaserCodeChoice;
+};
+export type SetMemberLiveryApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type SetMemberLiveryApiArg = {
+  packageId: string;
+  flightId: string;
+  memberIndex: number;
+  memberLiveryJs: MemberLivery;
+};
+export type SetMemberPropertyApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type SetMemberPropertyApiArg = {
+  packageId: string;
+  flightId: string;
+  memberIndex: number;
+  payloadValueJs: PayloadValue;
+};
+export type SaveMemberPayloadApiResponse =
+  /** status 200 Successful Response */ PayloadFile;
+export type SaveMemberPayloadApiArg = {
+  packageId: string;
+  flightId: string;
+  memberIndex: number;
+  savePayloadJs: SavePayload;
+};
 export type ListFlightsApiResponse =
   /** status 200 Successful Response */ Flight[];
 export type ListFlightsApiArg = {
@@ -1987,6 +2248,111 @@ export type DownedPilot = {
   position: LatLng;
   turns_remaining: number;
   sidc: string;
+};
+export type PayloadWeapon = {
+  clsid: string;
+  name: string;
+};
+export type PayloadPylonOptions = {
+  number: number;
+  weapons: PayloadWeapon[];
+};
+export type PayloadOption = {
+  id: boolean | number | number | string | null;
+  label: string;
+};
+export type PayloadProperty = {
+  id: string;
+  label: string;
+  control: string;
+  section?: string;
+  minimum?: number;
+  maximum?: number;
+  options: PayloadOption[];
+};
+export type WeaponSetting = {
+  id: string;
+  label: string;
+  control: string;
+  value: boolean | number | number | string | null;
+  read_only: boolean;
+  minimum?: number;
+  maximum?: number;
+  unit?: string;
+  options: PayloadOption[];
+};
+export type MemberPylon = {
+  number: number;
+  weapon?: PayloadWeapon;
+  replaced_weapon?: string;
+  settings: WeaponSetting[];
+};
+export type WeaponLaserCode = {
+  code?: number;
+  label: string;
+};
+export type MemberPayload = {
+  index: number;
+  pilot?: string;
+  is_player: boolean;
+  loadout: string;
+  custom: boolean;
+  pylons: MemberPylon[];
+  tgp_laser_code?: number;
+  weapon_laser_code?: number;
+  weapon_laser_codes: WeaponLaserCode[];
+  liveries: LiveryChoice[];
+  properties: {
+    [key: string]: boolean | number | number | string | null;
+  };
+};
+export type FlightPayload = {
+  aircraft: string;
+  fuel: number;
+  fuel_max: number;
+  same_loadout: boolean;
+  same_livery: boolean;
+  restrict_weapons_by_date: boolean;
+  date: string;
+  loadouts: string[];
+  pylons: PayloadPylonOptions[];
+  properties: PayloadProperty[];
+  members: MemberPayload[];
+};
+export type FlightFuel = {
+  fuel: number;
+};
+export type SameForAll = {
+  same: boolean;
+};
+export type PayloadFile = {
+  path?: string;
+};
+export type MemberLoadoutName = {
+  name: string;
+};
+export type MemberCustomLoadout = {
+  custom: boolean;
+};
+export type MemberPylonWeapon = {
+  clsid?: string | null;
+};
+export type PayloadValue = {
+  id: string;
+  value?: boolean | number | number | string | null;
+};
+export type TgpLaserCode = {
+  assigned: boolean;
+};
+export type WeaponLaserCodeChoice = {
+  code?: number | null;
+};
+export type MemberLivery = {
+  livery_id?: string | null;
+  use_livery_set?: boolean;
+};
+export type SavePayload = {
+  name: string;
 };
 export type Waypoint = {
   name: string;
@@ -2802,6 +3168,21 @@ export const {
   useGetDebugJoinZonesQuery,
   useListDownedPilotsQuery,
   useGetDownedPilotByIdQuery,
+  useGetFlightPayloadQuery,
+  useSetFlightFuelMutation,
+  useSetSameLoadoutMutation,
+  useSetSameLiveryMutation,
+  useBackupFlightPayloadsMutation,
+  useSetMemberLoadoutMutation,
+  useSetMemberCustomLoadoutMutation,
+  useSetMemberPylonMutation,
+  useSetMemberWeaponSettingMutation,
+  useResetMemberWeaponSettingsMutation,
+  useSetMemberTgpLaserCodeMutation,
+  useSetMemberWeaponLaserCodeMutation,
+  useSetMemberLiveryMutation,
+  useSetMemberPropertyMutation,
+  useSaveMemberPayloadMutation,
   useListFlightsQuery,
   useGetFlightByIdQuery,
   useGetCommitBoundaryForFlightQuery,
