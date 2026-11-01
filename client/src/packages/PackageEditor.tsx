@@ -282,7 +282,9 @@ function PackageBody({ pkg }: { pkg: PackageDetail }) {
         ) : (
           <FlightSections
             key={selected.id}
+            packageId={pkg.id}
             flight={selected}
+            onFlightReplaced={setSelectedId}
             actions={
               <Button
                 variant="danger"

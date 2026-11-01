@@ -158,6 +158,18 @@ them: an escort cannot come first, the last escorted flight cannot leave. Qt dia
 stay in Qt mode and call the same functions (`game/commands/packageflights.py`), which
 `tests/flightplans` (W16) drives against unchanged references.
 
+The tabs of a flight follow the same pattern. General and Pilots (WEB-04.2) read
+`GET /packages/{id}/flights/{id}/settings` and send one `PUT` per field
+(`game/commands/flightsettings.py`, routes in `game/server/packages/flightsettingsroutes.py`).
+A squadron change creates another `Flight`, as in Qt: `PUT .../squadron` answers the new
+`flight_id` next to the package, and the editor moves to it. Only a flight that has not
+started changes (`require_not_started`), except its name and callsign.
+
+The Payload tab (WEB-04.3, `game/commands/flightpayload.py`, `game/server/flightpayload/`,
+`GET /packages/{id}/flights/{id}/payload`) works the same way. Its read model separates what
+is stored from what flies: with the date restriction on, a read shows the degraded loadout
+and never writes it, and turning on the custom loadout starts from what was shown.
+
 The Radios & TACAN tab (WEB-04.5, `game/commands/flightradios.py`,
 `game/server/packages/radioroutes.py`) follows the same pattern with its own read model
 (`GET /packages/{id}/flights/{id}/radios`). The warnings of frequencies (guard, double

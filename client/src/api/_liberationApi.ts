@@ -450,6 +450,152 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({ url: `/downed-pilots/${queryArg.pilotId}` }),
     }),
+    getFlightPayload: build.query<
+      GetFlightPayloadApiResponse,
+      GetFlightPayloadApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload`,
+      }),
+    }),
+    setFlightFuel: build.mutation<
+      SetFlightFuelApiResponse,
+      SetFlightFuelApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/fuel`,
+        method: "PUT",
+        body: queryArg.flightFuelJs,
+      }),
+    }),
+    setSameLoadout: build.mutation<
+      SetSameLoadoutApiResponse,
+      SetSameLoadoutApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/same-loadout`,
+        method: "PUT",
+        body: queryArg.sameForAllJs,
+      }),
+    }),
+    setSameLivery: build.mutation<
+      SetSameLiveryApiResponse,
+      SetSameLiveryApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/same-livery`,
+        method: "PUT",
+        body: queryArg.sameForAllJs,
+      }),
+    }),
+    backupFlightPayloads: build.mutation<
+      BackupFlightPayloadsApiResponse,
+      BackupFlightPayloadsApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/backup`,
+        method: "POST",
+      }),
+    }),
+    setMemberLoadout: build.mutation<
+      SetMemberLoadoutApiResponse,
+      SetMemberLoadoutApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/members/${queryArg.memberIndex}/loadout`,
+        method: "PUT",
+        body: queryArg.memberLoadoutNameJs,
+      }),
+    }),
+    setMemberCustomLoadout: build.mutation<
+      SetMemberCustomLoadoutApiResponse,
+      SetMemberCustomLoadoutApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/members/${queryArg.memberIndex}/custom`,
+        method: "PUT",
+        body: queryArg.memberCustomLoadoutJs,
+      }),
+    }),
+    setMemberPylon: build.mutation<
+      SetMemberPylonApiResponse,
+      SetMemberPylonApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/members/${queryArg.memberIndex}/pylons/${queryArg["number"]}`,
+        method: "PUT",
+        body: queryArg.memberPylonWeaponJs,
+      }),
+    }),
+    setMemberWeaponSetting: build.mutation<
+      SetMemberWeaponSettingApiResponse,
+      SetMemberWeaponSettingApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/members/${queryArg.memberIndex}/pylons/${queryArg["number"]}/settings`,
+        method: "PUT",
+        body: queryArg.payloadValueJs,
+      }),
+    }),
+    resetMemberWeaponSettings: build.mutation<
+      ResetMemberWeaponSettingsApiResponse,
+      ResetMemberWeaponSettingsApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/members/${queryArg.memberIndex}/pylons/${queryArg["number"]}/settings`,
+        method: "DELETE",
+      }),
+    }),
+    setMemberTgpLaserCode: build.mutation<
+      SetMemberTgpLaserCodeApiResponse,
+      SetMemberTgpLaserCodeApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/members/${queryArg.memberIndex}/tgp-laser-code`,
+        method: "PUT",
+        body: queryArg.tgpLaserCodeJs,
+      }),
+    }),
+    setMemberWeaponLaserCode: build.mutation<
+      SetMemberWeaponLaserCodeApiResponse,
+      SetMemberWeaponLaserCodeApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/members/${queryArg.memberIndex}/weapon-laser-code`,
+        method: "PUT",
+        body: queryArg.weaponLaserCodeChoiceJs,
+      }),
+    }),
+    setMemberLivery: build.mutation<
+      SetMemberLiveryApiResponse,
+      SetMemberLiveryApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/members/${queryArg.memberIndex}/livery`,
+        method: "PUT",
+        body: queryArg.memberLiveryJs,
+      }),
+    }),
+    setMemberProperty: build.mutation<
+      SetMemberPropertyApiResponse,
+      SetMemberPropertyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/members/${queryArg.memberIndex}/properties`,
+        method: "PUT",
+        body: queryArg.payloadValueJs,
+      }),
+    }),
+    saveMemberPayload: build.mutation<
+      SaveMemberPayloadApiResponse,
+      SaveMemberPayloadApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/payload/members/${queryArg.memberIndex}/save`,
+        method: "POST",
+        body: queryArg.savePayloadJs,
+      }),
+    }),
     listFlights: build.query<ListFlightsApiResponse, ListFlightsApiArg>({
       query: (queryArg) => ({
         url: `/flights/`,
@@ -809,6 +955,113 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/packages/${queryArg.packageId}/auto-create`,
         method: "POST",
         body: queryArg.autoCreateRequestJs,
+      }),
+    }),
+    getFlightSettings: build.query<
+      GetFlightSettingsApiResponse,
+      GetFlightSettingsApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/settings`,
+      }),
+    }),
+    setFlightSquadron: build.mutation<
+      SetFlightSquadronApiResponse,
+      SetFlightSquadronApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/squadron`,
+        method: "PUT",
+        body: queryArg.flightSquadronChoiceJs,
+      }),
+    }),
+    setFlightSize: build.mutation<
+      SetFlightSizeApiResponse,
+      SetFlightSizeApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/size`,
+        method: "PUT",
+        body: queryArg.flightSizeJs,
+      }),
+    }),
+    setFlightStartType: build.mutation<
+      SetFlightStartTypeApiResponse,
+      SetFlightStartTypeApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/start-type`,
+        method: "PUT",
+        body: queryArg.flightStartTypeJs,
+      }),
+    }),
+    setFlightDivert: build.mutation<
+      SetFlightDivertApiResponse,
+      SetFlightDivertApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/divert`,
+        method: "PUT",
+        body: queryArg.flightDivertJs,
+      }),
+    }),
+    setFlightTotOffset: build.mutation<
+      SetFlightTotOffsetApiResponse,
+      SetFlightTotOffsetApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/tot-offset`,
+        method: "PUT",
+        body: queryArg.flightTotOffsetJs,
+      }),
+    }),
+    setFlightCustomName: build.mutation<
+      SetFlightCustomNameApiResponse,
+      SetFlightCustomNameApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/custom-name`,
+        method: "PUT",
+        body: queryArg.flightCustomNameJs,
+      }),
+    }),
+    setFlightCallsign: build.mutation<
+      SetFlightCallsignApiResponse,
+      SetFlightCallsignApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/callsign`,
+        method: "PUT",
+        body: queryArg.flightCallsignJs,
+      }),
+    }),
+    resetFlightCallsign: build.mutation<
+      ResetFlightCallsignApiResponse,
+      ResetFlightCallsignApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/callsign`,
+        method: "DELETE",
+      }),
+    }),
+    setFlightPilot: build.mutation<
+      SetFlightPilotApiResponse,
+      SetFlightPilotApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/pilots/${queryArg.slot}`,
+        method: "PUT",
+        body: queryArg.flightPilotChoiceJs,
+      }),
+    }),
+    setFlightSlotPlayer: build.mutation<
+      SetFlightSlotPlayerApiResponse,
+      SetFlightSlotPlayerApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/pilots/${queryArg.slot}/player`,
+        method: "PUT",
+        body: queryArg.flightSlotPlayerJs,
       }),
     }),
     getFlightRadios: build.query<
@@ -1475,6 +1728,121 @@ export type GetDownedPilotByIdApiResponse =
 export type GetDownedPilotByIdApiArg = {
   pilotId: string;
 };
+export type GetFlightPayloadApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type GetFlightPayloadApiArg = {
+  packageId: string;
+  flightId: string;
+};
+export type SetFlightFuelApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type SetFlightFuelApiArg = {
+  packageId: string;
+  flightId: string;
+  flightFuelJs: FlightFuel;
+};
+export type SetSameLoadoutApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type SetSameLoadoutApiArg = {
+  packageId: string;
+  flightId: string;
+  sameForAllJs: SameForAll;
+};
+export type SetSameLiveryApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type SetSameLiveryApiArg = {
+  packageId: string;
+  flightId: string;
+  sameForAllJs: SameForAll;
+};
+export type BackupFlightPayloadsApiResponse =
+  /** status 200 Successful Response */ PayloadFile;
+export type BackupFlightPayloadsApiArg = {
+  packageId: string;
+  flightId: string;
+};
+export type SetMemberLoadoutApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type SetMemberLoadoutApiArg = {
+  packageId: string;
+  flightId: string;
+  memberIndex: number;
+  memberLoadoutNameJs: MemberLoadoutName;
+};
+export type SetMemberCustomLoadoutApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type SetMemberCustomLoadoutApiArg = {
+  packageId: string;
+  flightId: string;
+  memberIndex: number;
+  memberCustomLoadoutJs: MemberCustomLoadout;
+};
+export type SetMemberPylonApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type SetMemberPylonApiArg = {
+  packageId: string;
+  flightId: string;
+  memberIndex: number;
+  number: number;
+  memberPylonWeaponJs: MemberPylonWeapon;
+};
+export type SetMemberWeaponSettingApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type SetMemberWeaponSettingApiArg = {
+  packageId: string;
+  flightId: string;
+  memberIndex: number;
+  number: number;
+  payloadValueJs: PayloadValue;
+};
+export type ResetMemberWeaponSettingsApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type ResetMemberWeaponSettingsApiArg = {
+  packageId: string;
+  flightId: string;
+  memberIndex: number;
+  number: number;
+};
+export type SetMemberTgpLaserCodeApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type SetMemberTgpLaserCodeApiArg = {
+  packageId: string;
+  flightId: string;
+  memberIndex: number;
+  tgpLaserCodeJs: TgpLaserCode;
+};
+export type SetMemberWeaponLaserCodeApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type SetMemberWeaponLaserCodeApiArg = {
+  packageId: string;
+  flightId: string;
+  memberIndex: number;
+  weaponLaserCodeChoiceJs: WeaponLaserCodeChoice;
+};
+export type SetMemberLiveryApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type SetMemberLiveryApiArg = {
+  packageId: string;
+  flightId: string;
+  memberIndex: number;
+  memberLiveryJs: MemberLivery;
+};
+export type SetMemberPropertyApiResponse =
+  /** status 200 Successful Response */ FlightPayload;
+export type SetMemberPropertyApiArg = {
+  packageId: string;
+  flightId: string;
+  memberIndex: number;
+  payloadValueJs: PayloadValue;
+};
+export type SaveMemberPayloadApiResponse =
+  /** status 200 Successful Response */ PayloadFile;
+export type SaveMemberPayloadApiArg = {
+  packageId: string;
+  flightId: string;
+  memberIndex: number;
+  savePayloadJs: SavePayload;
+};
 export type ListFlightsApiResponse =
   /** status 200 Successful Response */ Flight[];
 export type ListFlightsApiArg = {
@@ -1701,6 +2069,83 @@ export type AutoCreatePackageApiResponse =
 export type AutoCreatePackageApiArg = {
   packageId: string;
   autoCreateRequestJs: AutoCreateRequest;
+};
+export type GetFlightSettingsApiResponse =
+  /** status 200 Successful Response */ FlightSettings;
+export type GetFlightSettingsApiArg = {
+  packageId: string;
+  flightId: string;
+};
+export type SetFlightSquadronApiResponse =
+  /** status 200 Successful Response */ FlightSquadronChanged;
+export type SetFlightSquadronApiArg = {
+  packageId: string;
+  flightId: string;
+  flightSquadronChoiceJs: FlightSquadronChoice;
+};
+export type SetFlightSizeApiResponse =
+  /** status 200 Successful Response */ PackageDetail;
+export type SetFlightSizeApiArg = {
+  packageId: string;
+  flightId: string;
+  flightSizeJs: FlightSize;
+};
+export type SetFlightStartTypeApiResponse =
+  /** status 200 Successful Response */ PackageDetail;
+export type SetFlightStartTypeApiArg = {
+  packageId: string;
+  flightId: string;
+  flightStartTypeJs: FlightStartType;
+};
+export type SetFlightDivertApiResponse =
+  /** status 200 Successful Response */ PackageDetail;
+export type SetFlightDivertApiArg = {
+  packageId: string;
+  flightId: string;
+  flightDivertJs: FlightDivert;
+};
+export type SetFlightTotOffsetApiResponse =
+  /** status 200 Successful Response */ PackageDetail;
+export type SetFlightTotOffsetApiArg = {
+  packageId: string;
+  flightId: string;
+  flightTotOffsetJs: FlightTotOffset;
+};
+export type SetFlightCustomNameApiResponse =
+  /** status 200 Successful Response */ PackageDetail;
+export type SetFlightCustomNameApiArg = {
+  packageId: string;
+  flightId: string;
+  flightCustomNameJs: FlightCustomName;
+};
+export type SetFlightCallsignApiResponse =
+  /** status 200 Successful Response */ PackageDetail;
+export type SetFlightCallsignApiArg = {
+  packageId: string;
+  flightId: string;
+  flightCallsignJs: FlightCallsign;
+};
+export type ResetFlightCallsignApiResponse =
+  /** status 200 Successful Response */ PackageDetail;
+export type ResetFlightCallsignApiArg = {
+  packageId: string;
+  flightId: string;
+};
+export type SetFlightPilotApiResponse =
+  /** status 200 Successful Response */ PackageDetail;
+export type SetFlightPilotApiArg = {
+  packageId: string;
+  flightId: string;
+  slot: number;
+  flightPilotChoiceJs: FlightPilotChoice;
+};
+export type SetFlightSlotPlayerApiResponse =
+  /** status 200 Successful Response */ PackageDetail;
+export type SetFlightSlotPlayerApiArg = {
+  packageId: string;
+  flightId: string;
+  slot: number;
+  flightSlotPlayerJs: FlightSlotPlayer;
 };
 export type GetFlightRadiosApiResponse =
   /** status 200 Successful Response */ FlightRadios;
@@ -2420,6 +2865,111 @@ export type DownedPilot = {
   turns_remaining: number;
   sidc: string;
 };
+export type PayloadWeapon = {
+  clsid: string;
+  name: string;
+};
+export type PayloadPylonOptions = {
+  number: number;
+  weapons: PayloadWeapon[];
+};
+export type PayloadOption = {
+  id: boolean | number | number | string | null;
+  label: string;
+};
+export type PayloadProperty = {
+  id: string;
+  label: string;
+  control: string;
+  section?: string;
+  minimum?: number;
+  maximum?: number;
+  options: PayloadOption[];
+};
+export type WeaponSetting = {
+  id: string;
+  label: string;
+  control: string;
+  value: boolean | number | number | string | null;
+  read_only: boolean;
+  minimum?: number;
+  maximum?: number;
+  unit?: string;
+  options: PayloadOption[];
+};
+export type MemberPylon = {
+  number: number;
+  weapon?: PayloadWeapon;
+  replaced_weapon?: string;
+  settings: WeaponSetting[];
+};
+export type WeaponLaserCode = {
+  code?: number;
+  label: string;
+};
+export type MemberPayload = {
+  index: number;
+  pilot?: string;
+  is_player: boolean;
+  loadout: string;
+  custom: boolean;
+  pylons: MemberPylon[];
+  tgp_laser_code?: number;
+  weapon_laser_code?: number;
+  weapon_laser_codes: WeaponLaserCode[];
+  liveries: LiveryChoice[];
+  properties: {
+    [key: string]: boolean | number | number | string | null;
+  };
+};
+export type FlightPayload = {
+  aircraft: string;
+  fuel: number;
+  fuel_max: number;
+  same_loadout: boolean;
+  same_livery: boolean;
+  restrict_weapons_by_date: boolean;
+  date: string;
+  loadouts: string[];
+  pylons: PayloadPylonOptions[];
+  properties: PayloadProperty[];
+  members: MemberPayload[];
+};
+export type FlightFuel = {
+  fuel: number;
+};
+export type SameForAll = {
+  same: boolean;
+};
+export type PayloadFile = {
+  path?: string;
+};
+export type MemberLoadoutName = {
+  name: string;
+};
+export type MemberCustomLoadout = {
+  custom: boolean;
+};
+export type MemberPylonWeapon = {
+  clsid?: string | null;
+};
+export type PayloadValue = {
+  id: string;
+  value?: boolean | number | number | string | null;
+};
+export type TgpLaserCode = {
+  assigned: boolean;
+};
+export type WeaponLaserCodeChoice = {
+  code?: number | null;
+};
+export type MemberLivery = {
+  livery_id?: string | null;
+  use_livery_set?: boolean;
+};
+export type SavePayload = {
+  name: string;
+};
 export type Waypoint = {
   name: string;
   position: LatLng;
@@ -2978,6 +3528,84 @@ export type AutoCreateFlight = {
 export type AutoCreateRequest = {
   flights: AutoCreateFlight[];
 };
+export type FlightSettingsSquadron = {
+  id: string;
+  name: string;
+  aircraft: string;
+  base: string;
+  available: number;
+};
+export type FlightDivertOption = {
+  id: string;
+  name: string;
+};
+export type FlightCallsign = {
+  name: string;
+  number: number;
+};
+export type FlightPilotOption = {
+  id: string;
+  name: string;
+  player: boolean;
+};
+export type FlightPilotSlot = {
+  pilot?: FlightPilotOption;
+  player_refusal?: string;
+};
+export type FlightSettings = {
+  id: string;
+  task: string;
+  aircraft: string;
+  departure: string;
+  arrival: string;
+  startup: string;
+  editable: boolean;
+  squadron: FlightSettingsSquadron;
+  squadron_options: FlightSettingsSquadron[];
+  count: number;
+  max_count: number;
+  start_type: string;
+  start_types: string[];
+  start_type_locked: boolean;
+  divert_id?: string;
+  divert_options: FlightDivertOption[];
+  tot_offset_seconds: number;
+  custom_name?: string;
+  callsign?: FlightCallsign;
+  callsign_names: string[];
+  callsign_min_number: number;
+  callsign_max_number: number;
+  slots: FlightPilotSlot[];
+  free_pilots: FlightPilotOption[];
+};
+export type FlightSquadronChanged = {
+  flight_id: string;
+  package: PackageDetail;
+};
+export type FlightSquadronChoice = {
+  squadron_id: string;
+};
+export type FlightSize = {
+  size: number;
+};
+export type FlightStartType = {
+  start_type: StartType;
+};
+export type FlightDivert = {
+  divert_id?: string | null;
+};
+export type FlightTotOffset = {
+  seconds: number;
+};
+export type FlightCustomName = {
+  name: string;
+};
+export type FlightPilotChoice = {
+  pilot_id?: string | null;
+};
+export type FlightSlotPlayer = {
+  player: boolean;
+};
 export type RadioRange = {
   min_mhz: number;
   max_mhz: number;
@@ -3362,6 +3990,21 @@ export const {
   useGetDebugJoinZonesQuery,
   useListDownedPilotsQuery,
   useGetDownedPilotByIdQuery,
+  useGetFlightPayloadQuery,
+  useSetFlightFuelMutation,
+  useSetSameLoadoutMutation,
+  useSetSameLiveryMutation,
+  useBackupFlightPayloadsMutation,
+  useSetMemberLoadoutMutation,
+  useSetMemberCustomLoadoutMutation,
+  useSetMemberPylonMutation,
+  useSetMemberWeaponSettingMutation,
+  useResetMemberWeaponSettingsMutation,
+  useSetMemberTgpLaserCodeMutation,
+  useSetMemberWeaponLaserCodeMutation,
+  useSetMemberLiveryMutation,
+  useSetMemberPropertyMutation,
+  useSaveMemberPayloadMutation,
   useListFlightsQuery,
   useGetFlightByIdQuery,
   useGetCommitBoundaryForFlightQuery,
@@ -3417,6 +4060,17 @@ export const {
   useRemovePackageFlightMutation,
   useGetAutoCreateOptionsQuery,
   useAutoCreatePackageMutation,
+  useGetFlightSettingsQuery,
+  useSetFlightSquadronMutation,
+  useSetFlightSizeMutation,
+  useSetFlightStartTypeMutation,
+  useSetFlightDivertMutation,
+  useSetFlightTotOffsetMutation,
+  useSetFlightCustomNameMutation,
+  useSetFlightCallsignMutation,
+  useResetFlightCallsignMutation,
+  useSetFlightPilotMutation,
+  useSetFlightSlotPlayerMutation,
   useGetFlightRadiosQuery,
   useSetFlightFrequencyMutation,
   useSetPackageFrequencyMutation,
