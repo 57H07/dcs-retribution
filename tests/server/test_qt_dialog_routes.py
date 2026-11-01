@@ -11,11 +11,9 @@ from uuid import uuid4
 
 import pytest
 
-from game.gamelock import _GAME_LOCK
 from game.server import GameContext
 from game.server.app import app
 from game.server.dependencies import QtCallbacks, QtContext
-from game.server.qt.models import QtDialog
 from game.server.security import ApiKeyManager
 
 
@@ -23,16 +21,7 @@ class _Recorder:
     """Qt callbacks that record what they were asked to open, and lock ownership."""
 
     def __init__(self) -> None:
-        self.dialogs: list[QtDialog] = []
         self.packages: list[Any] = []
-        self.lock_held: list[bool] = []
-
-    def _held(self) -> None:
-        self.lock_held.append(_GAME_LOCK._is_owned())  # type: ignore[attr-defined]
-
-    def open_dialog(self, dialog: QtDialog) -> None:
-        self._held()
-        self.dialogs.append(dialog)
 
     def edit_package(self, package: Any) -> None:
         self.packages.append(package)
@@ -46,7 +35,6 @@ class _Recorder:
             ignore,
             ignore,
             ignore,
-            open_dialog=self.open_dialog,
             edit_package=self.edit_package,
         )
 
@@ -97,90 +85,26 @@ def _post(path: str, api_key: str | None = None) -> tuple[int, Any]:
     return status, json.loads(body) if body else None
 
 
-@pytest.mark.parametrize("dialog", list(QtDialog))
-def test_every_dialog_opens_with_a_campaign(
-    dialog: QtDialog, qt: _Recorder, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    _set_game(monkeypatch, SimpleNamespace(turn=3))
-    assert _post(f"/qt/dialogs/{dialog.value}") == (204, None)
-    assert qt.dialogs == [dialog]
-    # Queued while the route held the game lock (the callback only emits a signal).
-    assert qt.lock_held == [True]
-
-
-def test_dialogs_needing_a_campaign_are_refused_without_one(
-    qt: _Recorder, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    _set_game(monkeypatch, None)
-    assert _post("/qt/dialogs/air-wing") == (409, {"detail": "No campaign is loaded."})
-    without_game = [d for d in QtDialog if not d.needs_game]
-    for dialog in without_game:
-        assert _post(f"/qt/dialogs/{dialog.value}") == (204, None)
-    assert qt.dialogs == without_game
-
-
-def test_menu_actions_without_a_campaign() -> None:
-    assert QtDialog.AIR_WING.needs_game
-
-
-def test_take_off_left_the_qt_dialogs(
-    qt: _Recorder, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """WEB-01.1: take off is the POST /game/mission command, not a Qt dialog."""
-    _set_game(monkeypatch, SimpleNamespace(turn=3))
-    status, _ = _post("/qt/dialogs/take-off")
-    assert status == 422
-    assert qt.dialogs == []
-
-
-def test_reports_left_the_qt_dialogs(
-    qt: _Recorder, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """WEB-08.1: stats, finances and intel are the web reports screen."""
-    _set_game(monkeypatch, SimpleNamespace(turn=3))
-    for dialog in ("stats", "finances", "intel", "reports"):
-        status, _ = _post(f"/qt/dialogs/{dialog}")
-        assert status == 422
-    assert qt.dialogs == []
-
-
 @pytest.mark.parametrize(
     "dialog",
     [
+        "air-wing",
+        "take-off",
+        "stats",
+        "finances",
+        "intel",
         "notes",
         "logs",
         "about",
-        "import-layouts",
-        "pretense-campaign",
         "transfers",
-        "info-panel",
     ],
 )
-def test_secondary_screens_left_the_qt_dialogs(
+def test_the_generic_dialog_route_left_with_its_last_dialog(
     dialog: str, qt: _Recorder, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """WEB-08.2: web screens (and commands for the tools) replace these dialogs."""
+    """WEB-03: web screens and commands replaced every Qt dialog of this route."""
     _set_game(monkeypatch, SimpleNamespace(turn=3))
-    assert _post(f"/qt/dialogs/{dialog}")[0] == 422
-    assert qt.dialogs == []
-
-
-def test_unknown_dialog_is_rejected(
-    qt: _Recorder, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    _set_game(monkeypatch, SimpleNamespace(turn=3))
-    status, _ = _post("/qt/dialogs/self-destruct")
-    assert status == 422
-    assert qt.dialogs == []
-
-
-def test_dialogs_need_the_api_key(
-    qt: _Recorder, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    _set_game(monkeypatch, SimpleNamespace(turn=3))
-    status, _ = _post("/qt/dialogs/air-wing", api_key="wrong")
-    assert status == 401
-    assert qt.dialogs == []
+    assert _post(f"/qt/dialogs/{dialog}")[0] == 404
 
 
 def test_without_a_qt_window_the_route_answers_503(
@@ -193,7 +117,7 @@ def test_without_a_qt_window_the_route_answers_503(
         QtContext, "_callbacks", QtCallbacks(ignore, ignore, ignore, ignore)
     )
     _set_game(monkeypatch, SimpleNamespace(turn=3))
-    assert _post("/qt/dialogs/air-wing")[0] == 503
+    assert _post(f"/qt/edit-package/flight/{uuid4()}")[0] == 503
 
 
 def test_edit_package_opens_the_package_of_the_flight(
@@ -215,15 +139,3 @@ def test_edit_package_opens_the_package_of_the_flight(
     assert status == 404
     assert "no flight" in body["detail"]
     assert qt.packages == [package]
-
-
-@pytest.mark.parametrize(
-    "dialog", ["new-game", "open-game", "save-game", "save-game-as", "quit"]
-)
-def test_file_actions_moved_to_the_native_bridge(
-    dialog: str, qt: _Recorder, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    _set_game(monkeypatch, SimpleNamespace(turn=3))
-    assert _post(f"/qt/dialogs/{dialog}")[0] == 422
-    assert _post("/qt/links/github")[0] == 404
-    assert qt.dialogs == []

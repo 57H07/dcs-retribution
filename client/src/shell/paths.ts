@@ -9,11 +9,16 @@ export type BaseTabId = BaseTab["id"];
 export const REPORT_TABS = ["intel", "stats", "finances"] as const;
 export type ReportTab = (typeof REPORT_TABS)[number];
 
+/** Views of the air wing screen (WEB-03), in display order. */
+export const AIR_WING_VIEWS = ["squadrons", "aircraft", "pilots"] as const;
+export type AirWingView = (typeof AIR_WING_VIEWS)[number];
+
 // Paths of the web UI screens (WEB-00.3). They are hash-routed: Qt loads the
 // page from file://, and the ?server=&apiKey= query stays untouched before "#".
 export const PATHS = {
   command: "/",
   airWing: "/air-wing",
+  airWingView: (view: AirWingView) => `/air-wing/${view}`,
   base: (id: string) => `/bases/${id}`,
   baseTab: (id: string, tab: BaseTabId) => `/bases/${id}/${tab}`,
   package: (flightId: string) => `/packages/${flightId}`,

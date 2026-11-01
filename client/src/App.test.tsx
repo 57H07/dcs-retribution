@@ -36,8 +36,7 @@ test("the web shell routes in the hash and keeps the query intact", async () => 
   expect(screen.getByRole("banner")).toBeInTheDocument();
 
   await userEvent.click(screen.getByRole("button", { name: "Air Wing" }));
-  // The route opened the Qt screen and came back to the command view.
-  await waitFor(() => expect(window.location.hash).toBe("#/"));
+  await waitFor(() => expect(window.location.hash).toBe("#/air-wing"));
   expect(window.location.search).toBe(query);
   expect(window.location.pathname).toBe("/index.html");
 });

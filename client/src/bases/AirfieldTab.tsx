@@ -18,21 +18,9 @@ import { PATHS } from "../shell/paths";
 import { Button, IconButton, Modal, ModalClose, Table, useToast } from "../ui";
 import styles from "./AirfieldTab.module.css";
 import { money } from "./money";
+import { refusalOf, signed } from "./orders";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-
-type Refusal = Parameters<typeof commandErrorMessage>[0];
-type Result = { error?: unknown } | { data: unknown };
-
-function refusalOf(result: Result): Refusal | null {
-  return "error" in result && result.error !== undefined
-    ? (result.error as Refusal)
-    : null;
-}
-
-function signed(quantity: number): string {
-  return quantity > 0 ? `+${quantity}` : `${quantity}`;
-}
 
 function owned(row: SquadronOrderRow): string {
   return row.max_aircraft != null

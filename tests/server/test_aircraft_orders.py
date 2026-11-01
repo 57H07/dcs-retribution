@@ -570,7 +570,7 @@ def _request(method: str, path: str, body: Any = None) -> tuple[int, Any]:
     content = b"".join(
         m.get("body", b"") for m in messages if m["type"] == "http.response.body"
     )
-    return status, json.loads(content)
+    return status, json.loads(content) if content else None
 
 
 def test_order_route(loaded: tuple[Any, Squadron, list[GameUpdateEvents]]) -> None:

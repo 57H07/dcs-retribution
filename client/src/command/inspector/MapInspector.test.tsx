@@ -62,6 +62,7 @@ function renderInspector(selection: MapSelection | null, onClose = vi.fn()) {
       },
       { path: "/bases/:id", element: <p>Base screen</p> },
       { path: "/tgos/:id", element: <p>Site screen</p> },
+      { path: "/bases/:id/:tab", element: <p>Base screen tab</p> },
     ],
     { initialEntries: ["/"] },
   );
@@ -116,6 +117,21 @@ describe("map inspector", () => {
     await userEvent.click(screen.getByRole("button", { name: "Buy aircraft" }));
     await waitFor(() =>
       expect(router.state.location.pathname).toBe(`/bases/${CP_ID}`),
+    );
+  });
+
+  it("opens the ground forces tab from Ground units", async () => {
+    recordFetch(204, undefined, {
+      [`/control-points/${CP_ID}/summary`]: base(),
+    });
+    const { router } = renderInspector({ kind: "controlPoint", id: CP_ID });
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Ground units" }),
+    );
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe(
+        `/bases/${CP_ID}/ground-forces`,
+      ),
     );
   });
 

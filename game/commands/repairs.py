@@ -115,6 +115,11 @@ def _building_repairs(game: Game, cp: ControlPoint) -> Iterator[Repair]:
             )
 
 
+def squadron_repair_id(squadron: Squadron) -> str:
+    """Id of the expedited repair of a squadron at its base."""
+    return f"squadron:{squadron.id}"
+
+
 def _aircraft_repairs(game: Game, cp: ControlPoint) -> Iterator[Repair]:
     for squadron in cp.squadrons:
         count = squadron.aircraft_in_maintenance
@@ -128,7 +133,7 @@ def _aircraft_repairs(game: Game, cp: ControlPoint) -> Iterator[Repair]:
         turns_left = max((turns for _, turns in summary), default=1)
         if game.settings.expedited_aircraft_repair:
             yield Repair(
-                f"squadron:{squadron.id}",
+                squadron_repair_id(squadron),
                 "aircraft",
                 label,
                 squadron.expedited_repair_cost,
@@ -137,7 +142,12 @@ def _aircraft_repairs(game: Game, cp: ControlPoint) -> Iterator[Repair]:
             )
         else:
             yield Repair(
-                f"squadron:{squadron.id}", "aircraft", label, 0, turns_left, True
+                squadron_repair_id(squadron),
+                "aircraft",
+                label,
+                0,
+                turns_left,
+                True,
             )
 
 
@@ -176,7 +186,7 @@ def _ground_object(cp: ControlPoint, repair_id: str) -> TheaterGroundObject:
 
 
 def _squadron(cp: ControlPoint, repair_id: str) -> Squadron:
-    return next(s for s in cp.squadrons if f"squadron:{s.id}" == repair_id)
+    return next(s for s in cp.squadrons if squadron_repair_id(s) == repair_id)
 
 
 def _require_player_base(cp: ControlPoint) -> None:

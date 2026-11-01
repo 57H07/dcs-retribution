@@ -4,7 +4,7 @@ import datetime
 from dataclasses import dataclass, field
 from enum import unique, Enum
 from typing import Any, Optional, TYPE_CHECKING
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from faker import Faker
 
@@ -233,11 +233,15 @@ class Pilot:
     #: The control point holding this pilot prisoner. Only set while status is
     #: PrisonerOfWar; retaking that base frees them.
     held_at: Optional[UUID] = field(default=None)
+    #: Names are not unique: the API and the screens tell pilots apart by this.
+    id: UUID = field(default_factory=uuid4, compare=False)
 
     def __setstate__(self, state: dict[str, Any]) -> None:
         # Older saves predate CSAR and won't have these fields.
         state.setdefault("turns_until_available", 0)
         state.setdefault("held_at", None)
+        # Saves made before pilots had an id (WEB-03).
+        state.setdefault("id", uuid4())
         # Saves made before #64: an unrescued pilot was MissingInAction, held by a
         # base or not. A held one is a prisoner; anyone else was never coming back,
         # which is what Dead now says.

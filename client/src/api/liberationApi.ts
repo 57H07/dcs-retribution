@@ -16,6 +16,7 @@ export enum Tags {
   TRANSFERS = "Transfers",
   BASE = "Base",
   TGO = "Tgo",
+  AIR_WING = "AirWing",
 }
 
 const LIST_ID = "LIST";
@@ -84,20 +85,116 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     // Base screen (WEB-02.1): refetched with the inspector (eventstream).
     getBase: { providesTags: [Tags.BASE] },
     orderRepair: {
-      invalidatesTags: [Tags.BASE, Tags.INSPECTOR, Tags.TOP_BAR, Tags.REPORTS],
+      invalidatesTags: [
+        Tags.BASE,
+        Tags.AIR_WING,
+        Tags.INSPECTOR,
+        Tags.TOP_BAR,
+        Tags.REPORTS,
+      ],
     },
     orderAllRepairs: {
-      invalidatesTags: [Tags.BASE, Tags.INSPECTOR, Tags.TOP_BAR, Tags.REPORTS],
+      invalidatesTags: [
+        Tags.BASE,
+        Tags.AIR_WING,
+        Tags.INSPECTOR,
+        Tags.TOP_BAR,
+        Tags.REPORTS,
+      ],
     },
     // Aircraft orders and new squadrons (WEB-02.2).
     orderAircraft: {
-      invalidatesTags: [Tags.BASE, Tags.INSPECTOR, Tags.TOP_BAR, Tags.REPORTS],
+      invalidatesTags: [
+        Tags.BASE,
+        Tags.AIR_WING,
+        Tags.INSPECTOR,
+        Tags.TOP_BAR,
+        Tags.REPORTS,
+      ],
     },
     cancelAircraftOrder: {
-      invalidatesTags: [Tags.BASE, Tags.INSPECTOR, Tags.TOP_BAR, Tags.REPORTS],
+      invalidatesTags: [
+        Tags.BASE,
+        Tags.AIR_WING,
+        Tags.INSPECTOR,
+        Tags.TOP_BAR,
+        Tags.REPORTS,
+      ],
     },
     getSquadronChoices: { providesTags: [Tags.BASE] },
     createSquadron: {
+      invalidatesTags: [Tags.BASE, Tags.AIR_WING, Tags.INSPECTOR, Tags.REPORTS],
+    },
+    // Air wing screen (WEB-03): refetched after game changes (eventstream).
+    getAirWing: { providesTags: [Tags.AIR_WING] },
+    setSquadronPrimaryTask: { invalidatesTags: [Tags.AIR_WING] },
+    setSquadronAutoAssign: { invalidatesTags: [Tags.AIR_WING] },
+    getSquadronLiveries: { providesTags: [Tags.AIR_WING] },
+    setSquadronLivery: { invalidatesTags: [Tags.AIR_WING] },
+    getSquadronDestinations: { providesTags: [Tags.AIR_WING] },
+    setSquadronDestination: {
+      invalidatesTags: [
+        Tags.AIR_WING,
+        Tags.BASE,
+        Tags.INSPECTOR,
+        Tags.PACKAGES,
+        Tags.TOP_BAR,
+        Tags.TIMELINE,
+      ],
+    },
+    createPlayerPilot: { invalidatesTags: [Tags.AIR_WING, Tags.REPORTS] },
+    updatePilot: {
+      invalidatesTags: [
+        Tags.AIR_WING,
+        Tags.PACKAGES,
+        Tags.TOP_BAR,
+        Tags.REPORTS,
+      ],
+    },
+    // Ground forces, convoys, transfers and base actions (WEB-02.3).
+    getGroundForces: { providesTags: [Tags.BASE] },
+    getDepartingConvoys: { providesTags: [Tags.BASE] },
+    getTransferOptions: { providesTags: [Tags.BASE] },
+    getBaseActions: { providesTags: [Tags.BASE] },
+    orderGroundUnits: {
+      invalidatesTags: [Tags.BASE, Tags.INSPECTOR, Tags.TOP_BAR, Tags.REPORTS],
+    },
+    setFrontLineStance: { invalidatesTags: [Tags.BASE] },
+    setBaseRadios: { invalidatesTags: [Tags.BASE] },
+    createTransfer: {
+      invalidatesTags: [
+        Tags.TRANSFERS,
+        Tags.BASE,
+        Tags.PACKAGES,
+        Tags.INSPECTOR,
+        Tags.REPORTS,
+        Tags.TOP_BAR,
+        Tags.TIMELINE,
+      ],
+    },
+    // The cheats that replan the turn change everything shown.
+    cheatMoveFrontLine: {
+      invalidatesTags: [
+        Tags.BASE,
+        Tags.INSPECTOR,
+        Tags.PACKAGES,
+        Tags.TOP_BAR,
+        Tags.TIMELINE,
+        Tags.REPORTS,
+      ],
+    },
+    cheatCaptureBase: {
+      invalidatesTags: [
+        Tags.BASE,
+        Tags.INSPECTOR,
+        Tags.PACKAGES,
+        Tags.TRANSFERS,
+        Tags.TOP_BAR,
+        Tags.TIMELINE,
+        Tags.REPORTS,
+      ],
+    },
+    cheatRunwayState: {
       invalidatesTags: [Tags.BASE, Tags.INSPECTOR, Tags.REPORTS],
     },
     // Ground object sheet (WEB-08.3): refetched with the inspector (eventstream).
