@@ -76,6 +76,107 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.newSquadronJs,
       }),
     }),
+    getGroundForces: build.query<
+      GetGroundForcesApiResponse,
+      GetGroundForcesApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/control-points/${queryArg.cpId}/ground-forces`,
+      }),
+    }),
+    orderGroundUnits: build.mutation<
+      OrderGroundUnitsApiResponse,
+      OrderGroundUnitsApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/control-points/${queryArg.cpId}/purchases/ground-units`,
+        method: "POST",
+        body: queryArg.groundOrdersJs,
+      }),
+    }),
+    setFrontLineStance: build.mutation<
+      SetFrontLineStanceApiResponse,
+      SetFrontLineStanceApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/control-points/${queryArg.cpId}/front-lines/${queryArg.enemyId}/stance`,
+        method: "PUT",
+        body: queryArg.stanceJs,
+      }),
+    }),
+    getDepartingConvoys: build.query<
+      GetDepartingConvoysApiResponse,
+      GetDepartingConvoysApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/control-points/${queryArg.cpId}/convoys`,
+      }),
+    }),
+    attackDepartingConvoy: build.mutation<
+      AttackDepartingConvoyApiResponse,
+      AttackDepartingConvoyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/control-points/${queryArg.cpId}/convoys/${queryArg.destinationId}/package`,
+        method: "POST",
+        params: { kind: queryArg.kind },
+      }),
+    }),
+    getTransferOptions: build.query<
+      GetTransferOptionsApiResponse,
+      GetTransferOptionsApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/control-points/${queryArg.cpId}/transfer-options`,
+        params: { destination_id: queryArg.destinationId },
+      }),
+    }),
+    getBaseActions: build.query<
+      GetBaseActionsApiResponse,
+      GetBaseActionsApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/control-points/${queryArg.cpId}/actions`,
+      }),
+    }),
+    setBaseRadios: build.mutation<
+      SetBaseRadiosApiResponse,
+      SetBaseRadiosApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/control-points/${queryArg.cpId}/radios`,
+        method: "PUT",
+        body: queryArg.baseRadiosUpdateJs,
+      }),
+    }),
+    cheatMoveFrontLine: build.mutation<
+      CheatMoveFrontLineApiResponse,
+      CheatMoveFrontLineApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/control-points/${queryArg.cpId}/front-lines/${queryArg.enemyId}/cheat`,
+        method: "POST",
+        body: queryArg.frontLineCheatJs,
+      }),
+    }),
+    cheatRunwayState: build.mutation<
+      CheatRunwayStateApiResponse,
+      CheatRunwayStateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/control-points/${queryArg.cpId}/cheat/runway`,
+        method: "POST",
+      }),
+    }),
+    cheatCaptureBase: build.mutation<
+      CheatCaptureBaseApiResponse,
+      CheatCaptureBaseApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/control-points/${queryArg.cpId}/cheat/capture`,
+        method: "POST",
+      }),
+    }),
     controlPointDestinationInRange: build.query<
       ControlPointDestinationInRangeApiResponse,
       ControlPointDestinationInRangeApiArg
@@ -573,6 +674,16 @@ const injectedRtkApi = api.injectEndpoints({
     listTransfers: build.query<ListTransfersApiResponse, ListTransfersApiArg>({
       query: () => ({ url: `/transfers/` }),
     }),
+    createTransfer: build.mutation<
+      CreateTransferApiResponse,
+      CreateTransferApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/transfers/`,
+        method: "POST",
+        body: queryArg.newTransferJs,
+      }),
+    }),
     cancelTransfer: build.mutation<
       CancelTransferApiResponse,
       CancelTransferApiArg
@@ -635,6 +746,70 @@ export type CreateSquadronApiResponse =
 export type CreateSquadronApiArg = {
   cpId: string;
   newSquadronJs: NewSquadron;
+};
+export type GetGroundForcesApiResponse =
+  /** status 200 Successful Response */ GroundForces;
+export type GetGroundForcesApiArg = {
+  cpId: string;
+};
+export type OrderGroundUnitsApiResponse =
+  /** status 200 Successful Response */ GroundForces;
+export type OrderGroundUnitsApiArg = {
+  cpId: string;
+  groundOrdersJs: GroundOrders;
+};
+export type SetFrontLineStanceApiResponse =
+  /** status 200 Successful Response */ GroundForces;
+export type SetFrontLineStanceApiArg = {
+  cpId: string;
+  enemyId: string;
+  stanceJs: Stance;
+};
+export type GetDepartingConvoysApiResponse =
+  /** status 200 Successful Response */ DepartingConvoy[];
+export type GetDepartingConvoysApiArg = {
+  cpId: string;
+};
+export type AttackDepartingConvoyApiResponse =
+  /** status 204 Successful Response */ void;
+export type AttackDepartingConvoyApiArg = {
+  cpId: string;
+  destinationId: string;
+  kind?: "convoy" | "cargo-ship";
+};
+export type GetTransferOptionsApiResponse =
+  /** status 200 Successful Response */ TransferOptions;
+export type GetTransferOptionsApiArg = {
+  cpId: string;
+  destinationId?: string | null;
+};
+export type GetBaseActionsApiResponse =
+  /** status 200 Successful Response */ BaseActions;
+export type GetBaseActionsApiArg = {
+  cpId: string;
+};
+export type SetBaseRadiosApiResponse =
+  /** status 200 Successful Response */ BaseActions;
+export type SetBaseRadiosApiArg = {
+  cpId: string;
+  baseRadiosUpdateJs: BaseRadiosUpdate;
+};
+export type CheatMoveFrontLineApiResponse =
+  /** status 204 Successful Response */ void;
+export type CheatMoveFrontLineApiArg = {
+  cpId: string;
+  enemyId: string;
+  frontLineCheatJs: FrontLineCheat;
+};
+export type CheatRunwayStateApiResponse =
+  /** status 204 Successful Response */ void;
+export type CheatRunwayStateApiArg = {
+  cpId: string;
+};
+export type CheatCaptureBaseApiResponse =
+  /** status 204 Successful Response */ void;
+export type CheatCaptureBaseApiArg = {
+  cpId: string;
 };
 export type ControlPointDestinationInRangeApiResponse =
   /** status 200 Successful Response */ boolean;
@@ -957,6 +1132,11 @@ export type ListTransfersApiResponse = /** status 200 Successful Response */
   | TransferJs[]
   | null;
 export type ListTransfersApiArg = void;
+export type CreateTransferApiResponse =
+  /** status 200 Successful Response */ TransferJs;
+export type CreateTransferApiArg = {
+  newTransferJs: NewTransfer;
+};
 export type CancelTransferApiResponse =
   /** status 204 Successful Response */ void;
 export type CancelTransferApiArg = {
@@ -1095,6 +1275,105 @@ export type NewSquadron = {
   aircraft: string;
   primary_task: string;
   preset?: string | null;
+};
+export type GroundUnitRow = {
+  unit_id: string;
+  name: string;
+  unit_cost: number;
+  owned: number;
+  pending: number;
+  max_add: number;
+};
+export type FrontLineStance = {
+  enemy_id: string;
+  enemy: string;
+  stance: string;
+};
+export type GroundForces = {
+  units: GroundUnitRow[];
+  recruitment_refusal?: string;
+  has_factory: boolean;
+  present: number;
+  ordered: number;
+  transferring: number;
+  deployable_limit?: number;
+  reserve?: number;
+  front_lines: FrontLineStance[];
+  stance_options: string[];
+  front_line_cheats: boolean;
+};
+export type GroundOrderLine = {
+  unit_id: string;
+  quantity: number;
+};
+export type GroundOrders = {
+  orders: GroundOrderLine[];
+};
+export type Stance = {
+  stance: string;
+};
+export type DepartingConvoy = {
+  name: string;
+  kind: "convoy" | "cargo-ship";
+  destination_id: string;
+  destination: string;
+  size: number;
+  units: UnitCountJs[];
+};
+export type TransferDestination = {
+  id: string;
+  name: string;
+};
+export type TransferableUnit = {
+  unit_id: string;
+  name: string;
+  available: number;
+};
+export type TransportSquadron = {
+  id: string;
+  label: string;
+  capacity: number;
+};
+export type TransferOptions = {
+  destinations: TransferDestination[];
+  destination_id?: string;
+  units: TransferableUnit[];
+  squadrons: TransportSquadron[];
+  no_squadron_warning?: string;
+};
+export type BaseRadios = {
+  has_frequency: boolean;
+  has_tacan: boolean;
+  has_icls: boolean;
+  has_link4: boolean;
+  frequency_mhz?: number;
+  tacan_channel?: number;
+  tacan_band?: string;
+  tacan_callsign?: string;
+  icls_channel?: number;
+  icls_callsign?: string;
+  link4_mhz?: number;
+  warnings: string[];
+};
+export type BaseActions = {
+  can_transfer: boolean;
+  can_plan_transport: boolean;
+  can_attack_airfield: boolean;
+  cheat_capture?: string;
+  cheat_runway?: string;
+  radios?: BaseRadios;
+};
+export type BaseRadiosUpdate = {
+  frequency_mhz?: number | null;
+  tacan_channel?: number | null;
+  tacan_band?: string | null;
+  tacan_callsign?: string | null;
+  icls_channel?: number | null;
+  icls_callsign?: string | null;
+  link4_mhz?: number | null;
+};
+export type FrontLineCheat = {
+  advance: boolean;
 };
 export type HoldZones = {
   homeBubble: LatLng[][];
@@ -1652,6 +1931,17 @@ export type TransferJs = {
   units: TransferUnitJs[];
   transport: string;
 };
+export type NewTransferLine = {
+  unit_id: string;
+  count: number;
+};
+export type NewTransfer = {
+  origin_id: string;
+  destination_id: string;
+  units: NewTransferLine[];
+  airlift?: boolean;
+  squadron_id?: string | null;
+};
 export const {
   useListControlPointsQuery,
   useGetControlPointByIdQuery,
@@ -1663,6 +1953,17 @@ export const {
   useCancelAircraftOrderMutation,
   useGetSquadronChoicesQuery,
   useCreateSquadronMutation,
+  useGetGroundForcesQuery,
+  useOrderGroundUnitsMutation,
+  useSetFrontLineStanceMutation,
+  useGetDepartingConvoysQuery,
+  useAttackDepartingConvoyMutation,
+  useGetTransferOptionsQuery,
+  useGetBaseActionsQuery,
+  useSetBaseRadiosMutation,
+  useCheatMoveFrontLineMutation,
+  useCheatRunwayStateMutation,
+  useCheatCaptureBaseMutation,
   useControlPointDestinationInRangeQuery,
   useSetControlPointDestinationMutation,
   useClearControlPointDestinationMutation,
@@ -1741,5 +2042,6 @@ export const {
   useImportLayoutsMutation,
   useGeneratePretenseCampaignMutation,
   useListTransfersQuery,
+  useCreateTransferMutation,
   useCancelTransferMutation,
 } = injectedRtkApi;

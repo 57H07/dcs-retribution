@@ -25,15 +25,13 @@ from PySide6.QtWidgets import (
 from dcs.unittype import UnitType
 
 from game import Game
+from game.commands import CommandError
+from game.commands.transfers import no_transport_squadron_warning
 from game.dcs.groundunittype import GroundUnitType
+from game.gamelock import game_lock
 from game.squadrons import Squadron
 from game.theater import ControlPoint, Player
-from game.theater.ctldzones import (
-    ctld_zone_unavailable_reason,
-    default_zones_enabled,
-)
 from game.transfers import (
-    PlayerAirliftError,
     TransferOrder,
     airlift_squadrons,
     max_airlift_capacity,
@@ -399,19 +397,6 @@ class NewUnitTransferDialog(QDialog):
             combo.blockSignals(False)
         self.update_state()
 
-    def _no_squadron_warning(self, draft: TransferOrder) -> str:
-        lines = [
-            f"No Transport-capable squadron can fly between {draft.origin.name} and "
-            f"{draft.destination.name} this turn (aircraft, pilots, base type or "
-            "helicopter range)."
-        ]
-        settings = self.game_model.game.settings
-        land = self.game_model.game.theater if default_zones_enabled(settings) else None
-        for cp in (draft.origin, draft.destination):
-            if (reason := ctld_zone_unavailable_reason(cp, land)) is not None:
-                lines.append(reason)
-        return "\n".join(lines)
-
     def update_state(self) -> None:
         has_units = bool(self.selected_units)
         squadron = self.dest_panel.selected_squadron
@@ -428,7 +413,9 @@ class NewUnitTransferDialog(QDialog):
                 and draft is not None
                 and self.dest_panel.squadron.count() <= 1
             ):
-                warning = self._no_squadron_warning(draft)
+                warning = no_transport_squadron_warning(
+                    self.game_model.game, draft.origin, draft.destination
+                )
         self.dest_panel.show_warning(warning)
         blocked = squadron is not None and warning is not None
         self.submit_button.setDisabled(not has_units or blocked)
@@ -450,16 +437,13 @@ class NewUnitTransferDialog(QDialog):
         )
         now = self.game_model.sim_controller.current_time_in_sim
         squadron = self.dest_panel.selected_squadron
-        if squadron is not None:
-            try:
-                self.game_model.transfer_model.new_player_airlift(
-                    transfer, squadron, now
-                )
-            except PlayerAirliftError as ex:
-                QMessageBox.warning(self, "Cannot create Transport mission", str(ex))
-                return
-        else:
-            self.game_model.transfer_model.new_transfer(transfer, now)
+        # Same rules as the web base screen (WEB-02.3).
+        try:
+            with game_lock():
+                self.game_model.transfer_model.place_transfer(transfer, squadron, now)
+        except CommandError as ex:
+            QMessageBox.warning(self, "Cannot create the transfer", ex.message)
+            return
         # Airlifts add packages to the ATO behind the model's back.
         self.game_model.ato_model.replace_from_game(player=True)
         self.close()

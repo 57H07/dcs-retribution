@@ -131,6 +131,13 @@ element in `client/src/shell/routes.tsx`. A tool with no file UI needs no dialog
 all: `POST /tools/import-layouts` and `POST /tools/pretense-campaign` (WEB-08.2) are
 plain commands that answer once the work is done.
 
+A base screen tab does not fetch through `GET /control-points/{id}/base` when it
+has its own read model (`/ground-forces`, `/convoys`, `/actions`, WEB-02.3): they all
+provide `Tags.BASE`, so a base event refreshes them together.
+`POST /control-points/{id}/convoys/{destination}/package` opens the package editor on
+a convoy or cargo ship (they have no id of their own, hence the origin, destination
+and `kind`); WEB-04.1 moves it to the web editor with `POST /packages`.
+
 A command may also hand over to a Qt window that is not migrated yet, through a
 `QtCallbacks` callback emitting a `QLiberationWindow` signal (WEB-05.1 did so for
 the debriefing, until WEB-05.2 replaced it with the web after-action report).

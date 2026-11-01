@@ -169,18 +169,6 @@ describe("base screen", () => {
     const airDefense = screen.getByRole("region", { name: "Air defense" });
     expect(airDefense).toHaveTextContent("SA-15 Krymsk · SHORAD1/2");
   });
-
-  it("hands ground units over to the Qt base menu for now", async () => {
-    const { calls } = renderBase("/bases/cp-1/ground-forces");
-    await userEvent.click(
-      await screen.findByRole("button", { name: "Open the base menu" }),
-    );
-    await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0]).toMatchObject({
-      method: "POST",
-      path: "/qt/info/control-point/cp-1",
-    });
-  });
 });
 
 describe("repairs", () => {

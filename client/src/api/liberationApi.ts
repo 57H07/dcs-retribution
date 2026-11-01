@@ -90,6 +90,52 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     createSquadron: {
       invalidatesTags: [Tags.BASE, Tags.INSPECTOR, Tags.REPORTS],
     },
+    // Ground forces, convoys, transfers and base actions (WEB-02.3).
+    getGroundForces: { providesTags: [Tags.BASE] },
+    getDepartingConvoys: { providesTags: [Tags.BASE] },
+    getTransferOptions: { providesTags: [Tags.BASE] },
+    getBaseActions: { providesTags: [Tags.BASE] },
+    orderGroundUnits: {
+      invalidatesTags: [Tags.BASE, Tags.INSPECTOR, Tags.TOP_BAR, Tags.REPORTS],
+    },
+    setFrontLineStance: { invalidatesTags: [Tags.BASE] },
+    setBaseRadios: { invalidatesTags: [Tags.BASE] },
+    createTransfer: {
+      invalidatesTags: [
+        Tags.TRANSFERS,
+        Tags.BASE,
+        Tags.PACKAGES,
+        Tags.INSPECTOR,
+        Tags.REPORTS,
+        Tags.TOP_BAR,
+        Tags.TIMELINE,
+      ],
+    },
+    // The cheats that replan the turn change everything shown.
+    cheatMoveFrontLine: {
+      invalidatesTags: [
+        Tags.BASE,
+        Tags.INSPECTOR,
+        Tags.PACKAGES,
+        Tags.TOP_BAR,
+        Tags.TIMELINE,
+        Tags.REPORTS,
+      ],
+    },
+    cheatCaptureBase: {
+      invalidatesTags: [
+        Tags.BASE,
+        Tags.INSPECTOR,
+        Tags.PACKAGES,
+        Tags.TRANSFERS,
+        Tags.TOP_BAR,
+        Tags.TIMELINE,
+        Tags.REPORTS,
+      ],
+    },
+    cheatRunwayState: {
+      invalidatesTags: [Tags.BASE, Tags.INSPECTOR, Tags.REPORTS],
+    },
     // /packages/ (WEB-01.2): also refetched on flight events (eventstream.tsx).
     listPackages: { providesTags: [Tags.PACKAGES] },
     deletePackage: { invalidatesTags: [Tags.PACKAGES, Tags.TOP_BAR] },
