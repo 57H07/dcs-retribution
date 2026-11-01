@@ -64,6 +64,12 @@ class GroundUnitType(UnitType[Type[VehicleType]]):
         defaultdict(list)
     )
 
+    def __hash__(self) -> int:
+        # The generated hash covers dcs_unit_type (a class, hashed by address) and
+        # skynet_properties (hashed by id), so set iteration order, and with it
+        # every random pick among faction units, changed from run to run.
+        return hash(self.variant_id)
+
     def __setstate__(self, state: dict[str, Any]) -> None:
         # Save compat: the `name` field has been renamed `variant_id`.
         if "name" in state:

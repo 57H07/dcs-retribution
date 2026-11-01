@@ -82,14 +82,14 @@ describe("useQtCommands", () => {
     const qt = renderHook(() => useQtCommands(), { wrapper }).result;
     act(() => {
       qt.current.openDialog("open-game");
-      qt.current.openDialog("notes");
+      qt.current.openDialog("air-wing");
       qt.current.openLink("github");
     });
     await waitFor(() => expect(calls).toHaveLength(3));
     expect(calls.map((c) => c.path).sort()).toEqual([
       "/native/open",
       "/native/open-link/github",
-      "/qt/dialogs/notes",
+      "/qt/dialogs/air-wing",
     ]);
   });
 });

@@ -18,6 +18,7 @@ from game.ato.flight import Flight
 from game.ato.flighttype import FlightType
 from game.ato.package import Package
 from game.commands.packages import cancel_or_abort_package
+from game.commands.transfers import cancel_transfer
 from game.dcs.beacons import Beacons
 from game.game import Game
 from game.radio.RadioFrequencyContainer import RadioFrequencyContainer
@@ -447,7 +448,7 @@ class TransferModel(QAbstractListModel):
         index = self.transfers.index_of_transfer(transfer)
         self.beginRemoveRows(QModelIndex(), index, index)
         # TODO: Needs to regenerate base inventory tab.
-        self.transfers.cancel_transfer(transfer)
+        cancel_transfer(self.game_model.game, transfer)
         self.endRemoveRows()
 
     def transfer_at_index(self, index: QModelIndex) -> TransferOrder:

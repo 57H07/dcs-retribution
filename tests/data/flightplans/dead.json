@@ -1,0 +1,297 @@
+{
+  "target": "CANARY",
+  "target_type": "SamGroundObject",
+  "primary_task": "DEAD",
+  "auto_asap": true,
+  "tot": "2010-06-01T16:26:18",
+  "flights": [
+    {
+      "task": "DEAD",
+      "aircraft": "F-4E Phantom II",
+      "squadron": "201th Squadron",
+      "departure": "Ramat David",
+      "arrival": "Ramat David",
+      "divert": null,
+      "count": 2,
+      "start_type": "Cold",
+      "flight_plan": "DeadFlightPlan",
+      "startup": "2010-06-01T16:00:00",
+      "takeoff": "2010-06-01T16:10:30",
+      "tot": "2010-06-01T16:26:18",
+      "landing": "2010-06-01T16:35:43",
+      "waypoints": [
+        {
+          "type": "TAKEOFF",
+          "name": "TAKEOFF",
+          "x": -259121,
+          "y": -75105,
+          "alt_ft": 0,
+          "alt_type": "RADIO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "LOITER",
+          "name": "HOLD",
+          "x": -213472,
+          "y": -82528,
+          "alt_ft": 18000,
+          "alt_type": "BARO",
+          "tot": null,
+          "depart": "2010-06-01T16:19:14"
+        },
+        {
+          "type": "JOIN",
+          "name": "JOIN",
+          "x": -252388,
+          "y": -70084,
+          "alt_ft": 18000,
+          "alt_type": "BARO",
+          "tot": "2010-06-01T16:21:55",
+          "depart": null
+        },
+        {
+          "type": "INGRESS_DEAD",
+          "name": "INGRESS",
+          "x": -250760,
+          "y": -71151,
+          "alt_ft": 18000,
+          "alt_type": "BARO",
+          "tot": "2010-06-01T16:22:02",
+          "depart": null
+        },
+        {
+          "type": "TARGET_GROUP_LOC",
+          "name": "DEAD on CANARY",
+          "x": -214188,
+          "y": -17855,
+          "alt_ft": 0,
+          "alt_type": "RADIO",
+          "tot": "2010-06-01T16:26:18",
+          "depart": null
+        },
+        {
+          "type": "SPLIT",
+          "name": "SPLIT",
+          "x": -251662,
+          "y": -70840,
+          "alt_ft": 18000,
+          "alt_type": "BARO",
+          "tot": "2010-06-01T16:31:19",
+          "depart": null
+        },
+        {
+          "type": "REFUEL",
+          "name": "REFUEL",
+          "x": -252851,
+          "y": -72139,
+          "alt_ft": 18000,
+          "alt_type": "BARO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "LANDING_POINT",
+          "name": "LANDING",
+          "x": -259121,
+          "y": -75105,
+          "alt_ft": 0,
+          "alt_type": "RADIO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "BULLSEYE",
+          "name": "BULLSEYE",
+          "x": -213950,
+          "y": -19133,
+          "alt_ft": 0,
+          "alt_type": "BARO",
+          "tot": null,
+          "depart": null
+        }
+      ],
+      "loadouts": [
+        {
+          "name": "Retribution DEAD",
+          "pylons": {
+            "1": "{AB8B8299-F1CC-4359-89B5-2172E0CF4A5A}",
+            "2": "{AB8B8299-F1CC-4359-89B5-2172E0CF4A5A}",
+            "3": "{6D21ECEA-F85B-4E8D-9D51-31DC9B8AA4EF}",
+            "4": "{8D399DDA-FF81-4F14-904D-099B34FE7918}",
+            "5": "{8B9E3FD0-F034-4A07-B6CE-C269884CC71B}",
+            "6": "{8D399DDA-FF81-4F14-904D-099B34FE7918}",
+            "7": "{8D399DDA-FF81-4F14-904D-099B34FE7918}",
+            "8": "{AB8B8299-F1CC-4359-89B5-2172E0CF4A5A}",
+            "9": "{AB8B8299-F1CC-4359-89B5-2172E0CF4A5A}"
+          }
+        },
+        {
+          "name": "Retribution DEAD",
+          "pylons": {
+            "1": "{AB8B8299-F1CC-4359-89B5-2172E0CF4A5A}",
+            "2": "{AB8B8299-F1CC-4359-89B5-2172E0CF4A5A}",
+            "3": "{6D21ECEA-F85B-4E8D-9D51-31DC9B8AA4EF}",
+            "4": "{8D399DDA-FF81-4F14-904D-099B34FE7918}",
+            "5": "{8B9E3FD0-F034-4A07-B6CE-C269884CC71B}",
+            "6": "{8D399DDA-FF81-4F14-904D-099B34FE7918}",
+            "7": "{8D399DDA-FF81-4F14-904D-099B34FE7918}",
+            "8": "{AB8B8299-F1CC-4359-89B5-2172E0CF4A5A}",
+            "9": "{AB8B8299-F1CC-4359-89B5-2172E0CF4A5A}"
+          }
+        }
+      ]
+    },
+    {
+      "task": "SEAD Escort",
+      "aircraft": "F-16CM Fighting Falcon (Block 50)",
+      "squadron": "101st Squadron",
+      "departure": "Ramat David",
+      "arrival": "Ramat David",
+      "divert": null,
+      "count": 2,
+      "start_type": "Cold",
+      "flight_plan": "EscortFlightPlan",
+      "startup": "2010-06-01T16:00:00",
+      "takeoff": "2010-06-01T16:10:30",
+      "tot": "2010-06-01T16:26:18",
+      "landing": "2010-06-01T16:35:43",
+      "waypoints": [
+        {
+          "type": "TAKEOFF",
+          "name": "TAKEOFF",
+          "x": -259121,
+          "y": -75105,
+          "alt_ft": 0,
+          "alt_type": "RADIO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "LOITER",
+          "name": "HOLD",
+          "x": -213472,
+          "y": -82528,
+          "alt_ft": 22000,
+          "alt_type": "BARO",
+          "tot": null,
+          "depart": "2010-06-01T16:19:13"
+        },
+        {
+          "type": "JOIN",
+          "name": "JOIN",
+          "x": -252388,
+          "y": -70084,
+          "alt_ft": 22000,
+          "alt_type": "BARO",
+          "tot": "2010-06-01T16:21:55",
+          "depart": null
+        },
+        {
+          "type": "INGRESS_ESCORT",
+          "name": "INGRESS",
+          "x": -250760,
+          "y": -71151,
+          "alt_ft": 22000,
+          "alt_type": "BARO",
+          "tot": "2010-06-01T16:22:02",
+          "depart": null
+        },
+        {
+          "type": "CUSTOM",
+          "name": "ESCORT HOLD",
+          "x": -221925,
+          "y": -29129,
+          "alt_ft": 22000,
+          "alt_type": "BARO",
+          "tot": "2010-06-01T16:25:24",
+          "depart": null
+        },
+        {
+          "type": "TARGET_GROUP_LOC",
+          "name": "TARGET",
+          "x": -214188,
+          "y": -17855,
+          "alt_ft": 22000,
+          "alt_type": "BARO",
+          "tot": "2010-06-01T16:26:18",
+          "depart": null
+        },
+        {
+          "type": "SPLIT",
+          "name": "SPLIT",
+          "x": -251662,
+          "y": -70840,
+          "alt_ft": 22000,
+          "alt_type": "BARO",
+          "tot": "2010-06-01T16:31:19",
+          "depart": null
+        },
+        {
+          "type": "REFUEL",
+          "name": "REFUEL",
+          "x": -252851,
+          "y": -72139,
+          "alt_ft": 22000,
+          "alt_type": "BARO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "LANDING_POINT",
+          "name": "LANDING",
+          "x": -259121,
+          "y": -75105,
+          "alt_ft": 0,
+          "alt_type": "RADIO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "BULLSEYE",
+          "name": "BULLSEYE",
+          "x": -213950,
+          "y": -19133,
+          "alt_ft": 0,
+          "alt_type": "BARO",
+          "tot": null,
+          "depart": null
+        }
+      ],
+      "loadouts": [
+        {
+          "name": "Retribution SEAD Escort",
+          "pylons": {
+            "1": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "2": "{5CE2FF2A-645A-4197-B48D-8720AC69394F}",
+            "3": "{B06DD79A-F21E-4EB9-BD9D-AB3844618C93}",
+            "4": "{F376DBEE-4CAE-41BA-ADD9-B2910AC95DEC}",
+            "5": "ALQ_184",
+            "6": "{F376DBEE-4CAE-41BA-ADD9-B2910AC95DEC}",
+            "7": "LAU_117_AGM_65G",
+            "8": "{5CE2FF2A-645A-4197-B48D-8720AC69394F}",
+            "9": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "10": "{AN_ASQ_213}",
+            "11": "{AN_AAQ_33}"
+          }
+        },
+        {
+          "name": "Retribution SEAD Escort",
+          "pylons": {
+            "1": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "2": "{5CE2FF2A-645A-4197-B48D-8720AC69394F}",
+            "3": "{B06DD79A-F21E-4EB9-BD9D-AB3844618C93}",
+            "4": "{F376DBEE-4CAE-41BA-ADD9-B2910AC95DEC}",
+            "5": "ALQ_184",
+            "6": "{F376DBEE-4CAE-41BA-ADD9-B2910AC95DEC}",
+            "7": "LAU_117_AGM_65G",
+            "8": "{5CE2FF2A-645A-4197-B48D-8720AC69394F}",
+            "9": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "10": "{AN_ASQ_213}",
+            "11": "{AN_AAQ_33}"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -11,7 +11,9 @@ from PySide6.QtWidgets import (
 
 import qt_ui.uiconstants as CONST
 from qt_ui.theme_manager import set_style_class
+from game.commands.notes import notes_of, set_notes
 from game.game import Game
+from game.gamelock import game_lock
 
 
 class QNotesWindow(QDialog):
@@ -32,11 +34,8 @@ class QNotesWindow(QDialog):
         )
 
         self.textbox = QPlainTextEdit(self)
-        try:
-            self.textbox.setPlainText(self.game.notes)
-            self.textbox.moveCursor(QTextCursor.MoveOperation.End)
-        except AttributeError:  # old save may not have game.notes
-            pass
+        self.textbox.setPlainText(notes_of(self.game))
+        self.textbox.moveCursor(QTextCursor.MoveOperation.End)
         self.textbox.move(10, 10)
         self.textbox.resize(600, 450)
         set_style_class(self.textbox, "text-area")
@@ -61,6 +60,7 @@ class QNotesWindow(QDialog):
         self.textbox.setPlainText("")
 
     def saveNotes(self) -> None:
-        self.game.notes = self.textbox.toPlainText()
+        with game_lock():
+            set_notes(self.game, self.textbox.toPlainText())
         self.save_button.setText("SAVED")
         QTimer.singleShot(5000, lambda: self.save_button.setText("SAVE"))

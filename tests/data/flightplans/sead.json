@@ -1,0 +1,160 @@
+{
+  "target": "LOCUST",
+  "target_type": "SamGroundObject",
+  "primary_task": "SEAD",
+  "auto_asap": true,
+  "tot": "2010-06-01T16:26:07",
+  "flights": [
+    {
+      "task": "SEAD",
+      "aircraft": "F-16CM Fighting Falcon (Block 50)",
+      "squadron": "101st Squadron",
+      "departure": "Ramat David",
+      "arrival": "Ramat David",
+      "divert": null,
+      "count": 2,
+      "start_type": "Cold",
+      "flight_plan": "SeadFlightPlan",
+      "startup": "2010-06-01T15:59:00",
+      "takeoff": "2010-06-01T16:09:30",
+      "tot": "2010-06-01T16:25:07",
+      "landing": "2010-06-01T16:34:16",
+      "waypoints": [
+        {
+          "type": "TAKEOFF",
+          "name": "TAKEOFF",
+          "x": -259121,
+          "y": -75105,
+          "alt_ft": 0,
+          "alt_type": "RADIO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "LOITER",
+          "name": "HOLD",
+          "x": -213462,
+          "y": -82461,
+          "alt_ft": 21000,
+          "alt_type": "BARO",
+          "tot": null,
+          "depart": "2010-06-01T16:18:14"
+        },
+        {
+          "type": "JOIN",
+          "name": "JOIN",
+          "x": -251333,
+          "y": -69499,
+          "alt_ft": 21000,
+          "alt_type": "BARO",
+          "tot": "2010-06-01T16:20:51",
+          "depart": null
+        },
+        {
+          "type": "INGRESS_SEAD",
+          "name": "INGRESS",
+          "x": -250760,
+          "y": -71151,
+          "alt_ft": 21000,
+          "alt_type": "BARO",
+          "tot": "2010-06-01T16:20:58",
+          "depart": null
+        },
+        {
+          "type": "NAV",
+          "name": "SEAD Search",
+          "x": -216138,
+          "y": -24074,
+          "alt_ft": 21000,
+          "alt_type": "BARO",
+          "tot": "2010-06-01T16:24:48",
+          "depart": null
+        },
+        {
+          "type": "TARGET_GROUP_LOC",
+          "name": "SEAD on LOCUST",
+          "x": -213294,
+          "y": -20207,
+          "alt_ft": 21000,
+          "alt_type": "BARO",
+          "tot": "2010-06-01T16:25:07",
+          "depart": null
+        },
+        {
+          "type": "SPLIT",
+          "name": "SPLIT",
+          "x": -249828,
+          "y": -70545,
+          "alt_ft": 21000,
+          "alt_type": "BARO",
+          "tot": "2010-06-01T16:29:56",
+          "depart": null
+        },
+        {
+          "type": "REFUEL",
+          "name": "REFUEL",
+          "x": -252851,
+          "y": -72139,
+          "alt_ft": 21000,
+          "alt_type": "BARO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "LANDING_POINT",
+          "name": "LANDING",
+          "x": -259121,
+          "y": -75105,
+          "alt_ft": 0,
+          "alt_type": "RADIO",
+          "tot": null,
+          "depart": null
+        },
+        {
+          "type": "BULLSEYE",
+          "name": "BULLSEYE",
+          "x": -213950,
+          "y": -19133,
+          "alt_ft": 0,
+          "alt_type": "BARO",
+          "tot": null,
+          "depart": null
+        }
+      ],
+      "loadouts": [
+        {
+          "name": "Retribution SEAD",
+          "pylons": {
+            "1": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "2": "{5CE2FF2A-645A-4197-B48D-8720AC69394F}",
+            "3": "{B06DD79A-F21E-4EB9-BD9D-AB3844618C93}",
+            "4": "{F376DBEE-4CAE-41BA-ADD9-B2910AC95DEC}",
+            "5": "ALQ_184",
+            "6": "{F376DBEE-4CAE-41BA-ADD9-B2910AC95DEC}",
+            "7": "{B06DD79A-F21E-4EB9-BD9D-AB3844618C93}",
+            "8": "{5CE2FF2A-645A-4197-B48D-8720AC69394F}",
+            "9": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "10": "{AN_ASQ_213}",
+            "11": "{AN_AAQ_33}"
+          }
+        },
+        {
+          "name": "Retribution SEAD",
+          "pylons": {
+            "1": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "2": "{5CE2FF2A-645A-4197-B48D-8720AC69394F}",
+            "3": "{B06DD79A-F21E-4EB9-BD9D-AB3844618C93}",
+            "4": "{F376DBEE-4CAE-41BA-ADD9-B2910AC95DEC}",
+            "5": "ALQ_184",
+            "6": "{F376DBEE-4CAE-41BA-ADD9-B2910AC95DEC}",
+            "7": "{B06DD79A-F21E-4EB9-BD9D-AB3844618C93}",
+            "8": "{5CE2FF2A-645A-4197-B48D-8720AC69394F}",
+            "9": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}",
+            "10": "{AN_ASQ_213}",
+            "11": "{AN_AAQ_33}"
+          }
+        }
+      ]
+    }
+  ]
+}

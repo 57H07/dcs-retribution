@@ -112,14 +112,14 @@ def test_dialogs_needing_a_campaign_are_refused_without_one(
     qt: _Recorder, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _set_game(monkeypatch, None)
-    assert _post("/qt/dialogs/notes") == (409, {"detail": "No campaign is loaded."})
-    assert _post("/qt/dialogs/logs") == (204, None)
-    assert qt.dialogs == [QtDialog.LOGS]
+    assert _post("/qt/dialogs/air-wing") == (409, {"detail": "No campaign is loaded."})
+    without_game = [d for d in QtDialog if not d.needs_game]
+    for dialog in without_game:
+        assert _post(f"/qt/dialogs/{dialog.value}") == (204, None)
+    assert qt.dialogs == without_game
 
 
 def test_menu_actions_without_a_campaign() -> None:
-    assert not QtDialog.LOGS.needs_game
-    assert QtDialog.NOTES.needs_game
     assert QtDialog.AIR_WING.needs_game
 
 
@@ -144,6 +144,27 @@ def test_reports_left_the_qt_dialogs(
     assert qt.dialogs == []
 
 
+@pytest.mark.parametrize(
+    "dialog",
+    [
+        "notes",
+        "logs",
+        "about",
+        "import-layouts",
+        "pretense-campaign",
+        "transfers",
+        "info-panel",
+    ],
+)
+def test_secondary_screens_left_the_qt_dialogs(
+    dialog: str, qt: _Recorder, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """WEB-08.2: web screens (and commands for the tools) replace these dialogs."""
+    _set_game(monkeypatch, SimpleNamespace(turn=3))
+    assert _post(f"/qt/dialogs/{dialog}")[0] == 422
+    assert qt.dialogs == []
+
+
 def test_unknown_dialog_is_rejected(
     qt: _Recorder, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -157,7 +178,7 @@ def test_dialogs_need_the_api_key(
     qt: _Recorder, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _set_game(monkeypatch, SimpleNamespace(turn=3))
-    status, _ = _post("/qt/dialogs/notes", api_key="wrong")
+    status, _ = _post("/qt/dialogs/air-wing", api_key="wrong")
     assert status == 401
     assert qt.dialogs == []
 
@@ -172,7 +193,7 @@ def test_without_a_qt_window_the_route_answers_503(
         QtContext, "_callbacks", QtCallbacks(ignore, ignore, ignore, ignore)
     )
     _set_game(monkeypatch, SimpleNamespace(turn=3))
-    assert _post("/qt/dialogs/notes")[0] == 503
+    assert _post("/qt/dialogs/air-wing")[0] == 503
 
 
 def test_edit_package_opens_the_package_of_the_flight(
