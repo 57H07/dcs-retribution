@@ -3,6 +3,9 @@
 # to be cheap enough to repair with a single turn's income.
 RUNWAY_REPAIR_COST = 100
 
+#: Turns a runway repair takes once ordered.
+RUNWAY_REPAIR_TURNS = 4
+
 REWARDS = {
     "warehouse": 2,
     "ware": 2,
