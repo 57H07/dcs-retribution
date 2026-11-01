@@ -50,6 +50,7 @@ from tests.flightplans.referencegame import seed_all
 PLANNING_SEED = 1304
 
 T = TypeVar("T")
+TgoT = TypeVar("TgoT", bound=TheaterGroundObject)
 
 
 @dataclass(frozen=True)
@@ -140,12 +141,11 @@ def _closest(
     )
 
 
-def _enemy_tgos(game: Game, kind: type[T]) -> list[T]:
+def _enemy_tgos(game: Game, kind: type[TgoT]) -> list[TgoT]:
     return [
         tgo
         for tgo in game.theater.ground_objects
         if isinstance(tgo, kind)
-        and isinstance(tgo, TheaterGroundObject)
         and not tgo.is_friendly(game.blue.player)
         and not tgo.is_dead
     ]
@@ -212,9 +212,7 @@ def plan_reference_packages(game: Game) -> dict[str, Package]:
     packages["barcap"] = plan_manual(
         game, _home(game), [FlightRequest(FlightType.BARCAP, F15C, 2)]
     )
-    packages["cas"] = plan_manual(
-        game, front, [FlightRequest(FlightType.CAS, AH1W, 2)]
-    )
+    packages["cas"] = plan_manual(game, front, [FlightRequest(FlightType.CAS, AH1W, 2)])
     packages["sead"] = plan_manual(
         game, sams[0], [FlightRequest(FlightType.SEAD, F16, 2)]
     )

@@ -71,7 +71,8 @@ def repository_payloads_only(missing_dir: Path) -> Iterator[None]:
     saved_cache = FlyingType._payload_cache
 
     def reset_caches() -> None:
-        FlyingType._payload_cache = None
+        # An empty cache makes pydcs scan the payload directories again.
+        FlyingType._payload_cache = {}
         for cls in saved_payloads:
             cls.payloads = None
 

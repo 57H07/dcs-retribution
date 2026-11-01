@@ -37,8 +37,7 @@ def run(output_dir: Path) -> None:
             game = generate_reference_game()
             packages = plan_reference_packages(game)
             fingerprints = {
-                name: fingerprint_package(package)
-                for name, package in packages.items()
+                name: fingerprint_package(package) for name, package in packages.items()
             }
 
     output_dir.mkdir(parents=True, exist_ok=True)

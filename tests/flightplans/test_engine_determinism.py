@@ -6,12 +6,16 @@ from dataclasses import replace
 from typing import Any
 from unittest.mock import MagicMock
 
+from dcs.ships import Stennis
+
 from game.armedforces.forcegroup import ForceGroup
 from game.dcs.groundunittype import GroundUnitType
 from game.dcs.shipunittype import ShipUnitType
 
 
-def _force_group(units: list[Any], statics: list[Any], layouts: list[Any]) -> ForceGroup:
+def _force_group(
+    units: list[Any], statics: list[Any], layouts: list[Any]
+) -> ForceGroup:
     return ForceGroup("group", units, statics, [], layouts)
 
 
@@ -23,9 +27,7 @@ def test_ground_unit_type_hashes_by_variant_id() -> None:
 
 
 def test_ship_unit_type_hashes_by_variant_id() -> None:
-    ship = next(iter(ShipUnitType._by_name.values()), None)
-    if ship is None:
-        ship = ShipUnitType.named("CVN-74 John C. Stennis")
+    ship = next(ShipUnitType.for_dcs_type(Stennis))
     assert hash(ship) == hash(ship.variant_id)
 
 

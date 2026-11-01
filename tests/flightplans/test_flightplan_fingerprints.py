@@ -59,9 +59,7 @@ def reference_run(tmp_path_factory: pytest.TempPathFactory) -> ReferenceRun:
         pytest.fail(
             "Reference planning failed:\n" + result.stderr[-4000:], pytrace=False
         )
-    fingerprints = json.loads(
-        (output / FINGERPRINTS_FILE).read_text(encoding="utf-8")
-    )
+    fingerprints = json.loads((output / FINGERPRINTS_FILE).read_text(encoding="utf-8"))
     game = persistency.load_game(str(output / SAVE_FILE))
     assert game is not None
     return ReferenceRun(fingerprints, game)
