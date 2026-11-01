@@ -21,6 +21,8 @@ export function TransferButton(props: {
   cpId: string;
   baseName: string;
   kind: TransferKind;
+  /** Once the transfer is ordered. */
+  onOrdered?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const { kind, baseName } = props;
@@ -49,7 +51,10 @@ export function TransferButton(props: {
         <TransferForm
           cpId={props.cpId}
           kind={kind}
-          onDone={() => setOpen(false)}
+          onDone={() => {
+            setOpen(false);
+            props.onOrdered?.();
+          }}
         />
       )}
     </Modal>

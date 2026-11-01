@@ -8,7 +8,7 @@ automatically at mission generation.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Optional
+from typing import Iterable, Iterator, TYPE_CHECKING, Optional
 
 from game.dcs.beacons import Beacons
 from game.radio.ICLSContainer import ICLSContainer
@@ -32,6 +32,8 @@ ICLS_CHANNEL_RANGE = (1, 20)
 CALLSIGN_LENGTH = 3
 #: UHF and VHF guard: allowed, but worth a warning.
 GUARD_FREQUENCIES_MHZ = (243.0, 121.5)
+FREQUENCY_SLOT = "frequency"
+LINK4_SLOT = "link4"
 
 
 @dataclass(frozen=True)
@@ -68,18 +70,20 @@ def base_radios(cp: ControlPoint) -> BaseRadios:
     )
 
 
-def tacan_channels_in_use(game: Game, exclude: object = None) -> list[TacanChannel]:
-    """Channels reserved by anything other than `exclude` itself.
+def tacan_channels_in_use(
+    game: Game, exclude: object = None, player: Player = Player.BLUE
+) -> list[TacanChannel]:
+    """Channels reserved by anything of this side other than `exclude` itself.
 
     This always includes map beacon channels, even if `exclude`'s own current channel
     happens to share the same value (that's precisely the conflict to flag).
     """
     channels: set[TacanChannel] = set()
-    for package in game.ato_for(Player.BLUE).packages:
+    for package in game.ato_for(player).packages:
         for flight in package.flights:
             if flight is not exclude and flight.tacan is not None:
                 channels.add(flight.tacan)
-    for cp in game.theater.control_points_for(Player.BLUE):
+    for cp in game.theater.control_points_for(player):
         if cp is not exclude and isinstance(cp, TacanContainer):
             if cp.tacan is not None:
                 channels.add(cp.tacan)
@@ -90,35 +94,83 @@ def tacan_channels_in_use(game: Game, exclude: object = None) -> list[TacanChann
     return list(channels)
 
 
+def _frequency_slots(
+    game: Game, player: Player
+) -> Iterator[tuple[object, str, RadioFrequency]]:
+    """Every frequency set on this side: who holds it, in which slot, and its value."""
+    for package in game.ato_for(player).packages:
+        if package.frequency is not None:
+            yield package, FREQUENCY_SLOT, package.frequency
+        for flight in package.flights:
+            if flight.frequency is not None:
+                yield flight, FREQUENCY_SLOT, flight.frequency
+    for cp in game.theater.control_points_for(player):
+        if isinstance(cp, RadioFrequencyContainer) and cp.frequency is not None:
+            yield cp, FREQUENCY_SLOT, cp.frequency
+        if isinstance(cp, Link4Container) and cp.link4 is not None:
+            yield cp, LINK4_SLOT, cp.link4
+
+
+def frequency_warnings(
+    game: Game,
+    player: Player,
+    name: str,
+    frequency: Optional[RadioFrequency],
+    holder: object,
+    slot: str = FREQUENCY_SLOT,
+    shares_net_with: Iterable[object] = (),
+) -> list[str]:
+    """What is allowed but worth checking about this frequency, as Qt flags it.
+
+    A guard frequency, or one that something else already uses. `shares_net_with` lists
+    who is meant to share it: a flight talks on the frequency of its package.
+    """
+    if frequency is None:
+        return []
+    warnings = []
+    if frequency.mhz in GUARD_FREQUENCIES_MHZ:
+        warnings.append(f"{name} is on a guard frequency: check that this is intended.")
+    same_net = list(shares_net_with)
+    for other, other_slot, other_frequency in _frequency_slots(game, player):
+        itself = other is holder and other_slot == slot
+        if other_frequency != frequency or itself:
+            continue
+        if not any(other is partner for partner in same_net):
+            warnings.append(
+                f"{name} is double booked on {frequency}: check that this is intended."
+            )
+            break
+    return warnings
+
+
 def radio_warnings(game: Game, cp: ControlPoint) -> list[str]:
     """What is allowed but worth checking, as the Qt widgets flag it."""
-    settings = base_radios(cp)
-    warnings = [
-        f"{name} is on a guard frequency: check that this is intended."
-        for name, mhz in (
-            ("The base frequency", settings.frequency_mhz),
-            ("Link 4", settings.link4_mhz),
+    player = cp.captured
+    warnings = []
+    if isinstance(cp, RadioFrequencyContainer):
+        warnings += frequency_warnings(
+            game, player, "The base frequency", cp.frequency, cp
         )
-        if mhz in GUARD_FREQUENCIES_MHZ
-    ]
+    if isinstance(cp, Link4Container):
+        warnings += frequency_warnings(game, player, "Link 4", cp.link4, cp, LINK4_SLOT)
     if isinstance(cp, TacanContainer) and cp.tacan in tacan_channels_in_use(game, cp):
         warnings.append(f"TACAN {cp.tacan} is already in use: check this is intended.")
     return warnings
 
 
-def _check_mhz(name: str, mhz: Optional[float], limits: tuple[float, float]) -> None:
+def check_mhz(name: str, mhz: Optional[float], limits: tuple[float, float]) -> None:
     if mhz is not None and not limits[0] <= mhz < limits[1]:
         raise CommandError(
             f"{name} must be from {limits[0]:g} MHz up to {limits[1]:g} MHz."
         )
 
 
-def _check_channel(name: str, channel: Optional[int], limits: tuple[int, int]) -> None:
+def check_channel(name: str, channel: Optional[int], limits: tuple[int, int]) -> None:
     if channel is not None and not limits[0] <= channel <= limits[1]:
         raise CommandError(f"{name} must be from {limits[0]} to {limits[1]}.")
 
 
-def _callsign(name: str, callsign: Optional[str]) -> Optional[str]:
+def clean_callsign(name: str, callsign: Optional[str]) -> Optional[str]:
     if callsign is None or callsign == "":
         return None
     if len(callsign) > CALLSIGN_LENGTH:
@@ -128,7 +180,7 @@ def _callsign(name: str, callsign: Optional[str]) -> Optional[str]:
     return callsign.upper()
 
 
-def _tacan_band(band: Optional[str]) -> TacanBand:
+def tacan_band(band: Optional[str]) -> TacanBand:
     try:
         return TacanBand(band)
     except ValueError:
@@ -161,20 +213,20 @@ def set_base_radios(
     ):
         if value is not None and not supported:
             raise CommandError(f"{cp.name} cannot have {name}.")
-    _check_mhz("The frequency", radios.frequency_mhz, FREQUENCY_MHZ_RANGE)
-    _check_mhz("The Link 4 frequency", radios.link4_mhz, LINK4_MHZ_RANGE)
-    _check_channel("The TACAN channel", radios.tacan_channel, TACAN_CHANNEL_RANGE)
-    _check_channel("The ICLS channel", radios.icls_channel, ICLS_CHANNEL_RANGE)
+    check_mhz("The frequency", radios.frequency_mhz, FREQUENCY_MHZ_RANGE)
+    check_mhz("The Link 4 frequency", radios.link4_mhz, LINK4_MHZ_RANGE)
+    check_channel("The TACAN channel", radios.tacan_channel, TACAN_CHANNEL_RANGE)
+    check_channel("The ICLS channel", radios.icls_channel, ICLS_CHANNEL_RANGE)
     tacan = (
-        TacanChannel(radios.tacan_channel, _tacan_band(radios.tacan_band))
+        TacanChannel(radios.tacan_channel, tacan_band(radios.tacan_band))
         if radios.tacan_channel is not None
         else None
     )
-    tacan_callsign = _callsign("TACAN", radios.tacan_callsign)
-    icls_callsign = _callsign("ICLS", radios.icls_callsign)
+    tacan_callsign = clean_callsign("TACAN", radios.tacan_callsign)
+    icls_callsign = clean_callsign("ICLS", radios.icls_callsign)
 
     if isinstance(cp, RadioFrequencyContainer):
-        cp.frequency = _frequency(radios.frequency_mhz)
+        cp.frequency = to_frequency(radios.frequency_mhz)
     if isinstance(cp, TacanContainer):
         cp.tacan = tacan
         cp.tcn_name = tacan_callsign if tacan is not None else None
@@ -182,9 +234,9 @@ def set_base_radios(
         cp.icls_channel = radios.icls_channel
         cp.icls_name = icls_callsign if radios.icls_channel is not None else None
     if isinstance(cp, Link4Container):
-        cp.link4 = _frequency(radios.link4_mhz)
+        cp.link4 = to_frequency(radios.link4_mhz)
     events.update_control_point(cp)
 
 
-def _frequency(mhz: Optional[float]) -> Optional[RadioFrequency]:
+def to_frequency(mhz: Optional[float]) -> Optional[RadioFrequency]:
     return RadioFrequency(hertz=round(mhz * 10**6)) if mhz is not None else None

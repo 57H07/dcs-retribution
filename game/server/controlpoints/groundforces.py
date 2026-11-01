@@ -227,6 +227,15 @@ class TransferableUnitJs(BaseModel):
         title = "TransferableUnit"
 
 
+class PlannedPackageJs(BaseModel):
+    """The package planned against a convoy: the client opens it in the editor."""
+
+    id: UUID
+
+    class Config:
+        title = "PlannedPackage"
+
+
 class TransportSquadronJs(BaseModel):
     id: UUID
     label: str
