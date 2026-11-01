@@ -18,10 +18,15 @@ from dcs.unittype import FlyingType
 from game import Game
 from game.ato.flight import Flight
 from game.ato.flightroster import FlightRoster
-from game.ato.flightmember import apply_default_player_laser_code
 from game.ato.loadouts import Loadout
 from game.ato.package import Package
 from game.ato.starttype import StartType
+from game.commands.packageflights import (
+    build_flight,
+    default_loadout,
+    new_flight_start_type,
+    new_flight_error,
+)
 from game.squadrons.squadron import Squadron
 from game.theater import ControlPoint, OffMapSpawn
 from qt_ui.uiconstants import EVENT_ICONS
@@ -181,18 +186,7 @@ class QFlightCreator(QDialog):
             return "You must select an aircraft type."
         if squadron is None:
             return "You must select a squadron."
-        if divert is not None and divert.captured != squadron.player:
-            return f"{divert.name} is not owned by your coalition."
-        available = squadron.untasked_aircraft
-        if not available:
-            return f"{squadron} has no aircraft available."
-        if size > available:
-            return f"{squadron} has only {available} aircraft available."
-        if size <= 0:
-            return f"Flight must have at least one aircraft."
-        if self.custom_name_text and "|" in self.custom_name_text:
-            return f"Cannot include | in flight name"
-        return None
+        return new_flight_error(squadron, size, divert, self.custom_name_text)
 
     def create_flight(self) -> None:
         error = self.verify_form()
@@ -207,24 +201,17 @@ class QFlightCreator(QDialog):
         divert = self.divert.currentData()
         roster = self.roster_editor.roster
 
-        flight = Flight(
+        flight = build_flight(
+            self.game,
             self.package,
             squadron,
-            # A bit of a hack to work around the old API. Not actually relevant because
-            # the roster is passed explicitly. Needs a refactor.
-            roster.max_size,
             task,
+            roster,
             self.start_type.currentData(),
             divert,
             custom_name=self.custom_name_text,
-            roster=roster,
+            loadout=self.current_loadout(),
         )
-
-        for member in flight.iter_members():
-            apply_default_player_laser_code(
-                member, self.game.settings, self.game.laser_code_registry
-            )
-            member.loadout = self.current_loadout()
 
         # noinspection PyUnresolvedReferences
         self.created.emit(flight)
@@ -298,17 +285,16 @@ class QFlightCreator(QDialog):
         # https://github.com/dcs-liberation/dcs_liberation/issues/1567
 
         roster = self.roster_editor.roster
-        required_start_type = None
         squadron = self.squadron_selector.currentData()
+        task = self.task_selector.currentData()
+        has_players = roster is not None and roster.player_count > 0
         if squadron:
-            required_start_type = squadron.location.required_aircraft_start_type
-
-        if required_start_type:
-            start_type = required_start_type
+            start_type = new_flight_start_type(
+                self.game.settings, squadron, task, has_players
+            )
         else:
             start_type = self.game.settings.start_type_for(
-                self.task_selector.currentData(),
-                has_players=roster is not None and roster.player_count > 0,
+                task, has_players=has_players
             )
 
         self.start_type.setCurrentText(start_type.value)
@@ -330,13 +316,10 @@ class QFlightCreator(QDialog):
             self.loadout_selector.setDisabled(False)
         for loadout in Loadout.iter_for_aircraft(ac_type):
             self.loadout_selector.addItem(loadout.name, loadout)
-        for loadout in Loadout.default_loadout_names_for(
-            self.task_selector.currentData()
-        ):
-            index = self.loadout_selector.findText(loadout)
-            if index != -1:
-                self.loadout_selector.setCurrentIndex(index)
-                break
+        default = default_loadout(ac_type, self.task_selector.currentData())
+        self.loadout_selector.setCurrentIndex(
+            max(0, self.loadout_selector.findText(default.name))
+        )
 
 
 class LoadoutDelegate(QStyledItemDelegate):

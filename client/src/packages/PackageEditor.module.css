@@ -1,0 +1,213 @@
+/* Package editor (WEB-04.1), after mockups/Package.dc.html; the frame (header, back
+   link, title) is the settings screen's. */
+.subtitle,
+.hint {
+  color: var(--ui-color-text-secondary);
+}
+
+.hint {
+  margin: 0;
+  font-size: var(--ui-font-size-sm);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.state {
+  margin: 0;
+  padding: 20px 24px;
+  color: var(--ui-color-text-secondary);
+}
+
+.tot {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-md);
+}
+
+.totLabel,
+.flightsTitle {
+  color: var(--ui-color-text-secondary);
+  font-family: var(--ui-font-display);
+  font-size: var(--ui-font-size-sm);
+  font-weight: var(--ui-font-weight-semibold);
+  letter-spacing: var(--ui-letter-spacing-display);
+  text-transform: uppercase;
+}
+
+.totInput,
+.nameInput {
+  height: var(--ui-size-control);
+  padding: 0 var(--ui-space-md);
+  background: var(--ui-color-bg-canvas);
+  border: 1px solid var(--ui-color-line-strong);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-color-text-primary);
+  font: inherit;
+}
+
+.totInput {
+  font-family: var(--ui-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.totInput:focus-visible,
+.nameInput:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-shadow-focus);
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.side {
+  flex: 0 0 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  overflow-y: auto;
+  background: var(--ui-color-bg-panel);
+  border-right: 1px solid var(--ui-color-line);
+}
+
+.name {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.flightsHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-md);
+}
+
+.flights {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.times {
+  display: block;
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.warning {
+  color: var(--ui-color-hostile);
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.sectionsHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-md);
+  padding: 0 16px;
+  border-bottom: 1px solid var(--ui-color-line);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  margin: 0;
+}
+
+.facts dt {
+  color: var(--ui-color-text-secondary);
+}
+
+.facts dd {
+  margin: 0;
+}
+
+.slot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: var(--ui-color-bg-panel);
+  border: 1px dashed var(--ui-color-line-strong);
+  border-radius: var(--ui-radius-lg);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.field select {
+  max-width: none;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ui-space-md);
+}
+
+.autoRows {
+  display: grid;
+  grid-template-columns: 130px max-content minmax(0, 1fr);
+  align-items: center;
+  gap: 8px 10px;
+}
+
+.autoRows select {
+  max-width: none;
+}
+
+/* Its cells sit on the grid of the form. */
+.autoRow {
+  display: contents;
+}
+
+.autoCheck {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-sm);
+}

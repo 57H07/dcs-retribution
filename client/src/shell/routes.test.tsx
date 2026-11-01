@@ -15,7 +15,6 @@ describe("web shell routes", () => {
   it.each([
     ["/air-wing", "/qt/dialogs/air-wing"],
     ["/new-game", "/native/new-game"],
-    ["/packages/flight-7", "/qt/edit-package/flight/flight-7"],
   ])(
     "%s opens its Qt screen once and returns to the command view",
     async (path, qtRoute) => {
@@ -52,6 +51,14 @@ describe("web shell routes", () => {
       expect(calls).toHaveLength(0);
     },
   );
+
+  it("shows the web package editor on /packages/:id, without opening Qt", async () => {
+    const calls = recordFetch();
+    const { router, findByText } = renderShell("/packages/pkg-1");
+    expect(await findByText("No campaign loaded.")).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/packages/pkg-1");
+    expect(calls).toHaveLength(0);
+  });
 
   it("shows the web settings screen on /settings, without opening Qt", async () => {
     const calls = recordFetch(200, { pages: [] });

@@ -14,9 +14,13 @@ from PySide6.QtWidgets import (
 
 from game import Game
 from game.ato import FlightType
-from game.commander.missionproposals import ProposedFlight, ProposedMission
-from game.commander.packagefulfiller import PackageFulfiller
-from game.profiling import MultiEventTracer
+from game.commander.missionproposals import ProposedFlight
+from game.commands.packageflights import (
+    AUTO_CREATE_EXCLUDED_WITH_CAS,
+    auto_create_default_count,
+    auto_create_primary_tasks,
+    plan_auto_package,
+)
 from game.theater.player import Player
 from qt_ui.models import PackageModel
 from qt_ui.uiconstants import EVENT_ICONS
@@ -54,9 +58,7 @@ class QAutoCreateDialog(QDialog):
         self.primary_combobox.setFixedWidth(100)
         self.primary_count = _spinbox_template()
         self.primary_type = QComboBox()
-        nr_targets = len(self.package.target.strike_targets)
-        count = max(1, min(4, nr_targets // 2) + nr_targets % 1) if nr_targets else 4
-        self.primary_count.setValue(count)
+        self.primary_count.setValue(auto_create_default_count(self.package.target))
         hbox.addWidget(self.primary_combobox)
         hbox.addWidget(self.primary_count)
         hbox.addWidget(self.primary_type)
@@ -183,22 +185,10 @@ class QAutoCreateDialog(QDialog):
         self.setLayout(self.layout)
 
         self.primary_combobox.currentIndexChanged.connect(self.on_primary_task_changed)
-        primary_tasks = {
-            FlightType.STRIKE,
-            FlightType.OCA_AIRCRAFT,
-            FlightType.OCA_RUNWAY,
-            FlightType.DEAD,
-            FlightType.ANTISHIP,
-            FlightType.BAI,
-            FlightType.CAS,
-            FlightType.ARMED_RECON,
-            FlightType.AIR_ASSAULT,
-        }
-        for mt in self.package.target.mission_types(
-            Player.BLUE if self.is_ownfor else Player.RED
+        for mt in auto_create_primary_tasks(
+            self.package.target, Player.BLUE if self.is_ownfor else Player.RED
         ):
-            if mt in primary_tasks:
-                self.primary_combobox.addItem(mt.value, mt)
+            self.primary_combobox.addItem(mt.value, mt)
         self.primary_combobox.setCurrentIndex(0)
         self._load_aircraft_types()
 
@@ -226,8 +216,9 @@ class QAutoCreateDialog(QDialog):
 
     def on_primary_task_changed(self) -> None:
         disable = self.primary_combobox.currentData() == FlightType.CAS
-        to_disable = [self.escort, self.sead_escort, self.sead]
-        for cb in to_disable:
+        for cb, (task, _, _) in self.checkboxes.items():
+            if task not in AUTO_CREATE_EXCLUDED_WITH_CAS:
+                continue
             if disable:
                 cb.setChecked(False)
             cb.setDisabled(disable)
@@ -251,28 +242,20 @@ class QAutoCreateDialog(QDialog):
                         type, spinner.value(), preferred_type=ac_box.currentData()
                     )
                 )
-        with MultiEventTracer() as tracer:
-            with tracer.trace(f"Auto-plan package"):
-                pm = ProposedMission(self.package.target, pf, asap=True)
-                pff = PackageFulfiller(
-                    self.game.coalition_for(
-                        Player.BLUE if self.is_ownfor else Player.RED
-                    ),
-                    self.game.theater,
-                    self.game.db.flights,
-                    self.game.settings,
-                )
-                now = self.package_model.game_model.sim_controller.current_time_in_sim
-                package = pff.plan_mission(pm, 1, now, tracer, ignore_range=True)
-                if package:
-                    package.set_tot_asap(now)
-                    self.package = package
-                    self.package_model.package = package
-                else:
-                    QMessageBox.warning(
-                        QWidget(),
-                        "Unable to plan package",
-                        "Auto-create package failed due to insufficient aircraft and/or pilots.",
-                    )
-                    return
+        package = plan_auto_package(
+            self.game,
+            self.game.coalition_for(Player.BLUE if self.is_ownfor else Player.RED),
+            self.package.target,
+            pf,
+            self.package_model.game_model.sim_controller.current_time_in_sim,
+        )
+        if package is None:
+            QMessageBox.warning(
+                QWidget(),
+                "Unable to plan package",
+                "Auto-create package failed due to insufficient aircraft and/or pilots.",
+            )
+            return
+        self.package = package
+        self.package_model.package = package
         self.accept()

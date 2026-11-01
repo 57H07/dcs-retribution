@@ -2,7 +2,6 @@ import { Tgo as TgoModel } from "../../api/liberationApi";
 import backend from "../../api/backend";
 import {
   useClearTgoDestinationMutation,
-  useOpenNewTgoPackageDialogMutation,
   useSetTgoDestinationMutation,
 } from "../../api/liberationApi";
 import {
@@ -11,9 +10,12 @@ import {
   setHoveredEmitter,
 } from "../../api/mapSlice";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { useInspectTgo } from "../../maplayers/mapSelection";
+import { useInspectTgo, useNewPackage } from "../../maplayers/mapSelection";
 import SplitLines from "../splitlines/SplitLines";
-import { MovementPath, MovementPathHandle } from "../controlpoints/MovementPath";
+import {
+  MovementPath,
+  MovementPathHandle,
+} from "../controlpoints/MovementPath";
 import { TgoTooltip, useTgoIcon } from "./shared";
 import { LatLng, Marker as LMarker, LatLngLiteral } from "leaflet";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
@@ -42,17 +44,17 @@ function formatLatLng(latLng: LatLng): string {
 function destinationTooltipText(
   tgo: TgoModel,
   destinationish: LatLngLiteral,
-  inRange: boolean
+  inRange: boolean,
 ): string {
   const destination = new LatLng(destinationish.lat, destinationish.lng);
   const distance = metersToNauticalMiles(
-    destination.distanceTo(tgo.position)
+    destination.distanceTo(tgo.position),
   ).toFixed(1);
   if (!inRange) {
     return `Out of range (${distance}nm away)`;
   }
   return `${tgo.name} moving ${distance}nm to ${formatLatLng(
-    destination
+    destination,
   )} next turn`;
 }
 
@@ -88,10 +90,10 @@ function PrimaryMarker(props: PrimaryMarkerProps) {
   const icon = useTgoIcon(props.tgo);
 
   const [hasDestination, setHasDestination] = useState<boolean>(
-    props.tgo.destination != null
+    props.tgo.destination != null,
   );
   const [position, setPosition] = useState<LatLngLiteral>(
-    props.tgo.destination ? props.tgo.destination : props.tgo.position
+    props.tgo.destination ? props.tgo.destination : props.tgo.position,
   );
 
   const setDestination = useCallback((destination: LatLng) => {
@@ -108,14 +110,14 @@ function PrimaryMarker(props: PrimaryMarkerProps) {
   const [cancelTravel] = useClearTgoDestinationMutation();
 
   const inspect = useInspectTgo();
-  const [openNewPackageDialog] = useOpenNewTgoPackageDialogMutation();
+  const newPackage = useNewPackage();
   const dispatch = useAppDispatch();
   // Raised above other icons while this emitter (or its ring) is hovered,
   // matching the static TGO marker's behavior (#750).
   const raised = useAppSelector(
     (state) =>
       selectHighlightEmitters(state) &&
-      selectHoveredEmitter(state) === props.tgo.id
+      selectHoveredEmitter(state) === props.tgo.id,
   );
 
   // Set the tooltip content imperatively against the empty <Tooltip/> rendered
@@ -134,8 +136,8 @@ function PrimaryMarker(props: PrimaryMarkerProps) {
               {`${props.tgo.name} (${props.tgo.control_point_name})`}
               <br />
               <SplitLines items={props.tgo.units} />
-            </>
-          )
+            </>,
+          ),
     );
   });
 
@@ -170,21 +172,23 @@ function PrimaryMarker(props: PrimaryMarkerProps) {
                 resetDestination();
               });
             } else {
-              openNewPackageDialog({ tgoId: props.tgo.id });
+              newPackage("tgo", props.tgo.id);
             }
           },
           mouseover: () =>
-            dispatch(setHoveredEmitter({ id: props.tgo.id, source: "emitter" })),
+            dispatch(
+              setHoveredEmitter({ id: props.tgo.id, source: "emitter" }),
+            ),
           mouseout: () => dispatch(setHoveredEmitter(null)),
           drag: (event) => {
             const dest = event.target.getLatLng() as LatLng;
             backend
               .get(
-                `/tgos/${props.tgo.id}/destination-in-range?lat=${dest.lat}&lng=${dest.lng}`
+                `/tgos/${props.tgo.id}/destination-in-range?lat=${dest.lat}&lng=${dest.lng}`,
               )
               .then((inRange) => {
                 markerRef.current?.setTooltipContent(
-                  destinationTooltipText(props.tgo, dest, inRange.data)
+                  destinationTooltipText(props.tgo, dest, inRange.data),
                 );
               });
             pathRef.current?.setDestination(dest);
@@ -242,11 +246,11 @@ function SecondaryMarker(props: SecondaryMarkerProps) {
   const dispatch = useAppDispatch();
   const icon = useTgoIcon(props.tgo);
   const inspect = useInspectTgo();
-  const [openNewPackageDialog] = useOpenNewTgoPackageDialogMutation();
+  const newPackage = useNewPackage();
   const raised = useAppSelector(
     (state) =>
       selectHighlightEmitters(state) &&
-      selectHoveredEmitter(state) === props.tgo.id
+      selectHoveredEmitter(state) === props.tgo.id,
   );
 
   if (!props.destination) {
@@ -263,7 +267,7 @@ function SecondaryMarker(props: SecondaryMarkerProps) {
           inspect(props.tgo.id);
         },
         contextmenu: () => {
-          openNewPackageDialog({ tgoId: props.tgo.id });
+          newPackage("tgo", props.tgo.id);
         },
         mouseover: () =>
           dispatch(setHoveredEmitter({ id: props.tgo.id, source: "emitter" })),

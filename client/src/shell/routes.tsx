@@ -4,6 +4,7 @@
 import { BaseScreen } from "../bases/BaseScreen";
 import { DebriefScreen } from "../missionresult/DebriefScreen";
 import { WaitingScreen } from "../missionresult/WaitingScreen";
+import { PackageEditor } from "../packages/PackageEditor";
 import { PreferencesScreen } from "../preferences/PreferencesScreen";
 import { ReportsScreen } from "../reports/ReportsScreen";
 import { AboutScreen } from "../secondary/AboutScreen";
@@ -39,11 +40,9 @@ export const ROUTES: RouteObject[] = [
         element: <BaseScreen />,
       },
       {
-        // Packages have no API ID yet (WEB-03): a flight stands for its package.
+        // Package editor (WEB-04.1), by Package.id.
         path: "packages/:id",
-        element: (
-          <QtScreen open={(qt, { id }) => id && qt.editPackageOfFlight(id)} />
-        ),
+        element: <PackageEditor />,
       },
       {
         path: "new-game",

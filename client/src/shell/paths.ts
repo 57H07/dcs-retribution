@@ -14,7 +14,7 @@ export const PATHS = {
   airWing: "/air-wing",
   base: (id: string) => `/bases/${id}`,
   baseTab: (id: string, tab: BaseTabId) => `/bases/${id}/${tab}`,
-  package: (flightId: string) => `/packages/${flightId}`,
+  package: (id: string) => `/packages/${id}`,
   newGame: "/new-game",
   settings: "/settings",
   waiting: "/waiting",

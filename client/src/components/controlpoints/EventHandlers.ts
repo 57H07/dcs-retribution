@@ -1,10 +1,8 @@
 import { ControlPoint } from "../../api/_liberationApi";
-import backend from "../../api/backend";
-import { useInspectControlPoint } from "../../maplayers/mapSelection";
-
-function openNewPackageDialog(controlPoint: ControlPoint) {
-  backend.post(`/qt/create-package/control-point/${controlPoint.id}`);
-}
+import {
+  useInspectControlPoint,
+  useNewPackage,
+} from "../../maplayers/mapSelection";
 
 /**
  * Click: inspector in the web shell, Qt info dialog otherwise (WEB-01.3).
@@ -12,13 +10,14 @@ function openNewPackageDialog(controlPoint: ControlPoint) {
  */
 export const useLocationMarkerEventHandlers = (controlPoint: ControlPoint) => {
   const inspect = useInspectControlPoint();
+  const newPackage = useNewPackage();
   return {
     click: () => {
       inspect(controlPoint.id);
     },
 
     contextmenu: () => {
-      openNewPackageDialog(controlPoint);
+      newPackage("control-point", controlPoint.id);
     },
   };
 };

@@ -1,18 +1,13 @@
 """Planning scenarios replayed on the reference game (W16).
 
-Each scenario creates one blue package through the same engine calls the Qt
-planner makes today, in the same order:
+Each scenario creates one blue package through the engine commands of the web
+editor (WEB-04.1), which the Qt dialogs share:
 
-* ``plan_manual`` mirrors ``QNewPackageDialog`` + ``QFlightCreator.create_flight``
-  + ``QPackageDialog.add_flight``: ``Package(target, auto_asap=True)``, then for
-  each flight ``Flight(...)`` with a ``FlightRoster``, the task's default loadout,
-  ``Package.add_flight``, ``Flight.recreate_flight_plan`` and
-  ``Package.set_tot_asap``; the package is then added to the ATO on save.
-* ``plan_auto`` mirrors ``QAutoCreateDialog.on_create_clicked``:
-  ``PackageFulfiller.plan_mission`` on a ``ProposedMission`` with ``asap=True``.
+* ``plan_manual``: ``create_package``, then ``add_flight`` for each flight.
+* ``plan_auto``: ``create_package``, then ``auto_create``.
 
-The future web commands (WEB-04.1 package, WEB-04.2 flight, WEB-04.3 loadout)
-must reproduce exactly these results; see ``README.md``.
+The references were produced by the Qt call sequence before those commands
+existed (see ``README.md``). They must stay as they are.
 
 Targets are chosen by structure (closest enemy SAM, the only front line, ...)
 rather than by generated name, and ties are broken by name, so the selection
@@ -27,12 +22,10 @@ from typing import Callable, Iterable, TypeVar
 from dcs.mapping import Point
 
 from game import Game
-from game.ato import Flight, FlightType, Package
-from game.ato.flightroster import FlightRoster
-from game.ato.loadouts import Loadout
-from game.commander.missionproposals import ProposedFlight, ProposedMission
-from game.commander.packagefulfiller import PackageFulfiller
-from game.profiling import MultiEventTracer
+from game.ato import FlightType, Package
+from game.commander.missionproposals import ProposedFlight
+from game.commands.packageflights import add_flight, auto_create
+from game.commands.packages import create_package
 from game.squadrons import Squadron
 from game.squadrons.csarplacement import find_downed_pilot_position
 from game.squadrons.downedpilot import DownedPilot
@@ -67,46 +60,20 @@ def _squadron(game: Game, aircraft: str) -> Squadron:
     raise KeyError(f"No blue squadron flies {aircraft}")
 
 
-def _default_loadout(flight: Flight) -> Loadout:
-    """The loadout ``QFlightCreator`` preselects for the flight's task."""
-    loadouts = {
-        loadout.name: loadout for loadout in Loadout.iter_for_aircraft(flight.unit_type)
-    }
-    for name in Loadout.default_loadout_names_for(flight.flight_type):
-        if name in loadouts:
-            return loadouts[name]
-    if loadouts:
-        return next(iter(loadouts.values()))
-    return Loadout.empty_loadout()
-
-
 def plan_manual(
     game: Game, target: MissionTarget, requests: Iterable[FlightRequest]
 ) -> Package:
-    package = Package(target, game.db.flights, auto_asap=True)
     now = game.conditions.start_time
+    package = create_package(game, target, now)
     for request in requests:
-        squadron = _squadron(game, request.aircraft)
-        roster = FlightRoster(squadron, initial_size=request.count)
-        start_type = squadron.location.required_aircraft_start_type
-        if start_type is None:
-            start_type = game.settings.start_type_for(request.task, has_players=False)
-        flight = Flight(
+        add_flight(
+            game,
             package,
-            squadron,
-            roster.max_size,
             request.task,
-            start_type,
-            divert=None,
-            roster=roster,
+            _squadron(game, request.aircraft),
+            request.count,
+            now,
         )
-        loadout = _default_loadout(flight)
-        for member in flight.iter_members():
-            member.loadout = loadout
-        package.add_flight(flight)
-        flight.recreate_flight_plan()
-        package.set_tot_asap(now)
-    game.blue.ato.add_package(package)
     return package
 
 
@@ -114,22 +81,7 @@ def plan_auto(
     game: Game, target: MissionTarget, flights: Iterable[ProposedFlight]
 ) -> Package:
     now = game.conditions.start_time
-    fulfiller = PackageFulfiller(
-        game.blue, game.theater, game.db.flights, game.settings
-    )
-    with MultiEventTracer() as tracer:
-        package = fulfiller.plan_mission(
-            ProposedMission(target, list(flights), asap=True),
-            1,
-            now,
-            tracer,
-            ignore_range=True,
-        )
-    if package is None:
-        raise AssertionError(f"Auto-create failed for {target.name}")
-    package.set_tot_asap(now)
-    game.blue.ato.add_package(package)
-    return package
+    return auto_create(game, create_package(game, target, now), list(flights), now)
 
 
 def _closest(

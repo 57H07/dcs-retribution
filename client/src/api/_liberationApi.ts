@@ -341,6 +341,9 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.newPackageJs,
       }),
     }),
+    getPackage: build.query<GetPackageApiResponse, GetPackageApiArg>({
+      query: (queryArg) => ({ url: `/packages/${queryArg.packageId}` }),
+    }),
     deletePackage: build.mutation<
       DeletePackageApiResponse,
       DeletePackageApiArg
@@ -348,6 +351,80 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/packages/${queryArg.packageId}`,
         method: "DELETE",
+      }),
+    }),
+    renamePackage: build.mutation<
+      RenamePackageApiResponse,
+      RenamePackageApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/name`,
+        method: "PUT",
+        body: queryArg.packageNameJs,
+      }),
+    }),
+    setPackageTot: build.mutation<
+      SetPackageTotApiResponse,
+      SetPackageTotApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/tot`,
+        method: "PUT",
+        body: queryArg.packageTotJs,
+      }),
+    }),
+    setPackageTotEarliest: build.mutation<
+      SetPackageTotEarliestApiResponse,
+      SetPackageTotEarliestApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/tot/earliest`,
+        method: "POST",
+      }),
+    }),
+    getFlightOptions: build.query<
+      GetFlightOptionsApiResponse,
+      GetFlightOptionsApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flight-options`,
+      }),
+    }),
+    addPackageFlight: build.mutation<
+      AddPackageFlightApiResponse,
+      AddPackageFlightApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights`,
+        method: "POST",
+        body: queryArg.newFlightJs,
+      }),
+    }),
+    removePackageFlight: build.mutation<
+      RemovePackageFlightApiResponse,
+      RemovePackageFlightApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}`,
+        method: "DELETE",
+      }),
+    }),
+    getAutoCreateOptions: build.query<
+      GetAutoCreateOptionsApiResponse,
+      GetAutoCreateOptionsApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/auto-create`,
+      }),
+    }),
+    autoCreatePackage: build.mutation<
+      AutoCreatePackageApiResponse,
+      AutoCreatePackageApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/auto-create`,
+        method: "POST",
+        body: queryArg.autoCreateRequestJs,
       }),
     }),
     getInstallPreferences: build.query<
@@ -803,14 +880,64 @@ export type ListPackagesApiResponse =
   /** status 200 Successful Response */ Package[];
 export type ListPackagesApiArg = void;
 export type CreatePackageApiResponse =
-  /** status 204 Successful Response */ void;
+  /** status 201 Successful Response */ PackageDetail;
 export type CreatePackageApiArg = {
   newPackageJs: NewPackage;
+};
+export type GetPackageApiResponse =
+  /** status 200 Successful Response */ PackageDetail;
+export type GetPackageApiArg = {
+  packageId: string;
 };
 export type DeletePackageApiResponse =
   /** status 204 Successful Response */ void;
 export type DeletePackageApiArg = {
   packageId: string;
+};
+export type RenamePackageApiResponse =
+  /** status 200 Successful Response */ PackageDetail;
+export type RenamePackageApiArg = {
+  packageId: string;
+  packageNameJs: PackageName;
+};
+export type SetPackageTotApiResponse =
+  /** status 200 Successful Response */ PackageDetail;
+export type SetPackageTotApiArg = {
+  packageId: string;
+  packageTotJs: PackageTot;
+};
+export type SetPackageTotEarliestApiResponse =
+  /** status 200 Successful Response */ PackageDetail;
+export type SetPackageTotEarliestApiArg = {
+  packageId: string;
+};
+export type GetFlightOptionsApiResponse =
+  /** status 200 Successful Response */ FlightOptions;
+export type GetFlightOptionsApiArg = {
+  packageId: string;
+};
+export type AddPackageFlightApiResponse =
+  /** status 201 Successful Response */ PackageDetail;
+export type AddPackageFlightApiArg = {
+  packageId: string;
+  newFlightJs: NewFlight;
+};
+export type RemovePackageFlightApiResponse =
+  /** status 200 Successful Response */ PackageDetail;
+export type RemovePackageFlightApiArg = {
+  packageId: string;
+  flightId: string;
+};
+export type GetAutoCreateOptionsApiResponse =
+  /** status 200 Successful Response */ AutoCreateOptions;
+export type GetAutoCreateOptionsApiArg = {
+  packageId: string;
+};
+export type AutoCreatePackageApiResponse =
+  /** status 200 Successful Response */ PackageDetail;
+export type AutoCreatePackageApiArg = {
+  packageId: string;
+  autoCreateRequestJs: AutoCreateRequest;
 };
 export type GetInstallPreferencesApiResponse =
   /** status 200 Successful Response */ InstallPreferencesState;
@@ -1469,6 +1596,36 @@ export type Package = {
   flights: PackageFlight[];
   missing_pilots: number;
 };
+export type PackageEditorFlight = {
+  id: string;
+  task: string;
+  aircraft: string;
+  count: number;
+  clients: number;
+  missing_pilots: number;
+  squadron: string;
+  departure: string;
+  custom_name?: string;
+  start_type: string;
+  startup: string;
+  takeoff: string;
+  cancelable: boolean;
+};
+export type PackageDetail = {
+  id: string;
+  blue: boolean;
+  task?: string;
+  description: string;
+  custom_name?: string;
+  target: string;
+  tot?: string;
+  auto_asap: boolean;
+  tot_locked: boolean;
+  can_auto_create: boolean;
+  closest_base?: string;
+  closest_base_distance_nm?: number;
+  flights: PackageEditorFlight[];
+};
 export type PackageTargetKind =
   | "control-point"
   | "tgo"
@@ -1477,6 +1634,64 @@ export type PackageTargetKind =
 export type NewPackage = {
   target_kind: PackageTargetKind;
   target_id: string;
+};
+export type PackageName = {
+  name: string;
+};
+export type PackageTot = {
+  tot: string;
+};
+export type FlightSquadronOption = {
+  id: string;
+  name: string;
+  base: string;
+  available: number;
+  max_size: number;
+  required_start_type?: string;
+};
+export type FlightAircraftOption = {
+  id: string;
+  name: string;
+  squadrons: FlightSquadronOption[];
+};
+export type FlightTaskOption = {
+  task: string;
+  aircraft: FlightAircraftOption[];
+};
+export type FlightOptions = {
+  tasks: FlightTaskOption[];
+  start_types: string[];
+};
+export type StartType = "Cold" | "Warm" | "Runway" | "In Flight";
+export type NewFlight = {
+  task: string;
+  squadron_id: string;
+  size: number;
+  start_type?: StartType | null;
+};
+export type AutoCreateAircraft = {
+  id: string;
+  name: string;
+};
+export type AutoCreateTask = {
+  task: string;
+  default_count: number;
+  aircraft: AutoCreateAircraft[];
+};
+export type AutoCreateOptions = {
+  primary: AutoCreateTask[];
+  support: AutoCreateTask[];
+  excluded_with_cas: string[];
+  min_count: number;
+  max_count: number;
+};
+export type AutoCreateFlight = {
+  task: string;
+  count: number;
+  aircraft?: string | null;
+};
+export type AutoCreateRequest = {
+  flights: AutoCreateFlight[];
 };
 export type InstallPreferences = {
   saved_game_dir: string;
@@ -1706,7 +1921,16 @@ export const {
   useGetNavmeshQuery,
   useListPackagesQuery,
   useCreatePackageMutation,
+  useGetPackageQuery,
   useDeletePackageMutation,
+  useRenamePackageMutation,
+  useSetPackageTotMutation,
+  useSetPackageTotEarliestMutation,
+  useGetFlightOptionsQuery,
+  useAddPackageFlightMutation,
+  useRemovePackageFlightMutation,
+  useGetAutoCreateOptionsQuery,
+  useAutoCreatePackageMutation,
   useGetInstallPreferencesQuery,
   useSetInstallPreferencesMutation,
   useOpenNewFrontLinePackageDialogMutation,

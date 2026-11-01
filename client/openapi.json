@@ -1904,8 +1904,8 @@
         }
       },
       "post": {
-        "summary": "Create Package",
-        "description": "Opens the package editor on a target (the Qt dialog until WEB-04.1).\n\nOnly queues the dialog onto the Qt main thread: the package joins the ATO when\nthe player saves it, and its flights reach the event stream then.",
+        "summary": "New Package",
+        "description": "Plans an empty package against a target, for the package editor (WEB-04.1).",
         "operationId": "create_package",
         "requestBody": {
           "content": {
@@ -1918,8 +1918,15 @@
           "required": true
         },
         "responses": {
-          "204": {
-            "description": "Successful Response"
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackageDetailJs"
+                }
+              }
+            }
           },
           "409": {
             "description": "No campaign is loaded, the target is gone or cannot be planned against.",
@@ -1945,6 +1952,54 @@
       }
     },
     "/packages/{package_id}": {
+      "get": {
+        "summary": "Get Package",
+        "operationId": "get_package",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackageDetailJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded, or no such package.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "delete": {
         "summary": "Remove Package",
         "description": "Cancels a package of either ATO, or aborts its flights already under way.\n\nDeleted and aborted flights are published on the event stream. 404 when no\npackage has this id.",
@@ -1967,6 +2022,460 @@
           },
           "409": {
             "description": "No campaign is loaded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/name": {
+      "put": {
+        "summary": "Put Package Name",
+        "operationId": "rename_package",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PackageNameJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackageDetailJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded, or no such package.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/tot": {
+      "put": {
+        "summary": "Put Package Tot",
+        "description": "Sets the time over target, which ends the ASAP mode of the package.",
+        "operationId": "set_package_tot",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PackageTotJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackageDetailJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Flights of the package have started.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/tot/earliest": {
+      "post": {
+        "summary": "Post Package Tot Earliest",
+        "description": "Earliest TOT: the package flies ASAP, now and when its flights change.",
+        "operationId": "set_package_tot_earliest",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackageDetailJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Flights of the package have started.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flight-options": {
+      "get": {
+        "summary": "Get Flight Options",
+        "description": "What the Add flight form offers for this package.",
+        "operationId": "get_flight_options",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightOptionsJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded, or no such package.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights": {
+      "post": {
+        "summary": "Post Package Flight",
+        "operationId": "add_package_flight",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewFlightJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackageDetailJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The flight cannot be created or planned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}": {
+      "delete": {
+        "summary": "Delete Package Flight",
+        "description": "Removes a flight of the package, or aborts it if it is under way.",
+        "operationId": "remove_package_flight",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackageDetailJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Only escort flights would remain.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/auto-create": {
+      "get": {
+        "summary": "Get Auto Create Options",
+        "description": "What the Auto-create form offers for this package.",
+        "operationId": "get_auto_create_options",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutoCreateOptionsJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded, or no such package.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Post Auto Create",
+        "description": "Fills an empty package through the auto-planner; it keeps its id.",
+        "operationId": "auto_create_package",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutoCreateRequestJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackageDetailJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The package has flights, or there are not enough aircraft or pilots.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2365,7 +2874,7 @@
     "/qt/edit-package/flight/{flight_id}": {
       "post": {
         "summary": "Edit Package Of Flight",
-        "description": "Opens the Qt package editor of the package flying this flight.\n\nPackages have no ID in the API yet (WEB-03 adds them): a flight stands for its\npackage.",
+        "description": "Opens the Qt package editor of the package flying this flight.\n\nWhat the flight tabs of the web package editor offer until WEB-04.2 to 04.5 fill\nthem.",
         "operationId": "open_edit_package_dialog",
         "parameters": [
           {
@@ -3527,6 +4036,138 @@
         ],
         "title": "AttributionJs"
       },
+      "AutoCreateAircraftJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "AutoCreateAircraft"
+      },
+      "AutoCreateFlightJs": {
+        "properties": {
+          "task": {
+            "type": "string",
+            "title": "Task"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "aircraft": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aircraft"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task",
+          "count"
+        ],
+        "title": "AutoCreateFlight"
+      },
+      "AutoCreateOptionsJs": {
+        "properties": {
+          "primary": {
+            "items": {
+              "$ref": "#/components/schemas/AutoCreateTaskJs"
+            },
+            "type": "array",
+            "title": "Primary"
+          },
+          "support": {
+            "items": {
+              "$ref": "#/components/schemas/AutoCreateTaskJs"
+            },
+            "type": "array",
+            "title": "Support"
+          },
+          "excluded_with_cas": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Excluded With Cas"
+          },
+          "min_count": {
+            "type": "integer",
+            "title": "Min Count"
+          },
+          "max_count": {
+            "type": "integer",
+            "title": "Max Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "primary",
+          "support",
+          "excluded_with_cas",
+          "min_count",
+          "max_count"
+        ],
+        "title": "AutoCreateOptions",
+        "description": "The form of `QAutoCreateDialog`: one main flight, then optional ones."
+      },
+      "AutoCreateRequestJs": {
+        "properties": {
+          "flights": {
+            "items": {
+              "$ref": "#/components/schemas/AutoCreateFlightJs"
+            },
+            "type": "array",
+            "title": "Flights"
+          }
+        },
+        "type": "object",
+        "required": [
+          "flights"
+        ],
+        "title": "AutoCreateRequest"
+      },
+      "AutoCreateTaskJs": {
+        "properties": {
+          "task": {
+            "type": "string",
+            "title": "Task"
+          },
+          "default_count": {
+            "type": "integer",
+            "title": "Default Count"
+          },
+          "aircraft": {
+            "items": {
+              "$ref": "#/components/schemas/AutoCreateAircraftJs"
+            },
+            "type": "array",
+            "title": "Aircraft"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task",
+          "default_count",
+          "aircraft"
+        ],
+        "title": "AutoCreateTask"
+      },
       "AwardJs": {
         "properties": {
           "name": {
@@ -4225,6 +4866,32 @@
         ],
         "title": "FixedTots"
       },
+      "FlightAircraftOptionJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "squadrons": {
+            "items": {
+              "$ref": "#/components/schemas/FlightSquadronOptionJs"
+            },
+            "type": "array",
+            "title": "Squadrons"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "squadrons"
+        ],
+        "title": "FlightAircraftOption"
+      },
       "FlightJs": {
         "properties": {
           "id": {
@@ -4258,6 +4925,89 @@
           "sidc"
         ],
         "title": "Flight"
+      },
+      "FlightOptionsJs": {
+        "properties": {
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/FlightTaskOptionJs"
+            },
+            "type": "array",
+            "title": "Tasks"
+          },
+          "start_types": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Start Types"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tasks",
+          "start_types"
+        ],
+        "title": "FlightOptions"
+      },
+      "FlightSquadronOptionJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "base": {
+            "type": "string",
+            "title": "Base"
+          },
+          "available": {
+            "type": "integer",
+            "title": "Available"
+          },
+          "max_size": {
+            "type": "integer",
+            "title": "Max Size"
+          },
+          "required_start_type": {
+            "title": "Required Start Type",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "base",
+          "available",
+          "max_size"
+        ],
+        "title": "FlightSquadronOption"
+      },
+      "FlightTaskOptionJs": {
+        "properties": {
+          "task": {
+            "type": "string",
+            "title": "Task"
+          },
+          "aircraft": {
+            "items": {
+              "$ref": "#/components/schemas/FlightAircraftOptionJs"
+            },
+            "type": "array",
+            "title": "Aircraft"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task",
+          "aircraft"
+        ],
+        "title": "FlightTaskOption"
       },
       "FlightWaypointJs": {
         "properties": {
@@ -5352,6 +6102,40 @@
         ],
         "title": "NavMeshes"
       },
+      "NewFlightJs": {
+        "properties": {
+          "task": {
+            "type": "string",
+            "title": "Task"
+          },
+          "squadron_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Squadron Id"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          },
+          "start_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StartType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "task",
+          "squadron_id",
+          "size"
+        ],
+        "title": "NewFlight"
+      },
       "NewPackageJs": {
         "properties": {
           "target_kind": {
@@ -5429,6 +6213,155 @@
         ],
         "title": "OfflineBasemapImage",
         "description": "Precomputed offline basemap image of a heavy theatre (GFX-04.2).\n\nServed by GET /map-zones/offline-basemap, drawn between these corners."
+      },
+      "PackageDetailJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "blue": {
+            "type": "boolean",
+            "title": "Blue"
+          },
+          "task": {
+            "title": "Task",
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "custom_name": {
+            "title": "Custom Name",
+            "type": "string"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "tot": {
+            "title": "Tot",
+            "type": "string",
+            "format": "date-time"
+          },
+          "auto_asap": {
+            "type": "boolean",
+            "title": "Auto Asap"
+          },
+          "tot_locked": {
+            "type": "boolean",
+            "title": "Tot Locked"
+          },
+          "can_auto_create": {
+            "type": "boolean",
+            "title": "Can Auto Create"
+          },
+          "closest_base": {
+            "title": "Closest Base",
+            "type": "string"
+          },
+          "closest_base_distance_nm": {
+            "title": "Closest Base Distance Nm",
+            "type": "integer"
+          },
+          "flights": {
+            "items": {
+              "$ref": "#/components/schemas/PackageEditorFlightJs"
+            },
+            "type": "array",
+            "title": "Flights"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "blue",
+          "description",
+          "target",
+          "auto_asap",
+          "tot_locked",
+          "can_auto_create",
+          "flights"
+        ],
+        "title": "PackageDetail",
+        "description": "What the package editor shows (WEB-04.1)."
+      },
+      "PackageEditorFlightJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "task": {
+            "type": "string",
+            "title": "Task"
+          },
+          "aircraft": {
+            "type": "string",
+            "title": "Aircraft"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "clients": {
+            "type": "integer",
+            "title": "Clients"
+          },
+          "missing_pilots": {
+            "type": "integer",
+            "title": "Missing Pilots"
+          },
+          "squadron": {
+            "type": "string",
+            "title": "Squadron"
+          },
+          "departure": {
+            "type": "string",
+            "title": "Departure"
+          },
+          "custom_name": {
+            "title": "Custom Name",
+            "type": "string"
+          },
+          "start_type": {
+            "type": "string",
+            "title": "Start Type"
+          },
+          "startup": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Startup"
+          },
+          "takeoff": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Takeoff"
+          },
+          "cancelable": {
+            "type": "boolean",
+            "title": "Cancelable"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "task",
+          "aircraft",
+          "count",
+          "clients",
+          "missing_pilots",
+          "squadron",
+          "departure",
+          "start_type",
+          "startup",
+          "takeoff",
+          "cancelable"
+        ],
+        "title": "PackageEditorFlight"
       },
       "PackageFlightJs": {
         "properties": {
@@ -5543,6 +6476,19 @@
         ],
         "title": "Package"
       },
+      "PackageNameJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "PackageName"
+      },
       "PackageResultJs": {
         "properties": {
           "task": {
@@ -5597,6 +6543,21 @@
           "downed-pilot"
         ],
         "title": "PackageTargetKind"
+      },
+      "PackageTotJs": {
+        "properties": {
+          "tot": {
+            "type": "string",
+            "format": "time",
+            "title": "Tot"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tot"
+        ],
+        "title": "PackageTot",
+        "description": "A time of day: the date is the one of the current TOT."
       },
       "PilotLineJs": {
         "properties": {
@@ -6086,6 +7047,17 @@
           "label"
         ],
         "title": "SquadronPreset"
+      },
+      "StartType": {
+        "type": "string",
+        "enum": [
+          "Cold",
+          "Warm",
+          "Runway",
+          "In Flight"
+        ],
+        "title": "StartType",
+        "description": "The start type for a Flight.\n\nThis is distinct from dcs.mission.StartType because we need a fourth state:\nIN_FLIGHT."
       },
       "StatsJs": {
         "properties": {

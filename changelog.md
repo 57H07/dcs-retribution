@@ -1,6 +1,7 @@
 # Retribution v1.6.0
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 * **[UX]** Web base screen: aircraft orders per squadron (-/+, unit cost, owned/max, pending deliveries) with an order summary (total, budget and parking after delivery), cancelling pending orders, and creating a squadron at the base. The server enforces the same budget, parking and squadron size limits as the Qt base menu, which now uses the same rules (WEB-02.2).
 * **[UI] The web interface is now on by default (W10).** The full-window web interface replaces the Qt main window at the next start. To go back to the Qt interface, turn off "Web interface" in Preferences and restart, or start Retribution with `RETRIBUTION_WEB_UI=0`. A preferences file that already says `"web_ui": false` keeps the Qt interface. (WEB-05.2)
 * **[UI]** Web after-action report (`/debrief`, the "Last debriefing" menu): verdict, air kills and ground units destroyed (friendly : enemy), pilots rescued, prisoners and still down, next-turn budget, the result of each package, the event log and the casualty lists of both sides. The waiting screen opens it when the mission ends; "Accept results" applies them exactly as the Qt path does (same `accept_results`), then the report shows what they decided (prisoners, budget, the engine's timestamped log) until "Continue". The report is built by `game/debriefingreport.py`, which the Qt debriefing window now shares for its casualty lists. (WEB-05.2)
@@ -151,6 +152,7 @@
 # Retribution v1.5.0
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 * **[Campaigns]** Ability to define invisible FOBs
 * **[Campaigns]** Ability to define influence zones for Control Points
 * **[Plugins]** Improvements to AI support for EW Script 2.0
@@ -211,6 +213,7 @@
 # Retribution v1.4.0
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 * **[Payload Editor]** Ability to configure liveries on flight/flight-member level
 * **[Factions]** Support for definitions in yml/yaml format
 * **[Campaigns/Factions]** Support for inline recommended faction in campaign's yaml file
@@ -288,6 +291,7 @@
 #### Note: Re-save your missions in DCS' Mission Editor to avoid possible crashes due to datalink (usually the case when F-16C blk50s are used) when hosting missions on a dedicated server.
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 * **[Engine]** Support for DCS v2.9.3.51704
 * **[Package Planning]** Option to "Auto-Create" package
 * **[Modding]** Custom weapons injection system (definition in aircraft's yaml file)
@@ -362,6 +366,7 @@
 # Retribution v1.2.0
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 * **[Preset Groups]** Add SA-2 with ZSU-23/57
 * **[Campaign Design]** Ability to define almost all possible settings in the campaign's yaml file.
 * **[Campaign Design]** Ability to add roadbases and/or ground spawns to campaigns.
@@ -427,6 +432,7 @@
 # Retribution v1.1.1  (hotfix)
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 * **[Modding]** Support for IDF Mod Project F-16I Sufa & F-16D v3.6 mod
 * **[Modding]** Support for JAS-39 Gripen v1.8.5-beta mod
 
@@ -439,6 +445,7 @@
 # Retribution v1.1.0
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 * **[Mission Generation]** Given a CAS flight was planned, delay ground force attack until first CAS flight is on station
 * **[Mission Generation]** Add option to switch ATFLIR to LITENING automatically for ground based F/A-18C flights
 * **[Mission Generation]** Add option to configure OPFOR autoplanner aggressiveness and have the AI take risks and plan missions against defended targets
@@ -490,6 +497,7 @@
 # Retribution v1.0.0
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 * **[Engine]** Support for DCS v2.8.1.34437.
 * **[Briefing]** Add tanker info to mission briefing
 * **[Campaign]** Add 5 new campaigns by Oscar Juliet from WRL
@@ -529,6 +537,7 @@ BAI/ANTISHIP/DEAD/STRIKE/BARCAP/CAS/OCA/AIR-ASSAULT (main) missions
 
 # Liberation:
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 
 * **[Data]** Added support for the ARA Veinticinco de Mayo.
 * **[Data]** Changed display name of the AI-only F-15E Strike Eagle for clarity.
@@ -568,6 +577,7 @@ BAI/ANTISHIP/DEAD/STRIKE/BARCAP/CAS/OCA/AIR-ASSAULT (main) missions
 Saves from 8.0.0 are compatible with 8.1.0
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 
 * **[Engine]** Support for DCS 2.8.6.41363, including F-15E support.
 * **[UI]** Flight loadout/properties tab is now scrollable.
@@ -582,6 +592,7 @@ Saves from 8.0.0 are compatible with 8.1.0
 Saves from 7.x are not compatible with 8.0.
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 
 * **[Engine]** Support for DCS 2.8.6.41066, including the new Sinai map.
 * **[UI]** Limited size of overfull airbase display and added scrollbar.
@@ -600,6 +611,7 @@ Saves from 7.x are not compatible with 8.0.
 Saves from 7.0.0 are compatible with 7.1.0
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 
 * **[Factions]** Replaced Patriot STRs "EWRs" with AN/FPS-117 for blue factions 1980 or newer.
 * **[Mission Generation]** Added option to prevent scud and V2 sites from firing at the start of the mission.
@@ -617,6 +629,7 @@ Saves from 7.0.0 are compatible with 7.1.0
 Saves from 6.x are not compatible with 7.0.
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 
 * **[Engine]** Support for DCS 2.8.3.37556.
 * **[Engine]** Saved games are now a zip file of save assets for easier bug reporting. The new extension is .liberation.zip. Drag and drop that file into bug reports.
@@ -674,6 +687,7 @@ Saves from 6.x are not compatible with 7.0.
 Saves from 6.0.0 are compatible with 6.1.0
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 
 * **[Factions]** Defaulted bluefor modern to use Georgian and Ukrainian liveries for Russian aircraft.
 * **[Factions]** Added Peru.
@@ -690,6 +704,7 @@ Saves from 6.0.0 are compatible with 6.1.0
 Saves from 5.x are not compatible with 6.0.
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 
 * **[Engine]** Support for DCS 2.8.0.33006.
 * **[Factions]** Updated the Faction file structure. Older custom faction files will not work correctly and have to be updated to the new structure.
@@ -743,6 +758,7 @@ Saves from 5.x are not compatible with 6.0.
 Saves from 5.1.0 are compatible with 5.2.0
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 
 * **[Engine]** Support for DCS 2.7.11.21408, including the new Apache AH-64D and the Syria map extension
 * **[Mission Generation]** Improved FARP Helipad handling and creation (now includes windsocks)
@@ -770,6 +786,7 @@ Saves from 5.1.0 are compatible with 5.2.0
 Saves from 5.0.0 are compatible with 5.1.0
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 
 * **[Engine]** Support for DCS 2.7.9.17830 and newer, including the HTS and ECM pod.
 * **[Campaign]** Add option to manually add and remove squadrons and different aircraft type in the new game wizard / air wing configuration dialog.
@@ -794,6 +811,7 @@ Saves from 5.0.0 are compatible with 5.1.0
 Saves from 4.x are not compatible with 5.0.
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 
 * **[Campaign]** Weather! Theaters now experience weather that is more realistic for the region and its current season. For example, Persian Gulf will have very hot, sunny summers and Marianas will experience lots of rain during fall. These changes affect pressure, temperature, clouds and precipitation. Additionally, temperature will drop during the night, by an amount that is somewhat realistic for the region.
 * **[Campaign]** Weapon data such as fallbacks and introduction years is now moddable. Due to the new architecture to support this, the old data was not automatically migrated.
@@ -852,6 +870,7 @@ Saves from 4.1.0 are compatible with 4.1.1.
 Saves from 4.0.0 are compatible with 4.1.0.
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 
 * **[Campaign]** Air defense sites now generate a fixed number of launchers per type.
 * **[Campaign]** Added support for Mariana Islands map.
@@ -897,6 +916,7 @@ Saves from 4.0.0 are compatible with 4.1.0.
 Saves from 3.x are not compatible with 4.0.
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 
 * **[Engine]** Support for DCS 2.7.2.7910.1 and newer, including Cyprus, F-16 JDAMs, and the Hind.
 * **[Campaign]** Squadrons now (optionally, off by default) have a maximum size and killed pilots replenish at a limited rate.
@@ -945,6 +965,7 @@ Saves from 3.x are not compatible with 4.0.
 Saves from 2.5 are not compatible with 3.0.
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 
 * **[Campaign]** Ground units can now be transferred by road, airlift, and cargo ship. See https://github.com/dcs-liberation/dcs_liberation/wiki/Unit-Transfers for more information.
 * **[Campaign]** Ground units can no longer be sold. To move units to a new location, transfer them.
@@ -999,6 +1020,7 @@ Saves from 2.5 are not compatible with 3.0.
 # 2.5.1
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 
 * **[UI]** Engagement ranges are now displayed by default.
 * **[UI]** Engagement range display generalized to work for all patrolling flight plans (BARCAP, TARCAP, and CAS).
@@ -1014,6 +1036,7 @@ Saves from 2.5 are not compatible with 3.0.
 Saves from 2.4 are not compatible with 2.5.
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 
 * **[Engine]** DCS 2.7 Support
 * **[UI]** Improved FOB menu, added a custom banner, and do not display aircraft recruitment menu
@@ -1047,6 +1070,7 @@ Saves from 2.4 are not compatible with 2.5.
 # 2.4.3
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 
 * **[New Game Wizard]** Added the possibility to setup custom start date
 
@@ -1058,6 +1082,7 @@ Saves from 2.4 are not compatible with 2.5.
 # 2.4.2
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 
 * **[Factions]** Introduction dates and fallback weapons added for US, Russian, UK, and French weapons. Huge thanks to @TheCandianVendingMachine for the massive amount of data entry!
 * **[Campaigns]** Added 1995 start dates.
@@ -1089,6 +1114,7 @@ Saves from 2.3 are not compatible with 2.4.
 * Rebalanced economy to keep opfor competitive over the course of the game.
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 
 * **[Flight Planner]** Air-to-air and SEAD escorts will no longer be automatically planned for packages that are not in range of threats.
 * **[Flight Planner]** Non-custom flight plans will now navigate around threat areas en route to the target area when practical.
@@ -1163,6 +1189,7 @@ Saves from 2.3 are not compatible with 2.4.
 # 2.3.3
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 * **[Campaigns]** Reworked Golan Heights campaign on Syria, (Added FOB and preset locations for SAMS)
 * **[Campaigns]** Added a lite version of the Golan Heights campaign
 * **[Campaigns]** Reworked Syrian Civil War campaign (Added FOB and preset locations for SAMS)
@@ -1197,6 +1224,7 @@ Saves from 2.3 are not compatible with 2.4.
 # 2.3.2
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 * **[Units]** Support for newly added BTR-82A, T-72B3
 * **[Units]** Added ZSU-57 AAA sites
 * **[Culling]** BARCAP missions no longer create culling exclusion zones.
@@ -1213,6 +1241,7 @@ Saves from 2.3 are not compatible with 2.4.
 # 2.3.1
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 * **[UX]** Added a warning message when the player is attempting to buy more planes at an already full airbase. 
 * **[Campaigns]** Migrated Syria full map to new format. (Thanks to Hawkmoon)
 * **[Faction]** Added NATO desert Storm faction (Thanks to Hawkmoon)
@@ -1224,6 +1253,7 @@ Saves from 2.3 are not compatible with 2.4.
 # 2.3.0
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 * **[Campaign Map]** Overhauled the campaign model
 * **[Campaign Map]** Possible to add FOB as control points
 * **[Campaign Map]** Added off-map spawn locations
@@ -1260,6 +1290,7 @@ Saves from 2.3 are not compatible with 2.4.
 # 2.2.1
 
 ## Features/Improvements
+* **[UX]** Web package editor (`/packages/:id`): task, target, time on target (typed or Earliest TOT), package name, flights list, add and remove a flight, auto-create and delete. A right-click on a map target plans a package and opens it there; changes apply at once. The flight tabs (general, route, payload, pilots, radios) keep opening the Qt editor until their own lots. `game/commands/packageflights.py` holds the rules, shared with the Qt dialogs, and the flight-plan references are unchanged (WEB-04.1).
 * **[Factions]** Added factions : Georgia 2008, USN 1985, France 2005 Frenchpack by HerrTom
 * **[Factions]** Added map Persian Gulf full by Plob
 * **[Flight Planner]** Player flights with start delays under ten minutes will spawn immediately.

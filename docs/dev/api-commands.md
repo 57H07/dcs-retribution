@@ -131,9 +131,25 @@ element in `client/src/shell/routes.tsx`. A tool with no file UI needs no dialog
 all: `POST /tools/import-layouts` and `POST /tools/pretense-campaign` (WEB-08.2) are
 plain commands that answer once the work is done.
 
+The bare map embedded in the Qt window (Qt mode) has no router: its clicks keep
+going through `/qt/*`, and the web shell overrides them through a context
+(`MapSelectionContext`, `NewPackageContext` in `client/src/maplayers/mapSelection.tsx`).
+A right-click on a target thus plans a package with `POST /packages` and opens
+`/packages/{id}` in the web shell, and `/qt/create-package/...` in Qt mode.
+
 A command may also hand over to a Qt window that is not migrated yet, through a
 `QtCallbacks` callback emitting a `QLiberationWindow` signal (WEB-05.1 did so for
 the debriefing, until WEB-05.2 replaced it with the web after-action report).
+
+## 8a. An editor with no save step: the package editor (WEB-04.1)
+
+Each change of `/packages/{id}` is a command that applies at once and answers the
+whole read model (`PackageDetailJs`), and each form is a `GET` of what the engine
+offers (`/flight-options`, `/auto-create`): the client lists and sends, the engine
+decides. Rules a Qt dialog checked when saved move to the command that would break
+them: an escort cannot come first, the last escorted flight cannot leave. Qt dialogs
+stay in Qt mode and call the same functions (`game/commands/packageflights.py`), which
+`tests/flightplans` (W16) drives against unchanged references.
 
 ## 8b. Background work: status + event + commands (WEB-05.1)
 

@@ -1,4 +1,3 @@
-import { useOpenNewTgoPackageDialogMutation } from "../../api/liberationApi";
 import { Tgo as TgoModel } from "../../api/liberationApi";
 import {
   selectHighlightEmitters,
@@ -6,7 +5,7 @@ import {
   setHoveredEmitter,
 } from "../../api/mapSlice";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { useInspectTgo } from "../../maplayers/mapSelection";
+import { useInspectTgo, useNewPackage } from "../../maplayers/mapSelection";
 import MobileTgo from "./MobileTgo";
 import { TgoTooltip, useTgoIcon } from "./shared";
 import { Marker } from "react-leaflet";
@@ -16,7 +15,7 @@ interface TgoProps {
 }
 
 function StaticTgo(props: TgoProps) {
-  const [openNewPackageDialog] = useOpenNewTgoPackageDialogMutation();
+  const newPackage = useNewPackage();
   const inspect = useInspectTgo();
   const dispatch = useAppDispatch();
   const icon = useTgoIcon(props.tgo);
@@ -36,7 +35,7 @@ function StaticTgo(props: TgoProps) {
           inspect(props.tgo.id);
         },
         contextmenu: () => {
-          openNewPackageDialog({ tgoId: props.tgo.id });
+          newPackage("tgo", props.tgo.id);
         },
         // Hovering the emitter highlights its ring (and vice versa).
         mouseover: () =>

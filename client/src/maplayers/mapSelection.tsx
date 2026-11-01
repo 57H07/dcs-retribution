@@ -4,7 +4,11 @@
 // click opens the map inspector. Without it (the bare map embedded in the Qt
 // window), the click keeps opening the Qt info dialogs through /qt/info/*.
 import backend from "../api/backend";
-import { useOpenTgoInfoDialogMutation } from "../api/liberationApi";
+import {
+  NewPackage,
+  PackageTargetKind,
+  useOpenTgoInfoDialogMutation,
+} from "../api/liberationApi";
 import { createContext, useCallback, useContext } from "react";
 
 export type MapSelection =
@@ -14,6 +18,29 @@ export type MapSelection =
 export type MapSelectHandler = (selection: MapSelection) => void;
 
 export const MapSelectionContext = createContext<MapSelectHandler | null>(null);
+
+export type NewPackageHandler = (target: NewPackage) => void;
+
+/** How the web shell plans a package on a right-clicked target (WEB-04.1). */
+export const NewPackageContext = createContext<NewPackageHandler | null>(null);
+
+/**
+ * Plans a package on a target: the web package editor, or the Qt dialog on the
+ * bare map embedded in the Qt window.
+ */
+export function useNewPackage(): (kind: PackageTargetKind, id: string) => void {
+  const plan = useContext(NewPackageContext);
+  return useCallback(
+    (kind: PackageTargetKind, id: string) => {
+      if (plan) {
+        plan({ target_kind: kind, target_id: id });
+      } else {
+        backend.post(`/qt/create-package/${kind}/${id}`);
+      }
+    },
+    [plan],
+  );
+}
 
 /** Opens what a click on a base shows: the inspector, or the Qt dialog. */
 export function useInspectControlPoint(): (id: string) => void {

@@ -3,6 +3,7 @@ import { MapInspector } from "../command/inspector/MapInspector";
 import LiberationMap from "../components/liberationmap";
 import { toggleOverlay } from "../maplayers/layerToggle";
 import { MapSelection } from "../maplayers/mapSelection";
+import { usePlanPackage } from "../packages/usePlanPackage";
 import { FirstStart } from "../preferences/FirstStart";
 import { ToastProvider, useToast } from "../ui";
 import { AppBar } from "./AppBar";
@@ -25,9 +26,10 @@ function ShellLayout() {
   const location = useLocation();
   const qt = useQtCommands();
   const toast = useToast();
+  const planPackage = usePlanPackage();
 
   const newPackage = () => {
-    // No target-less package dialog in Qt: explain how to plan one.
+    // A package needs a target: explain how to plan one.
     toast({
       title: "New package",
       description: "Right-click a target on the map to plan a package.",
@@ -64,7 +66,13 @@ function ShellLayout() {
       <AppBar onNewPackage={newPackage} onShowHelp={() => setHelpOpen(true)} />
       <main className={styles.content}>
         <CommandView
-          map={<LiberationMap onSelect={setSelection} layerToolbar />}
+          map={
+            <LiberationMap
+              onSelect={setSelection}
+              onNewPackage={planPackage}
+              layerToolbar
+            />
+          }
           inspector={
             <MapInspector
               selection={selection}
