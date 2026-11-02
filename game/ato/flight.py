@@ -141,7 +141,9 @@ class Flight(
         dcs_unit = self.squadron.aircraft.dcs_unit_type
         category = dcs_unit.category
         category = "Air" if category == "Interceptor" else category
-        for name in self.squadron.coalition.faction.country.callsign[category]:
+        # pydcs has no callsigns of this category for some countries (e.g. Ukraine).
+        country_callsigns = self.squadron.coalition.faction.country.callsign
+        for name in country_callsigns.get(category, []):
             callsigns.add(name)
         if hasattr(dcs_unit, "callnames"):
             country_name = self.squadron.coalition.faction.country.name

@@ -8,7 +8,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any, Iterator
+from typing import Any, Iterator, cast
 from uuid import uuid4
 
 import pytest
@@ -674,3 +674,21 @@ def test_off_map_bases_lock_the_start_type_in_the_read_model(
     )
     _, body = _request("GET", _url(package, flight, "settings"))
     assert body["start_type_locked"] is True
+
+
+def test_a_country_without_air_callsigns_still_has_a_settings_sheet() -> None:
+    # pydcs has no "Air" callsigns for some countries: the sheet must still load.
+    from dcs.countries import Ukraine
+
+    assert "Air" not in Ukraine.callsign
+    flight = Flight.__new__(Flight)
+    flight.squadron = cast(
+        Any,
+        SimpleNamespace(
+            aircraft=SimpleNamespace(
+                dcs_unit_type=SimpleNamespace(category="Air", callnames={})
+            ),
+            coalition=SimpleNamespace(faction=SimpleNamespace(country=Ukraine)),
+        ),
+    )
+    assert flight.available_callsigns == []

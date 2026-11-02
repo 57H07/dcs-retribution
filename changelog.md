@@ -102,6 +102,7 @@
 
 ## Fixes
 
+* **[UI]** Flights of countries with no aircraft callsigns in DCS (e.g. Ukraine) no longer fail to open their settings.
 * **[UI]** Launching without a campaign no longer logs a server error when the map asks for the game state.
 * **[UI]** The end-of-campaign dialog said "Victory!" even after a defeat.
 * **[UI]** Loading another campaign now forgets a pending mission result, so it cannot be accepted against the wrong game.
