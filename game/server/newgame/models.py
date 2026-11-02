@@ -21,7 +21,9 @@ from game.commands.newgame import (
     campaign_id,
     doctrine_choices,
 )
+from game.commands.preferences import is_player_module
 from game.commands.settings import settings_pages
+from game.dcs.aircrafttype import AircraftType
 from ..gamesettings.models import SettingValueJs, SettingsPageJs
 from ..leaflet import LeafletPoint
 
@@ -230,6 +232,8 @@ class FactionUnitGroupJs(BaseModel):
     units: list[str]
     #: Names of the units that can join.
     addable: list[str]
+    #: Those of `units` and `addable` the player owns the module of.
+    player_modules: list[str]
 
     class Config:
         title = "FactionUnitGroup"
@@ -265,6 +269,14 @@ class FactionSheetJs(BaseModel):
                     label=group.label,
                     units=sorted(str(u) for u in getattr(faction, group.attribute)),
                     addable=sorted(str(u) for u in addable_units(faction, group)),
+                    player_modules=sorted(
+                        str(u)
+                        for u in (
+                            *getattr(faction, group.attribute),
+                            *addable_units(faction, group),
+                        )
+                        if isinstance(u, AircraftType) and is_player_module(u)
+                    ),
                 )
                 for group in UNIT_GROUPS
             ],

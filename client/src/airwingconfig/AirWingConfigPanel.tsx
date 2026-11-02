@@ -40,6 +40,7 @@ import {
 import {
   AircraftOptions,
   NoModulesHint,
+  compareNames,
 } from "../preferences/AircraftOptions";
 import styles from "./AirWingConfig.module.css";
 import { FactionUnits } from "./FactionUnits";
@@ -353,7 +354,12 @@ function AddSquadron({
   const [preset, setPreset] = useState("");
   const [add] = useAddConfigSquadronMutation();
   const run = useCommand();
-  const options = side.aircraft_options;
+  // The list shows the player's modules first: same order for the first choice.
+  const options = [...side.aircraft_options].sort(
+    (a, b) =>
+      Number(b.player_module) - Number(a.player_module) ||
+      compareNames(a.aircraft, b.aircraft),
+  );
   const option =
     options.find((o) => o.aircraft_id === aircraftId) ?? options[0];
   const chosenTask =
@@ -564,6 +570,7 @@ function FactionTab({ target, side }: TargetProps & { side: ConfigSide }) {
   return (
     <FactionUnits
       sheet={data}
+      markModules={side === "blue"}
       hasJtac={data.has_jtac}
       doctrine={data.doctrine}
       onAddUnit={(group, unit) =>

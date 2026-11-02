@@ -412,6 +412,27 @@ def test_faction_sheet_has_units_and_addable_units() -> None:
     assert status == 404
 
 
+def test_faction_sheet_lists_the_players_modules(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    path = f"/new-game/faction?name={quote(BLUE_FACTION)}"
+    group = next(
+        g for g in _request("GET", path)[1]["groups"] if g["key"] == "aircraft"
+    )
+    assert group["player_modules"] == []
+    aircraft = next(
+        a for a in AircraftType.iter_all() if a.flyable and str(a) in group["addable"]
+    )
+    module = aircraft.dcs_unit_type.id
+    monkeypatch.setattr(liberation_install, "owned_modules", lambda: [module])
+
+    group = next(
+        g for g in _request("GET", path)[1]["groups"] if g["key"] == "aircraft"
+    )
+
+    assert str(aircraft) in group["player_modules"]
+
+
 def test_customized_faction_leaves_the_original_alone() -> None:
     original = FACTIONS[BLUE_FACTION]
     before = set(original.aircraft)

@@ -89,12 +89,15 @@ function FactionColumn({
   factions,
   draft,
   recommended,
+  markModules,
   onChange,
 }: {
   title: string;
   factions: string[];
   draft: FactionDraft;
   recommended: boolean;
+  /** The player's side: their modules are marked. */
+  markModules?: boolean;
   onChange: (draft: FactionDraft) => void;
 }) {
   const { currentData: sheet } = useGetNewGameFactionQuery({
@@ -142,6 +145,7 @@ function FactionColumn({
           <SaveFaction draft={draft} />
           <FactionUnits
             sheet={sheet}
+            markModules={markModules}
             hasJtac={draft.hasJtac ?? sheet.has_jtac}
             doctrine={draft.doctrine ?? sheet.doctrine}
             added={draft.added}
@@ -180,6 +184,7 @@ export function FactionsStep({
         factions={options.factions}
         draft={state.blue}
         recommended={state.blue.name === blueWanted}
+        markModules
         onChange={(blue) => onChange({ ...state, blue })}
       />
       <FactionColumn

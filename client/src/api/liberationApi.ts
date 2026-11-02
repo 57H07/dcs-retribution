@@ -375,6 +375,7 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     setPlayerModules: {
       invalidatesTags: [Tags.MODULES, Tags.AIR_WING_CONFIG],
     },
+    getNewGameFaction: { providesTags: [Tags.MODULES] },
     // /waypoints/
     listAllWaypointsForFlight: {
       providesTags: (result, error, arg) => [
