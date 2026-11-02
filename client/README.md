@@ -49,8 +49,7 @@ The client is built with [Vite](https://vite.dev/) and tested with
 - `npm test`: runs the test suite once (`npm run test:watch` for watch mode,
   `npm test -- --coverage` for a coverage report).
 - `npm run build`: type-checks, then builds the app to `build/` with relative
-  asset paths, so the Qt UI can load `build/index.html` from disk; also writes
+  asset paths, so the Qt shell can load `build/index.html` from disk; also writes
   the third-party licence notice to `build/NOTICE`.
 - `npm run preview`: serves the production build on http://localhost:3000.
 - `npm run lint` / `npm run typecheck`: ESLint and `tsc --noEmit`.
-- `npm run electron`: opens the dev server in an Electron window.

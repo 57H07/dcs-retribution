@@ -54,7 +54,7 @@ app-wide dependency of `game/server/app.py`.
   adds the header to commands of the generated hooks (`baseApi.ts`) and of the
   `backend` axios instance, and appends it to `WEBSOCKET_URL`. Use those, never a
   bare `fetch`/`axios`.
-- A client started on its own (Vite dev server in a browser, `npm run electron`)
+- A client started on its own (Vite dev server in a browser)
   has no `?apiKey=`: set `SERVER_API_KEY=<anything>` in `serverconfig.env` (with
   `CORS_ALLOW_DEBUG_SERVER=true`) and the same value as `VITE_API_KEY` in
   `client/.env.local`. The Qt `--dev` mode needs neither: it passes the key.
@@ -210,7 +210,7 @@ compares a web campaign with a CLI one. Each path must use one copy of the facti
 ## 9. System actions: the native bridge `/native/*` (WEB-00.7, W7)
 
 What a web page cannot do goes through `NativeBridge` (`game/native/bridge.py`),
-which the shell implements (`qt_ui/nativebridge.py`): `POST /native/save`, `/native/save-as`, `/native/open`, `/native/new-game`,
+which the shell implements (`qt_ui/nativebridge.py`, ADR 0002): `POST /native/save`, `/native/save-as`, `/native/open`, `/native/new-game`,
 `/native/quit`, `/native/open-folder/{saves|missions}`,
 `/native/open-link/{link}` (`ExternalLink` in `game/native/places.py`), and
 `/native/pick-folder` (`{"purpose": "saved-games"|"dcs-install", "start"}` ->

@@ -4,7 +4,7 @@ import { defineConfig } from "vite";
 
 // QLiberationMap loads build/index.html through file://, so every asset path
 // must be relative (base "./"). `npm start` serves on localhost:3000, the URL
-// the Qt UI opens with --dev and the Electron shell waits for.
+// the Qt shell opens with --dev.
 export default defineConfig({
   base: "./",
   plugins: [react()],

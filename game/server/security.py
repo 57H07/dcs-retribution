@@ -37,7 +37,7 @@ class ApiKeyManager:
         """The key of this launch: random, unless fixed by `SERVER_API_KEY`.
 
         A fixed key (in serverconfig.env) lets a client started on its own (the
-        Vite dev server in a browser or Electron) send it from `VITE_API_KEY`.
+        Vite dev server in a browser) send it from `VITE_API_KEY`.
         """
         if cls._key is None:
             cls._key = ServerSettings.get().server_api_key or secrets.token_urlsafe()
