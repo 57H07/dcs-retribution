@@ -5,7 +5,7 @@ const params = new URL(window.location.toString()).searchParams;
 const backendAddr = params.get("server") ?? "[::1]:16880";
 
 // WEB-00.6: the server's key for this launch. The Qt map passes it in the URL;
-// a client started on its own (Vite dev server, Electron) reads VITE_API_KEY,
+// a client started on its own (Vite dev server) reads VITE_API_KEY,
 // matching SERVER_API_KEY in the server's serverconfig.env.
 export const API_KEY: string | undefined =
   params.get("apiKey") ?? import.meta.env.VITE_API_KEY ?? undefined;
