@@ -1,6 +1,13 @@
 # Retribution v1.6.0
 
 ## Features/Improvements
+* **[UX]** New **Campaign → Production & repairs** screen, with a badge in the top bar: orders, maintenance, repairs and transfers in progress, what waits for a decision, and direct cancel and repair actions (#182).
+* **[UX]** Declare the modules you own in **File → Preferences**, saved for every campaign: they come first, marked ★, in the aircraft lists. Add new squadron also shows how many squadrons of an aircraft you already have (#180).
+* **[UX]** The new campaign wizard shows the campaign on the real map, between the campaign list and its details (#181).
+* **[UX]** N, + New and Campaign → New package plan on the selected map target. Front lines and friendly downed pilots can be selected with a left click (#186).
+* **[UX]** Faction aircraft lists are sorted with their numbers in order and read down each column.
+* **[Map]** The map opens on the campaign rather than on the theater.
+* **[UI]** Help → Releases opens the releases of this fork.
 * **[Build]** The release package no longer ships the Qt modules its window does not use: 542 MB on disk instead of 805 MB, 271 MB instead of 356 MB as a zip. The window stays Qt: Electron and the player's browser were ruled out (ADR 0002, WEB-09.2).
 * **[UX]** The Qt interface is gone: `qt_ui/` is now only the window hosting the web UI, its web view and the native bridge. The `web_ui` preference and `RETRIBUTION_WEB_UI` no longer exist (a preferences file that still says `"web_ui": false` opens the web UI); the theme preference is dropped too, the interface is dark. When a campaign ends, the web UI offers a new one but the campaign stays on screen (no further turn or mission can be started), and the motorpool capture-zone warning is now shown by the web UI (WEB-09.1).
 * **[UX]** Web new campaign wizard (`/new-game`): Theater (campaign list filterable by text, theater and era, map preview, description), Factions (recommended by the campaign, units editable, save as a new faction), Campaign options (date, inverted map, advanced IADS, every setting), Generator (navies, budgets, mods, optional seed) and Summary. Generation shows its progress without blocking the campaign in play, which stays until the new one starts; the air wing is then configured on the generated campaign (squadrons of both sides, files, faction tabs). The same air wing and faction tabs open in a running campaign from the Air Wing screen when "Enable Air Wing adjustments" is on. The CLI `new-game`, the Qt wizard and the web wizard now share `game/commands/newgame.py`: the CLI also applies the campaign's settings and income multipliers and the player's `Default.zip`, and gains `--seed` (WEB-06).
@@ -104,6 +111,9 @@
 
 ## Fixes
 
+* **[Map]** A click on a base or a carrier no longer recentres the map (#185).
+* **[Map]** The Legend button is no longer hidden behind the turn buttons (#183), and the map attribution is readable (#184).
+* **[UI]** Reports no longer have an empty area above their tabs (#178), and table captions line up with their first column (#179).
 * **[UI]** Flights of countries with no aircraft callsigns in DCS (e.g. Ukraine) no longer fail to open their settings.
 * **[UI]** Launching without a campaign no longer logs a server error when the map asks for the game state.
 * **[UI]** The end-of-campaign dialog said "Victory!" even after a defeat.
