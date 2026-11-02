@@ -8,6 +8,8 @@ from pathlib import Path
 from game import persistency
 
 _REPOSITORY = "https://github.com/dcs-retribution/dcs-retribution"
+# This build is released from the fork: its packages are not on the upstream page.
+_RELEASES = "https://github.com/57H07/dcs-retribution/releases"
 
 
 class ExternalLink(str, Enum):
@@ -32,7 +34,7 @@ _LINK_URLS: dict[ExternalLink, str] = {
     ExternalLink.GITHUB: _REPOSITORY,
     ExternalLink.UKRAINE: "https://shdwp.github.io/ukraine/",
     ExternalLink.PRETENSE_DISCORD: "https://" + "discord.gg" + "/" + "PtPsb9Mpk6",
-    ExternalLink.RELEASES: f"{_REPOSITORY}/releases",
+    ExternalLink.RELEASES: _RELEASES,
     ExternalLink.MANUAL: f"{_REPOSITORY}/wiki",
     ExternalLink.FORUM_THREAD: (
         "https://forum.dcs.world/topic/"
