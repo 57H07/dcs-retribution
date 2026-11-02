@@ -173,6 +173,7 @@ export const handleStreamedEvents = (
         Tags.TIMELINE,
         Tags.REPORTS,
         Tags.AIR_WING,
+        Tags.PRODUCTION,
       ]),
     );
   }

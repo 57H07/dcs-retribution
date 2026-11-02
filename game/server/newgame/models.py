@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Optional, TYPE_CHECKING
 
+from dcs.mapping import LatLng
 from pydantic import BaseModel, Field
 
 from game.commands.newgame import (
@@ -22,6 +23,7 @@ from game.commands.newgame import (
 )
 from game.commands.settings import settings_pages
 from ..gamesettings.models import SettingValueJs, SettingsPageJs
+from ..leaflet import LeafletPoint
 
 if TYPE_CHECKING:
     from game.campaignloader.campaign import Campaign
@@ -112,10 +114,13 @@ class NewGameOptionsJs(BaseModel):
         title = "NewGameOptions"
 
 
+def _point(position: LatLng | None) -> LeafletPoint | None:
+    return None if position is None else LeafletPoint.from_latlng(position)
+
+
 class PreviewBaseJs(BaseModel):
     name: str
-    x: float
-    y: float
+    position: LeafletPoint
     side: str
     kind: str
 
@@ -133,8 +138,9 @@ class PreviewLinkJs(BaseModel):
 
 
 class CampaignPreviewJs(BaseModel):
-    width: float
-    height: float
+    #: Corners around `bases`; None without a base on the map.
+    south_west: LeafletPoint | None
+    north_east: LeafletPoint | None
     bases: list[PreviewBaseJs]
     links: list[PreviewLinkJs]
     blue_bases: int
@@ -147,11 +153,14 @@ class CampaignPreviewJs(BaseModel):
     @staticmethod
     def from_preview(preview: CampaignPreview) -> CampaignPreviewJs:
         return CampaignPreviewJs(
-            width=preview.width,
-            height=preview.height,
+            south_west=_point(preview.south_west),
+            north_east=_point(preview.north_east),
             bases=[
                 PreviewBaseJs(
-                    name=base.name, x=base.x, y=base.y, side=base.side, kind=base.kind
+                    name=base.name,
+                    position=LeafletPoint.from_latlng(base.position),
+                    side=base.side,
+                    kind=base.kind,
                 )
                 for base in preview.bases
             ],

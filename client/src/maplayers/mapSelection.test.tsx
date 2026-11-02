@@ -4,6 +4,7 @@ import { recordFetch, restoreFetch } from "../shell/testing";
 import {
   MapSelectionContext,
   NewPackageContext,
+  packageTarget,
   useInspectControlPoint,
   useInspectTgo,
   useNewPackage,
@@ -27,6 +28,28 @@ function wrapper(select: ((s: unknown) => void) | null) {
     </Provider>
   );
 }
+
+describe("packageTarget", () => {
+  it("maps each kind of selection to its package target", () => {
+    expect(packageTarget(null)).toBeNull();
+    expect(packageTarget({ kind: "controlPoint", id: "a" })).toEqual({
+      target_kind: "control-point",
+      target_id: "a",
+    });
+    expect(packageTarget({ kind: "tgo", id: "b" })).toEqual({
+      target_kind: "tgo",
+      target_id: "b",
+    });
+    expect(packageTarget({ kind: "frontLine", id: "c" })).toEqual({
+      target_kind: "front-line",
+      target_id: "c",
+    });
+    expect(packageTarget({ kind: "downedPilot", id: "d" })).toEqual({
+      target_kind: "downed-pilot",
+      target_id: "d",
+    });
+  });
+});
 
 describe("map right-clicks", () => {
   it("plan the package in the web editor in the web shell", () => {

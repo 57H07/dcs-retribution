@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
 
 from game import liberation_install
+from game.commands.preferences import is_player_module
+from game.dcs.aircrafttype import AircraftType
 from game.native import NativeContext
 from game.server import GameContext
 from tests.server.test_native_routes import FakeBridge, _set_game
@@ -286,3 +289,76 @@ def test_pick_folder_needs_the_shell(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(NativeContext, "_bridge", None)
     status, _ = _request("POST", "/native/pick-folder", {"purpose": "saved-games"})
     assert status == 503
+
+
+# --- modules the player owns ----------------------------------------------------
+
+
+def _aircraft(unit: str, name: str, flyable: bool = True) -> Any:
+    return SimpleNamespace(
+        flyable=flyable, display_name=name, dcs_unit_type=SimpleNamespace(id=unit)
+    )
+
+
+@pytest.fixture
+def modules(prefs: Path, saved_games: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """A valid Saved Games folder, a few aircraft and no module declared."""
+    prefs.parent.mkdir(parents=True)
+    prefs.write_text(
+        json.dumps({"saved_game_dir": str(saved_games), "dcs_install_dir": ""})
+    )
+    liberation_install.init()
+    monkeypatch.setattr(
+        AircraftType,
+        "iter_all",
+        lambda: [
+            _aircraft("F-14B", "F-14B Tomcat"),
+            _aircraft("Mi-8MT", "Mi-8MTV2 Hip"),
+            _aircraft("Mi-8MT", "Mi-17 Hip"),
+            _aircraft("E-3A", "E-3A Sentry", flyable=False),
+        ],
+    )
+    return prefs
+
+
+def test_modules_list_one_entry_per_flyable_dcs_type(modules: Path) -> None:
+    status, body = _request("GET", "/preferences/modules")
+    assert status == 200
+    assert body == [
+        {"id": "F-14B", "name": "F-14B Tomcat", "owned": False},
+        {"id": "Mi-8MT", "name": "Mi-17 Hip / Mi-8MTV2 Hip", "owned": False},
+    ]
+
+
+def test_owned_modules_are_kept_after_a_restart(modules: Path) -> None:
+    status, body = _request("PUT", "/preferences/modules", {"owned": ["F-14B"]})
+    assert status == 200
+    assert [m["owned"] for m in body] == [True, False]
+    assert json.loads(modules.read_text())["owned_modules"] == ["F-14B"]
+    liberation_install.init()
+    assert liberation_install.owned_modules() == ["F-14B"]
+    assert is_player_module(_aircraft("F-14B", "F-14B Tomcat"))
+    assert not is_player_module(_aircraft("Mi-8MT", "Mi-17 Hip"))
+
+
+def test_unticking_a_module_gives_it_back_to_the_ai(modules: Path) -> None:
+    _request("PUT", "/preferences/modules", {"owned": ["F-14B"]})
+    _request("PUT", "/preferences/modules", {"owned": []})
+    assert not is_player_module(_aircraft("F-14B", "F-14B Tomcat"))
+
+
+def test_an_unknown_module_is_refused(modules: Path) -> None:
+    status, body = _request("PUT", "/preferences/modules", {"owned": ["Nope"]})
+    assert status == 409
+    assert "Nope" in body["detail"]
+    assert liberation_install.owned_modules() == []
+
+
+def test_old_preferences_file_has_no_modules(modules: Path) -> None:
+    assert liberation_install.owned_modules() == []
+    assert "owned_modules" not in json.loads(modules.read_text())
+
+
+def test_no_module_list_without_a_saved_games_folder(prefs: Path) -> None:
+    liberation_install.init()
+    assert _request("GET", "/preferences/modules") == (200, [])

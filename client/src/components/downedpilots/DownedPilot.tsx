@@ -1,5 +1,5 @@
 import { DownedPilot as DownedPilotModel } from "../../api/liberationApi";
-import { useNewPackage } from "../../maplayers/mapSelection";
+import { useInspect, useNewPackage } from "../../maplayers/mapSelection";
 import { Icon, Point } from "leaflet";
 import { Marker, Tooltip } from "react-leaflet";
 import { downedPilotIconDataUrl } from "../../maplayers/downedPilotIcon";
@@ -18,6 +18,7 @@ interface DownedPilotProps {
 
 export default function DownedPilot(props: DownedPilotProps) {
   const newPackage = useNewPackage();
+  const inspect = useInspect("downedPilot");
   const pilot = props.downedPilot;
   const turns = pilot.turns_remaining;
   return (
@@ -30,6 +31,9 @@ export default function DownedPilot(props: DownedPilotProps) {
       eventHandlers={
         pilot.blue
           ? {
+              click: () => {
+                inspect(pilot.id);
+              },
               contextmenu: () => {
                 newPackage("downed-pilot", pilot.id);
               },

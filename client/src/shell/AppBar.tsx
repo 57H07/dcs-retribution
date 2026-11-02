@@ -1,6 +1,7 @@
 // Top bar of the command view (WEB-01.1, after the WEB-00.3 app bar): the
 // campaign state of QTopPanel, the campaign screens and every action of the Qt
 // menus and toolbars. The turn buttons sit at the bottom right of the map.
+import { ProductionBadge } from "../production/ProductionBadge";
 import { CampaignStatus } from "../command/CampaignStatus";
 import { ToolCommands, useToolCommands } from "../secondary/useToolCommands";
 import { Button, IconButton, Menu, MenuEntry } from "../ui";
@@ -54,6 +55,10 @@ export function appMenus({
       items: [
         { label: "Air Wing", onSelect: () => navigate(PATHS.airWing) },
         { label: "Transfers", onSelect: () => navigate(PATHS.transfers) },
+        {
+          label: "Production & repairs",
+          onSelect: () => navigate(PATHS.production),
+        },
         { label: "New package", shortcut: "N", onSelect: onNewPackage },
         "separator",
         { label: "Settings", onSelect: () => navigate(PATHS.settings) },
@@ -140,6 +145,7 @@ export function AppBar({ onNewPackage, onShowHelp }: AppBarProps) {
         onOpenIntel={() => navigate(PATHS.reportTab("intel"))}
       />
       <nav className={styles.screens} aria-label="Campaign screens">
+        <ProductionBadge />
         <Button variant="ghost" onClick={() => navigate(PATHS.airWing)}>
           Air Wing
         </Button>

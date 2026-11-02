@@ -27,12 +27,15 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Iterable, Optional, TYPE_CHECKING
 
+from dcs.mapping import LatLng
+
 from game import persistency
 from .errors import CommandError
 
 if TYPE_CHECKING:
     from game import Game
     from game.armedforces.forcegroup import ForceGroup
+
     from game.campaignloader.campaign import Campaign
     from game.dcs.unittype import UnitType
     from game.factions.faction import Faction
@@ -207,11 +210,9 @@ def campaign_era(campaign: Campaign) -> Optional[str]:
 @dataclass(frozen=True)
 class PreviewBase:
     name: str
-    #: Position in the preview: east, then south, in the map's unit.
-    x: float
-    y: float
-    side: str  # "blue" | "red" | "neutral"
-    kind: str  # `ControlPointType` name
+    position: LatLng
+    side: str
+    kind: str
 
 
 @dataclass(frozen=True)
@@ -223,9 +224,9 @@ class PreviewLink:
 
 @dataclass(frozen=True)
 class CampaignPreview:
-    #: Extent of the coordinates of `bases`: the larger one is 1.
-    width: float
-    height: float
+    #: Corners around `bases`; None without a base on the map.
+    south_west: Optional[LatLng]
+    north_east: Optional[LatLng]
     bases: list[PreviewBase]
     links: list[PreviewLink]
     blue_bases: int
@@ -249,19 +250,14 @@ def _preview_of_file(path: Path) -> CampaignPreview:
     theater = Campaign.from_file(path).load_theater(advanced_iads=False)
     points = list(theater.controlpoints)
     on_map = [cp for cp in points if not isinstance(cp, OffMapSpawn)]
-    if not on_map:
-        return CampaignPreview(1, 1, [], [], 0, 0, 0)
-    north = max(cp.position.x for cp in on_map)
-    south = min(cp.position.x for cp in on_map)
-    east = max(cp.position.y for cp in on_map)
-    west = min(cp.position.y for cp in on_map)
-    span = max(north - south, east - west, 1.0)
+    bounds = theater.campaign_bounds()
+    if bounds is None:
+        return CampaignPreview(None, None, [], [], 0, 0, 0)
     index = {cp: i for i, cp in enumerate(on_map)}
     bases = [
         PreviewBase(
             cp.name,
-            (cp.position.y - west) / span,
-            (north - cp.position.x) / span,
+            cp.position.latlng(),
             _side(cp.starting_coalition),
             cp.cptype.name,
         )
@@ -277,8 +273,8 @@ def _preview_of_file(path: Path) -> CampaignPreview:
                 ) in (("blue", "red"), ("red", "blue"))
                 links.append(PreviewLink(index[cp], index[other], front))
     return CampaignPreview(
-        (east - west) / span,
-        (north - south) / span,
+        bounds[0],
+        bounds[1],
         bases,
         links,
         sum(base.side == "blue" for base in bases),

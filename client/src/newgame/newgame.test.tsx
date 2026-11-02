@@ -105,11 +105,21 @@ const DEFAULTS: CampaignDefaults = {
 };
 
 const PREVIEW: CampaignPreview = {
-  width: 1,
-  height: 0.5,
+  south_west: { lat: 32, lng: 35 },
+  north_east: { lat: 33, lng: 36 },
   bases: [
-    { name: "Ramat David", x: 0, y: 0, side: "blue", kind: "AIRBASE" },
-    { name: "Damascus", x: 1, y: 0.5, side: "red", kind: "AIRBASE" },
+    {
+      name: "Ramat David",
+      position: { lat: 32, lng: 35 },
+      side: "blue",
+      kind: "AIRBASE",
+    },
+    {
+      name: "Damascus",
+      position: { lat: 33, lng: 36 },
+      side: "red",
+      kind: "AIRBASE",
+    },
   ],
   links: [{ from_index: 0, to_index: 1, front_line: true }],
   blue_bases: 1,
@@ -420,6 +430,8 @@ describe("air wing configuration", () => {
           {
             aircraft_id: "F-16C",
             aircraft: "F-16C",
+            player_module: false,
+            squadron_count: 1,
             primary_tasks: ["BARCAP"],
             bases: [{ id: "b1", name: "Ramat David" }],
             presets: [],

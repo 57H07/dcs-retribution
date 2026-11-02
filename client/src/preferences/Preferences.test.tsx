@@ -1,6 +1,7 @@
 import type {
   InstallPreferences,
   InstallPreferencesState,
+  PlayerModule,
 } from "../api/liberationApi";
 import { renderShell, restoreFetch } from "../shell/testing";
 import { screen, waitFor, within } from "@testing-library/react";
@@ -210,5 +211,82 @@ describe("first start", () => {
         screen.queryByRole("dialog", { name: "Welcome to DCS Retribution" }),
       ).toBeNull(),
     );
+  });
+});
+
+describe("Modules you own", () => {
+  const MODULES: PlayerModule[] = [
+    { id: "F-14B", name: "F-14B Tomcat", owned: true },
+    { id: "FA-18C_hornet", name: "F/A-18C Hornet", owned: false },
+  ];
+
+  function modulesServer(refuse = false) {
+    const puts: unknown[] = [];
+    const json = (body: unknown, status = 200) =>
+      new Response(JSON.stringify(body), {
+        status,
+        headers: { "Content-Type": "application/json" },
+      });
+    let modules = MODULES;
+    globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      const request = new Request(input, init);
+      const path = new URL(request.url).pathname;
+      if (path !== "/preferences/modules") {
+        return json(null);
+      }
+      if (request.method === "PUT") {
+        const body = await request.json();
+        puts.push(body);
+        if (refuse) {
+          return json({ detail: "Unknown modules: F-14B." }, 409);
+        }
+        modules = modules.map((m) => ({
+          ...m,
+          owned: body.owned.includes(m.id),
+        }));
+      }
+      return json(modules);
+    };
+    return puts;
+  }
+
+  it("shows what is owned and saves each tick", async () => {
+    const puts = modulesServer();
+    renderShell("/preferences");
+    const tomcat = await screen.findByRole("checkbox", {
+      name: "F-14B Tomcat",
+    });
+    expect(tomcat).toBeChecked();
+    const hornet = screen.getByRole("checkbox", { name: "F/A-18C Hornet" });
+    expect(hornet).not.toBeChecked();
+    await userEvent.click(hornet);
+    await waitFor(() => expect(puts).toHaveLength(1));
+    expect(puts[0]).toEqual({ owned: ["F-14B", "FA-18C_hornet"] });
+    await waitFor(() => expect(hornet).toBeChecked());
+  });
+
+  it("filters the list", async () => {
+    modulesServer();
+    renderShell("/preferences");
+    await screen.findByRole("checkbox", { name: "F-14B Tomcat" });
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Filter modules" }),
+      "hornet",
+    );
+    expect(screen.queryByRole("checkbox", { name: "F-14B Tomcat" })).toBeNull();
+    expect(
+      screen.getByRole("checkbox", { name: "F/A-18C Hornet" }),
+    ).toBeInTheDocument();
+  });
+
+  it("goes back to the saved state when the server refuses", async () => {
+    modulesServer(true);
+    renderShell("/preferences");
+    const tomcat = await screen.findByRole("checkbox", {
+      name: "F-14B Tomcat",
+    });
+    await userEvent.click(tomcat);
+    expect(await screen.findByText("Modules not saved")).toBeInTheDocument();
+    expect(tomcat).toBeChecked();
   });
 });

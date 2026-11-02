@@ -1,66 +1,16 @@
-// Step 1: filterable campaign list, map preview and description from the YAML.
+// Step 1, after mockups/NewGameMap.dc.html: filterable campaign list, the campaign on
+// the real map, and its description from the YAML.
 import {
-  CampaignPreview,
   NewGameCampaign,
   NewGameOptions,
   useGetCampaignPreviewQuery,
 } from "../api/liberationApi";
 import { commandErrorMessage } from "../api/commands";
+import { CampaignMapPreview } from "./CampaignMapPreview";
 import styles from "./NewGame.module.css";
 import { RichText } from "./RichText";
 import { CampaignFilter, filterCampaigns } from "./wizardState";
 import { ReactNode, useMemo, useState } from "react";
-
-const SIDE_COLORS: Record<string, string> = {
-  blue: "#7FB8EE",
-  red: "#F08A5D",
-  neutral: "#9AA6B0",
-};
-
-const VIEW = 1000;
-const MARGIN = 60;
-
-function CampaignMap({ preview }: { preview: CampaignPreview }) {
-  const x = (value: number) => MARGIN + value * VIEW;
-  const y = (value: number) => MARGIN + value * VIEW;
-  const width = preview.width * VIEW + 2 * MARGIN;
-  const height = preview.height * VIEW + 2 * MARGIN;
-  return (
-    <svg
-      className={styles.map}
-      viewBox={`0 0 ${width} ${height}`}
-      role="img"
-      aria-label={`Campaign map preview: ${preview.blue_bases} friendly bases, ${preview.red_bases} enemy bases, ${preview.front_lines} front lines`}
-    >
-      {preview.links.map((link) => {
-        const from = preview.bases[link.from_index];
-        const to = preview.bases[link.to_index];
-        return (
-          <line
-            key={`${link.from_index}-${link.to_index}`}
-            x1={x(from.x)}
-            y1={y(from.y)}
-            x2={x(to.x)}
-            y2={y(to.y)}
-            stroke={link.front_line ? "#E8A33D" : "#33404B"}
-            strokeWidth={link.front_line ? 6 : 3}
-          />
-        );
-      })}
-      {preview.bases.map((base) => (
-        <circle
-          key={`${base.name}-${base.x}-${base.y}`}
-          cx={x(base.x)}
-          cy={y(base.y)}
-          r={14}
-          fill={SIDE_COLORS[base.side] ?? SIDE_COLORS.neutral}
-        >
-          <title>{base.name}</title>
-        </circle>
-      ))}
-    </svg>
-  );
-}
 
 function Chips({
   label,
@@ -127,10 +77,11 @@ export function TheaterStep({
     { campaignId: selected?.id ?? "" },
     { skip: selected === undefined },
   );
-  const map = preview.currentData;
+  // The map stays up while the next campaign loads, and moves when it arrives.
+  const map = preview.data;
 
   return (
-    <div className={styles.columns}>
+    <div className={styles.theater}>
       <aside className={styles.aside}>
         <input
           className={styles.search}
@@ -187,18 +138,17 @@ export function TheaterStep({
           ))}
         </div>
       </aside>
-      <div className={styles.main}>
-        <div className={styles.mapFrame}>
-          {map ? (
-            <CampaignMap preview={map} />
-          ) : (
-            <p className={styles.hint}>
-              {preview.error
-                ? commandErrorMessage(preview.error)
-                : "Loading the map…"}
-            </p>
-          )}
-        </div>
+      <div className={styles.mapFrame}>
+        {map && <CampaignMapPreview preview={map} />}
+        {(preview.error || preview.isFetching || !map) && (
+          <p className={styles.mapStatus} role="status">
+            {preview.error
+              ? commandErrorMessage(preview.error)
+              : "Loading the map…"}
+          </p>
+        )}
+      </div>
+      <div className={styles.theaterDetails}>
         {selected && (
           <div className={styles.details}>
             <div className={styles.description}>
@@ -239,8 +189,8 @@ export function TheaterStep({
             </dl>
           </div>
         )}
-        {footer}
       </div>
+      <div className={styles.theaterFooter}>{footer}</div>
     </div>
   );
 }

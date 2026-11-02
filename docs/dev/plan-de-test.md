@@ -59,25 +59,25 @@ Ces cases n'ont jamais été vérifiées à la main depuis le retrait de Qt.
 - [x] **Ctrl+S** enregistre sans dialogue quand la campagne a déjà un fichier. **File → Save as…** ouvre le dialogue Windows et le titre change.
 - [x] **File → Exit** propose d'enregistrer : **Cancel** laisse l'application ouverte ; **No** la ferme sans écrire ; **Yes** enregistre puis ferme (vérifiez la date du fichier).
 - [x] La croix de la fenêtre pose la même question.
-- [ ] Après la fermeture, `MissionScripting.lua` est restauré dans l'installation DCS, et aucun processus `retribution_main.exe` ne reste dans le gestionnaire de tâches.
-- [ ] Une fenêtre redimensionnée retrouve sa taille et sa position au lancement suivant.
-- [ ] Un deuxième lancement pendant que le premier tourne n'ouvre pas de seconde fenêtre.
-- [ ] **File → Preferences** : les boutons de choix de dossier ouvrent le dialogue Windows, et un changement de dossier est conservé après redémarrage.
-- [ ] Une mise à l'échelle Windows de 100 %, 150 % et 200 % ne coupe aucun texte.
-- [ ] Les liens du menu **Help** (Discord, GitHub, Online manual…) s'ouvrent dans le navigateur du système.
-- [ ] Copié ailleurs (autre chemin, pas de venv actif), le dossier `dist\dcs-retribution` démarre aussi. Il pèse environ 540 Mo, et 270 Mo une fois compressé.
+- [x] Après la fermeture, `MissionScripting.lua` est restauré dans l'installation DCS, et aucun processus `retribution_main.exe` ne reste dans le gestionnaire de tâches.
+- [x] Une fenêtre redimensionnée retrouve sa taille et sa position au lancement suivant.
+- [x] Un deuxième lancement pendant que le premier tourne n'ouvre pas de seconde fenêtre.
+- [x] **File → Preferences** : les boutons de choix de dossier ouvrent le dialogue Windows, et un changement de dossier est conservé après redémarrage.
+- [x] Une mise à l'échelle Windows de 100 %, 150 % et 200 % ne coupe aucun texte.
+- [x] Les liens du menu **Help** (Discord, GitHub, Online manual…) s'ouvrent dans le navigateur du système.
+- [x] Copié ailleurs (autre chemin, pas de venv actif), le dossier `dist\dcs-retribution` démarre aussi. Il pèse environ 540 Mo, et 270 Mo une fois compressé.
 
 ### Premier démarrage — #175
 Renommez temporairement `%LOCALAPPDATA%\DCSRetribution\retribution_preferences.json`, puis remettez-le en place à la fin.
-- [ ] L'écran web de premier démarrage demande les dossiers de DCS et le fichier `MissionScripting.lua` n'est remplacé qu'après acceptation.
-- [ ] Une ancienne préférence `"web_ui": false` dans ce fichier est ignorée : l'interface web s'ouvre.
+- [x] L'écran web de premier démarrage demande les dossiers de DCS et le fichier `MissionScripting.lua` n'est remplacé qu'après acceptation.
+- [x] Une ancienne préférence `"web_ui": false` dans ce fichier est ignorée : l'interface web s'ouvre.
 
 ### Écrans web
 Sur une campagne en cours, ouvrez chaque écran et notez ce qui manque ou s'affiche mal.
-- [ ] **Barre du haut :** budget, météo, équilibre des forces, tour, **Begin Campaign** ou **End turn**, **Take off**.
-- [ ] **Panneau Packages** et **Enemy ATO**, avec **Edit** et **Delete** ; **frise temporelle** en bas.
-- [ ] **Inspecteur de carte :** un clic sur une base ou un site ouvre le panneau, et ses actions mènent aux bons écrans. (#175)
-- [ ] **Écran de base :** Airfield command, Ground forces HQ, Intel, Departing convoys, **Actions**, **Set radios**.
+- [x] **Barre du haut :** budget, météo, équilibre des forces, tour, **Begin Campaign** ou **End turn**, **Take off**.
+- [x] **Panneau Packages** et **Enemy ATO**, avec **Edit** et **Delete** ; **frise temporelle** en bas.
+- [x] **Inspecteur de carte :** un clic sur une base ou un site ouvre le panneau, et ses actions mènent aux bons écrans. (#175)
+- [x] **Écran de base :** Airfield command, Ground forces HQ, Intel, Departing convoys, **Actions**, **Set radios**.
 - [ ] **Éditeur de package :** clic droit sur chaque type de cible (base, site, ligne de front, pilote abattu), **Auto-create**, **Add flight**, puis General, Route, Payload, Pilots, Radios & TACAN.
 - [ ] **Air Wing :** liste, fiche d'escadron, onglet des pilotes, **Show enemy**. Avec « Enable Air Wing adjustments », **Air wing adjustments**.
 - [ ] **Campaign :** Transfers, Stats, Notes, Reports (Intel, Stats, Finances), Info panel, Pilot career, Last debriefing.

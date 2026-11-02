@@ -8,6 +8,10 @@ import {
   useAddPackageFlightMutation,
   useGetFlightOptionsQuery,
 } from "../api/liberationApi";
+import {
+  AircraftOptions,
+  NoModulesHint,
+} from "../preferences/AircraftOptions";
 import settings from "../settings/SettingsScreen.module.css";
 import { Button, Modal, ModalClose, NumberField, useToast } from "../ui";
 import styles from "./PackageEditor.module.css";
@@ -126,13 +130,18 @@ function AddFlightForm({
           onChange={(event) => setAircraftId(event.target.value)}
         >
           {!aircraft && <option value="">No capable aircraft available</option>}
-          {task?.aircraft.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.name}
-            </option>
-          ))}
+          {task && (
+            <AircraftOptions
+              options={task.aircraft.map((a) => ({
+                id: a.id,
+                name: a.name,
+                playerModule: a.player_module,
+              }))}
+            />
+          )}
         </select>
       </label>
+      {task && !task.aircraft.some((a) => a.player_module) && <NoModulesHint />}
       <label className={styles.field}>
         Squadron
         <select

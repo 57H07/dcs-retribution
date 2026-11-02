@@ -7795,6 +7795,157 @@
         }
       }
     },
+    "/preferences/modules": {
+      "get": {
+        "summary": "Get Modules",
+        "description": "The aircraft the player can declare owning, and those already declared.",
+        "operationId": "get_player_modules",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ModuleJs"
+                  },
+                  "type": "array",
+                  "title": "Response Get Player Modules"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Set Modules",
+        "description": "Saves the modules the player owns, which come first in the aircraft lists.",
+        "operationId": "set_player_modules",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OwnedModulesJs"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ModuleJs"
+                  },
+                  "type": "array",
+                  "title": "Response Set Player Modules"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "when a module is not a flyable aircraft",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/production/": {
+      "get": {
+        "summary": "Get Production",
+        "description": "What is in progress for the player and what waits; null without a campaign.",
+        "operationId": "get_production",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ProductionJs"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Production"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/production/items/{item_id}/action": {
+      "post": {
+        "summary": "Run Action",
+        "description": "Runs the command of one item: the same as on its base, site or transfer.",
+        "operationId": "run_production_action",
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductionJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "the item is gone or has no action, not enough budget, or refused by the command it runs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/reports/intel": {
       "get": {
         "summary": "Intel",
@@ -10354,13 +10505,11 @@
       },
       "CampaignPreviewJs": {
         "properties": {
-          "width": {
-            "type": "number",
-            "title": "Width"
+          "south_west": {
+            "$ref": "#/components/schemas/LeafletPoint"
           },
-          "height": {
-            "type": "number",
-            "title": "Height"
+          "north_east": {
+            "$ref": "#/components/schemas/LeafletPoint"
           },
           "bases": {
             "items": {
@@ -10391,8 +10540,6 @@
         },
         "type": "object",
         "required": [
-          "width",
-          "height",
           "bases",
           "links",
           "blue_bases",
@@ -10583,6 +10730,14 @@
             "type": "string",
             "title": "Aircraft"
           },
+          "player_module": {
+            "type": "boolean",
+            "title": "Player Module"
+          },
+          "squadron_count": {
+            "type": "integer",
+            "title": "Squadron Count"
+          },
           "primary_tasks": {
             "items": {
               "type": "string"
@@ -10609,6 +10764,8 @@
         "required": [
           "aircraft_id",
           "aircraft",
+          "player_module",
+          "squadron_count",
           "primary_tasks",
           "bases",
           "presets"
@@ -11477,6 +11634,10 @@
             "type": "string",
             "title": "Name"
           },
+          "player_module": {
+            "type": "boolean",
+            "title": "Player Module"
+          },
           "squadrons": {
             "items": {
               "$ref": "#/components/schemas/FlightSquadronOptionJs"
@@ -11489,6 +11650,7 @@
         "required": [
           "id",
           "name",
+          "player_module",
           "squadrons"
         ],
         "title": "FlightAircraftOption"
@@ -13956,6 +14118,29 @@
         ],
         "title": "NewGameModChoice"
       },
+      "ModuleJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "owned": {
+            "type": "boolean",
+            "title": "Owned"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "owned"
+        ],
+        "title": "PlayerModule"
+      },
       "NativeFolder": {
         "type": "string",
         "enum": [
@@ -14387,6 +14572,22 @@
         ],
         "title": "OfflineBasemapImage",
         "description": "Precomputed offline basemap image of a heavy theatre (GFX-04.2).\n\nServed by GET /map-zones/offline-basemap, drawn between these corners."
+      },
+      "OwnedModulesJs": {
+        "properties": {
+          "owned": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Owned"
+          }
+        },
+        "type": "object",
+        "required": [
+          "owned"
+        ],
+        "title": "OwnedModules"
       },
       "PackageDetailJs": {
         "properties": {
@@ -15124,13 +15325,8 @@
             "type": "string",
             "title": "Name"
           },
-          "x": {
-            "type": "number",
-            "title": "X"
-          },
-          "y": {
-            "type": "number",
-            "title": "Y"
+          "position": {
+            "$ref": "#/components/schemas/LeafletPoint"
           },
           "side": {
             "type": "string",
@@ -15144,8 +15340,7 @@
         "type": "object",
         "required": [
           "name",
-          "x",
-          "y",
+          "position",
           "side",
           "kind"
         ],
@@ -15186,6 +15381,116 @@
           "task"
         ],
         "title": "PrimaryTask"
+      },
+      "ProductionActionJs": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "cost": {
+            "type": "number",
+            "title": "Cost"
+          },
+          "affordable": {
+            "type": "boolean",
+            "title": "Affordable"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "cost",
+          "affordable"
+        ],
+        "title": "ProductionAction"
+      },
+      "ProductionItemJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "group": {
+            "type": "string",
+            "enum": [
+              "aircraft-orders",
+              "ground-orders",
+              "maintenance",
+              "repairs",
+              "transfers",
+              "damage",
+              "ships"
+            ],
+            "title": "Group"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "turns": {
+            "title": "Turns",
+            "type": "integer"
+          },
+          "base_id": {
+            "title": "Base Id",
+            "type": "string",
+            "format": "uuid"
+          },
+          "tgo_id": {
+            "title": "Tgo Id",
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "$ref": "#/components/schemas/ProductionActionJs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "group",
+          "label",
+          "detail"
+        ],
+        "title": "ProductionItem"
+      },
+      "ProductionJs": {
+        "properties": {
+          "in_progress": {
+            "items": {
+              "$ref": "#/components/schemas/ProductionItemJs"
+            },
+            "type": "array",
+            "title": "In Progress"
+          },
+          "to_handle": {
+            "items": {
+              "$ref": "#/components/schemas/ProductionItemJs"
+            },
+            "type": "array",
+            "title": "To Handle"
+          },
+          "next_end_turns": {
+            "title": "Next End Turns",
+            "type": "integer"
+          },
+          "budget": {
+            "type": "number",
+            "title": "Budget"
+          }
+        },
+        "type": "object",
+        "required": [
+          "in_progress",
+          "to_handle",
+          "budget"
+        ],
+        "title": "Production"
       },
       "PurchaseForceGroupJs": {
         "properties": {

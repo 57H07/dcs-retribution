@@ -54,9 +54,7 @@ class GameJs(BaseModel):
             iads_network=IadsNetworkJs.from_network(game.theater.iads_network),
             threat_zones=ThreatZoneContainerJs.for_game(game),
             navmeshes=NavMeshesJs.from_game(game),
-            map_center=LeafletPoint.from_latlng(
-                game.theater.terrain.map_view_default.position.latlng()
-            ),
+            map_center=LeafletPoint.from_latlng(game.theater.campaign_center()),
             unculled_zones=UnculledZoneJs.from_game(game),
             map_zones=MapZonesJs.from_game(game),
         )

@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Iterator, List, Optional, TYPE_CHECKING, Tuple, Any
 from uuid import UUID
 
-from dcs.mapping import Point
+from dcs.mapping import LatLng, Point
 from dcs.terrain.terrain import Terrain
 from dcs.triggers import TriggerZone
 from shapely import geometry, ops
@@ -87,6 +87,33 @@ class ConflictTheater:
                 k: v for k, v in rz.color.items() if k in [1, 2, 3]
             }:
                 yield rz
+
+    def campaign_bounds(self) -> Optional[Tuple[LatLng, LatLng]]:
+        """South-west and north-east corners around the bases on the map."""
+        from .controlpoint import OffMapSpawn
+
+        positions = [
+            cp.position.latlng()
+            for cp in self.controlpoints
+            if not isinstance(cp, OffMapSpawn)
+        ]
+        if not positions:
+            return None
+        return (
+            LatLng(min(p.lat for p in positions), min(p.lng for p in positions)),
+            LatLng(max(p.lat for p in positions), max(p.lng for p in positions)),
+        )
+
+    def campaign_center(self) -> LatLng:
+        """Where the map opens: the middle of the bases, else the terrain's default."""
+        bounds = self.campaign_bounds()
+        if bounds is None:
+            return self.terrain.map_view_default.position.latlng()
+        south_west, north_east = bounds
+        return LatLng(
+            (south_west.lat + north_east.lat) / 2,
+            (south_west.lng + north_east.lng) / 2,
+        )
 
     def add_controlpoint(self, point: ControlPoint) -> None:
         self.controlpoints.append(point)

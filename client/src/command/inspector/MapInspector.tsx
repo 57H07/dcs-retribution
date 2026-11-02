@@ -1,7 +1,9 @@
 // Contextual inspector of the command view (WEB-01.3, W12): a floating card
-// over the top-right of the map for the base or ground object clicked on the
-// map. Its actions open the base screen (/bases/:id, WEB-02.1).
+// over the top-right of the map for the target clicked on the map. Its actions
+// open the base screen (/bases/:id, WEB-02.1) or plan a package.
 import { commandErrorMessage } from "../../api/commands";
+import { selectDownedPilots } from "../../api/downedPilotsSlice";
+import { selectFrontLines } from "../../api/frontLinesSlice";
 import {
   ControlPointSummary,
   Count,
@@ -10,6 +12,7 @@ import {
   useGetControlPointSummaryQuery,
   useGetTgoSummaryQuery,
 } from "../../api/liberationApi";
+import { useAppSelector } from "../../app/hooks";
 import { MapSelection } from "../../maplayers/mapSelection";
 import { PATHS } from "../../shell/paths";
 import { Button, Gauge, GaugeTone, IconButton, MilSymbol } from "../../ui";
@@ -22,17 +25,39 @@ import { useNavigate } from "react-router-dom";
 export interface MapInspectorProps {
   selection: MapSelection | null;
   onClose: () => void;
+  /** Plans a package on the selection, like the N key. */
+  onPlanPackage?: () => void;
 }
 
-export function MapInspector({ selection, onClose }: MapInspectorProps) {
-  if (selection === null) {
-    return null;
+export function MapInspector({
+  selection,
+  onClose,
+  onPlanPackage,
+}: MapInspectorProps) {
+  switch (selection?.kind) {
+    case undefined:
+      return null;
+    case "controlPoint":
+      return <ControlPointInspector id={selection.id} onClose={onClose} />;
+    case "tgo":
+      return <TgoInspector id={selection.id} onClose={onClose} />;
+    case "frontLine":
+      return (
+        <FrontLineInspector
+          id={selection.id}
+          onClose={onClose}
+          onPlanPackage={onPlanPackage}
+        />
+      );
+    case "downedPilot":
+      return (
+        <DownedPilotInspector
+          id={selection.id}
+          onClose={onClose}
+          onPlanPackage={onPlanPackage}
+        />
+      );
   }
-  return selection.kind === "controlPoint" ? (
-    <ControlPointInspector id={selection.id} onClose={onClose} />
-  ) : (
-    <TgoInspector id={selection.id} onClose={onClose} />
-  );
 }
 
 /** "12 nm from front", or nothing without a front line. */
@@ -295,6 +320,57 @@ function TgoInspector(props: { id: string; onClose: () => void }) {
           {data.control_point_name}
         </Button>
       </div>
+    </Card>
+  );
+}
+
+interface TargetInspectorProps {
+  id: string;
+  onClose: () => void;
+  onPlanPackage?: () => void;
+}
+
+function FrontLineInspector(props: TargetInspectorProps) {
+  const front = useAppSelector(selectFrontLines).fronts[props.id];
+  if (!front) {
+    return <Gone what="front line" onClose={props.onClose} />;
+  }
+  return (
+    <Card title="Front line" onClose={props.onClose}>
+      <div className={styles.actions}>
+        <Button onClick={props.onPlanPackage}>Plan package</Button>
+      </div>
+    </Card>
+  );
+}
+
+function DownedPilotInspector(props: TargetInspectorProps) {
+  const pilot = useAppSelector(selectDownedPilots).downedPilots[props.id];
+  if (!pilot) {
+    return <Gone what="pilot" onClose={props.onClose} />;
+  }
+  return (
+    <Card
+      title={pilot.name}
+      subtitle={subtitle("Downed pilot", pilot.squadron, pilot.aircraft)}
+      onClose={props.onClose}
+    >
+      <p className={styles.note}>
+        {pilot.turns_remaining === 1
+          ? "Last turn to rescue!"
+          : `${pilot.turns_remaining} turns remaining to rescue`}
+      </p>
+      <div className={styles.actions}>
+        <Button onClick={props.onPlanPackage}>Plan CSAR package</Button>
+      </div>
+    </Card>
+  );
+}
+
+function Gone(props: { what: string; onClose: () => void }) {
+  return (
+    <Card title={`No ${props.what}`} onClose={props.onClose}>
+      <p className={styles.note}>This {props.what} is no longer on the map.</p>
     </Card>
   );
 }

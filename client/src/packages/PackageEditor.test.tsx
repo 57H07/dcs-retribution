@@ -7,7 +7,13 @@ import { setupStore } from "../app/store";
 import { Answer, recordFetch, restoreFetch } from "../shell/testing";
 import { ToastProvider } from "../ui";
 import { PackageEditor } from "./PackageEditor";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
@@ -84,10 +90,16 @@ const FLIGHT_OPTIONS: FlightOptions = {
     {
       task: "DEAD",
       aircraft: [
-        { id: "fa18", name: "F/A-18C", squadrons: [squadron("vfa-25")] },
+        {
+          id: "fa18",
+          name: "F/A-18C",
+          player_module: true,
+          squadrons: [squadron("vfa-25")],
+        },
         {
           id: "f16",
           name: "F-16CM",
+          player_module: false,
           squadrons: [
             squadron("sq-16", { max_size: 2 }),
             squadron("sq-carrier", { required_start_type: "In Flight" }),
@@ -341,6 +353,15 @@ describe("add flight form", () => {
     );
     await screen.findByLabelText("Task");
   };
+
+  it("lists the player's modules first, marked, and the others apart", async () => {
+    renderEditor();
+    await open();
+    const own = screen.getByRole("group", { name: "Your modules" });
+    expect(within(own).getByRole("option")).toHaveTextContent("★ F/A-18C");
+    const others = screen.getByRole("group", { name: "AI only" });
+    expect(within(others).getByRole("option")).toHaveTextContent("F-16CM");
+  });
 
   it("adds a flight with the first choices and the default start", async () => {
     const { calls } = renderEditor();

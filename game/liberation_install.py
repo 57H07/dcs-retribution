@@ -45,6 +45,8 @@ __ignore_empty_install_directory = False
 __prefer_liberation_payloads = False
 __setup_preferences_on_every_start = False
 __server_port = DEFAULT_SERVER_PORT
+# DCS unit type ids of the modules the player declared owning.
+__owned_modules: list[str] = []
 # True from a startup that needs the first start setup until preferences are applied.
 __first_start_pending = False
 
@@ -75,12 +77,14 @@ def init() -> bool:
     global __prefer_liberation_payloads
     global __setup_preferences_on_every_start
     global __server_port
+    global __owned_modules
     global __first_start_pending
     __last_save_file = ""
     __ignore_empty_install_directory = False
     __prefer_liberation_payloads = False
     __setup_preferences_on_every_start = False
     __server_port = DEFAULT_SERVER_PORT
+    __owned_modules = []
     if PREFERENCES_PATH.exists():
         try:
             logging.debug("Loading Retribution preferences from %s", PREFERENCES_PATH)
@@ -99,6 +103,7 @@ def init() -> bool:
                 "setup_preferences_on_every_start", False
             )
             __server_port = pref_data.get("server_port", DEFAULT_SERVER_PORT)
+            __owned_modules = list(pref_data.get("owned_modules", []))
             is_first_start = bool(__setup_preferences_on_every_start)
         except (KeyError, TypeError, AttributeError, json.JSONDecodeError):
             __dcs_saved_game_directory = ""
@@ -156,10 +161,20 @@ def save_config() -> None:
         "prefer_liberation_payloads": __prefer_liberation_payloads,
         "setup_preferences_on_every_start": __setup_preferences_on_every_start,
         "server_port": __server_port,
+        "owned_modules": __owned_modules,
     }
     PREFERENCES_PATH.parent.mkdir(exist_ok=True, parents=True)
     with PREFERENCES_PATH.open("w") as prefs:
         json.dump(pref_data, prefs, indent="  ")
+
+
+def owned_modules() -> list[str]:
+    return __owned_modules
+
+
+def set_owned_modules(modules: list[str]) -> None:
+    global __owned_modules
+    __owned_modules = modules
 
 
 def get_dcs_install_directory() -> str:

@@ -13,7 +13,8 @@ from uuid import uuid4
 
 import pytest
 
-from game import Game
+from game import Game, liberation_install
+from game.dcs.aircrafttype import AircraftType
 from game.ato import Flight, FlightType, Package
 from game.ato.flightplans.planningerror import PlanningError
 from game.ato.starttype import StartType
@@ -216,6 +217,31 @@ def test_tot_is_fixed_once_a_flight_started(
 
 
 # --- add flight ----------------------------------------------------------------
+
+
+def test_flight_options_list_the_players_modules_first(
+    game: Game, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = f"/packages/{_sam_package(game).id}/flight-options"
+    aircraft = next(
+        t["aircraft"]
+        for t in _request("GET", path)[1]["tasks"]
+        if len(t["aircraft"]) > 1
+    )
+    assert not any(a["player_module"] for a in aircraft)
+    last = aircraft[-1]
+    module = AircraftType.named(last["id"]).dcs_unit_type.id
+    monkeypatch.setattr(liberation_install, "owned_modules", lambda: [module])
+
+    tasks = _request("GET", path)[1]["tasks"]
+
+    listed = next(t["aircraft"] for t in tasks if last["id"] in map(_id, t["aircraft"]))
+    assert listed[0]["id"] == last["id"]
+    assert listed[0]["player_module"] is True
+
+
+def _id(option: dict[str, Any]) -> str:
+    return option["id"]
 
 
 def test_flight_options_follow_the_target_and_the_air_wing(game: Game) -> None:

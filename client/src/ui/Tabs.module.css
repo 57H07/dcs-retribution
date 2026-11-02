@@ -39,3 +39,8 @@
 .content {
   composes: focusRing from "./shared.module.css";
 }
+
+/* A screen's class can give the panel a display, which would beat [hidden]. */
+.content[hidden] {
+  display: none;
+}

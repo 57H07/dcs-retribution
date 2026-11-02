@@ -13,6 +13,7 @@ import { CareerScreen } from "../secondary/CareerScreen";
 import { InfoPanelScreen } from "../secondary/InfoPanelScreen";
 import { LogsScreen } from "../secondary/LogsScreen";
 import { NotesScreen } from "../secondary/NotesScreen";
+import { ProductionScreen } from "../production/ProductionScreen";
 import { TransfersScreen } from "../secondary/TransfersScreen";
 import { SettingsScreen } from "../settings/SettingsScreen";
 import { TgoScreen } from "../tgos/TgoScreen";
@@ -81,6 +82,7 @@ export const ROUTES: RouteObject[] = [
       },
       // Secondary screens (WEB-08.2).
       { path: "transfers", element: <TransfersScreen /> },
+      { path: "production", element: <ProductionScreen /> },
       { path: "notes", element: <NotesScreen /> },
       { path: "info", element: <InfoPanelScreen /> },
       { path: "career", element: <CareerScreen /> },

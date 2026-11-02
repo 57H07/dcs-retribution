@@ -11,6 +11,8 @@ export enum Tags {
   MISSION_RESULT = "MissionResult",
   TIMELINE = "Timeline",
   PREFERENCES = "Preferences",
+  MODULES = "Modules",
+  PRODUCTION = "Production",
   REPORTS = "Reports",
   PACKAGES = "Packages",
   TRANSFERS = "Transfers",
@@ -359,6 +361,20 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     // /preferences/ (WEB-07.2): saving reloads the state (problems, first start).
     getInstallPreferences: { providesTags: [Tags.PREFERENCES] },
     setInstallPreferences: { invalidatesTags: [Tags.PREFERENCES] },
+    getProduction: { providesTags: [Tags.PRODUCTION] },
+    runProductionAction: {
+      invalidatesTags: [
+        Tags.PRODUCTION,
+        Tags.TRANSFERS,
+        ...TGO_CHANGES,
+        Tags.AIR_WING,
+      ],
+    },
+    getPlayerModules: { providesTags: [Tags.MODULES] },
+    // The aircraft lists show the player's modules first.
+    setPlayerModules: {
+      invalidatesTags: [Tags.MODULES, Tags.AIR_WING_CONFIG],
+    },
     // /waypoints/
     listAllWaypointsForFlight: {
       providesTags: (result, error, arg) => [

@@ -17,11 +17,13 @@ from game.commands.airwingconfig import (
     presets_for,
     primary_tasks,
 )
+from game.commands.preferences import is_player_module
 from ..airwing.models import AllowedTaskJs
 
 if TYPE_CHECKING:
     from game import Game
     from game.coalition import Coalition
+    from game.dcs.aircrafttype import AircraftType
     from game.squadrons import Squadron
 
 
@@ -107,6 +109,10 @@ class ConfigAircraftOptionJs(BaseModel):
 
     aircraft_id: str
     aircraft: str
+    #: The player owns the module: listed first, on the player's side only.
+    player_module: bool
+    #: Squadrons of this aircraft the coalition already has.
+    squadron_count: int
     primary_tasks: list[str]
     bases: list[ConfigBaseJs]
     presets: list[str]
@@ -127,6 +133,9 @@ class ConfigSideJs(BaseModel):
 
     @staticmethod
     def for_coalition(game: Game, side: str, coalition: Coalition) -> ConfigSideJs:
+        def is_own(aircraft: AircraftType) -> bool:
+            return coalition.player.is_blue and is_player_module(aircraft)
+
         return ConfigSideJs(
             side=side,
             faction=coalition.faction.name,
@@ -141,6 +150,8 @@ class ConfigSideJs(BaseModel):
                 ConfigAircraftOptionJs(
                     aircraft_id=aircraft.variant_id,
                     aircraft=aircraft.display_name,
+                    player_module=is_own(aircraft),
+                    squadron_count=len(coalition.air_wing.squadrons.get(aircraft, [])),
                     primary_tasks=[t.value for t in primary_tasks(aircraft)],
                     bases=[
                         ConfigBaseJs(id=base.id, name=base.name)
@@ -148,7 +159,9 @@ class ConfigSideJs(BaseModel):
                     ],
                     presets=[d.name for d in presets_for(coalition, aircraft)],
                 )
-                for aircraft in possible_aircraft(coalition)
+                for aircraft in sorted(
+                    possible_aircraft(coalition), key=lambda a: not is_own(a)
+                )
             ],
         )
 

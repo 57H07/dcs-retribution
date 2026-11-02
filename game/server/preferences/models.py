@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from game.commands.preferences import (
     MAX_PORT,
     InstallPreferences,
+    ModuleChoice,
     install_dir_problem,
     needs_first_start,
     saved_games_problem,
@@ -78,3 +79,23 @@ class InstallPreferencesStateJs(BaseModel):
             dcs_install_dir_problem=install_dir_problem(preferences.dcs_install_dir),
             warning=warning,
         )
+
+
+class ModuleJs(BaseModel):
+    id: str
+    name: str
+    owned: bool
+
+    class Config:
+        title = "PlayerModule"
+
+    @staticmethod
+    def from_choice(choice: ModuleChoice) -> ModuleJs:
+        return ModuleJs(id=choice.id, name=choice.name, owned=choice.owned)
+
+
+class OwnedModulesJs(BaseModel):
+    owned: list[str]
+
+    class Config:
+        title = "OwnedModules"

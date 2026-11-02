@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>New campaign with the real map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+html,body{height:100%}
+body{margin:0;background:#0B0F12;color:#E6EAED;font:14px Inter,sans-serif;display:flex;flex-direction:column;min-height:640px}
+.hd{font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.08em}
+.mono{font-family:'JetBrains Mono',monospace}
+header{display:flex;align-items:center;gap:20px;padding:0 20px;min-height:56px;background:#12181D;border-bottom:1px solid #263039;flex-wrap:wrap}
+h1{margin:0;font-size:22px}
+.step{display:flex;align-items:center;gap:6px;color:#9AA6B0}
+.step i{display:inline-grid;place-items:center;width:20px;height:20px;border:1px solid #33404B;border-radius:50%;font-style:normal;font-size:11px}
+.step.on{color:#E8A33D}.step.on i{border-color:#E8A33D}
+.body{flex:1;min-height:0;display:grid;grid-template-columns:300px minmax(0,1fr) 300px}
+@media (max-width:1100px){.body{grid-template-columns:260px minmax(0,1fr)}.details{grid-column:1 / -1;border-left:0;border-top:1px solid #263039;max-height:220px}}
+@media (max-width:700px){.body{grid-template-columns:minmax(0,1fr)}.list{max-height:240px;border-right:0}.map{min-height:320px}}
+.list,.details{background:#12181D;overflow-y:auto;min-height:0}
+.list{border-right:1px solid #263039;display:flex;flex-direction:column}
+.details{border-left:1px solid #263039;padding:16px;display:flex;flex-direction:column;gap:14px}
+.search{margin:12px;height:34px;padding:0 10px;background:#0B0F12;border:1px solid #33404B;border-radius:4px;color:#E6EAED;font:inherit}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 12px;border-bottom:1px solid #263039}
+.chip{padding:3px 8px;background:#161D23;border:1px solid #33404B;border-radius:4px;font-size:12px;color:#9AA6B0}
+.chip.on{border-color:#E8A33D;color:#E8A33D}
+.item{padding:9px 12px;border-bottom:1px solid #1B232A;cursor:pointer}
+.item b{display:block;font-weight:500}.item span{color:#9AA6B0;font-size:12px}
+.item.on{background:#1A2229;box-shadow:inset 3px 0 #E8A33D}
+.map{position:relative;background:#141D23;overflow:hidden;min-height:0}
+.map svg{position:absolute;inset:0;width:100%;height:100%}
+.tag{position:absolute;left:12px;top:12px;padding:6px 10px;background:rgba(18,24,29,.92);border:1px solid #263039;border-radius:4px;font-size:12px;color:#9AA6B0}
+.attr{position:absolute;right:0;bottom:0;padding:1px 6px;background:rgba(20,24,30,.85);color:#fff;font-size:11px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat span{display:block;color:#9AA6B0;font-size:12px}
+footer{display:flex;align-items:center;gap:10px;padding:10px 20px;background:#12181D;border-top:1px solid #263039}
+button{height:34px;padding:0 14px;background:#161D23;border:1px solid #33404B;border-radius:4px;color:#E6EAED;font:inherit;cursor:pointer}
+button.primary{background:#E8A33D;border-color:#E8A33D;color:#0B0F12;font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <h1 class="hd">New campaign</h1>
+  <span class="step on"><i>1</i>Theater</span><span class="step"><i>2</i>Factions</span><span class="step"><i>3</i>Campaign options</span><span class="step"><i>4</i>Generator</span><span class="step"><i>5</i>Summary</span>
+</header>
+
+<div class="body">
+  <nav class="list" aria-label="Campaigns">
+    <input class="search" placeholder="Filter campaigns" aria-label="Filter campaigns">
+    <div class="chips"><span class="chip on">Syria</span><span class="chip">Caucasus</span><span class="chip">Persian Gulf</span><span class="chip">Cold War</span><span class="chip">Modern</span></div>
+    <div class="item on"><b>Golan Heights lite</b><span>Syria · modern · small</span></div>
+    <div class="item"><b>Assault on Damascus</b><span>Syria · modern · large</span></div>
+    <div class="item"><b>Operation Allied Sword</b><span>Syria · modern · medium</span></div>
+    <div class="item"><b>Inherent Resolve</b><span>Syria · modern · large</span></div>
+    <div class="item"><b>Humble Helper</b><span>Syria · modern · very large</span></div>
+  </nav>
+
+  <main class="map" aria-label="Campaign map preview">
+    <!-- Stands for the Leaflet map of the running campaign, same basemap. -->
+    <svg viewBox="0 0 800 640" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Golan Heights on the map">
+      <rect width="800" height="640" fill="#2A2D30"></rect>
+      <path d="M0 0H250L300 120 262 240 200 330 150 450 110 640H0Z" fill="#1E2023"></path>
+      <path d="M320 0 370 150 350 300 400 460 380 640M600 0 560 170 610 310 590 500 660 640M250 330 420 380 610 310" fill="none" stroke="#3B3F44" stroke-width="1.5"></path>
+      <g fill="none" stroke="#7FB8EE" stroke-width="2" stroke-dasharray="6 5">
+        <path d="M285 480 440 400"></path>
+      </g>
+      <g fill="none" stroke="#F08A5D" stroke-width="2" stroke-dasharray="6 5">
+        <path d="M445 345 535 205 525 245"></path>
+      </g>
+      <path d="M410 372 478 372" stroke="#FE7D0A" stroke-width="12" stroke-linecap="round"></path>
+      <g font-size="14" fill="#E6EAED" font-family="Inter,sans-serif">
+        <g><rect x="273" y="468" width="24" height="24" rx="3" fill="#7FB8EE"></rect><text x="304" y="486">Ramat David</text></g>
+        <g><rect x="428" y="400" width="24" height="24" rx="3" fill="#7FB8EE"></rect><text x="459" y="418">Golan South</text></g>
+        <g><path d="M445 322 460 337 445 352 430 337Z" fill="#F08A5D"></path><text x="466" y="342">Golan North</text></g>
+        <g><path d="M535 190 550 205 535 220 520 205Z" fill="#F08A5D"></path><text x="556" y="210">Damascus</text></g>
+        <g><path d="M525 232 540 247 525 262 510 247Z" fill="#F08A5D"></path><text x="546" y="252">Marj Ruhayyil</text></g>
+      </g>
+    </svg>
+    <div class="tag">Recentred on the selected campaign · pan and zoom work · read only</div>
+    <div class="attr">Leaflet | HERE, DeLorme, MapmyIndia, © OpenStreetMap contributors</div>
+  </main>
+
+  <aside class="details" aria-label="Campaign details">
+    <h2 class="hd" style="margin:0;font-size:20px">Golan Heights lite</h2>
+    <p style="margin:0;color:#C9D2D9">[Campaign description from the campaign YAML: setting, objectives and starting situation.]</p>
+    <div class="stats">
+      <div class="stat"><span>Bases</span><b class="mono" style="color:#7FB8EE">2</b> : <b class="mono" style="color:#F08A5D">3</b></div>
+      <div class="stat"><span>Front lines</span><b class="mono">1</b></div>
+      <div class="stat"><span>Start date</span><b class="mono">2010-06</b></div>
+      <div class="stat"><span>Performance</span><b>Low</b></div>
+    </div>
+    <div><div style="color:#7FB8EE">Blue · Israel 2000</div><div style="color:#F08A5D">Red · Syria 2011</div></div>
+  </aside>
+</div>
+
+<footer>
+  <span style="flex:1"></span>
+  <button>Cancel</button><button>Back</button><button class="primary">Next → Factions</button>
+</footer>
+</body>
+</html>

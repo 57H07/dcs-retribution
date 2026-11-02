@@ -18,7 +18,7 @@ export const SHORTCUT_HELP: { keys: string; description: string }[] = [
     keys: key,
     description: `Toggle map layer: ${OVERLAYS[overlay].name}`,
   })),
-  { keys: "N", description: "New package" },
+  { keys: "N", description: "Plan a package on the selected map target" },
   { keys: "Ctrl+S", description: "Save the campaign" },
   { keys: "?", description: "Show this help" },
 ];

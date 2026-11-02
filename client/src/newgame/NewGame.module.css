@@ -236,20 +236,80 @@
   font-weight: var(--ui-font-weight-semibold);
 }
 
-.mapFrame {
-  flex: 0 0 280px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  background: var(--ui-color-bg-panel);
-  border: 1px solid var(--ui-color-line);
-  border-radius: var(--ui-radius-md);
+/* Theater step (issue #181): the map takes the space left by the list and details. */
+.theater {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr) 320px;
+  grid-template-rows: minmax(320px, 1fr) auto;
+  overflow-y: auto;
 }
 
-.map {
-  width: 100%;
+.theater > .aside {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.mapFrame {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  /* Keeps Leaflet's z-indexes under the status and the screens. */
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--ui-color-bg-canvas);
+}
+
+.previewMap,
+.previewMap :global(.leaflet-container) {
+  position: absolute;
+  inset: 0;
   height: 100%;
+  min-height: 0;
+}
+
+.mapStatus,
+.previewOffline {
+  position: absolute;
+  z-index: 1000;
+  top: var(--ui-space-md);
+  left: var(--ui-space-md);
+  margin: 0;
+  padding: 6px 10px;
+  background: var(--ui-color-bg-panel);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-sm);
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.theaterDetails {
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--ui-space-lg);
+  background: var(--ui-color-bg-panel);
+  border-left: 1px solid var(--ui-color-line);
+}
+
+.theaterFooter {
+  grid-column: 1 / -1;
+  padding: var(--ui-space-md) var(--ui-space-xl);
+  background: var(--ui-color-bg-panel);
+  border-top: 1px solid var(--ui-color-line);
+}
+
+@media (max-width: 1100px) {
+  .theater {
+    grid-template-columns: 260px minmax(0, 1fr);
+    grid-template-rows: minmax(320px, 1fr) minmax(0, 220px) auto;
+  }
+
+  .theaterDetails {
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--ui-color-line);
+    border-left: 0;
+  }
 }
 
 .details {

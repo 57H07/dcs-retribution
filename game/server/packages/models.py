@@ -23,6 +23,7 @@ from game.commands.packageflights import (
     squadrons_for,
 )
 from game.commands.packages import coalition_of
+from game.commands.preferences import is_player_module
 from game.commands.transfers import can_plan_transport_mission
 from game.theater.controlpoint import ControlPoint
 from game.utils import meters
@@ -261,6 +262,8 @@ class FlightAircraftOptionJs(BaseModel):
     #: The id `POST /packages/{id}/auto-create` takes.
     id: str
     name: str
+    #: The player owns the module: listed first, on the player's side only.
+    player_module: bool
     squadrons: list[FlightSquadronOptionJs]
 
     class Config:
@@ -269,7 +272,8 @@ class FlightAircraftOptionJs(BaseModel):
 
 class FlightTaskOptionJs(BaseModel):
     task: str
-    #: Best aircraft for the task first, each with the squadrons that can fly it now.
+    #: The player's modules first, then the best aircraft for the task, each with the
+    #: squadrons that can fly it now.
     aircraft: list[FlightAircraftOptionJs]
 
     class Config:
@@ -285,11 +289,15 @@ class FlightTaskOptionJs(BaseModel):
                     FlightAircraftOptionJs(
                         id=aircraft_type.variant_id,
                         name=str(aircraft_type),
+                        player_module=(
+                            air_wing.player.is_blue and is_player_module(aircraft_type)
+                        ),
                         squadrons=[
                             FlightSquadronOptionJs.for_squadron(s) for s in squadrons
                         ],
                     )
                 )
+        aircraft.sort(key=lambda option: not option.player_module)
         return FlightTaskOptionJs(task=task.value, aircraft=aircraft)
 
 

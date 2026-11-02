@@ -35,6 +35,7 @@ import Legend from "../legend";
 import { CoalitionThreatZones } from "../threatzones";
 import { WaypointDebugZonesControls } from "../waypointdebugzones/WaypointDebugZonesControls";
 import "./LiberationMap.css";
+import { useRecenterOnGame } from "./useRecenterOnGame";
 import { Control, Map } from "leaflet";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { LayersControl, MapContainer, ScaleControl } from "react-leaflet";
@@ -75,12 +76,7 @@ export default function LiberationMap({
   const overlayControl = useRef<Control.Layers>(null);
   const debugControl = useRef<Control.Layers>(null);
   const mapCenter = useAppSelector(selectMapCenter);
-  useEffect(() => {
-    map.current?.setView(mapCenter, map.current?.getZoom() ?? 8, {
-      animate: true,
-      duration: 1,
-    });
-  });
+  useRecenterOnGame(leafletMap, mapCenter);
   // Lets the shortcuts (and WEB-01.3's layer buttons) toggle the overlays.
   useEffect(
     () =>
