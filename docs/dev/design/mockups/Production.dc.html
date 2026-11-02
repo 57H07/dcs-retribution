@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Production and repairs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0B0F12;color:#E6EAED;font:14px Inter,sans-serif}
+.hd{font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.08em}
+.mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+.bar{display:flex;align-items:center;gap:18px;padding:0 16px;min-height:52px;background:#12181D;border-bottom:1px solid #263039;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:8px;height:30px;padding:0 10px;background:#161D23;border:1px solid #E8A33D;border-radius:4px;color:#E8A33D;cursor:pointer}
+.note{color:#9AA6B0;font-size:12px}
+header.top{display:flex;align-items:center;gap:16px;padding:0 24px;min-height:56px;background:#12181D;border-bottom:1px solid #263039;flex-wrap:wrap}
+h1{margin:0;font-size:22px}
+.main{display:grid;grid-template-columns:minmax(0,3fr) minmax(320px,2fr);gap:20px;padding:20px 24px;align-items:start}
+@media (max-width:900px){.main{grid-template-columns:minmax(0,1fr);padding:16px}}
+.panel{background:#12181D;border:1px solid #263039;border-radius:6px;overflow:hidden}
+.panel>h2{margin:0;padding:12px 16px;font-size:17px;border-bottom:1px solid #263039;display:flex;justify-content:space-between}
+.group{padding:10px 16px 4px;color:#9AA6B0;font-size:13px}
+.line{display:grid;grid-template-columns:minmax(0,1fr) 72px 124px;align-items:center;gap:12px;padding:8px 16px;border-top:1px solid #1B232A;cursor:pointer}
+.line:hover{background:#1A2229}
+.what{min-width:0}.what b{font-weight:500;display:block}.what span{color:#9AA6B0;font-size:12px}
+.turns{text-align:right;color:#7FB8EE}
+button{height:30px;width:100%;background:#161D23;border:1px solid #33404B;border-radius:4px;color:#E6EAED;font:inherit;font-size:12px;cursor:pointer}
+button.primary{background:#E8A33D;border-color:#E8A33D;color:#0B0F12;font-weight:600}
+button:disabled{background:#161D23;border-color:#263039;color:#5B6771;cursor:not-allowed}
+.none{height:30px;line-height:30px;text-align:center;color:#5B6771;font-size:12px}
+.cost{text-align:right;color:#E8A33D}
+.caption{padding:18px 24px 0;max-width:1100px;color:#9AA6B0}
+</style>
+</head>
+<body>
+<!-- Top bar of the shell, only to show the badge (issue #182, requirement 7). -->
+<div class="bar">
+  <span class="hd" style="font-weight:700;letter-spacing:.2em">Retribution</span>
+  <span class="mono">$ 2 000M</span>
+  <span class="hd">Air wing</span><span class="hd">Transfers</span><span class="hd">Reports</span>
+  <span class="badge mono" title="5 items in progress, the next one ends in 1 turn. Opens Production and repairs.">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 21h18M5 21V9l5 3V9l5 3V5h4v16"></path></svg>
+    5 · 1 turn
+  </span>
+  <span class="note">← New badge. Discreet (grey, count only) when nothing is under way. Opens this screen.</span>
+</div>
+
+<header class="top">
+  <a style="color:#C9D2D9;text-decoration:none">‹ Command view</a>
+  <div style="width:1px;height:28px;background:#263039"></div>
+  <h1 class="hd">Production &amp; repairs</h1>
+  <span style="flex:1"></span>
+  <span class="note">Budget</span><span class="mono" style="color:#7FB8EE">$ 2 000M</span>
+</header>
+
+<div class="main">
+  <section class="panel" aria-label="In progress">
+    <h2 class="hd"><span>In progress</span><span class="mono" style="color:#E8A33D">5</span></h2>
+
+    <div class="group hd">Aircraft on order</div>
+    <div class="line"><div class="what"><b>4 × F-16CM Fighting Falcon</b><span>VFA-25 · Ramat David</span></div><div class="turns mono">1 turn</div><button>Cancel · +$ 96M</button></div>
+
+    <div class="group hd">Ground units on order</div>
+    <div class="line"><div class="what"><b>6 × M1A2 Abrams</b><span>Golan South</span></div><div class="turns mono">1 turn</div><button>Cancel · +$ 60M</button></div>
+
+    <div class="group hd">Aircraft in maintenance</div>
+    <div class="line"><div class="what"><b>2 × F-4E Phantom II</b><span>Fighter Sqn 69 · Ramat David</span></div><div class="turns mono">2 turns</div><div class="none">Not cancellable</div></div>
+
+    <div class="group hd">Repairs</div>
+    <div class="line"><div class="what"><b>Runway</b><span>Golan South</span></div><div class="turns mono">4 turns</div><div class="none">Not cancellable</div></div>
+
+    <div class="group hd">Pending transfers</div>
+    <div class="line"><div class="what"><b>8 ground units</b><span>Ramat David → Golan South · by road</span></div><div class="turns mono">—</div><button>Cancel</button></div>
+  </section>
+
+  <section class="panel" aria-label="To handle">
+    <h2 class="hd"><span>To handle</span><span class="mono" style="color:#E8A33D">3</span></h2>
+
+    <div class="group hd">Damaged, waiting for money</div>
+    <div class="line" style="grid-template-columns:minmax(0,1fr) 124px"><div class="what"><b>Runway destroyed</b><span>Ramat David · 4 turns once started</span></div><button class="primary">Repair · $ 100M</button></div>
+    <div class="line" style="grid-template-columns:minmax(0,1fr) 124px"><div class="what"><b>3 buildings of Fuel depot HERON</b><span>Golan South · 2 turns once started</span></div><button class="primary">Repair · $ 30M</button></div>
+
+    <div class="group hd">Ships and carriers</div>
+    <div class="line" style="grid-template-columns:minmax(0,1fr) 124px"><div class="what"><b>CVN-74 John C. Stennis</b><span>2 of 5 escort ships destroyed</span></div><button disabled title="Not enough money for the repair">Repair · $ 2 400M</button></div>
+
+    <p class="note" style="margin:0;padding:12px 16px;border-top:1px solid #1B232A">Greyed out: not enough money, the reason shows on hover. A click on any line opens the base, squadron or site concerned.</p>
+  </section>
+</div>
+
+<p class="caption note">Example values. Enemy information never appears here. Empty state: "Nothing in progress, nothing waiting."</p>
+</body>
+</html>

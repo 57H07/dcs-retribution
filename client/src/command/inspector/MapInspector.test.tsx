@@ -1,4 +1,5 @@
-import { ControlPointSummary, TgoSummary } from "../../api/liberationApi";
+import { gameLoaded } from "../../api/actions";
+import { ControlPointSummary, Game, TgoSummary } from "../../api/liberationApi";
 import { setupStore } from "../../app/store";
 import { MapSelection } from "../../maplayers/mapSelection";
 import { recordFetch, restoreFetch } from "../../shell/testing";
@@ -53,12 +54,44 @@ function site(overrides: Partial<TgoSummary> = {}): TgoSummary {
   };
 }
 
-function renderInspector(selection: MapSelection | null, onClose = vi.fn()) {
+const EMPTY_GAME: Partial<Game> = {
+  control_points: [],
+  tgos: [],
+  supply_routes: [],
+  front_lines: [],
+  flights: [],
+  threat_zones: {
+    blue: { full: [], aircraft: [], air_defenses: [], radar_sams: [] },
+    red: { full: [], aircraft: [], air_defenses: [], radar_sams: [] },
+  },
+  navmeshes: { blue: { polys: [] }, red: { polys: [] } },
+  unculled_zones: [],
+  map_zones: { inclusion: [], exclusion: [], sea: [] },
+  iads_network: { advanced: false, connections: [] },
+  downed_pilots: [],
+};
+
+function renderInspector(
+  selection: MapSelection | null,
+  onClose = vi.fn(),
+  onPlanPackage = vi.fn(),
+  game?: Partial<Game>,
+) {
+  const store = setupStore();
+  if (game) {
+    store.dispatch(gameLoaded(game as Game));
+  }
   const router = createMemoryRouter(
     [
       {
         path: "/",
-        element: <MapInspector selection={selection} onClose={onClose} />,
+        element: (
+          <MapInspector
+            selection={selection}
+            onClose={onClose}
+            onPlanPackage={onPlanPackage}
+          />
+        ),
       },
       { path: "/bases/:id", element: <p>Base screen</p> },
       { path: "/tgos/:id", element: <p>Site screen</p> },
@@ -67,7 +100,7 @@ function renderInspector(selection: MapSelection | null, onClose = vi.fn()) {
     { initialEntries: ["/"] },
   );
   render(
-    <Provider store={setupStore()}>
+    <Provider store={store}>
       <RouterProvider router={router} />
     </Provider>,
   );
@@ -196,6 +229,50 @@ describe("map inspector", () => {
     await waitFor(() =>
       expect(router.state.location.pathname).toBe("/bases/cp-2"),
     );
+  });
+
+  it("plans a package on a front line", async () => {
+    recordFetch();
+    const plan = vi.fn();
+    renderInspector({ kind: "frontLine", id: "fl-1" }, vi.fn(), plan, {
+      ...EMPTY_GAME,
+      front_lines: [{ id: "fl-1", extents: [] }],
+    });
+    await userEvent.click(
+      within(card()).getByRole("button", { name: "Plan package" }),
+    );
+    expect(plan).toHaveBeenCalled();
+  });
+
+  it("plans a rescue of a downed pilot", async () => {
+    recordFetch();
+    const plan = vi.fn();
+    renderInspector({ kind: "downedPilot", id: "dp-1" }, vi.fn(), plan, {
+      ...EMPTY_GAME,
+      downed_pilots: [
+        {
+          id: "dp-1",
+          name: "Maverick",
+          squadron: "VF-1",
+          aircraft: "F-14B",
+          blue: true,
+          position: { lat: 0, lng: 0 },
+          turns_remaining: 1,
+          sidc: "",
+        },
+      ],
+    });
+    expect(screen.getByText("Last turn to rescue!")).toBeInTheDocument();
+    await userEvent.click(
+      within(card()).getByRole("button", { name: "Plan CSAR package" }),
+    );
+    expect(plan).toHaveBeenCalled();
+  });
+
+  it("says when the target left the map", () => {
+    recordFetch();
+    renderInspector({ kind: "frontLine", id: "gone" });
+    expect(screen.getByText(/no longer on the map/)).toBeInTheDocument();
   });
 
   it("closes", async () => {

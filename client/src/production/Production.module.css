@@ -1,0 +1,173 @@
+/* Production & repairs (issue #182), after mockups/Production.dc.html. */
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(320px, 2fr);
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.state {
+  margin: 0;
+  color: var(--ui-color-text-secondary);
+}
+
+.budget {
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.budget b {
+  margin-left: var(--ui-space-sm);
+  color: var(--ui-color-friendly);
+  font-family: var(--ui-font-mono);
+  font-weight: var(--ui-font-weight-semibold);
+}
+
+.panel {
+  overflow: hidden;
+  background: var(--ui-color-bg-panel);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-md);
+}
+
+.title {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--ui-color-line);
+  color: var(--ui-color-text-strong);
+  font-family: var(--ui-font-display);
+  font-size: var(--ui-font-size-lg);
+  font-weight: var(--ui-font-weight-semibold);
+  letter-spacing: var(--ui-letter-spacing-display);
+  text-transform: uppercase;
+}
+
+.count {
+  color: var(--ui-color-accent);
+  font-family: var(--ui-font-mono);
+}
+
+.empty {
+  margin: 0;
+  padding: 16px;
+  color: var(--ui-color-text-secondary);
+}
+
+.group {
+  margin: 0;
+  padding: 10px 16px 4px;
+  color: var(--ui-color-text-secondary);
+  font-family: var(--ui-font-display);
+  font-size: var(--ui-font-size-sm);
+  font-weight: var(--ui-font-weight-semibold);
+  letter-spacing: var(--ui-letter-spacing-display);
+  text-transform: uppercase;
+}
+
+.lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px minmax(124px, auto);
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px 0 0;
+  border-top: 1px solid var(--ui-color-line);
+}
+
+.line:hover {
+  background: var(--ui-color-bg-hover);
+}
+
+.what {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 0 8px 16px;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.what:disabled {
+  cursor: default;
+}
+
+.what:focus-visible {
+  outline: 2px solid var(--ui-color-accent);
+  outline-offset: -2px;
+}
+
+.label {
+  font-weight: var(--ui-font-weight-semibold);
+}
+
+.detail {
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+}
+
+.turns {
+  color: var(--ui-color-friendly);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-font-size-sm);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.noAction {
+  color: var(--ui-color-text-disabled);
+  font-size: var(--ui-font-size-sm);
+  text-align: center;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-sm);
+  height: 30px;
+  padding: 0 10px;
+  background: transparent;
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-sm);
+  color: var(--ui-color-text-secondary);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-font-size-sm);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.badge svg {
+  width: 14px;
+  height: 14px;
+}
+
+.badge[data-active] {
+  border-color: var(--ui-color-accent);
+  color: var(--ui-color-accent);
+}
+
+.badge:hover {
+  background: var(--ui-color-bg-hover);
+}
+
+.badge:focus-visible {
+  outline: 2px solid var(--ui-color-accent);
+  outline-offset: 1px;
+}

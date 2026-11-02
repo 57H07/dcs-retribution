@@ -12,7 +12,7 @@ from urllib.parse import quote
 
 import pytest
 
-from game import Game
+from game import Game, liberation_install
 from game.commands import CommandError
 from game.commands.newgame import (
     FactionChoice,
@@ -25,6 +25,7 @@ from game.commands.newgame import (
     starting_settings,
 )
 from game.data.doctrine import ALL_DOCTRINES
+from game.dcs.aircrafttype import AircraftType
 from game.factions import FACTIONS
 from game.gamelock import _GAME_LOCK
 from game.naming import NameGenerator
@@ -365,7 +366,10 @@ def test_preview_counts_bases_and_front_lines() -> None:
     assert status == 200
     assert body["blue_bases"] > 0 and body["red_bases"] > 0
     assert body["front_lines"] >= 1
-    assert all(0 <= base["x"] <= 1 and 0 <= base["y"] <= 1 for base in body["bases"])
+    south_west, north_east = body["south_west"], body["north_east"]
+    for base in body["bases"]:
+        assert south_west["lat"] <= base["position"]["lat"] <= north_east["lat"]
+        assert south_west["lng"] <= base["position"]["lng"] <= north_east["lng"]
     assert sum(link["front_line"] for link in body["links"]) == body["front_lines"]
     status, _ = _request("GET", "/new-game/campaigns/nope/preview")
     assert status == 404
@@ -522,6 +526,47 @@ def test_draft_squadron_can_move_only_to_a_possible_base(draft: Game) -> None:
     assert moved["base_id"] == target["id"]
     enemy = next(iter(draft.theater.control_points_for(draft.red.player)))
     assert _request("PATCH", path, {"base_id": str(enemy.id)})[0] == 409
+
+
+def test_add_squadron_lists_the_players_modules_first(
+    draft: Game, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    options = _blue_side()["aircraft_options"]
+    assert not any(o["player_module"] for o in options)
+    flyable = [o for o in options if AircraftType.named(o["aircraft_id"]).flyable]
+    chosen = flyable[-1]
+    module = AircraftType.named(chosen["aircraft_id"]).dcs_unit_type.id
+    monkeypatch.setattr(liberation_install, "owned_modules", lambda: [module])
+
+    side = _blue_side()
+
+    assert side["aircraft_options"][0]["aircraft_id"] == chosen["aircraft_id"]
+    assert side["aircraft_options"][0]["player_module"] is True
+
+
+def test_add_squadron_counts_the_squadrons_of_each_aircraft(draft: Game) -> None:
+    side = _blue_side()
+    for option in side["aircraft_options"]:
+        assert option["squadron_count"] == sum(
+            s["aircraft"] == option["aircraft"] for s in side["squadrons"]
+        )
+    option = side["aircraft_options"][0]
+    status, _ = _request(
+        "POST",
+        "/air-wing-config/draft/sides/blue/squadrons",
+        {
+            "aircraft_id": option["aircraft_id"],
+            "base_id": option["bases"][0]["id"],
+            "primary_task": option["primary_tasks"][0],
+        },
+    )
+    assert status == 204
+    again = next(
+        o
+        for o in _blue_side()["aircraft_options"]
+        if o["aircraft_id"] == option["aircraft_id"]
+    )
+    assert again["squadron_count"] == option["squadron_count"] + 1
 
 
 def test_draft_squadrons_can_be_added_and_removed(draft: Game) -> None:

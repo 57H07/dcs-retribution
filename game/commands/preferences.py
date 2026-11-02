@@ -10,9 +10,11 @@ from __future__ import annotations
 
 import logging
 import os
+from collections import defaultdict
 from dataclasses import dataclass
 
 from game import liberation_install
+from game.dcs.aircrafttype import AircraftType
 from .errors import CommandError
 
 MAX_PORT = 2**16 - 1
@@ -125,3 +127,50 @@ def apply_preferences(
             "rights. Run Retribution as administrator or replace the file yourself."
         )
     return None
+
+
+@dataclass(frozen=True)
+class ModuleChoice:
+    #: The DCS unit type: its variants in the aircraft data are the same module.
+    id: str
+    name: str
+    owned: bool
+
+
+def module_choices() -> list[ModuleChoice]:
+    """Every flyable aircraft, mods included, and whether the player owns it.
+
+    Empty without a valid Saved Games folder: loading the aircraft data needs it.
+    """
+    if saved_games_problem(liberation_install.get_saved_game_dir()) is not None:
+        return []
+    names: defaultdict[str, list[str]] = defaultdict(list)
+    for aircraft in AircraftType.iter_all():
+        if aircraft.flyable:
+            names[aircraft.dcs_unit_type.id].append(aircraft.display_name)
+    owned = liberation_install.owned_modules()
+    return sorted(
+        (
+            ModuleChoice(module, " / ".join(sorted(variants)), module in owned)
+            for module, variants in names.items()
+        ),
+        key=lambda choice: choice.name,
+    )
+
+
+def set_owned_modules(modules: list[str]) -> None:
+    """Saves the modules the player owns, for every campaign."""
+    known = {choice.id for choice in module_choices()}
+    unknown = sorted(set(modules) - known)
+    if unknown:
+        raise CommandError(f"Unknown modules: {', '.join(unknown)}.")
+    liberation_install.set_owned_modules(sorted(set(modules)))
+    liberation_install.save_config()
+
+
+def is_player_module(aircraft: AircraftType) -> bool:
+    """True when the player declared owning the module of this aircraft."""
+    return (
+        aircraft.flyable
+        and aircraft.dcs_unit_type.id in liberation_install.owned_modules()
+    )

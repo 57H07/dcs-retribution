@@ -75,3 +75,39 @@
   position: fixed;
   z-index: var(--ui-z-index-overlay);
 }
+
+.modules {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-md);
+  padding: var(--ui-space-lg);
+  background: var(--ui-color-bg-panel);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-md);
+}
+
+.modules .path {
+  flex: none;
+  max-width: 320px;
+}
+
+.moduleGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--ui-space-xs) var(--ui-space-lg);
+}
+
+.module {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-sm);
+  min-height: 24px;
+  color: var(--ui-color-text-primary);
+  font-size: var(--ui-font-size-sm);
+  cursor: pointer;
+}
+
+.module input {
+  flex: none;
+  accent-color: var(--ui-color-accent);
+}

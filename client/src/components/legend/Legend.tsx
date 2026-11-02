@@ -145,8 +145,9 @@ export function LegendPanel(props: LegendPanelProps) {
   );
 }
 
-// Legend button and collapsible panel, positioned like a Leaflet control. The
-// open state is remembered across sessions.
+// Legend button and collapsible panel, positioned like a Leaflet control, in
+// the corner the turn actions leave free. The open state is remembered across
+// sessions.
 export function LegendControl(props: LegendPanelProps) {
   const [open, setOpen] = useState(readOpenState);
   const container = useRef<HTMLDivElement>(null);
@@ -165,7 +166,7 @@ export function LegendControl(props: LegendPanelProps) {
   };
 
   return (
-    <div className="leaflet-bottom leaflet-right">
+    <div className="leaflet-bottom leaflet-left legend-corner">
       <div className="leaflet-control leaflet-bar legend" ref={container}>
         <button
           type="button"

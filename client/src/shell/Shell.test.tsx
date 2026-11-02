@@ -23,11 +23,11 @@ describe("shortcuts in the shell", () => {
     expect(screen.getByText("C:/saves/a.retribution")).toBeInTheDocument();
   });
 
-  it("N explains how to plan a package, without a Qt window", async () => {
+  it("N explains how to plan a package while nothing is selected", async () => {
     const calls = recordFetch();
     renderShell();
     fireEvent.keyDown(window, { key: "n" });
-    expect(await screen.findByText(/Right-click a target/)).toBeInTheDocument();
+    expect(await screen.findByText(/Select a target/)).toBeInTheDocument();
     expect(calls).toHaveLength(0);
   });
 
@@ -207,6 +207,7 @@ describe("app bar", () => {
         "/reports/stats",
         "/debrief",
         "/transfers",
+        "/production",
         "/notes",
         "/info",
         "/career",

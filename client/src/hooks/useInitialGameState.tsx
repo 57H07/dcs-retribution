@@ -10,7 +10,7 @@ export const useInitialGameState = () => {
   const dispatch = useAppDispatch();
   useEffect(() => {
     reloadGameState(dispatch);
-  });
+  }, [dispatch]);
 };
 
 export default useInitialGameState;

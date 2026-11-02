@@ -150,9 +150,7 @@ class GameUpdateEvents:
             self.game_unloaded = True
             self.reset_on_map_center = None
         else:
-            self.reset_on_map_center = (
-                game.theater.terrain.map_view_default.position.latlng()
-            )
+            self.reset_on_map_center = game.theater.campaign_center()
             self.game_unloaded = False
         return self
 

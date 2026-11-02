@@ -2,7 +2,7 @@ import { CommandView } from "../command/CommandView";
 import { MapInspector } from "../command/inspector/MapInspector";
 import LiberationMap from "../components/liberationmap";
 import { toggleOverlay } from "../maplayers/layerToggle";
-import { MapSelection } from "../maplayers/mapSelection";
+import { MapSelection, packageTarget } from "../maplayers/mapSelection";
 import { usePlanPackage } from "../packages/usePlanPackage";
 import { FirstStart } from "../preferences/FirstStart";
 import { ToastProvider, useToast } from "../ui";
@@ -30,10 +30,17 @@ function ShellLayout() {
   const planPackage = usePlanPackage();
 
   const newPackage = () => {
+    // The selection only counts while the map is what the player is looking at.
+    const target = location.pathname === "/" ? packageTarget(selection) : null;
+    if (target) {
+      planPackage(target);
+      return;
+    }
     // A package needs a target: explain how to plan one.
     toast({
       title: "New package",
-      description: "Right-click a target on the map to plan a package.",
+      description:
+        "Select a target on the map and press N, or right-click the target.",
     });
   };
 
@@ -79,6 +86,7 @@ function ShellLayout() {
             <MapInspector
               selection={selection}
               onClose={() => setSelection(null)}
+              onPlanPackage={newPackage}
             />
           }
           onNewPackage={newPackage}

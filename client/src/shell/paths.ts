@@ -32,6 +32,7 @@ export const PATHS = {
   reportTab: (tab: ReportTab) => `/reports/${tab}`,
   // WEB-08.2
   transfers: "/transfers",
+  production: "/production",
   notes: "/notes",
   info: "/info",
   career: "/career",

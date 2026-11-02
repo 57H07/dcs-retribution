@@ -37,6 +37,10 @@ import {
   TabsTrigger,
   useToast,
 } from "../ui";
+import {
+  AircraftOptions,
+  NoModulesHint,
+} from "../preferences/AircraftOptions";
 import styles from "./AirWingConfig.module.css";
 import { FactionUnits } from "./FactionUnits";
 import { useEffect, useState } from "react";
@@ -405,13 +409,20 @@ function AddSquadron({
               setPreset("");
             }}
           >
-            {options.map((o) => (
-              <option key={o.aircraft_id} value={o.aircraft_id}>
-                {o.aircraft}
-              </option>
-            ))}
+            <AircraftOptions
+              options={options.map((o) => ({
+                id: o.aircraft_id,
+                name: o.aircraft,
+                playerModule: o.player_module,
+                squadrons: o.squadron_count,
+              }))}
+              grouped={side.side === "blue"}
+            />
           </select>
         </label>
+        {side.side === "blue" && !options.some((o) => o.player_module) && (
+          <NoModulesHint />
+        )}
         <label className={styles.field}>
           <span className={styles.label}>Primary task</span>
           <select

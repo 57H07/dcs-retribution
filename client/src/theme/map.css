@@ -91,7 +91,7 @@ body .leaflet-control-scale-line {
   border-color: var(--color-overlay-text);
 }
 
-body .leaflet-control-attribution {
+body .leaflet-container .leaflet-control-attribution {
   background: var(--color-overlay-background);
   color: var(--color-overlay-text);
 }

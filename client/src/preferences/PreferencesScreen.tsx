@@ -7,6 +7,7 @@ import {
 } from "../api/liberationApi";
 import settings from "../settings/SettingsScreen.module.css";
 import { PATHS } from "../shell/paths";
+import { ModulesSection } from "./ModulesSection";
 import { PreferencesForm } from "./PreferencesForm";
 import { ReactNode } from "react";
 import { Link } from "react-router-dom";
@@ -58,6 +59,7 @@ export function PreferencesScreen() {
         <PreferencesBody>
           {(state) => <PreferencesForm state={state} submitLabel="Apply" />}
         </PreferencesBody>
+        <ModulesSection />
       </div>
     </div>
   );

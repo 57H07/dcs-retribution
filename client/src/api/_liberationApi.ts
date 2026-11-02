@@ -1237,6 +1237,34 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.installPreferencesUpdateJs,
       }),
     }),
+    getPlayerModules: build.query<
+      GetPlayerModulesApiResponse,
+      GetPlayerModulesApiArg
+    >({
+      query: () => ({ url: `/preferences/modules` }),
+    }),
+    setPlayerModules: build.mutation<
+      SetPlayerModulesApiResponse,
+      SetPlayerModulesApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/preferences/modules`,
+        method: "PUT",
+        body: queryArg.ownedModulesJs,
+      }),
+    }),
+    getProduction: build.query<GetProductionApiResponse, GetProductionApiArg>({
+      query: () => ({ url: `/production/` }),
+    }),
+    runProductionAction: build.mutation<
+      RunProductionActionApiResponse,
+      RunProductionActionApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/production/items/${queryArg.itemId}/action`,
+        method: "POST",
+      }),
+    }),
     getIntelReport: build.query<
       GetIntelReportApiResponse,
       GetIntelReportApiArg
@@ -2302,6 +2330,22 @@ export type SetInstallPreferencesApiResponse =
 export type SetInstallPreferencesApiArg = {
   installPreferencesUpdateJs: InstallPreferencesUpdate;
 };
+export type GetPlayerModulesApiResponse =
+  /** status 200 Successful Response */ PlayerModule[];
+export type GetPlayerModulesApiArg = void;
+export type SetPlayerModulesApiResponse =
+  /** status 200 Successful Response */ PlayerModule[];
+export type SetPlayerModulesApiArg = {
+  ownedModulesJs: OwnedModules;
+};
+export type GetProductionApiResponse =
+  /** status 200 Successful Response */ Production | null;
+export type GetProductionApiArg = void;
+export type RunProductionActionApiResponse =
+  /** status 200 Successful Response */ Production;
+export type RunProductionActionApiArg = {
+  itemId: string;
+};
 export type GetIntelReportApiResponse =
   /** status 200 Successful Response */ IntelJs | null;
 export type GetIntelReportApiArg = void;
@@ -2634,6 +2678,8 @@ export type AirWingConfigSquadron = {
 export type AirWingConfigAircraftOption = {
   aircraft_id: string;
   aircraft: string;
+  player_module: boolean;
+  squadron_count: number;
   primary_tasks: string[];
   bases: AirWingConfigBase[];
   presets: string[];
@@ -3449,8 +3495,7 @@ export type NewGameOptions = {
 };
 export type CampaignPreviewBase = {
   name: string;
-  x: number;
-  y: number;
+  position: LatLng;
   side: string;
   kind: string;
 };
@@ -3460,8 +3505,8 @@ export type CampaignPreviewLink = {
   front_line: boolean;
 };
 export type CampaignPreview = {
-  width: number;
-  height: number;
+  south_west?: LatLng;
+  north_east?: LatLng;
   bases: CampaignPreviewBase[];
   links: CampaignPreviewLink[];
   blue_bases: number;
@@ -3608,6 +3653,7 @@ export type FlightSquadronOption = {
 export type FlightAircraftOption = {
   id: string;
   name: string;
+  player_module: boolean;
   squadrons: FlightSquadronOption[];
 };
 export type FlightTaskOption = {
@@ -3805,6 +3851,42 @@ export type InstallPreferencesUpdate = {
   setup_preferences_on_every_start: boolean;
   server_port: number;
   allow_empty_install_dir?: boolean;
+};
+export type PlayerModule = {
+  id: string;
+  name: string;
+  owned: boolean;
+};
+export type OwnedModules = {
+  owned: string[];
+};
+export type ProductionAction = {
+  label: string;
+  cost: number;
+  affordable: boolean;
+};
+export type ProductionItem = {
+  id: string;
+  group:
+    | "aircraft-orders"
+    | "ground-orders"
+    | "maintenance"
+    | "repairs"
+    | "transfers"
+    | "damage"
+    | "ships";
+  label: string;
+  detail: string;
+  turns?: number;
+  base_id?: string;
+  tgo_id?: string;
+  action?: ProductionAction;
+};
+export type Production = {
+  in_progress: ProductionItem[];
+  to_handle: ProductionItem[];
+  next_end_turns?: number;
+  budget: number;
 };
 export type BaseForcesJs = {
   id: string;
@@ -4209,6 +4291,10 @@ export const {
   useSetFlightDatalinkMutation,
   useGetInstallPreferencesQuery,
   useSetInstallPreferencesMutation,
+  useGetPlayerModulesQuery,
+  useSetPlayerModulesMutation,
+  useGetProductionQuery,
+  useRunProductionActionMutation,
   useGetIntelReportQuery,
   useGetStatsReportQuery,
   useGetFinancesReportQuery,

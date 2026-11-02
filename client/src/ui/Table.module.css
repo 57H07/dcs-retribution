@@ -11,7 +11,7 @@
 
 .caption {
   composes: display from "./shared.module.css";
-  padding: var(--ui-space-md) 0;
+  padding: var(--ui-space-md) var(--ui-space-lg);
   color: var(--ui-color-text-secondary);
   font-size: var(--ui-font-size-sm);
   font-weight: var(--ui-font-weight-semibold);
