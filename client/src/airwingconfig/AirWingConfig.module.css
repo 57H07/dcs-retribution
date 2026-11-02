@@ -132,10 +132,15 @@ textarea.input {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: var(--ui-space-xs) var(--ui-space-md);
+  /* Read down each column, so that the alphabetical order shows. */
+  columns: 220px;
+  column-gap: var(--ui-space-md);
   font-size: var(--ui-font-size-sm);
+}
+
+.units > li {
+  break-inside: avoid;
+  padding-bottom: var(--ui-space-xs);
 }
 
 .addUnit {

@@ -11536,6 +11536,13 @@
             },
             "type": "array",
             "title": "Addable"
+          },
+          "player_modules": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Player Modules"
           }
         },
         "type": "object",
@@ -11543,7 +11550,8 @@
           "key",
           "label",
           "units",
-          "addable"
+          "addable",
+          "player_modules"
         ],
         "title": "FactionUnitGroup"
       },

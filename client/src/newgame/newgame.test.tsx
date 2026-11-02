@@ -141,6 +141,7 @@ const SHEET: FactionSheet = {
       label: "Aircraft",
       units: ["F-15C", "F-16C"],
       addable: ["F-22A"],
+      player_modules: [],
     },
   ],
 };

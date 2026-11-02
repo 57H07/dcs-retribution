@@ -6,6 +6,7 @@ import {
   useSetPlayerModulesMutation,
 } from "../api/liberationApi";
 import settings from "../settings/SettingsScreen.module.css";
+import { compareNames } from "./AircraftOptions";
 import { useToast } from "../ui";
 import styles from "./Preferences.module.css";
 import { useEffect, useId, useState } from "react";
@@ -42,9 +43,9 @@ export function ModulesSection() {
   };
 
   const needle = filter.trim().toLowerCase();
-  const shown = (modules ?? []).filter((m) =>
-    m.name.toLowerCase().includes(needle),
-  );
+  const shown = (modules ?? [])
+    .filter((m) => m.name.toLowerCase().includes(needle))
+    .sort((a, b) => compareNames(a.name, b.name));
   return (
     <section className={settings.section} aria-labelledby={headingId}>
       <h2 id={headingId} className={settings.sectionTitle}>

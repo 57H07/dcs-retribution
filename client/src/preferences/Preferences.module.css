@@ -91,10 +91,10 @@
   max-width: 320px;
 }
 
+/* Read down each column, so that the alphabetical order shows. */
 .moduleGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: var(--ui-space-xs) var(--ui-space-lg);
+  columns: 240px;
+  column-gap: var(--ui-space-lg);
 }
 
 .module {
@@ -102,6 +102,7 @@
   align-items: center;
   gap: var(--ui-space-sm);
   min-height: 24px;
+  break-inside: avoid;
   color: var(--ui-color-text-primary);
   font-size: var(--ui-font-size-sm);
   cursor: pointer;

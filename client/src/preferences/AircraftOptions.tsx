@@ -2,6 +2,12 @@
 // others. Which aircraft are the player's comes from the server.
 import styles from "./Preferences.module.css";
 
+/** By name, with the numbers in order: A-4E, A-10A, then F-14, F-100. */
+export const compareNames = new Intl.Collator("en", {
+  numeric: true,
+  sensitivity: "base",
+}).compare;
+
 export interface AircraftOption {
   id: string;
   name: string;

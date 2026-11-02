@@ -2721,6 +2721,7 @@ export type FactionUnitGroup = {
   label: string;
   units: string[];
   addable: string[];
+  player_modules: string[];
 };
 export type FactionSheet = {
   name: string;
