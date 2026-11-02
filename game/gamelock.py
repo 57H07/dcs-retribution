@@ -2,8 +2,8 @@
 
 `Game` is not thread-safe, yet it is touched from several threads: FastAPI runs the
 sync API routes in a worker threadpool, the simulation ticks on a `threading.Timer`
-and the Qt main thread passes turns and processes mission results. Every one of those
-code paths takes this single re-entrant lock for the duration of its access, so that
+and the shell activates campaigns from its main thread. Every one of those code paths
+takes this single re-entrant lock for the duration of its access, so that
 they never interleave.
 
 Rules for callers:

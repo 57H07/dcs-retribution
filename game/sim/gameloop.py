@@ -91,11 +91,7 @@ class GameLoop:
             self.send_update(rate_limit=False)
 
     def send_update(self, rate_limit: bool) -> None:
-        # We don't skip empty events because we still want the tick in the Qt part of
-        # the UI, which will update things like the current simulation time. The time
-        # probably be an "event" of its own. For now the websocket endpoint will filter
-        # out empty events to avoid the map handling unnecessary events, but we still
-        # pass the events through to Qt.
+        # Empty events are not skipped here: the websocket endpoint filters them out.
         now = datetime.now()
         time_since_update = now - self.last_update_time
         if not rate_limit or time_since_update >= timedelta(seconds=1 / 60):

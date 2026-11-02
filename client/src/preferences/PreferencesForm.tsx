@@ -161,9 +161,7 @@ export function PreferencesForm({
     }
   };
 
-  const restartNote =
-    draft.server_port !== state.preferences.server_port ||
-    draft.web_ui !== state.preferences.web_ui;
+  const restartNote = draft.server_port !== state.preferences.server_port;
 
   return (
     <form
@@ -236,22 +234,12 @@ export function PreferencesForm({
             onValueChange={(value) => edit({ server_port: value })}
           />
         </Row>
-        <Row
-          label="Web interface"
-          help="Fill the main window with the web interface (on by default). Turn it off to use the classic Qt interface."
-        >
-          <Switch
-            aria-label="Web interface"
-            checked={draft.web_ui}
-            onCheckedChange={(checked) => edit({ web_ui: checked })}
-          />
-        </Row>
       </Section>
       {children}
       <div className={styles.actions}>
         {restartNote && (
           <span className={styles.note}>
-            Restart Retribution to apply the port and web interface changes.
+            Restart Retribution to apply the port change.
           </span>
         )}
         <Button type="submit" variant="primary" disabled={isLoading}>

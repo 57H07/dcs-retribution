@@ -1,15 +1,9 @@
 // What a click on a base or a ground object of the map does (WEB-01.3).
 //
-// In the web shell, the command view provides a selection handler and the
-// click opens the map inspector, whose actions lead to the base (/bases/:id) and
-// ground object (/tgos/:id, WEB-08.3) screens. Without it (the bare map embedded in
-// the Qt window, Qt mode only), the click opens the Qt dialogs through /qt/info/*.
-import backend from "../api/backend";
-import {
-  NewPackage,
-  PackageTargetKind,
-  useOpenTgoInfoDialogMutation,
-} from "../api/liberationApi";
+// The command view provides a selection handler and the click opens the map
+// inspector, whose actions lead to the base (/bases/:id) and ground object
+// (/tgos/:id, WEB-08.3) screens.
+import { NewPackage, PackageTargetKind } from "../api/liberationApi";
 import { createContext, useCallback, useContext } from "react";
 
 export type MapSelection =
@@ -25,19 +19,12 @@ export type NewPackageHandler = (target: NewPackage) => void;
 /** How the web shell plans a package on a right-clicked target (WEB-04.1). */
 export const NewPackageContext = createContext<NewPackageHandler | null>(null);
 
-/**
- * Plans a package on a target: the web package editor, or the Qt dialog on the
- * bare map embedded in the Qt window.
- */
+/** Plans a package on a target, in the web package editor. */
 export function useNewPackage(): (kind: PackageTargetKind, id: string) => void {
   const plan = useContext(NewPackageContext);
   return useCallback(
     (kind: PackageTargetKind, id: string) => {
-      if (plan) {
-        plan({ target_kind: kind, target_id: id });
-      } else {
-        backend.post(`/qt/create-package/${kind}/${id}`);
-      }
+      plan?.({ target_kind: kind, target_id: id });
     },
     [plan],
   );
@@ -52,33 +39,24 @@ export function useIsInspectedTgo(id: string): boolean {
   return inspected?.kind === "tgo" && inspected.id === id;
 }
 
-/** Opens what a click on a base shows: the inspector, or the Qt dialog. */
+/** Opens what a click on a base shows: the inspector. */
 export function useInspectControlPoint(): (id: string) => void {
   const select = useContext(MapSelectionContext);
   return useCallback(
     (id: string) => {
-      if (select) {
-        select({ kind: "controlPoint", id });
-      } else {
-        backend.post(`/qt/info/control-point/${id}`);
-      }
+      select?.({ kind: "controlPoint", id });
     },
     [select],
   );
 }
 
-/** Opens what a click on a ground object shows: the inspector, or Qt. */
+/** Opens what a click on a ground object shows: the inspector. */
 export function useInspectTgo(): (id: string) => void {
   const select = useContext(MapSelectionContext);
-  const [openInfoDialog] = useOpenTgoInfoDialogMutation();
   return useCallback(
     (id: string) => {
-      if (select) {
-        select({ kind: "tgo", id });
-      } else {
-        openInfoDialog({ tgoId: id });
-      }
+      select?.({ kind: "tgo", id });
     },
-    [select, openInfoDialog],
+    [select],
   );
 }

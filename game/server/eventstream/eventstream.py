@@ -13,7 +13,7 @@ from game.sim import GameUpdateEvents
 class EventStream:
     """Hands game update events from any thread to the /eventstream websocket.
 
-    Producers live on several threads (Qt main thread, API worker threads, the sim
+    Producers live on several threads (shell main thread, API worker threads, the sim
     timer thread) while the consumer awaits on the server's asyncio loop. An
     `asyncio.Queue` is not thread-safe, so once the consumer has bound the queue to
     its loop, puts from other threads are marshalled onto that loop with

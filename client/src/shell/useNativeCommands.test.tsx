@@ -7,7 +7,7 @@ import {
   isFileAction,
   useNativeCommands,
 } from "./useNativeCommands";
-import { useQtCommands } from "./useQtCommands";
+import { useShellCommands } from "./useShellCommands";
 import { act, renderHook, screen, waitFor } from "@testing-library/react";
 import { ReactNode } from "react";
 import { Provider } from "react-redux";
@@ -76,10 +76,10 @@ describe("native file actions", () => {
   });
 });
 
-describe("useQtCommands", () => {
+describe("useShellCommands", () => {
   it("routes the File menu entries and links to the bridge", async () => {
     const calls = recordFetch(200, { outcome: "cancelled" });
-    const qt = renderHook(() => useQtCommands(), { wrapper }).result;
+    const qt = renderHook(() => useShellCommands(), { wrapper }).result;
     act(() => {
       qt.current.openDialog("open-game");
       qt.current.openLink("github");

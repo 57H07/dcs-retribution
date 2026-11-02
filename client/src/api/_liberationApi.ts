@@ -705,6 +705,12 @@ const injectedRtkApi = api.injectEndpoints({
         params: { with_waypoints: queryArg.withWaypoints },
       }),
     }),
+    selectFlight: build.mutation<SelectFlightApiResponse, SelectFlightApiArg>({
+      query: (queryArg) => ({
+        url: `/flights/${queryArg.flightId}/select`,
+        method: "POST",
+      }),
+    }),
     getFlightById: build.query<GetFlightByIdApiResponse, GetFlightByIdApiArg>({
       query: (queryArg) => ({
         url: `/flights/${queryArg.flightId}`,
@@ -1229,75 +1235,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/preferences/`,
         method: "PUT",
         body: queryArg.installPreferencesUpdateJs,
-      }),
-    }),
-    openNewFrontLinePackageDialog: build.mutation<
-      OpenNewFrontLinePackageDialogApiResponse,
-      OpenNewFrontLinePackageDialogApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/qt/create-package/front-line/${queryArg.frontLineId}`,
-        method: "POST",
-      }),
-    }),
-    openNewTgoPackageDialog: build.mutation<
-      OpenNewTgoPackageDialogApiResponse,
-      OpenNewTgoPackageDialogApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/qt/create-package/tgo/${queryArg.tgoId}`,
-        method: "POST",
-      }),
-    }),
-    openTgoInfoDialog: build.mutation<
-      OpenTgoInfoDialogApiResponse,
-      OpenTgoInfoDialogApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/qt/info/tgo/${queryArg.tgoId}`,
-        method: "POST",
-      }),
-    }),
-    openNewControlPointPackageDialog: build.mutation<
-      OpenNewControlPointPackageDialogApiResponse,
-      OpenNewControlPointPackageDialogApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/qt/create-package/control-point/${queryArg.cpId}`,
-        method: "POST",
-      }),
-    }),
-    openNewDownedPilotPackageDialog: build.mutation<
-      OpenNewDownedPilotPackageDialogApiResponse,
-      OpenNewDownedPilotPackageDialogApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/qt/create-package/downed-pilot/${queryArg.pilotId}`,
-        method: "POST",
-      }),
-    }),
-    selectFlight: build.mutation<SelectFlightApiResponse, SelectFlightApiArg>({
-      query: (queryArg) => ({
-        url: `/qt/select-flight/${queryArg.flightId}`,
-        method: "POST",
-      }),
-    }),
-    openControlPointInfoDialog: build.mutation<
-      OpenControlPointInfoDialogApiResponse,
-      OpenControlPointInfoDialogApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/qt/info/control-point/${queryArg.cpId}`,
-        method: "POST",
-      }),
-    }),
-    openEditPackageDialog: build.mutation<
-      OpenEditPackageDialogApiResponse,
-      OpenEditPackageDialogApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/qt/edit-package/flight/${queryArg.flightId}`,
-        method: "POST",
       }),
     }),
     getIntelReport: build.query<
@@ -2019,6 +1956,10 @@ export type ListFlightsApiResponse =
 export type ListFlightsApiArg = {
   withWaypoints?: boolean;
 };
+export type SelectFlightApiResponse = /** status 200 Successful Response */ any;
+export type SelectFlightApiArg = {
+  flightId: string;
+};
 export type GetFlightByIdApiResponse =
   /** status 200 Successful Response */ Flight;
 export type GetFlightByIdApiArg = {
@@ -2360,45 +2301,6 @@ export type SetInstallPreferencesApiResponse =
   /** status 200 Successful Response */ InstallPreferencesState;
 export type SetInstallPreferencesApiArg = {
   installPreferencesUpdateJs: InstallPreferencesUpdate;
-};
-export type OpenNewFrontLinePackageDialogApiResponse =
-  /** status 200 Successful Response */ any;
-export type OpenNewFrontLinePackageDialogApiArg = {
-  frontLineId: string;
-};
-export type OpenNewTgoPackageDialogApiResponse =
-  /** status 200 Successful Response */ any;
-export type OpenNewTgoPackageDialogApiArg = {
-  tgoId: string;
-};
-export type OpenTgoInfoDialogApiResponse =
-  /** status 200 Successful Response */ any;
-export type OpenTgoInfoDialogApiArg = {
-  tgoId: string;
-};
-export type OpenNewControlPointPackageDialogApiResponse =
-  /** status 200 Successful Response */ any;
-export type OpenNewControlPointPackageDialogApiArg = {
-  cpId: string;
-};
-export type OpenNewDownedPilotPackageDialogApiResponse =
-  /** status 200 Successful Response */ any;
-export type OpenNewDownedPilotPackageDialogApiArg = {
-  pilotId: string;
-};
-export type SelectFlightApiResponse = /** status 200 Successful Response */ any;
-export type SelectFlightApiArg = {
-  flightId: string;
-};
-export type OpenControlPointInfoDialogApiResponse =
-  /** status 200 Successful Response */ any;
-export type OpenControlPointInfoDialogApiArg = {
-  cpId: string;
-};
-export type OpenEditPackageDialogApiResponse =
-  /** status 204 Successful Response */ void;
-export type OpenEditPackageDialogApiArg = {
-  flightId: string;
 };
 export type GetIntelReportApiResponse =
   /** status 200 Successful Response */ IntelJs | null;
@@ -3324,6 +3226,7 @@ export type Sim = {
   speed: SimSpeedJs;
   time?: string;
 };
+export type CampaignStateJs = "continue" | "win" | "loss";
 export type TopBar = {
   campaign_name?: string;
   theater: string;
@@ -3342,6 +3245,8 @@ export type TopBar = {
   max_player_count: number;
   sim: Sim;
   show_sim_speed_controls: boolean;
+  campaign_state: CampaignStateJs;
+  warnings: string[];
 };
 export type TimelinePackage = {
   id: string;
@@ -3356,7 +3261,6 @@ export type Timeline = {
   start_time: string;
   packages: TimelinePackage[];
 };
-export type CampaignStateJs = "continue" | "win" | "loss";
 export type Turn = {
   turn: number;
   campaign_state: CampaignStateJs;
@@ -3886,7 +3790,6 @@ export type InstallPreferences = {
   prefer_liberation_payloads: boolean;
   setup_preferences_on_every_start: boolean;
   server_port: number;
-  web_ui: boolean;
 };
 export type InstallPreferencesState = {
   preferences: InstallPreferences;
@@ -3901,7 +3804,6 @@ export type InstallPreferencesUpdate = {
   prefer_liberation_payloads: boolean;
   setup_preferences_on_every_start: boolean;
   server_port: number;
-  web_ui: boolean;
   allow_empty_install_dir?: boolean;
 };
 export type BaseForcesJs = {
@@ -4234,6 +4136,7 @@ export const {
   useSetMemberPropertyMutation,
   useSaveMemberPayloadMutation,
   useListFlightsQuery,
+  useSelectFlightMutation,
   useGetFlightByIdQuery,
   useGetCommitBoundaryForFlightQuery,
   useListFrontLinesQuery,
@@ -4306,14 +4209,6 @@ export const {
   useSetFlightDatalinkMutation,
   useGetInstallPreferencesQuery,
   useSetInstallPreferencesMutation,
-  useOpenNewFrontLinePackageDialogMutation,
-  useOpenNewTgoPackageDialogMutation,
-  useOpenTgoInfoDialogMutation,
-  useOpenNewControlPointPackageDialogMutation,
-  useOpenNewDownedPilotPackageDialogMutation,
-  useSelectFlightMutation,
-  useOpenControlPointInfoDialogMutation,
-  useOpenEditPackageDialogMutation,
   useGetIntelReportQuery,
   useGetStatsReportQuery,
   useGetFinancesReportQuery,

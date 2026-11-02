@@ -32,7 +32,6 @@ from game.commands import (
 from game.server import GameContext
 from game.server.airwing.models import AirWingJs
 from game.server.app import app
-from game.server.dependencies import QtContext
 from game.server.security import ApiKeyManager
 from game.sim import GameUpdateEvents
 from game.squadrons import Pilot, Squadron
@@ -60,7 +59,6 @@ def _loaded(game: Game, monkeypatch: pytest.MonkeyPatch) -> None:
         SimpleNamespace(game=game, sim_controller=sim),
         raising=False,
     )
-    monkeypatch.setattr(QtContext, "_callbacks", None)
 
 
 def _blue(game: Game) -> list[Squadron]:

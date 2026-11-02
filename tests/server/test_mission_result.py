@@ -31,7 +31,6 @@ from game.game import TurnState
 from game.native import NativeContext
 from game.polldebriefingfilethread import PollDebriefingFileThread
 from game.server import GameContext
-from game.server.dependencies import QtCallbacks, QtContext
 from game.server.eventstream import EventStream
 from game.server.eventstream.models import GameUpdateEventsJs
 from game.server.missionresult import MissionResultContext
@@ -381,35 +380,6 @@ def test_mission_result_event_reaches_the_client() -> None:
 # --- HTTP side -----------------------------------------------------------------
 
 
-class _Qt:
-    def __init__(self) -> None:
-        self.turns_passed: list[TurnState] = []
-        self.game_changed = 0
-
-    def callbacks(self) -> QtCallbacks:
-        def ignore(_: Any) -> None:
-            pass
-
-        def changed() -> None:
-            self.game_changed += 1
-
-        return QtCallbacks(
-            ignore,
-            ignore,
-            ignore,
-            ignore,
-            turn_passed=self.turns_passed.append,
-            game_changed=changed,
-        )
-
-
-@pytest.fixture
-def qt(monkeypatch: pytest.MonkeyPatch) -> _Qt:
-    recorder = _Qt()
-    monkeypatch.setattr(QtContext, "_callbacks", recorder.callbacks())
-    return recorder
-
-
 @pytest.fixture
 def bridge(monkeypatch: pytest.MonkeyPatch) -> FakeBridge:
     fake = FakeBridge()
@@ -521,7 +491,7 @@ def test_cancel_route_aborts_the_mission(
     monkeypatch: pytest.MonkeyPatch,
     waiter: MissionResultWaiter,
     sim: _Sim,
-    qt: _Qt,
+    sim_reloads: list[bool],
     published: list[GameUpdateEvents],
     fake_uninitialized: None,
 ) -> None:
@@ -535,7 +505,7 @@ def test_cancel_route_aborts_the_mission(
     assert not sim.watches[0].is_alive()
     assert sim.calls == ["set_game"]
     assert game.released == ["cp"]
-    assert qt.game_changed == 1
+    assert len(sim_reloads) == 1
     assert len(published[-1].updated_flights) == 2
 
 
@@ -597,7 +567,7 @@ def test_accept_route(
     monkeypatch: pytest.MonkeyPatch,
     waiter: MissionResultWaiter,
     sim: _Sim,
-    qt: _Qt,
+    sim_reloads: list[bool],
     state_path: Path,
     fake_reports: None,
 ) -> None:
@@ -622,7 +592,7 @@ def test_accept_route(
     assert ("process", {"mission_ended": True}) in sim.calls
     assert waiter.snapshot().status is MissionResultStatus.IDLE
     # The Qt widgets refresh and the campaign end is checked, as after any turn.
-    assert qt.turns_passed == [TurnState.CONTINUE]
+    assert len(sim_reloads) == 1
     last = waiter.last_report()
     assert last is not None and last.summary == "applied {'mission_ended': True}"
 
@@ -631,7 +601,7 @@ def test_report_route(
     monkeypatch: pytest.MonkeyPatch,
     waiter: MissionResultWaiter,
     sim: _Sim,
-    qt: _Qt,
+    sim_reloads: list[bool],
     state_path: Path,
     fake_reports: None,
 ) -> None:
@@ -666,16 +636,10 @@ def test_report_route(
     assert body["report"]["budget_next_turn"] == 1420.0
 
 
-def test_web_accept_applies_the_result_as_the_qt_path(
+def test_accept_frames_the_result_with_its_report(
     monkeypatch: pytest.MonkeyPatch, sim: _Sim
 ) -> None:
-    """Both front ends apply a result with the same `accept_results` (WEB-05.2):
-    the Qt waiting window calls it, and the web path only frames it with the
-    report, read before and completed after."""
-    from qt_ui.windows import QWaitingForMissionResultWindow as qt_window
-
-    assert qt_window.accept_results is accept_results
-
+    """The report is read before the result is applied and completed after."""
     order: list[str] = []
     applied: list[Any] = []
 

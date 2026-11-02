@@ -51,7 +51,7 @@ from .groundforces import (
 from .models import ControlPointJs
 from .summary import ControlPointSummaryJs
 from ..commanderrors import command_error_responses
-from ..dependencies import GameContext, QtCallbacks, QtContext
+from ..dependencies import GameContext
 from ..leaflet import LeafletPoint
 
 router: APIRouter = APIRouter(prefix="/control-points")
@@ -348,7 +348,6 @@ def attack_departing_convoy(
     destination_id: UUID,
     kind: Literal["convoy", "cargo-ship"] = "convoy",
     game: Game = Depends(GameContext.require),
-    qt: Optional[QtCallbacks] = Depends(QtContext.get_optional),
 ) -> PlannedPackageJs:
     """Plans an empty package against a convoy, for the package editor (WEB-04.5).
 
@@ -358,10 +357,9 @@ def attack_departing_convoy(
         game, _find(game, cp_id), _find(game, destination_id), kind
     )
     # Here: the package routes import the event stream, which needs this module.
-    from ..packages.routes import _now, _refresh_qt
+    from ..packages.routes import _now
 
     package = create_package(game, target, _now(game))
-    _refresh_qt(qt)
     return PlannedPackageJs(id=package.id)
 
 
@@ -414,12 +412,6 @@ def set_radios(
     return BaseActionsJs.for_control_point(game, cp)
 
 
-def _replanned(qt: Optional[QtCallbacks]) -> None:
-    """The Qt widgets reload: a cheat replanned the whole turn."""
-    if qt is not None and qt.game_changed is not None:
-        qt.game_changed()
-
-
 @router.post(
     "/{cp_id}/front-lines/{enemy_id}/cheat",
     operation_id="cheat_move_front_line",
@@ -435,7 +427,6 @@ def cheat_front_line(
     enemy_id: UUID,
     body: FrontLineCheatJs,
     game: Game = Depends(GameContext.require),
-    qt: Optional[QtCallbacks] = Depends(QtContext.get_optional),
 ) -> None:
     cp = _find(game, cp_id)
     enemy = _find(game, enemy_id)
@@ -443,7 +434,7 @@ def cheat_front_line(
 
     with EventStream.event_context() as events:
         cheat_move_front_line(game, cp, enemy, body.advance, events)
-    _replanned(qt)
+    GameContext.reload_sim()
 
 
 @router.post(
@@ -473,17 +464,14 @@ def cheat_runway(cp_id: UUID, game: Game = Depends(GameContext.require)) -> None
 def cheat_capture_base(
     cp_id: UUID,
     game: Game = Depends(GameContext.require),
-    qt: Optional[QtCallbacks] = Depends(QtContext.get_optional),
 ) -> None:
-    """Flips a base. The campaign may be over: `turn_passed` tells the Qt window."""
+    """Flips a base. The campaign may be over: the top bar tells the client."""
     cp = _find(game, cp_id)
     from .. import EventStream
 
     with EventStream.event_context() as events:
         state = cheat_capture(game, cp, events)
-    _replanned(qt)
-    if qt is not None and qt.turn_passed is not None:
-        qt.turn_passed(state)
+    GameContext.reload_sim()
 
 
 @router.get(

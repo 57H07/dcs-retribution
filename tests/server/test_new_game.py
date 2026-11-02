@@ -30,7 +30,6 @@ from game.gamelock import _GAME_LOCK
 from game.naming import NameGenerator
 from game.native import NativeContext
 from game.server import GameContext
-from game.server.dependencies import QtContext
 from game.server.newgame.routes import NewGameContext
 from tests.flightplans.referencegame import (
     BLUE_FACTION,
@@ -175,7 +174,6 @@ def _generation(monkeypatch: pytest.MonkeyPatch) -> Iterator[NewGameGeneration]:
     monkeypatch.setattr(
         GameContext, "_game_model", SimpleNamespace(game=None), raising=False
     )
-    monkeypatch.setattr(QtContext, "_callbacks", None)
     generation = NewGameGeneration()
     NewGameContext.set(generation)
     yield generation
@@ -310,7 +308,6 @@ def test_a_failure_is_reported_and_can_be_retried(
     assert body["status"] == "failed"
     assert "broken miz" in body["error"]
     monkeypatch.undo()
-    monkeypatch.setattr(QtContext, "_callbacks", None)
     NewGameContext.set(_generation)
     status, _ = _request("POST", "/new-game/generation", WEB_REQUEST)
     assert status == 200

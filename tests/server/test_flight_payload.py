@@ -45,7 +45,6 @@ from game.commands.packages import create_package
 from game.data.weapons import Pylon, Weapon
 from game.radio.datalink import DataLinkKey
 from game.server import GameContext
-from game.server.dependencies import QtContext
 from game.server.eventstream import EventStream
 from game.server.flightpayload.models import FlightPayloadJs
 from game.sim import GameUpdateEvents
@@ -79,7 +78,6 @@ def game(reference_game: Game, monkeypatch: pytest.MonkeyPatch) -> Iterator[Game
         SimpleNamespace(game=reference_game, sim_controller=sim),
         raising=False,
     )
-    monkeypatch.setattr(QtContext, "_callbacks", None)
     monkeypatch.setattr(reference_game.settings, "restrict_weapons_by_date", False)
     monkeypatch.setattr(reference_game.settings, "restrict_props_by_date", False)
     yield reference_game

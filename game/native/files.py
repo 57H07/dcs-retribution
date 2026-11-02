@@ -1,7 +1,7 @@
 """Open, save and save-as through the native bridge (WEB-00.7).
 
-Shared by the `/native/*` API routes and the Qt menus, so that both apply the same
-rules as the former `QLiberationWindow.openFile/saveGame/saveGameAs`.
+Shared by the `/native/*` API routes and the shell, which saves when the player
+asks to on closing the window.
 
 The game lock is never held while a dialog waits for the player: these functions
 take it only to read the campaign before the dialog and to write it after.
@@ -116,12 +116,13 @@ def open_game(bridge: NativeBridge, current_game: CurrentGame) -> FileActionResu
     if not path:
         return CANCELLED
     # The new campaign is not shared with any other thread yet: no lock needed.
-    game = _load(path)
+    game = load_save(path)
     bridge.game_loaded(game, path)
     return FileActionResult(FileOutcome.OPENED, path)
 
 
-def _load(path: str) -> Game:
+def load_save(path: str) -> Game:
+    """Read and migrate a save file; a `CommandError` tells why it cannot be."""
     from game import Migrator
 
     incompatible = CommandError(

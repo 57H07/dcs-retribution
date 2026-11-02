@@ -40,9 +40,9 @@ from .flightsettingsmodels import (
     FlightTotOffsetJs,
 )
 from .models import PackageDetailJs
-from .routes import _flight, _now, _refresh_qt, _require_game, _squadron
+from .routes import _flight, _now, _require_game, _squadron
 from ..commanderrors import command_error_responses
-from ..dependencies import GameContext, QtCallbacks, QtContext
+from ..dependencies import GameContext
 
 router: APIRouter = APIRouter()
 
@@ -57,16 +57,13 @@ def _find(
     return game, package, _flight(package, flight_id)
 
 
-def _changed(
-    game: Game, package: Package, flight: Flight, qt: QtCallbacks | None
-) -> PackageDetailJs:
+def _changed(game: Game, package: Package, flight: Flight) -> PackageDetailJs:
     """Publishes the change: the TOT of an ASAP package moves with its flights."""
     with EventStream.event_context() as events:
         if package.auto_asap:
             events.update_flights_in_package(package)
         else:
             events.update_flight(flight)
-    _refresh_qt(qt)
     return PackageDetailJs.for_package(game, package)
 
 
@@ -100,7 +97,6 @@ def put_flight_squadron(
     flight_id: UUID,
     body: FlightSquadronChoiceJs,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> FlightSquadronChangedJs:
     """A new flight of this squadron replaces this one, under another id."""
     game, package, flight = _find(game, package_id, flight_id)
@@ -114,7 +110,6 @@ def put_flight_squadron(
             if other is not replacement:
                 events.update_flight(other)
         game.compute_unculled_zones(events)
-    _refresh_qt(qt)
     return FlightSquadronChangedJs(
         flight_id=replacement.id, package=PackageDetailJs.for_package(game, package)
     )
@@ -132,11 +127,10 @@ def put_flight_size(
     flight_id: UUID,
     body: FlightSizeJs,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> PackageDetailJs:
     game, package, flight = _find(game, package_id, flight_id)
     resize_flight(flight, body.size, _now(game))
-    return _changed(game, package, flight, qt)
+    return _changed(game, package, flight)
 
 
 @router.put(
@@ -151,11 +145,10 @@ def put_flight_start_type(
     flight_id: UUID,
     body: FlightStartTypeJs,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> PackageDetailJs:
     game, package, flight = _find(game, package_id, flight_id)
     set_flight_start_type(flight, body.start_type, _now(game))
-    return _changed(game, package, flight, qt)
+    return _changed(game, package, flight)
 
 
 def _control_point(game: Game, control_point_id: UUID) -> ControlPoint:
@@ -179,13 +172,12 @@ def put_flight_divert(
     flight_id: UUID,
     body: FlightDivertJs,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> PackageDetailJs:
     game, package, flight = _find(game, package_id, flight_id)
     set_flight_divert(
         flight, None if body.divert_id is None else _control_point(game, body.divert_id)
     )
-    return _changed(game, package, flight, qt)
+    return _changed(game, package, flight)
 
 
 @router.put(
@@ -200,11 +192,10 @@ def put_flight_tot_offset(
     flight_id: UUID,
     body: FlightTotOffsetJs,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> PackageDetailJs:
     game, package, flight = _find(game, package_id, flight_id)
     set_flight_tot_offset(flight, timedelta(seconds=body.seconds), _now(game))
-    return _changed(game, package, flight, qt)
+    return _changed(game, package, flight)
 
 
 @router.put(
@@ -219,11 +210,10 @@ def put_flight_custom_name(
     flight_id: UUID,
     body: FlightCustomNameJs,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> PackageDetailJs:
     game, package, flight = _find(game, package_id, flight_id)
     set_flight_custom_name(flight, body.name)
-    return _changed(game, package, flight, qt)
+    return _changed(game, package, flight)
 
 
 @router.put(
@@ -238,11 +228,10 @@ def put_flight_callsign(
     flight_id: UUID,
     body: FlightCallsignJs,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> PackageDetailJs:
     game, package, flight = _find(game, package_id, flight_id)
     set_callsign(flight, body.name, body.number)
-    return _changed(game, package, flight, qt)
+    return _changed(game, package, flight)
 
 
 @router.delete(
@@ -256,12 +245,11 @@ def delete_flight_callsign(
     package_id: UUID,
     flight_id: UUID,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> PackageDetailJs:
     """Back to an automatic callsign."""
     game, package, flight = _find(game, package_id, flight_id)
     reset_callsign(flight)
-    return _changed(game, package, flight, qt)
+    return _changed(game, package, flight)
 
 
 def _free_pilot(flight: Flight, pilot_id: UUID) -> Pilot:
@@ -284,13 +272,12 @@ def put_flight_pilot(
     slot: int,
     body: FlightPilotChoiceJs,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> PackageDetailJs:
     """A pilot, or nobody, in this slot (0 is the lead)."""
     game, package, flight = _find(game, package_id, flight_id)
     pilot = None if body.pilot_id is None else _free_pilot(flight, body.pilot_id)
     set_flight_pilot(flight, slot, pilot, _now(game))
-    return _changed(game, package, flight, qt)
+    return _changed(game, package, flight)
 
 
 @router.put(
@@ -306,10 +293,9 @@ def put_flight_slot_player(
     slot: int,
     body: FlightSlotPlayerJs,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> PackageDetailJs:
     """Makes the pilot of this slot a player or an AI."""
     game, package, flight = _find(game, package_id, flight_id)
     with EventStream.event_context() as events:
         set_flight_slot_player(flight, slot, body.player, events, _now(game))
-    return _changed(game, package, flight, qt)
+    return _changed(game, package, flight)

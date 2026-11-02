@@ -8,9 +8,8 @@ Worked example: `POST /game/turn/pass` (`game/server/game/routes.py`,
 
 ## 1. Business logic in `game/commands/`
 
-The rules live in a plain function under `game/commands/`, shared by the API route
-and any remaining Qt widget (extract it from `qt_ui/` if it lives there today, and
-make the Qt code call it). It takes a `Game`, knows nothing about HTTP or Qt, and
+The rules live in a plain function under `game/commands/`, called by the API route.
+It takes a `Game`, knows nothing about HTTP or Qt, and
 raises `CommandError("readable message")` when the action is not allowed.
 
 ```python
@@ -77,10 +76,9 @@ with EventStream.event_context() as events:
 
 Pick the `GameUpdateEvents` methods matching what changed (`update_flight`,
 `update_tgo`, `begin_new_turn`...). Engine code that already publishes (like
-`Game.pass_turn`, which sends `new_turn`) needs nothing more. When a Qt widget must
-also refresh, add a callback to `QtCallbacks` (`game/server/dependencies.py`) that
-emits a signal of `QLiberationWindow`: the route runs on a worker thread, and the
-signal queues the refresh onto the Qt main thread (see `turn_passed`).
+`Game.pass_turn`, which sends `new_turn`) needs nothing more. A simulation belongs to one turn: after a command that passes
+the turn or changes the game in depth, call `GameContext.reload_sim()` (safe with
+the game lock held).
 
 ## 5. Errors
 
@@ -118,24 +116,15 @@ that codegen cannot handle (send a string or a list of strings instead).
 - Client: stub `fetch`, dispatch `_liberationApi.endpoints.<name>.initiate()` on
   `setupStore()` and check the request and result (see `commands.test.ts`).
 
-## 8. Screens not migrated yet: `/qt/*` (WEB-00.3)
+## 8. Commands without a screen of their own
 
-Until a screen has its web version, its client route opens the Qt dialog through
-a target route (`/qt/create-package/...`, `/qt/info/...`,
-`/qt/edit-package/...`; `/qt/info/tgo/...` only serves the Qt map and answers 503 in
-web mode, where its callback is `None`). The route only calls a `QtCallbacks` callback that emits
-a `QLiberationWindow` signal, so the dialog opens on the Qt main thread after the
-lock is released. A migrated screen removes its route, its Qt slot and the dialog
-itself (W9). `QtScreen` left with its last use, the new campaign wizard (WEB-06). The generic `POST /qt/dialogs/{dialog}` left with
-its last dialog, the air wing (WEB-03). A tool with no file UI needs no dialog at
-all: `POST /tools/import-layouts` and `POST /tools/pretense-campaign` (WEB-08.2) are
-plain commands that answer once the work is done.
+A tool with no file UI needs no dialog at all: `POST /tools/import-layouts` and
+`POST /tools/pretense-campaign` (WEB-08.2) are plain commands that answer once the
+work is done.
 
-The bare map embedded in the Qt window (Qt mode) has no router: its clicks keep
-going through `/qt/*`, and the web shell overrides them through a context
-(`MapSelectionContext`, `NewPackageContext` in `client/src/maplayers/mapSelection.tsx`).
-A right-click on a target thus plans a package with `POST /packages` and opens
-`/packages/{id}` in the web shell, and `/qt/create-package/...` in Qt mode.
+A right-click on a map target plans a package with `POST /packages` and opens
+`/packages/{id}`, through `NewPackageContext` in
+`client/src/maplayers/mapSelection.tsx`.
 
 A base screen tab does not fetch through `GET /control-points/{id}/base` when it
 has its own read model (`/ground-forces`, `/convoys`, `/actions`, WEB-02.3): they all
@@ -143,10 +132,6 @@ provide `Tags.BASE`, so a base event refreshes them together.
 `POST /control-points/{id}/convoys/{destination}/package` plans a package on a convoy
 or cargo ship and answers its id (they have no id of their own, hence the origin,
 destination and `kind`); the client then opens the package editor.
-
-A command may also hand over to a Qt window that is not migrated yet, through a
-`QtCallbacks` callback emitting a `QLiberationWindow` signal (WEB-05.1 did so for
-the debriefing, until WEB-05.2 replaced it with the web after-action report).
 
 ## 8a. An editor with no save step: the package editor (WEB-04.1)
 
@@ -225,8 +210,7 @@ compares a web campaign with a CLI one. Each path must use one copy of the facti
 ## 9. System actions: the native bridge `/native/*` (WEB-00.7, W7)
 
 What a web page cannot do goes through `NativeBridge` (`game/native/bridge.py`),
-which the shell implements (`qt_ui/nativebridge.py` today, Electron or a browser
-later): `POST /native/save`, `/native/save-as`, `/native/open`, `/native/new-game`,
+which the shell implements (`qt_ui/nativebridge.py`): `POST /native/save`, `/native/save-as`, `/native/open`, `/native/new-game`,
 `/native/quit`, `/native/open-folder/{saves|missions}`,
 `/native/open-link/{link}` (`ExternalLink` in `game/native/places.py`), and
 `/native/pick-folder` (`{"purpose": "saved-games"|"dcs-install", "start"}` ->

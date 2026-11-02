@@ -109,8 +109,13 @@ def generate_mission(game: Game, sim: MissionSim) -> Path:
     mission result.
 
     Raises:
-        CommandError: the campaign has not begun, or flights are missing pilots.
+        CommandError: the campaign has not begun or is over, or flights are missing
+            pilots.
     """
+    from game.game import TurnState
+
+    if game.check_win_loss() is not TurnState.CONTINUE:
+        raise CommandError("The campaign is over: no further turn can be played.")
     if game.turn == 0:
         raise CommandError("Begin the campaign before taking off.")
     missing = flights_missing_pilots(game)

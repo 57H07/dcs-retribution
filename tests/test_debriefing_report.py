@@ -282,9 +282,3 @@ def test_report_once_the_results_are_applied(monkeypatch: pytest.MonkeyPatch) ->
 def test_logged_events_without_title() -> None:
     message = Information("", "Repairs begun", turn=1)
     assert [e.text for e in logged_events([message])] == ["Repairs begun"]
-
-
-def test_qt_casualty_grid_uses_the_shared_lines() -> None:
-    from qt_ui.windows import QDebriefingWindow
-
-    assert QDebriefingWindow.loss_lines is debriefingreport.loss_lines

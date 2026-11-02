@@ -7,6 +7,7 @@ from game.gamelock import locked
 from .models import LayoutImportJs, PretenseCampaignJs
 from ..commanderrors import command_error_responses
 from ..dependencies import GameContext
+from ..gamesession import activate_game
 
 router: APIRouter = APIRouter(prefix="/tools")
 
@@ -40,4 +41,4 @@ def post_pretense_campaign(
     """Writes a Pretense mission of the running campaign to the missions folder."""
     if game is None:
         raise CommandError("No campaign is loaded.")
-    return PretenseCampaignJs(path=str(generate_pretense_campaign(game)))
+    return PretenseCampaignJs(path=str(generate_pretense_campaign(game, activate_game)))

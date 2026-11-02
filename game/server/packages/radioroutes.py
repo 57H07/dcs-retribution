@@ -22,9 +22,9 @@ from .radiomodels import (
     FlightTacanJs,
     PackageFrequencyJs,
 )
-from .routes import _flight, _refresh_qt, _require_game
+from .routes import _flight, _require_game
 from ..commanderrors import command_error_responses
-from ..dependencies import GameContext, QtCallbacks, QtContext
+from ..dependencies import GameContext
 
 #: Included in the router of `routes.py`, which adds `/packages`.
 router: APIRouter = APIRouter(prefix="/{package_id}/flights/{flight_id}/radios")
@@ -62,13 +62,11 @@ def put_flight_frequency(
     flight_id: UUID,
     body: FlightFrequencyJs,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> FlightRadiosJs:
     game = _require_game(game)
     flight = _find(game, package_id, flight_id)
     with EventStream.event_context() as events:
         set_flight_frequency(flight, body.mhz, body.modulation, events)
-    _refresh_qt(qt)
     return FlightRadiosJs.for_flight(game, flight)
 
 
@@ -84,14 +82,12 @@ def put_package_frequency(
     flight_id: UUID,
     body: PackageFrequencyJs,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> FlightRadiosJs:
     """Sets the frequency of the package this flight belongs to."""
     game = _require_game(game)
     flight = _find(game, package_id, flight_id)
     with EventStream.event_context() as events:
         set_package_frequency(flight.package, body.mhz, events)
-    _refresh_qt(qt)
     return FlightRadiosJs.for_flight(game, flight)
 
 
@@ -109,13 +105,11 @@ def put_flight_tacan(
     flight_id: UUID,
     body: FlightTacanJs,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> FlightRadiosJs:
     game = _require_game(game)
     flight = _find(game, package_id, flight_id)
     with EventStream.event_context() as events:
         set_flight_tacan(flight, body.channel, body.band, body.callsign, events)
-    _refresh_qt(qt)
     return FlightRadiosJs.for_flight(game, flight)
 
 
@@ -134,11 +128,9 @@ def put_flight_datalink(
     member_index: int,
     body: DatalinkValueJs,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> FlightRadiosJs:
     game = _require_game(game)
     flight = _find(game, package_id, flight_id)
     with EventStream.event_context() as events:
         set_datalink_value(flight, member_index, body.identifier, body.value, events)
-    _refresh_qt(qt)
     return FlightRadiosJs.for_flight(game, flight)

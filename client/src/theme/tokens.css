@@ -1,5 +1,5 @@
-/* Generated from resources/design/tokens.json by qt_ui/design_tokens.py.
- * Do not edit: change the tokens and run `python -m qt_ui.design_tokens`. */
+/* Generated from resources/design/tokens.json by resources/tools/design_tokens.py.
+ * Do not edit: change the tokens and run `python -m resources.tools.design_tokens`. */
 
 :root,
 :root[data-theme="dark"] {

@@ -23,8 +23,10 @@ from game.commands import (
 from game.commands.mission import describe_flight, describe_package
 from game.income import Income
 from game.sim.simspeedsetting import SimSpeedSetting
+from game.theater.controlpoint import motorpools_inside_capture_zone
 from game.theater.player import Player
 from game.utils import meters, mps
+from .models import CampaignStateJs
 
 if TYPE_CHECKING:
     from game import Game
@@ -185,6 +187,21 @@ def economy_assessment(own: float, enemy: float) -> str:
     return "strong advantage"
 
 
+def campaign_warnings(game: Game) -> list[str]:
+    """What the player should fix in the campaign itself, whenever it is loaded."""
+    if not game.settings.motorpool_enabled:
+        return []
+    violations = motorpools_inside_capture_zone(game.theater.controlpoints)
+    if not violations:
+        return []
+    return [
+        "These motorpools are inside their control point's 3 km capture zone, so "
+        "their parked reserve vehicles will block base capture. Move each Garage_A "
+        "marker outside the capture radius:",
+        *(str(v) for v in violations),
+    ]
+
+
 class TopBarJs(BaseModel):
     """Everything the top bar and the turn buttons of the command view show."""
 
@@ -206,6 +223,10 @@ class TopBarJs(BaseModel):
     max_player_count: int
     sim: SimJs
     show_sim_speed_controls: bool
+    #: Won or lost: the client offers a new campaign.
+    campaign_state: CampaignStateJs
+    #: Problems of the campaign to show the player once.
+    warnings: list[str]
 
     class Config:
         title = "TopBar"
@@ -257,6 +278,8 @@ class TopBarJs(BaseModel):
                 time=None if sim_time is None else sim_time.strftime("%H:%M:%S"),
             ),
             show_sim_speed_controls=show_sim_speed_controls,
+            campaign_state=CampaignStateJs.from_turn_state(game.check_win_loss()),
+            warnings=campaign_warnings(game),
         )
 
 

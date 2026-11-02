@@ -2,7 +2,7 @@ from pathlib import Path
 
 from PySide6.QtWebEngineCore import QWebEngineProfile
 
-from qt_ui.widgets.map.webprofile import (
+from qt_ui.webprofile import (
     MAP_HTTP_CACHE_MAX_BYTES,
     MapProfilePaths,
     configure_persistent_http_cache,

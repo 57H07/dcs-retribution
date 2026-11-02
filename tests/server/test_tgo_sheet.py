@@ -39,7 +39,6 @@ from game.dcs.shipunittype import ShipUnitType
 from game.dcs.unitbanners import MISSING_BANNER_PATH, existing_banner_for
 from game.server import GameContext
 from game.server.app import app
-from game.server.dependencies import QtCallbacks, QtContext
 from game.server.security import ApiKeyManager
 from game.server.unitinfo.routes import UnitInfoJs
 from game.sim import GameUpdateEvents
@@ -594,25 +593,6 @@ class TestRoutes:
         assert body["budget"] == 10_000 + value
         assert body["units"] == []
         assert _request("DELETE", f"/tgos/{tgo.id}/group")[0] == 409
-
-    def test_the_qt_dialog_route_is_gone_in_web_mode(
-        self, game: Game, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        def ignore(*_: Any) -> None:
-            pass
-
-        tgo = _sam(game)
-        monkeypatch.setattr(
-            QtContext, "_callbacks", QtCallbacks(ignore, None, ignore, ignore)
-        )
-        assert _request("POST", f"/qt/info/tgo/{tgo.id}")[0] == 503
-
-        opened: list[Any] = []
-        monkeypatch.setattr(
-            QtContext, "_callbacks", QtCallbacks(ignore, opened.append, ignore, ignore)
-        )
-        assert _request("POST", f"/qt/info/tgo/{tgo.id}")[0] == 200
-        assert opened == [tgo]
 
 
 class TestUnitInfo:

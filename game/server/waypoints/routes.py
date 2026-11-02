@@ -12,7 +12,6 @@ from game.ato.flightwaypoint import FlightWaypoint
 from game.ato.flightwaypointtype import FlightWaypointType
 from game.server import GameContext
 from game.server.commanderrors import command_error_responses
-from game.server.dependencies import QtCallbacks, QtContext
 from game.server.leaflet import LeafletPoint
 from game.server.waypoints.models import FlightWaypointJs
 from game.utils import meters
@@ -63,7 +62,6 @@ def set_position(
     waypoint_idx: int,
     position: LeafletPoint,
     game: Game = Depends(GameContext.require),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> None:
     from game.server import EventStream
 
@@ -83,5 +81,3 @@ def set_position(
         package.set_tot_asap(game.conditions.start_time if now is None else now)
     with EventStream.event_context() as events:
         events.update_flights_in_package(package)
-    if qt is not None and qt.packages_changed is not None:
-        qt.packages_changed()
