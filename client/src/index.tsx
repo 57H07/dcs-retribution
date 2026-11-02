@@ -6,7 +6,6 @@ import * as serviceWorker from "./serviceWorker";
 import "./theme/fonts.css";
 import "./theme/map.css";
 import "./theme/tokens.css";
-import { applyTheme, themeFromQuery } from "./theme/theme";
 import "./ui/base.css";
 import "./ui/fonts";
 import { installTokens } from "./ui/tokens";
@@ -14,7 +13,6 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
 
-applyTheme(themeFromQuery(window.location.search));
 // Design system tokens (--ui-*) for the web shell and screens; the map layers
 // keep the Qt-shared theme tokens until the command view (WEB-01).
 installTokens();

@@ -39,7 +39,7 @@ from .models import (
     SquadronTransferOptionsJs,
 )
 from ..commanderrors import command_error_responses
-from ..dependencies import GameContext, QtCallbacks, QtContext
+from ..dependencies import GameContext
 from ..eventstream import EventStream
 
 router: APIRouter = APIRouter()
@@ -173,7 +173,6 @@ def put_destination(
     squadron_id: UUID,
     body: SetDestinationJs,
     game: Game = Depends(GameContext.require),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> None:
     """Orders or cancels a transfer: ferry flights join or leave the ATO."""
     squadron = _squadron(game, squadron_id)
@@ -189,8 +188,6 @@ def put_destination(
     now = GameContext.get_sim().current_time_in_sim
     with EventStream.event_context() as events:
         transfer_squadron(squadron, destination, now, events)
-    if qt is not None and qt.packages_changed is not None:
-        qt.packages_changed()
 
 
 @router.post(

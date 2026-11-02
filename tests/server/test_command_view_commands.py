@@ -8,7 +8,7 @@ from collections.abc import Iterator, MutableMapping
 from datetime import datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, cast
 
 import pytest
 from dcs.cloud_presets import CLOUD_PRESETS
@@ -27,13 +27,15 @@ from game.commands import (
     set_sim_speed,
 )
 from game.commands import mission as mission_module
+from game.game import TurnState
 from game.gamelock import _GAME_LOCK
 from game.server import GameContext
 from game.server.app import app
-from game.server.dependencies import QtContext, UiOptions
+from game.server.dependencies import UiOptions
 from game.server.eventstream import EventStream
 from game.server.game import topbar
 from game.server.missionresult import MissionResultContext
+from game.server.game.models import CampaignStateJs
 from game.server.game.topbar import (
     SimSpeedJs,
     TopBarJs,
@@ -132,9 +134,11 @@ def _game(*packages: _Package, turn: int = 3) -> Any:
         turn=turn,
         blue=SimpleNamespace(ato=SimpleNamespace(packages=list(packages))),
         settings=SimpleNamespace(
-            fast_forward_stop_condition=FastForwardStopCondition.DISABLED
+            fast_forward_stop_condition=FastForwardStopCondition.DISABLED,
+            motorpool_enabled=False,
         ),
         ato_has_clients=ato_has_clients,
+        check_win_loss=lambda: TurnState.CONTINUE,
     )
 
 
@@ -361,6 +365,37 @@ def fake_income(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(topbar, "Income", Income)
 
 
+def test_top_bar_tells_the_campaign_is_over(fake_income: None) -> None:
+    game = _top_bar_game()
+    bar = TopBarJs.from_game(game, SimSpeedSetting.PAUSED, NOW, False)
+    assert bar.campaign_state is CampaignStateJs.CONTINUE
+    game.check_win_loss = lambda: TurnState.WIN
+    bar = TopBarJs.from_game(game, SimSpeedSetting.PAUSED, NOW, False)
+    assert bar.campaign_state is CampaignStateJs.WIN
+
+
+def test_top_bar_warns_about_motorpools_in_the_capture_zone(
+    fake_income: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    game = _top_bar_game()
+    game.theater.controlpoints = []
+    monkeypatch.setattr(
+        topbar, "motorpools_inside_capture_zone", lambda _: ["Motorpool at Batumi"]
+    )
+    # Only when the campaign uses motorpools.
+    assert TopBarJs.from_game(game, SimSpeedSetting.PAUSED, NOW, False).warnings == []
+    game.settings.motorpool_enabled = True
+    warnings = TopBarJs.from_game(game, SimSpeedSetting.PAUSED, NOW, False).warnings
+    assert warnings[-1] == "Motorpool at Batumi"
+
+
+def test_generate_mission_refuses_when_the_campaign_is_over() -> None:
+    game = _game()
+    game.check_win_loss = lambda: TurnState.LOSS
+    with pytest.raises(CommandError, match="The campaign is over"):
+        generate_mission(game, cast(Any, None))
+
+
 def test_top_bar_dto(fake_income: None) -> None:
     bar = TopBarJs.from_game(_top_bar_game(), SimSpeedSetting.X2, NOW, True)
     assert bar.campaign_name == "Slava Ukraini"
@@ -417,7 +452,6 @@ def _load(monkeypatch: pytest.MonkeyPatch, game: Any, sim: _Sim) -> None:
         SimpleNamespace(game=game, sim_controller=sim),
         raising=False,
     )
-    monkeypatch.setattr(QtContext, "_callbacks", None)
 
 
 def _request(method: str, path: str, body: Any = None) -> tuple[int, Any]:

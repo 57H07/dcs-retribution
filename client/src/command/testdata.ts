@@ -28,6 +28,8 @@ export function topBar(overrides: Partial<TopBar> = {}): TopBar {
     air: { friendly: 96, enemy: 132, assessment: "slightly outnumbered" },
     ground: { friendly: 64, enemy: 52, assessment: "slight advantage" },
     economy: "strong advantage",
+    campaign_state: "continue",
+    warnings: [],
     max_player_count: 2,
     sim: { speed: "paused", time: "06:40:00" },
     show_sim_speed_controls: false,

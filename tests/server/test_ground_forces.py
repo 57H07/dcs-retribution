@@ -55,7 +55,6 @@ from game.server.controlpoints.groundforces import (
     GroundForcesJs,
     TransferOptionsJs,
 )
-from game.server.dependencies import QtCallbacks, QtContext
 from game.server.eventstream import EventStream
 from game.sim import GameUpdateEvents
 from game.theater import ControlPoint
@@ -576,10 +575,9 @@ def test_radio_limits_change_nothing(radios: BaseRadios, message: str) -> None:
 
 
 @pytest.fixture
-def served(game: Game, monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
-    created: list[Any] = []
-    changes: list[str] = []
-    passed: list[TurnState] = []
+def served(
+    game: Game, monkeypatch: pytest.MonkeyPatch, sim_reloads: list[bool]
+) -> dict[str, Any]:
 
     def ignore(_: Any) -> None:
         pass
@@ -593,26 +591,11 @@ def served(game: Game, monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
         ),
         raising=False,
     )
-    monkeypatch.setattr(
-        QtContext,
-        "_callbacks",
-        QtCallbacks(
-            created.append,
-            ignore,
-            ignore,
-            ignore,
-            turn_passed=passed.append,
-            game_changed=lambda: changes.append("game"),
-            packages_changed=lambda: changes.append("packages"),
-        ),
-    )
     published: list[GameUpdateEvents] = []
     monkeypatch.setattr(EventStream, "put_nowait", published.append)
     return {
         "game": game,
-        "created": created,
-        "changes": changes,
-        "passed": passed,
+        "reloads": sim_reloads,
         "published": published,
     }
 
@@ -699,7 +682,6 @@ def test_transfer_route(served: dict[str, Any]) -> None:
         2,
     )
     assert origin.base.total_units_of_type(unit) == 3
-    assert "packages" in served["changes"]
     assert any(origin in e.updated_control_points for e in served["published"])
 
     status, body = _request("GET", "/transfers/")
@@ -745,7 +727,6 @@ def test_attack_convoy_route_plans_a_package_for_the_web_editor(
         "POST", f"/control-points/{origin.id}/convoys/{destination.id}/package"
     )
     assert status == 201
-    assert served["created"] == []
     package = game.blue.ato.packages[-1]
     assert body["id"] == str(package.id)
     assert isinstance(package.target, Convoy)
@@ -778,7 +759,7 @@ def test_cheat_routes(served: dict[str, Any]) -> None:
         {"advance": True},
     )
     assert status == 204
-    assert "game" in served["changes"]
+    assert served["reloads"]
 
     game.settings.enable_runway_state_cheat = True
     airfield = _cp(game, "Ramat David")
@@ -790,4 +771,4 @@ def test_cheat_routes(served: dict[str, Any]) -> None:
     status, _ = _request("POST", f"/control-points/{enemy.id}/cheat/capture")
     assert status == 204
     assert enemy.captured.is_blue
-    assert served["passed"] == [TurnState.CONTINUE]
+    assert served["reloads"]

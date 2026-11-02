@@ -13,7 +13,6 @@ from fastapi.routing import APIRoute
 
 from game.server import GameContext
 from game.server.app import app
-from game.server.dependencies import QtContext
 from game.server.eventstream.routes import manager
 from game.server.security import COMMAND_METHODS, ApiKeyManager
 from game.server.settings import ServerSettings
@@ -108,7 +107,6 @@ def no_campaign(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         GameContext, "_game_model", SimpleNamespace(game=None), raising=False
     )
-    monkeypatch.setattr(QtContext, "_callbacks", None)
 
 
 # --- commands -----------------------------------------------------------------

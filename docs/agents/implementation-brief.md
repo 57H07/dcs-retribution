@@ -23,7 +23,7 @@ You implement one or more GitHub issues of the fork `57H07/dcs-retribution` (rem
 - Spec: `docs/dev/design/specification-interface-web.md`; its §6 decisions (W1-W19) win over everything else. ADR: `docs/adr/0001-interface-web-locale.md`.
 - Visual reference: `docs/dev/design/mockups/*.dc.html` (direction A). Read them as HTML for layout, colors and copy; their `<x-dc>`/`{{accent}}` markup is a mockup format, not code to reuse. Accent = `#E8A33D`.
 - The engine stays the source of truth: no game rule in the client. Commands are REST per resource (W3) and mutate `Game` under the global lock once WEB-00.4 is merged.
-- A migrated screen deletes its Qt equivalent in the same PR (W9). Keep old saves loadable.
+- There is no Qt interface left (WEB-09.1): `qt_ui/` is only the shell. Keep old saves loadable.
 - Client checks: the Vitest/Vite scripts of `client/package.json` (`npm test`, `npm run lint`, `npm run build`). After WEB-00.5, regenerate the API client offline with the script it adds; before, start the server only if you must.
 - Do not ask for in-game DCS tests: manual testing is suspended (W19). List DCS-only checks under `## Flight test` as usual.
 

@@ -32,7 +32,6 @@ from game.radio.datalink import DataLinkKey
 from game.radio.radios import RadioFrequency
 from game.radio.tacan import TacanBand, TacanChannel
 from game.server import GameContext
-from game.server.dependencies import QtContext
 from game.server.eventstream import EventStream
 from game.server.packages.models import PackageDetailJs
 from game.sim import GameUpdateEvents
@@ -67,7 +66,6 @@ def game(reference_game: Game, monkeypatch: pytest.MonkeyPatch) -> Iterator[Game
         SimpleNamespace(game=reference_game, sim_controller=sim),
         raising=False,
     )
-    monkeypatch.setattr(QtContext, "_callbacks", None)
     yield reference_game
     reference_game.blue.ato.clear()
     for cp in reference_game.theater.controlpoints:

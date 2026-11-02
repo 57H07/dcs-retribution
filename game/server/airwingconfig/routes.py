@@ -58,7 +58,7 @@ from .models import (
 )
 from ..airwing.models import AutoAssignJs, LiveryChoiceJs, SetLiveryJs
 from ..commanderrors import command_error_responses
-from ..dependencies import GameContext, QtCallbacks, QtContext
+from ..dependencies import GameContext
 from ..native.routes import require_bridge
 from ..newgame.models import FactionSheetJs
 from ..newgame.routes import NewGameContext
@@ -115,9 +115,9 @@ def _base(coalition: Coalition, base_id: UUID) -> ControlPoint:
     raise CommandError(f"The coalition has no base with ID {base_id}.")
 
 
-def _refresh_qt(target: ConfigTarget, qt: QtCallbacks | None) -> None:
-    if target is ConfigTarget.CAMPAIGN and qt is not None and qt.game_changed:
-        qt.game_changed()
+def _reload_sim(target: ConfigTarget) -> None:
+    if target is ConfigTarget.CAMPAIGN:
+        GameContext.reload_sim()
 
 
 @router.get(
@@ -150,7 +150,6 @@ def patch_squadron(
     squadron_id: UUID,
     body: SquadronConfigUpdateJs,
     game: Game = Depends(_game),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> None:
     squadron = _squadron(game, squadron_id)
     if body.name is not None:
@@ -165,7 +164,7 @@ def patch_squadron(
         set_player_names(squadron, body.player_names)
     if body.base_id is not None:
         move_to_base(game, squadron, _base(squadron.coalition, body.base_id))
-    _refresh_qt(target, qt)
+    _reload_sim(target)
 
 
 @router.put(
@@ -238,11 +237,10 @@ def post_preset(
     squadron_id: UUID,
     body: ReplacePresetJs,
     game: Game = Depends(_game),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> None:
     """Replaces the squadron with a preset of the same aircraft."""
     replace_with_preset(game, _squadron(game, squadron_id), body.preset)
-    _refresh_qt(target, qt)
+    _reload_sim(target)
 
 
 @router.delete(
@@ -257,10 +255,9 @@ def delete_squadron(
     target: ConfigTarget,
     squadron_id: UUID,
     game: Game = Depends(_game),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> None:
     remove_squadron(game, _squadron(game, squadron_id))
-    _refresh_qt(target, qt)
+    _reload_sim(target)
 
 
 @router.post(
@@ -276,7 +273,6 @@ def post_squadron(
     side: ConfigSide,
     body: ConfigNewSquadronJs,
     game: Game = Depends(_game),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> None:
     coalition = _coalition(game, side)
     try:
@@ -291,7 +287,7 @@ def post_squadron(
         flight_type_named(body.primary_task),
         body.preset,
     )
-    _refresh_qt(target, qt)
+    _reload_sim(target)
 
 
 @router.post(
@@ -327,7 +323,6 @@ def post_load_file(
     side: ConfigSide,
     game: Game = Depends(_game),
     bridge: NativeBridge = Depends(require_bridge),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> AirWingFileResultJs:
     """Asks for an air wing file, then replaces the coalition's squadrons with it."""
     with one_dialog():
@@ -337,7 +332,7 @@ def post_load_file(
     if path:
         with game_lock():
             load_air_wing(game, _coalition(game, side), Path(path))
-            _refresh_qt(target, qt)
+            _reload_sim(target)
     return AirWingFileResultJs(path=path)
 
 

@@ -14,7 +14,7 @@ from game.theater.player import Player
 from game.transfers import TransferOrder
 from .models import NewTransferJs, TransferJs
 from ..commanderrors import command_error_responses
-from ..dependencies import GameContext, QtCallbacks, QtContext
+from ..dependencies import GameContext
 
 router: APIRouter = APIRouter(prefix="/transfers")
 
@@ -60,7 +60,6 @@ def _transport_squadron(game: Game, squadron_id: UUID) -> Squadron:
 def create_transfer(
     new: NewTransferJs,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> TransferJs:
     """Sends ground units to another base. With a squadron: a Transport mission."""
     if game is None:
@@ -89,9 +88,6 @@ def create_transfer(
     place_transfer(game, transfer, squadron, now)
     with EventStream.event_context() as events:
         events.update_control_point(origin)
-    if qt is not None and qt.packages_changed is not None:
-        # An airlift adds a package behind the Qt ATO models.
-        qt.packages_changed()
     return TransferJs.from_transfer(transfer)
 
 
@@ -108,7 +104,6 @@ def create_transfer(
 def cancel(
     transfer_id: UUID,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> None:
     """Cancels a player transfer: its units return to the origin's inventory."""
     if game is None:
@@ -119,5 +114,4 @@ def cancel(
     cancel_transfer(game, transfer)
     with EventStream.event_context() as events:
         events.update_control_point(transfer.origin)
-    if qt is not None and qt.game_changed is not None:
-        qt.game_changed()
+    GameContext.reload_sim()

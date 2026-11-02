@@ -32,7 +32,7 @@ from .models import (
 )
 from .waiter import MissionResultContext
 from ..commanderrors import command_error_responses
-from ..dependencies import GameContext, QtCallbacks, QtContext
+from ..dependencies import GameContext
 from ..eventstream import EventStream
 from ..game.models import CampaignStateJs, TurnJs
 from ..native.routes import require_bridge
@@ -118,13 +118,12 @@ def load_file(bridge: NativeBridge = Depends(require_bridge)) -> MissionResultJs
     responses=command_error_responses("No campaign is loaded."),
 )
 @locked
-def cancel(qt: QtCallbacks | None = Depends(QtContext.get_optional)) -> None:
+def cancel() -> None:
     """ "Abort mission": stops waiting and goes back to planning, as in Qt."""
     game = _require_game(GameContext.get())
     MissionResultContext.get().stop()
     EventStream.put_nowait(abort_mission(game, GameContext.get_sim()))
-    if qt is not None and qt.game_changed is not None:
-        qt.game_changed()
+    GameContext.reload_sim()
 
 
 @router.post(
@@ -136,13 +135,13 @@ def cancel(qt: QtCallbacks | None = Depends(QtContext.get_optional)) -> None:
     ),
 )
 @locked
-def accept(qt: QtCallbacks | None = Depends(QtContext.get_optional)) -> TurnJs:
+def accept() -> TurnJs:
     """ "Accept results": applies the mission result and starts the next turn.
 
-    Same `accept_results` as the Qt waiting window; the report of the applied
+    The report of the applied
     result is then served by `GET /game/mission/result/report` (status
-    "accepted"). The Qt widgets refresh and the campaign end is checked as after
-    any turn (`QtCallbacks.turn_passed`), as closing the Qt debriefing did.
+    "accepted"). A new turn has a new simulation; the client reads the campaign end
+    in the answer and in the top bar.
     """
     game = _require_game(GameContext.get())
     waiter = MissionResultContext.get()
@@ -150,8 +149,7 @@ def accept(qt: QtCallbacks | None = Depends(QtContext.get_optional)) -> TurnJs:
     report = accept_and_report(game, GameContext.get_sim(), debriefing)
     waiter.finish(report)
     state = game.check_win_loss()
-    if qt is not None and qt.turn_passed is not None:
-        qt.turn_passed(state)
+    GameContext.reload_sim()
     return TurnJs(
         turn=game.turn,
         campaign_state=CampaignStateJs.from_turn_state(state),

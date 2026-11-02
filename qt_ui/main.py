@@ -22,22 +22,12 @@ from game.data.weapons import Pylon, Weapon, WeaponGroup
 from game.dcs.aircrafttype import AircraftType
 from game.persistency import base_path
 from game.profiling import logged_duration
-from game.server import EventStream, Server
-from game.sim import GameUpdateEvents
+from game.server import Server
+from game.server.dependencies import UiOptions
+from game.server.gamesession import start_session
 from pydcs_extensions import load_mods
 from game import liberation_install
-from qt_ui import (
-    liberation_theme,
-    uiconstants,
-)
-from qt_ui.fonts import apply_app_font
-from qt_ui.theme_manager import apply_theme
-from qt_ui.uiflags import UiFlags
-from qt_ui.windows.GameUpdateSignal import GameUpdateSignal
-from qt_ui.windows.QLiberationWindow import QLiberationWindow
-from qt_ui.windows.preferences.QLiberationFirstStartWindow import (
-    QLiberationFirstStartWindow,
-)
+from qt_ui.shell import ShellWindow
 
 THIS_DIR = Path(__file__).parent
 
@@ -61,31 +51,43 @@ def inject_custom_payloads(user_path: Path) -> None:
     PayloadDirectories.set_preferred(user_path / "MissionEditor" / "UnitPayloads")
 
 
-def on_game_load(game: Optional[Game]) -> None:
-    EventStream.drain()
-    EventStream.put_nowait(GameUpdateEvents().game_loaded(game))
+def warn_about_missing_install_directory(splash: QSplashScreen) -> None:
+    if not liberation_install.ignore_empty_install_directory():
+        ignore_checkbox = QCheckBox("Do not show again")
+        ignore_checkbox.stateChanged.connect(set_ignore_empty_install_directory)
+        message_box = QtWidgets.QMessageBox(parent=splash)
+        message_box.setIcon(QtWidgets.QMessageBox.Icon.Warning)
+        message_box.setWindowTitle("No DCS installation directory.")
+        message_box.setText(
+            "The DCS Installation directory is not set correctly. "
+            "This will prevent DCS Retribution from working properly, as the MissionScripting "
+            "file will not be modified."
+            "<br/><br/>To solve this problem, you can set the Installation directory "
+            "within the preferences menu. You can also manually edit or replace the "
+            "following file:"
+            "<br/><br/><strong>&lt;dcs_installation_directory&gt;/Scripts/MissionScripting.lua</strong>"
+            "<br/><br/>The easiest way to do it is to replace the original file with the file in dcs-retribution "
+            "distribution (&lt;dcs_retribution_installation&gt;/resources/scripts/MissionScripting.lua)."
+            "<br/><br/>You can find more information on how to manually change this file in the Retribution Wiki "
+            "(Page: Dedicated Server Guide) on GitHub.</p>"
+        )
+        message_box.setDefaultButton(QtWidgets.QMessageBox.StandardButton.Ok)
+        message_box.setCheckBox(ignore_checkbox)
+        message_box.exec()
 
 
-def run_ui(game: Optional[Game], ui_flags: UiFlags) -> None:
+def run_ui(game: Optional[Game], dev: bool) -> None:
     QApplication.setHighDpiScaleFactorRoundingPolicy(
         Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
     )
 
     app = QApplication(sys.argv)
+    # The few native dialogs left match the dark web UI.
+    app.styleHints().setColorScheme(Qt.ColorScheme.Dark)
 
-    # init the theme and load the stylesheet based on the theme index
-    liberation_theme.init()
-    # Bundled Inter font, sized from the design tokens (GFX-01.4).
-    apply_app_font(app, liberation_theme.get_token_variant())
-    apply_theme(app)
-
-    first_start = liberation_install.init()
     # The web UI shows its own first start screen (WEB-07.2), which replaces the
     # MissionScripting file once the player accepts.
-    web_first_start = first_start and liberation_install.web_ui_enabled()
-    if first_start and not web_first_start:
-        window = QLiberationFirstStartWindow()
-        window.exec()
+    first_start = liberation_install.init()
 
     logging.info("Using {} as 'Saved Game Folder'".format(persistency.base_path()))
     logging.info(
@@ -101,61 +103,28 @@ def run_ui(game: Optional[Game], ui_flags: UiFlags) -> None:
     splash = QSplashScreen(pixmap)
     splash.show()
 
-    # Once splash screen is up : load resources & setup stuff
-    uiconstants.load_icons()
-    uiconstants.load_event_icons()
-    uiconstants.load_aircraft_icons()
-    uiconstants.load_vehicle_icons()
-
-    # Show warning if no DCS Installation directory was set
-    if web_first_start:
-        pass
-    elif liberation_install.get_dcs_install_directory() == "":
-        logging.warning(
-            "DCS Installation directory is empty. MissionScripting file will not be replaced!"
-        )
-        if not liberation_install.ignore_empty_install_directory():
-            ignore_checkbox = QCheckBox("Do not show again")
-            ignore_checkbox.stateChanged.connect(set_ignore_empty_install_directory)
-            message_box = QtWidgets.QMessageBox(parent=splash)
-            message_box.setIcon(QtWidgets.QMessageBox.Icon.Warning)
-            message_box.setWindowTitle("No DCS installation directory.")
-            message_box.setText(
-                "The DCS Installation directory is not set correctly. "
-                "This will prevent DCS Retribution from working properly, as the MissionScripting "
-                "file will not be modified."
-                "<br/><br/>To solve this problem, you can set the Installation directory "
-                "within the preferences menu. You can also manually edit or replace the "
-                "following file:"
-                "<br/><br/><strong>&lt;dcs_installation_directory&gt;/Scripts/MissionScripting.lua</strong>"
-                "<br/><br/>The easiest way to do it is to replace the original file with the file in dcs-retribution "
-                "distribution (&lt;dcs_retribution_installation&gt;/resources/scripts/MissionScripting.lua)."
-                "<br/><br/>You can find more information on how to manually change this file in the Retribution Wiki "
-                "(Page: Dedicated Server Guide) on GitHub.</p>"
+    if not first_start:
+        # Show warning if no DCS Installation directory was set
+        if liberation_install.get_dcs_install_directory() == "":
+            logging.warning(
+                "DCS Installation directory is empty. MissionScripting file will not be replaced!"
             )
-            message_box.setDefaultButton(QtWidgets.QMessageBox.StandardButton.Ok)
-            message_box.setCheckBox(ignore_checkbox)
-            message_box.exec()
-    # Replace DCS Mission scripting file to allow DCS Retribution to work
-    try:
-        if not web_first_start:
+            warn_about_missing_install_directory(splash)
+        # Replace DCS Mission scripting file to allow DCS Retribution to work
+        try:
             liberation_install.replace_mission_scripting_file()
-    except Exception as e:
-        logging.error(e)
-        error_dialog = QtWidgets.QErrorMessage()
-        error_dialog.setWindowTitle("Wrong DCS installation directory.")
-        error_dialog.showMessage(
-            "Unable to modify Mission Scripting file. Possible issues with rights. "
-            "Try running as admin, or please perform the modification of the MissionScripting file manually."
-        )
-        error_dialog.exec()
-
-    # Apply CSS (need works)
-    GameUpdateSignal()
-    GameUpdateSignal.get_instance().game_loaded.connect(on_game_load)
+        except Exception as e:
+            logging.error(e)
+            error_dialog = QtWidgets.QErrorMessage()
+            error_dialog.setWindowTitle("Wrong DCS installation directory.")
+            error_dialog.showMessage(
+                "Unable to modify Mission Scripting file. Possible issues with rights. "
+                "Try running as admin, or please perform the modification of the MissionScripting file manually."
+            )
+            error_dialog.exec()
 
     # Start window
-    window = QLiberationWindow(game, ui_flags)
+    window = ShellWindow(game, dev)
     window.showMaximized()
     splash.finish(window)
     qt_execution_code = app.exec()
@@ -439,8 +408,10 @@ def main():
         return
 
     liberation_install.init()
+    start_session()
+    UiOptions.set(show_sim_speed_controls=args.show_sim_speed_controls)
     with Server(liberation_install.server_port()).run_in_thread():
-        run_ui(game, UiFlags(args.dev, args.show_sim_speed_controls))
+        run_ui(game, args.dev)
 
 
 if __name__ == "__main__":

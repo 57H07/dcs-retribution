@@ -23,7 +23,6 @@ def prefs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     monkeypatch.setattr(liberation_install.persistency, "setup", lambda *args: None)
     monkeypatch.setattr(liberation_install, "_detect_saved_games_directory", str)
     monkeypatch.setattr(liberation_install, "_detect_install_directory", str)
-    monkeypatch.delenv(liberation_install.WEB_UI_ENV_VAR, raising=False)
     _set_game(monkeypatch, None)
     return path
 
@@ -61,7 +60,6 @@ def _body(saved_games: Path | str, install: Path | str, **extra: Any) -> dict[st
         "prefer_liberation_payloads": True,
         "setup_preferences_on_every_start": False,
         "server_port": 16881,
-        "web_ui": True,
         **extra,
     }
 
@@ -87,7 +85,6 @@ def test_first_start_without_preferences_file_and_no_campaign(prefs: Path) -> No
     assert state["saved_game_dir_problem"] == "Choose your DCS Saved Games folder."
     assert state["dcs_install_dir_problem"] is None
     assert state["preferences"]["server_port"] == 16880
-    assert state["preferences"]["web_ui"] is True  # on by default (W10)
 
 
 @pytest.mark.parametrize("content", ["", "{}", "[]", "not json"])
@@ -160,7 +157,6 @@ def test_put_saves_to_the_preferences_file_and_ends_the_first_start(
     assert saved["dcs_install_dir"] == str(dcs)
     assert saved["prefer_liberation_payloads"] is True
     assert saved["server_port"] == 16881
-    assert saved["web_ui"] is True
     # Accepting the first start replaces MissionScripting.lua, as in Qt; later
     # changes do not.
     assert replaced == [str(dcs)]

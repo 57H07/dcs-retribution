@@ -14,7 +14,6 @@ const SAVED: InstallPreferences = {
   prefer_liberation_payloads: false,
   setup_preferences_on_every_start: false,
   server_port: 16880,
-  web_ui: true,
 };
 
 /**
@@ -89,7 +88,6 @@ describe("Preferences screen", () => {
     expect(
       screen.getByRole("textbox", { name: "DCS installation folder" }),
     ).toHaveValue(SAVED.dcs_install_dir);
-    expect(screen.getByRole("switch", { name: "Web interface" })).toBeChecked();
 
     await userEvent.click(
       screen.getByRole("switch", { name: "Prefer custom Liberation payloads" }),

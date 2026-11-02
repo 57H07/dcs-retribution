@@ -7,10 +7,11 @@ import { usePlanPackage } from "../packages/usePlanPackage";
 import { FirstStart } from "../preferences/FirstStart";
 import { ToastProvider, useToast } from "../ui";
 import { AppBar } from "./AppBar";
+import { CampaignNotices } from "./CampaignNotices";
 import { HelpOverlay } from "./HelpOverlay";
 import styles from "./Shell.module.css";
 import { ShortcutAction, useShortcuts } from "./shortcuts";
-import { useQtCommands } from "./useQtCommands";
+import { useShellCommands } from "./useShellCommands";
 import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
@@ -24,7 +25,7 @@ function ShellLayout() {
   const [selection, setSelection] = useState<MapSelection | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const qt = useQtCommands();
+  const qt = useShellCommands();
   const toast = useToast();
   const planPackage = usePlanPackage();
 
@@ -86,6 +87,7 @@ function ShellLayout() {
       </main>
       <HelpOverlay open={helpOpen} onOpenChange={setHelpOpen} />
       <FirstStart />
+      <CampaignNotices />
     </div>
   );
 }

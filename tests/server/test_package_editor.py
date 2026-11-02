@@ -26,7 +26,6 @@ from game.commands.packageflights import (
 )
 from game.commands.packages import create_package, set_package_tot
 from game.server import GameContext
-from game.server.dependencies import QtContext
 from game.server.eventstream import EventStream
 from game.sim import GameUpdateEvents
 from game.squadrons import Squadron
@@ -60,7 +59,6 @@ def game(reference_game: Game, monkeypatch: pytest.MonkeyPatch) -> Iterator[Game
         SimpleNamespace(game=reference_game, sim_controller=sim),
         raising=False,
     )
-    monkeypatch.setattr(QtContext, "_callbacks", None)
     yield reference_game
     reference_game.blue.ato.clear()
 

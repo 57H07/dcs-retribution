@@ -25,7 +25,6 @@ class InstallPreferences:
     prefer_liberation_payloads: bool
     setup_preferences_on_every_start: bool
     server_port: int
-    web_ui: bool
 
 
 def current_preferences() -> InstallPreferences:
@@ -37,7 +36,6 @@ def current_preferences() -> InstallPreferences:
             liberation_install.setup_preferences_on_every_start()
         ),
         server_port=liberation_install.server_port(),
-        web_ui=liberation_install.web_ui_preference(),
     )
 
 
@@ -115,7 +113,6 @@ def apply_preferences(
         preferences.setup_preferences_on_every_start,
         preferences.server_port,
     )
-    liberation_install.set_web_ui_preference(preferences.web_ui)
     liberation_install.save_config()
     if not completes_first_start:
         return None

@@ -1,15 +1,19 @@
 from __future__ import annotations
 
-from typing import Callable, TYPE_CHECKING
-
-from game.theater import ControlPoint, MissionTarget, TheaterGroundObject
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from game import Game
-    from game.ato import Flight, Package
-    from game.game import TurnState
-    from qt_ui.models import GameModel
-    from qt_ui.simcontroller import SimController
+    from game.sim.simcontroller import SimController
+
+
+@dataclass
+class GameModel:
+    """The running campaign, or None, and its turn simulation."""
+
+    game: Game | None
+    sim_controller: SimController
 
 
 class GameContext:
@@ -18,6 +22,10 @@ class GameContext:
     @classmethod
     def set_model(cls, game_model: GameModel) -> None:
         cls._game_model = game_model
+
+    @classmethod
+    def set_game(cls, game: Game | None) -> None:
+        cls._game_model.game = game
 
     @classmethod
     def get(cls) -> Game | None:
@@ -30,72 +38,26 @@ class GameContext:
         return cls._game_model.game
 
     @classmethod
-    def get_model(cls) -> GameModel:
-        return cls._game_model
-
-    @classmethod
     def get_sim(cls) -> SimController:
         """The turn simulation (sim speed, fast forward, mission generation)."""
         return cls._game_model.sim_controller
 
+    @classmethod
+    def reload_sim(cls) -> None:
+        """Starts a new simulation of the campaign, paused.
+
+        A simulation belongs to one turn and to the flights planned when it was
+        created: call this after a command passed the turn or changed the game in
+        depth (a cheat, an expensive setting). Safe with the game lock held.
+        """
+        cls.get_sim().set_game(cls._game_model.game)
+
 
 class UiOptions:
-    """Command-line options of the UI the web client needs (`qt_ui.uiflags`)."""
+    """Command-line options of the shell the web client needs (`qt_ui.main`)."""
 
     show_sim_speed_controls: bool = False
 
     @classmethod
     def set(cls, show_sim_speed_controls: bool) -> None:
         cls.show_sim_speed_controls = show_sim_speed_controls
-
-
-class QtCallbacks:
-    def __init__(
-        self,
-        create_new_package: Callable[[MissionTarget], None],
-        # None in web mode: the web UI has its own ground object screen (WEB-08.3).
-        show_tgo_info: Callable[[TheaterGroundObject], None] | None,
-        show_control_point_info: Callable[[ControlPoint], None],
-        select_flight: Callable[[Flight], None],
-        turn_passed: Callable[[TurnState], None] | None = None,
-        edit_package: Callable[[Package], None] | None = None,
-        game_changed: Callable[[], None] | None = None,
-        packages_changed: Callable[[], None] | None = None,
-    ) -> None:
-        self.create_new_package = create_new_package
-        self.show_tgo_info = show_tgo_info
-        self.show_control_point_info = show_control_point_info
-        self.select_flight = select_flight
-        # Refreshes the Qt widgets after an API command passed the turn. Called from
-        # an API worker thread with the game lock held: it must only queue work onto
-        # the Qt main thread (emit a signal), never block on it.
-        self.turn_passed = turn_passed
-        # Opens the package editor for the web UI (WEB-00.3). Same contract as
-        # turn_passed: emit a signal.
-        self.edit_package = edit_package
-        # Reloads every Qt widget after an API command changed the game in depth
-        # (Qt: GameUpdateSignal.updateGame), e.g. a cheat or an expensive setting
-        # (WEB-07.1). Same contract as turn_passed: emit a signal.
-        self.game_changed = game_changed
-        # Resyncs the Qt ATO models and radio allocations after an API command
-        # removed a package (WEB-01.2). Same contract as turn_passed: emit a signal.
-        self.packages_changed = packages_changed
-
-
-class QtContext:
-    _callbacks: QtCallbacks | None = None
-
-    @classmethod
-    def set_callbacks(cls, callbacks: QtCallbacks) -> None:
-        cls._callbacks = callbacks
-
-    @classmethod
-    def get(cls) -> QtCallbacks:
-        if cls._callbacks is None:
-            raise RuntimeError("QtContext has no callbacks set")
-        return cls._callbacks
-
-    @classmethod
-    def get_optional(cls) -> QtCallbacks | None:
-        """The Qt callbacks, or None when no Qt window is running (tests)."""
-        return cls._callbacks

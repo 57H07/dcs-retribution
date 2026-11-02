@@ -4,7 +4,7 @@ Choosing a save file, opening a folder or an external link and quitting cannot b
 done by a web page. The engine asks a `NativeBridge` instead, which the shell hosting
 the web view implements: Qt today (`qt_ui/nativebridge.py`), Electron or a browser
 later. The file actions themselves (`files.py`) know nothing about Qt or HTTP: the
-`/native/*` API routes and the remaining Qt menus share them.
+`/native/*` API routes and the shell share them.
 """
 
 from .bridge import NativeBridge, NativeContext

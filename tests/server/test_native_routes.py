@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
+import json
 import threading
+from collections.abc import MutableMapping
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -15,7 +18,41 @@ from game.gamelock import _GAME_LOCK
 from game.native import ExternalLink, NativeBridge, NativeContext, NativeFolder
 from game.native import files
 from game.server import GameContext
-from tests.server.test_qt_dialog_routes import _post
+from game.server.app import app
+from game.server.security import ApiKeyManager
+
+
+def _post(path: str, api_key: str | None = None) -> tuple[int, Any]:
+    """Send one POST through the whole ASGI app (key, routing, lock, errors)."""
+    messages: list[MutableMapping[str, Any]] = []
+
+    async def receive() -> dict[str, Any]:
+        return {"type": "http.request", "body": b"", "more_body": False}
+
+    async def send(message: MutableMapping[str, Any]) -> None:
+        messages.append(message)
+
+    key = ApiKeyManager.key() if api_key is None else api_key
+    scope = {
+        "type": "http",
+        "asgi": {"version": "3.0"},
+        "http_version": "1.1",
+        "method": "POST",
+        "scheme": "http",
+        "path": path,
+        "raw_path": path.encode(),
+        "root_path": "",
+        "query_string": b"",
+        "headers": [(b"host", b"testserver"), (b"x-api-key", key.encode())],
+        "client": ("testclient", 50000),
+        "server": ("testserver", 80),
+    }
+    asyncio.run(app(scope, receive, send))
+    status = next(m["status"] for m in messages if m["type"] == "http.response.start")
+    body = b"".join(
+        m.get("body", b"") for m in messages if m["type"] == "http.response.body"
+    )
+    return status, json.loads(body) if body else None
 
 
 def _lock_is_free() -> bool:

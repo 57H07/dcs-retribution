@@ -1,4 +1,4 @@
-"""Tools menu actions (WEB-08.2), shared by the web UI and Qt.
+"""Tools menu actions (WEB-08.2).
 
 Neither needs a file dialog: layouts are read from the install folders and the
 Pretense mission is written to the missions folder, so both are plain commands.
@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Callable, TYPE_CHECKING
 
 from game import persistency
 from .errors import CommandError
@@ -37,21 +37,26 @@ def _keep_pre_pretense_backup() -> None:
         target.write_bytes(backup.read_bytes())
 
 
-def generate_pretense_campaign(game: Game) -> Path:
+def generate_pretense_campaign(game: Game, on_restored: Callable[[Game], None]) -> Path:
     """Write a Pretense mission of the running campaign; returns its path.
 
+    The generation alters the campaign, so the generator goes on with a copy taken
+    beforehand: `on_restored` receives it, to make it the running campaign.
+
     On failure, the campaign backup taken before generation is kept with a
-    timestamp (as the Qt action did) and the error becomes a `CommandError`.
+    timestamp and the error becomes a `CommandError`.
     """
     from game.pretense.pretensemissiongenerator import PretenseMissionGenerator
 
     output = persistency.mission_path_for("pretense_campaign.miz")
     try:
-        PretenseMissionGenerator(game, game.conditions.start_time).generate_miz(output)
+        generator = PretenseMissionGenerator(game, game.conditions.start_time)
+        generator.generate_miz(output)
     except Exception as error:
         logging.exception("Could not generate the Pretense campaign")
         _keep_pre_pretense_backup()
         raise CommandError(
             f"Could not generate the Pretense campaign: {error}", status_code=500
         ) from error
+    on_restored(generator.game)
     return output

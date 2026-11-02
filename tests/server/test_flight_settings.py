@@ -37,7 +37,6 @@ from game.commands.flightsettings import (
 from game.commands.packageflights import add_flight
 from game.commands.packages import create_package
 from game.server import GameContext
-from game.server.dependencies import QtContext
 from game.server.eventstream import EventStream
 from game.settings.settings import DefaultPlayerLaserCode
 from game.sim import GameUpdateEvents
@@ -72,7 +71,6 @@ def game(reference_game: Game, monkeypatch: pytest.MonkeyPatch) -> Iterator[Game
         SimpleNamespace(game=reference_game, sim_controller=sim),
         raising=False,
     )
-    monkeypatch.setattr(QtContext, "_callbacks", None)
     yield reference_game
     for package in list(reference_game.blue.ato.packages):
         for flight in list(package.flights):

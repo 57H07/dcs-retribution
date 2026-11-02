@@ -6,7 +6,7 @@ import { ToolCommands, useToolCommands } from "../secondary/useToolCommands";
 import { Button, IconButton, Menu, MenuEntry } from "../ui";
 import styles from "./AppBar.module.css";
 import { PATHS } from "./paths";
-import { QtCommands, useQtCommands } from "./useQtCommands";
+import { ShellCommands, useShellCommands } from "./useShellCommands";
 import { NavLink, useNavigate } from "react-router-dom";
 
 export interface AppBarProps {
@@ -15,7 +15,7 @@ export interface AppBarProps {
 }
 
 interface MenuContext {
-  qt: QtCommands;
+  qt: ShellCommands;
   tools: ToolCommands;
   navigate: (path: string) => void;
   onNewPackage: () => void;
@@ -109,7 +109,7 @@ export function appMenus({
 }
 
 export function AppBar({ onNewPackage, onShowHelp }: AppBarProps) {
-  const qt = useQtCommands();
+  const qt = useShellCommands();
   const tools = useToolCommands();
   const navigate = useNavigate();
 

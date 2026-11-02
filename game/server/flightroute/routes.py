@@ -37,7 +37,7 @@ from .models import (
     WaypointNameJs,
 )
 from ..commanderrors import command_error_responses
-from ..dependencies import GameContext, QtCallbacks, QtContext
+from ..dependencies import GameContext
 
 router: APIRouter = APIRouter(prefix="/flights/{flight_id}/route")
 
@@ -60,7 +60,7 @@ def _now(game: Game) -> datetime:
     return game.conditions.start_time if now is None else now
 
 
-def _changed(game: Game, flight: Flight, qt: QtCallbacks | None) -> FlightRouteJs:
+def _changed(game: Game, flight: Flight) -> FlightRouteJs:
     """After a change: the TOT of an ASAP package moves with the route, the waypoints
     it shares may have moved with its primary flight, and every screen shows it."""
     package = flight.package
@@ -68,8 +68,6 @@ def _changed(game: Game, flight: Flight, qt: QtCallbacks | None) -> FlightRouteJ
         package.set_tot_asap(_now(game))
     with EventStream.event_context() as events:
         events.update_flights_in_package(package)
-    if qt is not None and qt.packages_changed is not None:
-        qt.packages_changed()
     return FlightRouteJs.for_flight(game, flight)
 
 
@@ -99,7 +97,6 @@ def put_position(
     index: int,
     position: LeafletPoint,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> FlightRouteJs:
     game = _require_game(game)
     flight = _flight(game, flight_id)
@@ -108,7 +105,7 @@ def put_position(
         require_waypoint(flight, index),
         Point.from_latlng(LatLng(position.lat, position.lng), game.theater.terrain),
     )
-    return _changed(game, flight, qt)
+    return _changed(game, flight)
 
 
 @router.put(
@@ -123,12 +120,11 @@ def put_altitude(
     index: int,
     body: WaypointAltitudeJs,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> FlightRouteJs:
     game = _require_game(game)
     flight = _flight(game, flight_id)
     set_waypoint_altitude(require_waypoint(flight, index), body.altitude_ft)
-    return _changed(game, flight, qt)
+    return _changed(game, flight)
 
 
 @router.put(
@@ -143,12 +139,11 @@ def put_name(
     index: int,
     body: WaypointNameJs,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> FlightRouteJs:
     game = _require_game(game)
     flight = _flight(game, flight_id)
     require_waypoint(flight, index).apply_name_edit(body.name)
-    return _changed(game, flight, qt)
+    return _changed(game, flight)
 
 
 @router.delete(
@@ -166,12 +161,11 @@ def delete_route_waypoint(
     index: int,
     allow_degrade: bool = False,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> FlightRouteJs:
     game = _require_game(game)
     flight = _flight(game, flight_id)
     delete_waypoint(flight, require_waypoint(flight, index), allow_degrade)
-    return _changed(game, flight, qt)
+    return _changed(game, flight)
 
 
 @router.post(
@@ -185,13 +179,12 @@ def post_nav(
     flight_id: UUID,
     index: int,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> FlightRouteJs:
     """Inserts a NAV point after this waypoint, halfway to the next one."""
     game = _require_game(game)
     flight = _flight(game, flight_id)
     insert_nav_after(flight, index)
-    return _changed(game, flight, qt)
+    return _changed(game, flight)
 
 
 @router.post(
@@ -207,12 +200,11 @@ def post_rtb(
     flight_id: UUID,
     allow_degrade: bool = False,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> FlightRouteJs:
     game = _require_game(game)
     flight = _flight(game, flight_id)
     add_rtb_waypoint(flight, allow_degrade)
-    return _changed(game, flight, qt)
+    return _changed(game, flight)
 
 
 @router.get(
@@ -250,12 +242,11 @@ def post_predefined(
     flight_id: UUID,
     body: NewPredefinedWaypointJs,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> FlightRouteJs:
     game = _require_game(game)
     flight = _flight(game, flight_id)
     add_predefined_waypoint(game, flight, body.name, body.same_location)
-    return _changed(game, flight, qt)
+    return _changed(game, flight)
 
 
 @router.put(
@@ -269,13 +260,12 @@ def put_route_altitude(
     flight_id: UUID,
     body: WaypointAltitudeJs,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> FlightRouteJs:
     """One altitude for all en-route waypoints."""
     game = _require_game(game)
     flight = _flight(game, flight_id)
     set_en_route_altitude(flight, body.altitude_ft)
-    return _changed(game, flight, qt)
+    return _changed(game, flight)
 
 
 @router.post(
@@ -289,7 +279,6 @@ def post_recreate(
     flight_id: UUID,
     body: RecreateRouteJs,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> FlightRouteJs:
     """Plans the route again, which resets the player's changes to it."""
     game = _require_game(game)
@@ -299,4 +288,4 @@ def post_recreate(
     except ValueError:
         raise CommandError(f"Unknown task: {body.task}.", status_code=422)
     recreate_route(game, flight, task)
-    return _changed(game, flight, qt)
+    return _changed(game, flight)

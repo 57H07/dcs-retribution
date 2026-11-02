@@ -27,7 +27,6 @@ from game.commands.settings import (
 from game.plugins import LuaPluginManager
 from game.server import GameContext
 from game.server.app import app
-from game.server.dependencies import QtCallbacks, QtContext
 from game.server.eventstream import EventStream
 from game.server.security import ApiKeyManager
 from game.settings import BooleanOption, NightMissions, Settings
@@ -51,7 +50,6 @@ def game(monkeypatch: pytest.MonkeyPatch) -> _FakeGame:
     monkeypatch.setattr(
         GameContext, "_game_model", SimpleNamespace(game=fake), raising=False
     )
-    monkeypatch.setattr(QtContext, "_callbacks", None)
     return fake
 
 
@@ -291,36 +289,25 @@ def test_hidden_fields_cannot_be_written(game: _FakeGame) -> None:
     assert _put("only_player_takeoff", False)[0] == 404
 
 
-def test_expensive_setting_recomputes_publishes_and_refreshes_qt(
+def test_expensive_setting_recomputes_publishes_and_reloads_the_sim(
+    sim_reloads: list[bool],
     game: _FakeGame,
     published: list[GameUpdateEvents],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    refreshed: list[bool] = []
-
-    def ignore(_: Any) -> None:
-        pass
-
-    monkeypatch.setattr(
-        QtContext,
-        "_callbacks",
-        QtCallbacks(
-            ignore, ignore, ignore, ignore, game_changed=lambda: refreshed.append(True)
-        ),
-    )
     assert _put("perf_culling_distance", 200)[0] == 200
     assert game.unculled_recomputed == 1
     assert len(published) == 1
-    assert refreshed == [True]
+    assert len(sim_reloads) == 1
 
     assert _put("enable_frontline_cheats", True)[0] == 200
     assert game.settings.enable_frontline_cheats is True
     assert game.unculled_recomputed == 2
-    assert refreshed == [True, True]
+    assert len(sim_reloads) == 2
 
     assert _put("manpads", False)[0] == 200
     assert game.unculled_recomputed == 2
-    assert refreshed == [True, True]
+    assert len(sim_reloads) == 2
 
 
 def test_bandit_clouds_are_loaded_and_unloaded(

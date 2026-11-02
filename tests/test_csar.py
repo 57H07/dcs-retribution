@@ -1789,14 +1789,8 @@ def test_start_type_defaults_are_decided_in_one_place() -> None:
     import inspect
 
     from game.commander.packagebuilder import PackageBuilder
-    from qt_ui.windows.mission.flight.QFlightCreator import QFlightCreator
-    from qt_ui.windows.mission.flight.settings.QFlightStartType import QFlightStartType
 
-    deciders = (
-        PackageBuilder.plan_flight,
-        QFlightCreator.on_pilot_selected,
-        QFlightStartType.on_pilot_selected,
-    )
+    deciders = (PackageBuilder.plan_flight,)
     for decider in deciders:
         source = inspect.getsource(decider)
         assert "start_type_for" in source, decider.__qualname__

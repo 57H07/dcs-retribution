@@ -2375,7 +2375,7 @@
     "/control-points/{cp_id}/cheat/capture": {
       "post": {
         "summary": "Cheat Capture Base",
-        "description": "Flips a base. The campaign may be over: `turn_passed` tells the Qt window.",
+        "description": "Flips a base. The campaign may be over: the top bar tells the client.",
         "operationId": "cheat_capture_base",
         "parameters": [
           {
@@ -4558,6 +4558,45 @@
         }
       }
     },
+    "/flights/{flight_id}/select": {
+      "post": {
+        "summary": "Select Flight",
+        "description": "A flight was clicked on the map: the packages panel follows (WEB-01.2).",
+        "operationId": "select_flight",
+        "parameters": [
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/flights/{flight_id}": {
       "get": {
         "summary": "Get Flight",
@@ -5321,7 +5360,7 @@
     "/game/mission/result/accept": {
       "post": {
         "summary": "Accept",
-        "description": "\"Accept results\": applies the mission result and starts the next turn.\n\nSame `accept_results` as the Qt waiting window; the report of the applied\nresult is then served by `GET /game/mission/result/report` (status\n\"accepted\"). The Qt widgets refresh and the campaign end is checked as after\nany turn (`QtCallbacks.turn_passed`), as closing the Qt debriefing did.",
+        "description": "\"Accept results\": applies the mission result and starts the next turn.\n\nThe report of the applied\nresult is then served by `GET /game/mission/result/report` (status\n\"accepted\"). A new turn has a new simulation; the client reads the campaign end\nin the answer and in the top bar.",
         "operationId": "accept_mission_result",
         "responses": {
           "200": {
@@ -7742,307 +7781,6 @@
                 }
               }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/qt/create-package/front-line/{front_line_id}": {
-      "post": {
-        "summary": "New Front Line Package",
-        "operationId": "open_new_front_line_package_dialog",
-        "parameters": [
-          {
-            "name": "front_line_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Front Line Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/qt/create-package/tgo/{tgo_id}": {
-      "post": {
-        "summary": "New Tgo Package",
-        "operationId": "open_new_tgo_package_dialog",
-        "parameters": [
-          {
-            "name": "tgo_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Tgo Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/qt/info/tgo/{tgo_id}": {
-      "post": {
-        "summary": "Show Tgo Info",
-        "description": "Opens the Qt site dialog of the Qt map; refused in web mode (WEB-08.3).",
-        "operationId": "open_tgo_info_dialog",
-        "parameters": [
-          {
-            "name": "tgo_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Tgo Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/qt/create-package/control-point/{cp_id}": {
-      "post": {
-        "summary": "New Cp Package",
-        "operationId": "open_new_control_point_package_dialog",
-        "parameters": [
-          {
-            "name": "cp_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Cp Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/qt/create-package/downed-pilot/{pilot_id}": {
-      "post": {
-        "summary": "New Downed Pilot Package",
-        "operationId": "open_new_downed_pilot_package_dialog",
-        "parameters": [
-          {
-            "name": "pilot_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Pilot Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/qt/select-flight/{flight_id}": {
-      "post": {
-        "summary": "Select Flight",
-        "operationId": "select_flight",
-        "parameters": [
-          {
-            "name": "flight_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Flight Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/qt/info/control-point/{cp_id}": {
-      "post": {
-        "summary": "Show Control Point Info",
-        "operationId": "open_control_point_info_dialog",
-        "parameters": [
-          {
-            "name": "cp_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Cp Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/qt/edit-package/flight/{flight_id}": {
-      "post": {
-        "summary": "Edit Package Of Flight",
-        "description": "Opens the Qt package editor of the package flying this flight.\n\nWhat the flight tabs of the web package editor offer until WEB-04.2 to 04.5 fill\nthem.",
-        "operationId": "open_edit_package_dialog",
-        "parameters": [
-          {
-            "name": "flight_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Flight Id"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -13362,10 +13100,6 @@
             "maximum": 65535.0,
             "minimum": 1.0,
             "title": "Server Port"
-          },
-          "web_ui": {
-            "type": "boolean",
-            "title": "Web Ui"
           }
         },
         "type": "object",
@@ -13374,8 +13108,7 @@
           "dcs_install_dir",
           "prefer_liberation_payloads",
           "setup_preferences_on_every_start",
-          "server_port",
-          "web_ui"
+          "server_port"
         ],
         "title": "InstallPreferences"
       },
@@ -13440,10 +13173,6 @@
             "minimum": 1.0,
             "title": "Server Port"
           },
-          "web_ui": {
-            "type": "boolean",
-            "title": "Web Ui"
-          },
           "allow_empty_install_dir": {
             "type": "boolean",
             "title": "Allow Empty Install Dir",
@@ -13456,8 +13185,7 @@
           "dcs_install_dir",
           "prefer_liberation_payloads",
           "setup_preferences_on_every_start",
-          "server_port",
-          "web_ui"
+          "server_port"
         ],
         "title": "InstallPreferencesUpdate"
       },
@@ -17205,6 +16933,16 @@
           "show_sim_speed_controls": {
             "type": "boolean",
             "title": "Show Sim Speed Controls"
+          },
+          "campaign_state": {
+            "$ref": "#/components/schemas/CampaignStateJs"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
           }
         },
         "type": "object",
@@ -17224,7 +16962,9 @@
           "economy",
           "max_player_count",
           "sim",
-          "show_sim_speed_controls"
+          "show_sim_speed_controls",
+          "campaign_state",
+          "warnings"
         ],
         "title": "TopBar",
         "description": "Everything the top bar and the turn buttons of the command view show."

@@ -36,7 +36,7 @@ from .models import (
     PackageTotJs,
 )
 from ..commanderrors import command_error_responses
-from ..dependencies import GameContext, QtCallbacks, QtContext
+from ..dependencies import GameContext
 
 router: APIRouter = APIRouter(prefix="/packages")
 
@@ -50,12 +50,6 @@ def _require_game(game: Game | None) -> Game:
 def _now(game: Game) -> datetime:
     now = GameContext.get_sim().current_time_in_sim_if_game_loaded
     return game.conditions.start_time if now is None else now
-
-
-def _refresh_qt(qt: QtCallbacks | None) -> None:
-    """Keeps the Qt ATO panel, when shown, in step with a command."""
-    if qt is not None and qt.packages_changed is not None:
-        qt.packages_changed()
 
 
 def _task(value: str) -> FlightType:
@@ -104,7 +98,7 @@ def _target(game: Game, new: NewPackageJs) -> MissionTarget:
     except KeyError:
         raise CommandError("This target no longer exists.", status_code=404)
     if not pilot.is_friendly(Player.BLUE):
-        # Only the owning coalition rescues its pilots (see /qt/create-package).
+        # Only the owning coalition rescues its pilots.
         raise CommandError("Only friendly pilots can be rescued.")
     return pilot
 
@@ -122,12 +116,10 @@ def _target(game: Game, new: NewPackageJs) -> MissionTarget:
 def new_package(
     new: NewPackageJs,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> PackageDetailJs:
     """Plans an empty package against a target, for the package editor (WEB-04.1)."""
     game = _require_game(game)
     package = create_package(game, _target(game, new), _now(game))
-    _refresh_qt(qt)
     return PackageDetailJs.for_package(game, package)
 
 
@@ -156,12 +148,10 @@ def put_package_name(
     package_id: UUID,
     body: PackageNameJs,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> PackageDetailJs:
     game = _require_game(game)
     package = require_package(game, package_id)
     rename_package(package, body.name)
-    _refresh_qt(qt)
     return PackageDetailJs.for_package(game, package)
 
 
@@ -176,7 +166,6 @@ def put_package_tot(
     package_id: UUID,
     body: PackageTotJs,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> PackageDetailJs:
     """Sets the time over target, which ends the ASAP mode of the package."""
     game = _require_game(game)
@@ -184,7 +173,6 @@ def put_package_tot(
     set_package_tot(package, body.tot, _now(game))
     with EventStream.event_context() as events:
         events.update_flights_in_package(package)
-    _refresh_qt(qt)
     return PackageDetailJs.for_package(game, package)
 
 
@@ -198,7 +186,6 @@ def put_package_tot(
 def post_package_tot_earliest(
     package_id: UUID,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> PackageDetailJs:
     """Earliest TOT: the package flies ASAP, now and when its flights change."""
     game = _require_game(game)
@@ -206,7 +193,6 @@ def post_package_tot_earliest(
     set_package_tot_earliest(package, _now(game))
     with EventStream.event_context() as events:
         events.update_flights_in_package(package)
-    _refresh_qt(qt)
     return PackageDetailJs.for_package(game, package)
 
 
@@ -237,7 +223,6 @@ def post_package_flight(
     package_id: UUID,
     body: NewFlightJs,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> PackageDetailJs:
     game = _require_game(game)
     package = require_package(game, package_id)
@@ -256,7 +241,6 @@ def post_package_flight(
         for other in package.flights:
             if other is not flight:
                 events.update_flight(other)
-    _refresh_qt(qt)
     return PackageDetailJs.for_package(game, package)
 
 
@@ -271,7 +255,6 @@ def delete_package_flight(
     package_id: UUID,
     flight_id: UUID,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> PackageDetailJs:
     """Removes a flight of the package, or aborts it if it is under way."""
     game = _require_game(game)
@@ -279,7 +262,6 @@ def delete_package_flight(
     with EventStream.event_context() as events:
         remove_flight(game, package, _flight(package, flight_id), events, _now(game))
         events.update_flights_in_package(package)
-    _refresh_qt(qt)
     return PackageDetailJs.for_package(game, package)
 
 
@@ -311,7 +293,6 @@ def post_auto_create(
     package_id: UUID,
     body: AutoCreateRequestJs,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> PackageDetailJs:
     """Fills an empty package through the auto-planner; it keeps its id."""
     game = _require_game(game)
@@ -335,7 +316,6 @@ def post_auto_create(
     with EventStream.event_context() as events:
         for flight in planned.flights:
             events.new_flight(flight)
-    _refresh_qt(qt)
     return PackageDetailJs.for_package(game, planned)
 
 
@@ -350,7 +330,6 @@ def post_auto_create(
 def remove_package(
     package_id: UUID,
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> None:
     """Cancels a package of either ATO, or aborts its flights already under way.
 
@@ -361,4 +340,3 @@ def remove_package(
     now = GameContext.get_sim().current_time_in_sim_if_game_loaded
     with EventStream.event_context() as events:
         delete_package(game, package_id, events, now)
-    _refresh_qt(qt)

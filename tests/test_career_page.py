@@ -10,7 +10,7 @@ from game.squadrons.pilot import (
     LogbookEntry,
     PilotRecord,
 )
-from qt_ui.windows.CareerDialog import (
+from game.squadrons.careerreport import (
     HISTORY_HEADERS,
     award_rows,
     format_duration,

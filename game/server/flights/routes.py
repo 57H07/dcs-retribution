@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from game.gamelock import locked
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from shapely.geometry import LineString, Point as ShapelyPoint
 
 from game import Game
@@ -19,6 +19,27 @@ def list_flights(
     with_waypoints: bool = False, game: Game = Depends(GameContext.require)
 ) -> list[FlightJs]:
     return FlightJs.all_in_game(game, with_waypoints)
+
+
+@router.post(
+    "/{flight_id}/select",
+    operation_id="select_flight",
+    status_code=status.HTTP_200_OK,
+)
+@locked
+def select_flight(flight_id: UUID, game: Game = Depends(GameContext.require)) -> None:
+    """A flight was clicked on the map: the packages panel follows (WEB-01.2)."""
+    # Here: the event stream models import this package.
+    from game.server import EventStream
+
+    flight = game.db.flights.get(flight_id)
+    if flight is None:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            detail=f"Game has no flight with ID {flight_id}",
+        )
+    with EventStream.event_context() as events:
+        events.select_flight(flight)
 
 
 @router.get("/{flight_id}", operation_id="get_flight_by_id", response_model=FlightJs)

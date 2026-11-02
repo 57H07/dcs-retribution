@@ -22,7 +22,6 @@ from game.db import Database
 from game.gamelock import _GAME_LOCK
 from game.server import GameContext
 from game.server.app import app
-from game.server.dependencies import QtCallbacks, QtContext
 from game.server.eventstream import EventStream
 from game.server.packages.models import PackageJs
 from game.server.security import ApiKeyManager
@@ -235,28 +234,6 @@ def test_delete_an_unknown_package_is_a_404() -> None:
 # --- HTTP side -----------------------------------------------------------------
 
 
-class _Qt:
-    def __init__(self) -> None:
-        self.targets: list[Any] = []
-        self.packages_changed = 0
-        self.lock_held: list[bool] = []
-
-    def create(self, target: Any) -> None:
-        self.lock_held.append(_GAME_LOCK._is_owned())  # type: ignore[attr-defined]
-        self.targets.append(target)
-
-    def changed(self) -> None:
-        self.packages_changed += 1
-
-    def callbacks(self) -> QtCallbacks:
-        def ignore(_: Any) -> None:
-            pass
-
-        return QtCallbacks(
-            self.create, ignore, ignore, ignore, packages_changed=self.changed
-        )
-
-
 @pytest.fixture
 def game(monkeypatch: pytest.MonkeyPatch) -> _Game:
     game = _Game()
@@ -267,15 +244,7 @@ def game(monkeypatch: pytest.MonkeyPatch) -> _Game:
         SimpleNamespace(game=game, sim_controller=sim),
         raising=False,
     )
-    monkeypatch.setattr(QtContext, "_callbacks", None)
     return game
-
-
-@pytest.fixture
-def qt(monkeypatch: pytest.MonkeyPatch) -> _Qt:
-    recorder = _Qt()
-    monkeypatch.setattr(QtContext, "_callbacks", recorder.callbacks())
-    return recorder
 
 
 @pytest.fixture
@@ -344,7 +313,7 @@ def test_list_packages_without_a_campaign(monkeypatch: pytest.MonkeyPatch) -> No
 
 
 def test_delete_route_publishes_the_deleted_flights(
-    game: _Game, qt: _Qt, published: list[GameUpdateEvents]
+    game: _Game, published: list[GameUpdateEvents]
 ) -> None:
     flight = _Flight()
     package = _plan(game.blue, flight)
@@ -353,7 +322,6 @@ def test_delete_route_publishes_the_deleted_flights(
 
     assert game.blue.ato.packages == []
     assert [events.deleted_flights for events in published] == [{flight.id}]
-    assert qt.packages_changed == 1
 
 
 def test_delete_route_keeps_the_asap_tot_current(game: _Game) -> None:
@@ -372,7 +340,7 @@ def test_delete_route_unknown_package(game: _Game) -> None:
     )
 
 
-def test_create_route_unknown_target(game: _Game, qt: _Qt) -> None:
+def test_create_route_unknown_target(game: _Game) -> None:
     game.db = SimpleNamespace(front_lines=Database())  # type: ignore[attr-defined]
     status, body = _request(
         "POST", "/packages/", {"target_kind": "front-line", "target_id": str(uuid4())}
@@ -380,7 +348,7 @@ def test_create_route_unknown_target(game: _Game, qt: _Qt) -> None:
     assert (status, body) == (404, {"detail": "This target no longer exists."})
 
 
-def test_create_route_refuses_enemy_downed_pilots(game: _Game, qt: _Qt) -> None:
+def test_create_route_refuses_enemy_downed_pilots(game: _Game) -> None:
     pilot = SimpleNamespace(is_friendly=lambda player: player is Player.RED)
     pilot_id = uuid4()
     game.db = SimpleNamespace(downed_pilots=Database())  # type: ignore[attr-defined]
@@ -393,9 +361,7 @@ def test_create_route_refuses_enemy_downed_pilots(game: _Game, qt: _Qt) -> None:
     assert status == 409
 
 
-def test_create_route_without_a_campaign(
-    monkeypatch: pytest.MonkeyPatch, qt: _Qt
-) -> None:
+def test_create_route_without_a_campaign(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         GameContext, "_game_model", SimpleNamespace(game=None), raising=False
     )
@@ -418,15 +384,6 @@ def test_select_flight_route_tells_the_web_panel(
         SimpleNamespace(game=SimpleNamespace(db=SimpleNamespace(flights=flights))),
         raising=False,
     )
-    selected: list[Any] = []
-
-    def ignore(_: Any) -> None:
-        pass
-
-    monkeypatch.setattr(
-        QtContext, "_callbacks", QtCallbacks(ignore, ignore, ignore, selected.append)
-    )
-    status, _ = _request("POST", f"/qt/select-flight/{flight.id}")
+    status, _ = _request("POST", f"/flights/{flight.id}/select")
     assert status == 200
     assert [events.selected_flight for events in published] == [flight.id]
-    assert selected == [flight]

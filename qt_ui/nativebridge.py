@@ -44,7 +44,7 @@ class _MainThread(QObject):
 
 
 class QtShell:
-    """What the bridge needs from the main window (`QLiberationWindow`)."""
+    """What the bridge needs from the main window (`ShellWindow`)."""
 
     def __init__(
         self,

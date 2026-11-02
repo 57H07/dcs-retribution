@@ -172,7 +172,7 @@ def test_concurrent_commands_during_sim_ticks() -> None:
     cp = _ControlPoint(state)
 
     def qt_action() -> None:
-        # A Qt-side mutation, through the same path qt_ui/models.py uses.
+        # A mutation outside any route.
         for _ in range(COMMANDS_PER_THREAD):
             with loop.paused_sim():
                 state.check("Qt action")

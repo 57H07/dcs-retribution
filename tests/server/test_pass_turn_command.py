@@ -15,7 +15,6 @@ from game.commands import CommandError, skip_turn
 from game.game import Game, TurnState
 from game.server import GameContext
 from game.server.app import app
-from game.server.dependencies import QtCallbacks, QtContext
 from game.server.eventstream import EventStream
 from game.server.security import ApiKeyManager
 from game.server.openapischema import DEFAULT_OUTPUT, openapi_schema, render
@@ -40,20 +39,12 @@ class _FakeGame:
         self.state = self.state_after
 
 
-def _qt_callbacks(received: list[TurnState]) -> QtCallbacks:
-    def ignore(_: Any) -> None:
-        pass
-
-    return QtCallbacks(ignore, ignore, ignore, ignore, turn_passed=received.append)
-
-
 @pytest.fixture
 def loaded_game(monkeypatch: pytest.MonkeyPatch) -> _FakeGame:
     game = _FakeGame()
     monkeypatch.setattr(
         GameContext, "_game_model", SimpleNamespace(game=game), raising=False
     )
-    monkeypatch.setattr(QtContext, "_callbacks", None)
     return game
 
 
@@ -149,13 +140,11 @@ def test_pass_turn_route_reports_victory(
     assert _post("/game/turn/pass") == (200, {"turn": 2, "campaign_state": "win"})
 
 
-def test_pass_turn_route_refreshes_qt(
-    loaded_game: _FakeGame, monkeypatch: pytest.MonkeyPatch
+def test_pass_turn_route_starts_a_new_simulation(
+    loaded_game: _FakeGame, sim_reloads: list[bool]
 ) -> None:
-    received: list[TurnState] = []
-    monkeypatch.setattr(QtContext, "_callbacks", _qt_callbacks(received))
     _post("/game/turn/pass")
-    assert received == [TurnState.CONTINUE]
+    assert len(sim_reloads) == 1
 
 
 def test_business_error_is_a_409_with_a_readable_message(

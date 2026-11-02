@@ -23,7 +23,7 @@ from .topbar import (
     TopBarJs,
 )
 from ..commanderrors import command_error_responses
-from ..dependencies import QtCallbacks, QtContext, UiOptions
+from ..dependencies import UiOptions
 from ..missionresult import MissionResultContext
 
 router: APIRouter = APIRouter(prefix="/game")
@@ -77,7 +77,6 @@ def timeline(game: Game | None = Depends(GameContext.get)) -> TimelineJs | None:
 @locked
 def pass_turn(
     game: Game | None = Depends(GameContext.get),
-    qt: QtCallbacks | None = Depends(QtContext.get_optional),
 ) -> TurnJs:
     """Skip the current turn without flying it ("Pass Turn" / "Begin Campaign").
 
@@ -86,8 +85,7 @@ def pass_turn(
     """
     game = _require_game(game)
     state = skip_turn(game)
-    if qt is not None and qt.turn_passed is not None:
-        qt.turn_passed(state)
+    GameContext.reload_sim()
     return TurnJs(turn=game.turn, campaign_state=CampaignStateJs.from_turn_state(state))
 
 

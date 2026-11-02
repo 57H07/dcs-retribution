@@ -21,7 +21,6 @@ from game.commands import tools as tools_commands
 from game.commands.notes import MAX_NOTES_LENGTH
 from game.infos.information import Information
 from game.server import GameContext
-from game.server.dependencies import QtCallbacks, QtContext
 from game.squadrons.pilot import Award, AwardKind, LogbookEntry, Pilot
 from game.theater.player import Player
 from game.transfers import TransferOrder
@@ -93,27 +92,6 @@ def _game(
     )
 
 
-class _QtRecorder:
-    def __init__(self) -> None:
-        self.game_changes = 0
-
-    def callbacks(self) -> QtCallbacks:
-        def ignore(_: Any) -> None:
-            pass
-
-        def changed() -> None:
-            self.game_changes += 1
-
-        return QtCallbacks(ignore, ignore, ignore, ignore, game_changed=changed)
-
-
-@pytest.fixture
-def qt(monkeypatch: pytest.MonkeyPatch) -> _QtRecorder:
-    recorder = _QtRecorder()
-    monkeypatch.setattr(QtContext, "_callbacks", recorder.callbacks())
-    return recorder
-
-
 def _load(monkeypatch: pytest.MonkeyPatch, game: Any) -> None:
     monkeypatch.setattr(
         GameContext, "_game_model", SimpleNamespace(game=game), raising=False
@@ -140,7 +118,9 @@ def test_transfer_orders_have_a_stable_id_that_old_saves_get_on_load() -> None:
     assert pickle.loads(pickle.dumps(order)).id == order.id
 
 
-def test_list_transfers(monkeypatch: pytest.MonkeyPatch, qt: _QtRecorder) -> None:
+def test_list_transfers(
+    monkeypatch: pytest.MonkeyPatch, sim_reloads: list[bool]
+) -> None:
     _load(monkeypatch, None)
     assert _request("GET", "/transfers/") == (200, None)
 
@@ -166,21 +146,23 @@ def test_list_transfers(monkeypatch: pytest.MonkeyPatch, qt: _QtRecorder) -> Non
     ]
 
 
-def test_cancel_transfer(monkeypatch: pytest.MonkeyPatch, qt: _QtRecorder) -> None:
+def test_cancel_transfer(
+    monkeypatch: pytest.MonkeyPatch, sim_reloads: list[bool]
+) -> None:
     transfer = _transfer({"M1A2 Abrams": 4})
     blue = _Transfers(transfer)
     _load(monkeypatch, _game(blue))
 
     assert _request("DELETE", f"/transfers/{transfer.id}") == (204, None)
     assert blue.cancelled == [transfer]
-    assert qt.game_changes == 1
+    assert len(sim_reloads) == 1
 
     status, body = _request("DELETE", f"/transfers/{transfer.id}")
     assert (status, body) == (404, {"detail": "This transfer is no longer pending."})
 
 
 def test_enemy_transfers_cannot_be_cancelled(
-    monkeypatch: pytest.MonkeyPatch, qt: _QtRecorder
+    monkeypatch: pytest.MonkeyPatch, sim_reloads: list[bool]
 ) -> None:
     enemy = _transfer({"T-72B": 3}, Player.RED)
     red = _Transfers(enemy)
@@ -191,11 +173,11 @@ def test_enemy_transfers_cannot_be_cancelled(
         {"detail": "Only your own transfers can be cancelled."},
     )
     assert red.cancelled == []
-    assert qt.game_changes == 0
+    assert len(sim_reloads) == 0
 
 
 def test_cancel_transfer_without_a_campaign(
-    monkeypatch: pytest.MonkeyPatch, qt: _QtRecorder
+    monkeypatch: pytest.MonkeyPatch, sim_reloads: list[bool]
 ) -> None:
     _load(monkeypatch, None)
     assert _request("DELETE", f"/transfers/{uuid4()}") == (
@@ -363,7 +345,7 @@ def test_pretense_campaign_route(monkeypatch: pytest.MonkeyPatch) -> None:
     _load(monkeypatch, game)
     generated: list[Any] = []
 
-    def generate(g: Any) -> Path:
+    def generate(g: Any, on_restored: Any) -> Path:
         generated.append(g)
         return Path("missions/pretense_campaign.miz")
 
@@ -399,6 +381,8 @@ def test_failed_pretense_generation_keeps_the_backup(
     monkeypatch.setattr(generator, "PretenseMissionGenerator", _Failing)
     game = SimpleNamespace(conditions=SimpleNamespace(start_time=datetime.now()))
     with pytest.raises(CommandError, match="no airfields"):
-        tools_commands.generate_pretense_campaign(game)  # type: ignore[arg-type]
+        tools_commands.generate_pretense_campaign(
+            game, lambda _: None  # type: ignore[arg-type]
+        )
     backups = list(tmp_path.glob("pre-pretense-backup_*.retribution"))
     assert [b.read_bytes() for b in backups] == [b"campaign"]

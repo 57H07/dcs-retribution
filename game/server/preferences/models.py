@@ -19,7 +19,6 @@ class InstallPreferencesJs(BaseModel):
     prefer_liberation_payloads: bool
     setup_preferences_on_every_start: bool
     server_port: int = Field(ge=1, le=MAX_PORT)
-    web_ui: bool
 
     class Config:
         title = "InstallPreferences"
@@ -34,7 +33,6 @@ class InstallPreferencesJs(BaseModel):
                 preferences.setup_preferences_on_every_start
             ),
             server_port=preferences.server_port,
-            web_ui=preferences.web_ui,
         )
 
     def to_preferences(self) -> InstallPreferences:
@@ -44,7 +42,6 @@ class InstallPreferencesJs(BaseModel):
             prefer_liberation_payloads=self.prefer_liberation_payloads,
             setup_preferences_on_every_start=self.setup_preferences_on_every_start,
             server_port=self.server_port,
-            web_ui=self.web_ui,
         )
 
 

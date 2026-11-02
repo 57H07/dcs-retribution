@@ -89,7 +89,7 @@ describe("with the key in the URL", () => {
     const { backend } = await loadClient(search);
 
     const post = await sentConfig((adapter) =>
-      backend.post("/qt/info/control-point/1", undefined, { adapter }),
+      backend.post("/flights/1/select", undefined, { adapter }),
     );
     const get = await sentConfig((adapter) =>
       backend.get("/game/", { adapter }),
