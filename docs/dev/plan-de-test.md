@@ -1,88 +1,107 @@
 # Plan de test en jeu (DCS) — branche `dev`
 
-> **Suspendu (2026-10-29).** Ce plan reprendra quand l'interface web sera active par défaut, et sera alors complété avec ses écrans (décisions W10 et W19 de [la spécification de l'interface web](design/specification-interface-web.md)). Les cases qui citent des boutons ou fenêtres Qt devront être réécrites pour l'interface web.
+Ce plan couvre ce que les tests automatiques ne peuvent pas vérifier : le rendu réel de l'application, et le comportement dans DCS. Il reprend après la migration vers l'interface web (décision W19 de [la spécification](design/specification-interface-web.md)).
 
-Ce plan couvre tout ce que les tests automatiques ne peuvent pas vérifier : le rendu réel de l'application, et le comportement dans DCS. Chaque case renvoie à la PR qui a introduit le changement (`#NN` sur `57H07/dcs-retribution`). Si une case échoue, notez la PR, la campagne, le tour, et joignez `logs/retribution.log`, la sauvegarde et le `state.json`.
+Chaque case renvoie à la PR qui a introduit le changement (`#NN` sur `57H07/dcs-retribution`). Si une case échoue, notez la PR, la campagne et le tour, et joignez `logs\retribution.log`, la sauvegarde et le `state.json`.
+
+**Par où commencer :** §1 valide le paquet en une vingtaine de minutes, sans voler. Faites-le en premier : s'il échoue, le reste du plan ne vous apprendra rien de plus.
 
 ---
 
 ## 0. Préambule : lancer le programme
 
-### 0.1 Une seule fois
+### 0.1 Construire le paquet
 
-Tout est déjà installé sur cette machine : le venv Python 3.11 dans `venv\` avec PySide6 6.11.2, et le client de la carte compilé dans `client\build`. Refaites ces deux étapes seulement après un `git pull` qui touche `requirements.txt` ou `client/` :
-
-```powershell
-cd F:\_Projets\Jeux\DcsRetribution
-.\venv\Scripts\python.exe -m pip install -r requirements.txt
-cd client; npm ci; npm run build; cd ..
-```
-
-### 0.2 À chaque lancement (depuis les sources)
+Depuis la racine du dépôt, à refaire après chaque `git pull` :
 
 ```powershell
 cd F:\_Projets\Jeux\DcsRetribution
-git switch dev; git pull
-.\venv\Scripts\Activate.ps1
-$env:PYTHONPATH = "."
-python qt_ui\main.py
+cd client; npm run build; cd ..
+.\venv\Scripts\python.exe -m PyInstaller pyinstaller.spec --noconfirm
 ```
 
-- Lancez toujours depuis la racine du dépôt : les chemins `resources\`, `client\build` et `logs\` sont relatifs.
-- Le journal est écrit dans `logs\retribution.log`. Gardez-le ouvert dans un éditeur pendant les tests.
-- `--dev` sert seulement au développement de la carte : il charge `http://localhost:3000` au lieu de `client\build`. Ne l'utilisez pas pour ces tests.
+Si le `git pull` touche `requirements.txt` ou `client/package.json`, lancez d'abord `.\venv\Scripts\python.exe -m pip install -r requirements.txt` et `cd client; npm ci; cd ..`.
 
-### 0.3 Premier démarrage
+### 0.2 Lancer
 
-1. La fenêtre de configuration demande le dossier d'installation de DCS et le dossier `Saved Games\DCS` (ou `DCS.openbeta`).
-2. Retribution modifie `<DCS>\Scripts\MissionScripting.lua` (désassainissement nécessaire à l'export de `state.json`), puis le restaure à la fermeture. Laissez Retribution ouvert pendant que DCS tourne.
+- **Paquet (à privilégier) :** double-cliquez sur `dist\dcs-retribution\retribution_main.exe`, ou lancez-le depuis son dossier. Le journal est alors dans `dist\dcs-retribution\logs\retribution.log`.
+- **Depuis les sources :** à la racine du dépôt, `$env:PYTHONPATH = "."; .\venv\Scripts\python.exe qt_ui\main.py`. Le journal est alors dans `logs\retribution.log`.
+
+Les chemins `resources\`, `client\build` et `logs\` sont relatifs au dossier de lancement. Gardez le journal ouvert pendant les tests ; il se lit aussi dans **Help → Show logs**.
+
+### 0.3 Avant de commencer
+
+- **Copiez vos sauvegardes** (`Saved Games\DCS\Retribution\`) : une partie de ces tests modifie des campagnes.
+- Retribution remplace `<DCS>\Scripts\MissionScripting.lua` au démarrage (nécessaire à l'export de `state.json`) et le restaure à la fermeture. Laissez-le ouvert pendant que DCS tourne, et quittez-le par sa fenêtre ou par **File → Exit**.
 
 ### 0.4 Boucle d'un tour
 
-1. **New Game** : l'assistant crée la campagne. Choisissez la campagne, les factions et les options, puis réglez les **Settings** (§2).
-2. Planifiez, puis cliquez sur **Take off**. Retribution génère `Saved Games\DCS\Missions\retribution_nextturn.miz` et ouvre la fenêtre d'attente des résultats.
-3. Dans DCS : **Mission → ouvrir `retribution_nextturn.miz`**, volez, puis quittez la mission (Échap → Quitter). DCS écrit `state.json`.
-4. De retour dans Retribution, la fenêtre d'attente des résultats détecte `state.json` et affiche le bilan. **Accept results** valide le tour, et le tour suivant est planifié.
-5. Sauvegardez souvent (**File → Save**), surtout avant un test destructif.
+1. **File → New game** : l'assistant crée la campagne (théâtre, factions, options, générateur, résumé). **Generate campaign**, puis la configuration de l'air wing, puis **Start campaign**. Réglez ensuite **Campaign → Settings** (§2).
+2. **Begin Campaign** lance le premier tour ; ensuite, **End turn** passe un tour sans voler.
+3. Clic droit sur une cible de la carte pour planifier un package, puis **Take off**. Retribution génère `Saved Games\DCS\Missions\retribution_nextturn.miz` et ouvre l'écran d'attente.
+4. Dans DCS : **Mission → ouvrir `retribution_nextturn.miz`**, volez, puis quittez la mission (Échap → Quitter). DCS écrit `state.json`.
+5. De retour dans Retribution, l'écran d'attente détecte `state.json` et ouvre le rapport (**Review results** s'il ne s'ouvre pas seul, **Load state.json** si DCS l'a écrit ailleurs). **Accept results** valide le tour, **Continue** revient à la carte.
+6. Sauvegardez souvent (**Ctrl+S** ou **File → Save**), surtout avant un test destructif.
 
 > Astuce : pour les tests qui ne demandent pas de voler, utilisez l'avance rapide ou la résolution automatique. Pour aller vite dans DCS, passez en accéléré (Ctrl+Z) et activez l'invulnérabilité, sauf quand un test demande de l'éteindre.
 
-### 0.5 (Optionnel) Paquet exécutable
-
-À faire une fois à la fin, pour vérifier le paquet distribué (#82, #89) :
-
-```powershell
-.\venv\Scripts\Activate.ps1
-$env:PYTHONPATH = ".;./pydcs"
-pip install pyinstaller   # s'il n'est pas déjà présent
-pyinstaller pyinstaller.spec
-.\dist\dcs-retribution\dcs-retribution.exe
-```
-
 ---
 
-## 1. Démarrage, interface et carte (sans voler)
+## 1. Validation du paquet et de l'interface (sans voler)
 
-### Application (PySide6, thèmes, police) — #82, #89, #94, #96
-- [ ] L'application démarre, charge une campagne, la carte s'affiche, un tour passe et une mission se génère. (#82, #96)
-- [ ] Aucune régression visuelle : feuilles de style, icônes, listes. (#82)
-- [ ] Installation neuve : renommez temporairement `%LOCALAPPDATA%\DCSRetribution\retribution_preferences.json` et `liberation_theme.json`. L'application démarre en thème **Dark**, pour Qt et pour la carte. Remettez ensuite les fichiers en place. (#89)
-- [ ] Installation existante : le thème choisi est conservé. Vanilla, DCS World, Dark et Light sont tous sélectionnables dans **Preferences**. (#89)
-- [ ] Changement à chaud : passez de Dark à Light puis à Dark, avec la fenêtre principale, une fenêtre non modale ouverte (Logs) et la carte. Les trois suivent sans redémarrage. (#94)
-- [ ] Les icônes de la barre d'outils et du panneau du haut changent avec le thème. (#94)
-- [ ] Les fréquences en double ou de garde s'affichent en couleur d'avertissement ou de danger dans les 4 thèmes. (#94)
-- [ ] Police Inter, réseau coupé, avec une mise à l'échelle Windows de 100 %, 150 % et 200 % : pas de texte coupé. Vérifiez depuis les sources et depuis le paquet. (#89)
+Ces cases n'ont jamais été vérifiées à la main depuis le retrait de Qt.
+
+### Coquille et paquet — #175, #176
+- [x] Le `.exe` démarre : l'écran de démarrage s'affiche, puis la fenêtre avec le titre `DCS Retribution - v…`, sans fenêtre d'erreur.
+- [x] La dernière sauvegarde se recharge seule, et le titre affiche la campagne et le fichier.
+- [x] **File → Open…** : le dialogue Windows s'ouvre, une **ancienne sauvegarde** se charge et la carte se recentre sur son théâtre.
+- [x] Un tour passe (**End turn**), puis la carte et la barre du haut se mettent à jour.
+- [x] **Ctrl+S** enregistre sans dialogue quand la campagne a déjà un fichier. **File → Save as…** ouvre le dialogue Windows et le titre change.
+- [x] **File → Exit** propose d'enregistrer : **Cancel** laisse l'application ouverte ; **No** la ferme sans écrire ; **Yes** enregistre puis ferme (vérifiez la date du fichier).
+- [x] La croix de la fenêtre pose la même question.
+- [ ] Après la fermeture, `MissionScripting.lua` est restauré dans l'installation DCS, et aucun processus `retribution_main.exe` ne reste dans le gestionnaire de tâches.
+- [ ] Une fenêtre redimensionnée retrouve sa taille et sa position au lancement suivant.
+- [ ] Un deuxième lancement pendant que le premier tourne n'ouvre pas de seconde fenêtre.
+- [ ] **File → Preferences** : les boutons de choix de dossier ouvrent le dialogue Windows, et un changement de dossier est conservé après redémarrage.
+- [ ] Une mise à l'échelle Windows de 100 %, 150 % et 200 % ne coupe aucun texte.
+- [ ] Les liens du menu **Help** (Discord, GitHub, Online manual…) s'ouvrent dans le navigateur du système.
+- [ ] Copié ailleurs (autre chemin, pas de venv actif), le dossier `dist\dcs-retribution` démarre aussi. Il pèse environ 540 Mo, et 270 Mo une fois compressé.
+
+### Premier démarrage — #175
+Renommez temporairement `%LOCALAPPDATA%\DCSRetribution\retribution_preferences.json`, puis remettez-le en place à la fin.
+- [ ] L'écran web de premier démarrage demande les dossiers de DCS et le fichier `MissionScripting.lua` n'est remplacé qu'après acceptation.
+- [ ] Une ancienne préférence `"web_ui": false` dans ce fichier est ignorée : l'interface web s'ouvre.
+
+### Écrans web
+Sur une campagne en cours, ouvrez chaque écran et notez ce qui manque ou s'affiche mal.
+- [ ] **Barre du haut :** budget, météo, équilibre des forces, tour, **Begin Campaign** ou **End turn**, **Take off**.
+- [ ] **Panneau Packages** et **Enemy ATO**, avec **Edit** et **Delete** ; **frise temporelle** en bas.
+- [ ] **Inspecteur de carte :** un clic sur une base ou un site ouvre le panneau, et ses actions mènent aux bons écrans. (#175)
+- [ ] **Écran de base :** Airfield command, Ground forces HQ, Intel, Departing convoys, **Actions**, **Set radios**.
+- [ ] **Éditeur de package :** clic droit sur chaque type de cible (base, site, ligne de front, pilote abattu), **Auto-create**, **Add flight**, puis General, Route, Payload, Pilots, Radios & TACAN.
+- [ ] **Air Wing :** liste, fiche d'escadron, onglet des pilotes, **Show enemy**. Avec « Enable Air Wing adjustments », **Air wing adjustments**.
+- [ ] **Campaign :** Transfers, Stats, Notes, Reports (Intel, Stats, Finances), Info panel, Pilot career, Last debriefing.
+- [ ] **Fiche de site** et **fiche d'unité**, avec **Buy / Replace** et **Disband**.
+- [ ] **Tools :** Generate a Pretense campaign puis, sans recharger, un tour qui passe ; Import layouts. (#175)
+- [ ] **Help :** Keyboard shortcuts (`?`), Show logs, About DCS Retribution.
+- [ ] **Raccourcis :** `N`, `?`, Échap et les touches de couches. Ils ne se déclenchent pas pendant la saisie dans un champ.
+- [ ] Cliquer sur un vol de la carte le sélectionne dans le panneau Packages. (#175)
+
+### Simulation et fin de campagne — #175
+Lancez en sources avec `--show-sim-speed-controls` pour la première case.
+- [ ] Les boutons de vitesse font avancer l'horloge. Après **End turn**, l'horloge repart de la nouvelle heure de mission, en pause.
+- [ ] Après un **Abort mission**, la vitesse et l'horloge repartent bien, et on peut relancer **Take off**.
+- [ ] Sur une campagne où les motorpools sont activés et mal placés, la fenêtre **Campaign problems** les liste une seule fois.
+- [ ] **Victoire ou défaite** (par exemple avec le cheat de capture de base) : la fenêtre **Victory!** ou **Defeat!** s'affiche. **New campaign** ouvre l'assistant. **Not now** laisse la carte visible, et **End turn** comme **Take off** sont alors refusés avec un message.
 
 ### Carte et légende — #61, #81, #88, #92
 - [ ] Le bouton **Legend** ouvre le panneau. Cocher ou décocher une couche ajoute ou retire ses entrées. (#61)
 - [ ] Chaque symbole et chaque couleur visible sur la carte a son entrée dans la légende. (#61)
-- [ ] Dans les deux thèmes, le sélecteur de couches, les boutons zoom, règle et légende, les infobulles et le bandeau hors ligne suivent le thème, avec un contraste suffisant. (#92)
-- [ ] Changer le thème depuis Qt restyle la légende sans recharger la page. (#92)
+- [ ] Le sélecteur de couches, les boutons zoom, règle et légende, les infobulles et le bandeau hors ligne ont un contraste suffisant. (#92)
 - [ ] Du zoom théâtre au zoom aérodrome, les symboles restent lisibles et les étiquettes ne recouvrent pas le symbole. (#81)
-- [ ] **Hors ligne, Caucase** (réseau coupé avant le lancement) : contours terre/mer, toutes les couches de jeu et le bandeau « hors ligne » sont visibles. (#81)
+- [ ] **Hors ligne, Caucase** (réseau coupé avant le lancement) : contours terre/mer, toutes les couches de jeu et le bandeau « hors ligne » sont visibles. (#81, #88)
 - [ ] Après une session en ligne, les zones déjà vues s'affichent hors ligne, au mieux, grâce au cache HTTP. (#81)
 - [ ] **Hors ligne, Malouines** : l'image précalculée s'affiche, alignée avec les couches de jeu (aérodromes sur la côte). (#88)
-- [ ] **Hors ligne, Caucase** : rendu inchangé, toujours avec des polygones. (#88)
 
 ### Ligne de commande — #95
 - [ ] `python qt_ui\main.py new-game resources\campaigns\TblisiGap.yaml --squadrons-start-full` crée une partie sans planter.
@@ -91,7 +110,7 @@ pyinstaller pyinstaller.spec
 
 ## 2. Campagne de test et réglages
 
-Les nouvelles mécaniques sont **désactivées par défaut** (règle 1 de la spec), sauf la dépense du surplus par l'IA. Pour les tester, créez une campagne dédiée, par exemple **TblisiGap** (Bluefor Coldwar contre Russia 1975, avec hélicoptères et FARP) ou **Kutaisi2Vaziani** (USA 2005 contre Russia 1990), et activez dans **Settings** :
+Les nouvelles mécaniques sont **désactivées par défaut** (règle 1 de la spec), sauf la dépense du surplus par l'IA. Pour les tester, créez une campagne dédiée, par exemple **TblisiGap** (Bluefor Coldwar contre Russia 1975, avec hélicoptères et FARP) ou **WRL_Kutaisi2Vaziani** (USA 2005 contre Russia 1990), et activez dans **Campaign → Settings** (la recherche en haut de l'écran trouve chaque réglage) :
 
 | Page / section | Réglage | Valeur de test |
 |---|---|---|
@@ -141,8 +160,8 @@ Les nouvelles mécaniques sont **désactivées par défaut** (règle 1 de la spe
 - [ ] (Si vous avez la sauvegarde de `upstream#734`) plus aucun chevauchement.
 
 ### BUG-05 — Transferts d'escadron — #62
-- [ ] Planifiez un transfert d'escadron, puis rouvrez la fenêtre : la destination est toujours sélectionnable et affiche la même capacité.
-- [ ] Endommagez la piste d'une base qui a un transfert planifié, cliquez sur **Take off**, puis annulez ou réessayez : pas de pilote en double, et le nombre d'avions est inchangé.
+- [ ] Planifiez un transfert d'escadron dans sa fiche (Air Wing), puis rouvrez-la : la destination est toujours sélectionnable et affiche la même capacité.
+- [ ] Endommagez la piste d'une base qui a un transfert planifié, cliquez sur **Take off**, puis **Abort mission** et réessayez : pas de pilote en double, et le nombre d'avions est inchangé.
 
 ### Dotations — #100, #102
 - [ ] Campagne guerre froide (TblisiGap, Russia 1975) : `logs\retribution.log` ne contient aucune ligne « cannot equip ».
@@ -164,8 +183,8 @@ Les nouvelles mécaniques sont **désactivées par défaut** (règle 1 de la spe
 - [ ] Le saut du joueur est refusé au-dessus du plafond (3 000 ft AGL par défaut), et une autre valeur réglée dans LUA Plugins Options / CTLD est respectée.
 
 ### PER-02 — Réparations — #77
-- [ ] Détruisez une usine, capturez sa base et réparez-la depuis le panneau du bâtiment. Elle reste détruite pendant les 5 missions suivantes, puis est intacte à la 7e, et son revenu revient.
-- [ ] Frappez un autre bâtiment d'un site en réparation : le compteur « Repairing (N turns) » repart au délai complet.
+- [ ] Détruisez une usine, capturez sa base et réparez-la depuis la fiche du site (bouton **Repair**). Elle reste détruite pendant les 5 missions suivantes, puis est intacte à la 7e, et son revenu revient.
+- [ ] Frappez un autre bâtiment d'un site en réparation : le compteur de réparation de la fiche du site repart au délai complet.
 - [ ] Avec « Enemy AI repairs SAM and EWR sites » activé, détruisez le radar de recherche et des lanceurs d'un SA-3 : le radar est reconstruit en premier et réapparaît vivant à la mission suivante.
 - [ ] Réparez une unité SAM détruite avec le délai par défaut : elle réapparaît vivante, sans épave sous elle.
 
@@ -173,11 +192,11 @@ Les nouvelles mécaniques sont **désactivées par défaut** (règle 1 de la spe
 **Bases**
 - [ ] Un pilote IA abattu en territoire ennemi apparaît sur la carte comme pilote abattu. Une mission CSAR jouable le récupère, et il reprend du service après N tours. (#79)
 - [ ] Les éjections, les sauvetages et les dégâts arrivent ensemble dans `state.json` : vérifiez le fichier après une mission. (#79)
-- [ ] Clic droit sur un pilote **ennemi** abattu : aucune fenêtre de package ne s'ouvre. (#95)
+- [ ] Clic droit sur un pilote **ennemi** abattu : aucun package n'est créé. Sur un pilote ami, l'éditeur de package s'ouvre. (#95, #175)
 - [ ] Aucun Gazelle, AH-64 ou Ka-50 n'est affecté à un vol CSAR. (#99)
 
 **Statut des pilotes** (#87)
-- [ ] Option prisonnier désactivée : laissez expirer le compte à rebours d'un pilote IA. Les messages et le débriefing le déclarent mort, et l'escadron le liste comme mort.
+- [ ] Option prisonnier désactivée : laissez expirer le compte à rebours d'un pilote IA. Les messages et le débriefing le déclarent mort, et l'onglet des pilotes de l'Air Wing le liste comme mort.
 - [ ] Option prisonnier activée : un pilote qui expire près d'une base ennemie apparaît « Prisoner of war » dans l'escadron. Sa place est **libérée** (décision du 29/10, #101), et capturer la base le libère.
 - [ ] Avec « CSAR rescues AI-controlled downed pilots » désactivé, un pilote IA éjecté n'apparaît pas sur la carte. Un pilote joueur (invulnérabilité coupée) y apparaît.
 - [ ] Un pilote abattu ce tour-ci est toujours sur la carte au tour suivant, et on peut planifier un CSAR vers lui.
@@ -207,9 +226,9 @@ Les nouvelles mécaniques sont **désactivées par défaut** (règle 1 de la spe
 - [ ] Les unités détruites n'apparaissent pas dans `damaged_units`. (#60)
 - [ ] Endommagez un F-16 IA à 30 % ou plus : son escadron a un avion disponible de moins au tour suivant, puis il revient. (#78)
 - [ ] Les noms d'unités de `damaged_units` correspondent à ceux des avions, slots clients compris. (#78)
-- [ ] Le débriefing liste les unités endommagées. (#84)
-- [ ] La fenêtre d'escadron, la liste de l'Air Wing et l'inventaire affichent « N in maintenance (T turns) ». (#84)
-- [ ] Avec la réparation payante activée, **Repair N aircraft now** (fenêtre d'escadron) déduit le coût et libère l'avion. (#84)
+- [ ] Le rapport (section **Damaged units**) liste les unités endommagées. (#84)
+- [ ] La fiche d'escadron et la liste de l'Air Wing affichent les avions en maintenance et le nombre de tours. (#84)
+- [ ] Avec la réparation payante activée, **Repair N aircraft** (fiche d'escadron) déduit le coût et libère l'avion. (#84)
 - [ ] Un lanceur SAM inopérant ne tire pas à la mission suivante : il apparaît comme un objet statique. (#80)
 - [ ] Une unité EWR ou SAM inopérante ne casse pas le script Skynet IADS. (#80)
 - [ ] Une unité inopérante (statique) touchée de nouveau voit ses dégâts correctement enregistrés. (#80)
@@ -218,7 +237,7 @@ Les nouvelles mécaniques sont **désactivées par défaut** (règle 1 de la spe
 ### TRN-01 — Missions de transport jouables — #74, #86
 - [ ] Avec « Create default pickup/drop zones » activé, sur une campagne sans zones CTLD : un transport aérien en UH-1H joueur a ses zones de chargement et de dépose à côté de l'aérodrome ou de la FARP, en terrain dégagé, et le chargement/déchargement CTLD y fonctionne. (#74)
 - [ ] Option désactivée : une campagne qui a ses propres zones CTLD fonctionne comme avant. (#74)
-- [ ] Créez une mission Transport en UH-1H entre deux bases amies, par le bouton du menu de base puis par le clic droit sur la carte. En vol : le vol est un slot client, les zones et caisses CTLD apparaissent, et le kneeboard a la page Transport. (#86)
+- [ ] Créez une mission Transport en UH-1H entre deux bases amies, par le transfert de l'écran de base (**Actions**, type **Airlift**) puis par un clic droit sur la carte et **Add flight**. En vol : le vol est un slot client, les zones et caisses CTLD apparaissent, et le kneeboard a la page Transport. (#86)
 - [ ] Les unités livrées sont à destination au tour suivant. (#86)
 - [ ] Un CH-47 de transport abattu en route perd sa cargaison. (#86)
 - [ ] Un vol de transport généré par un transfert, réaffecté à un autre escadron et passé en Player, devient un slot client, et ses unités sont livrées. (#86)
@@ -233,12 +252,12 @@ Sur TblisiGap, le camp rouge planifie déjà un vol logistique (Mi-8) à chaque 
 - [ ] Une base sans route, sans accès maritime et sans liaison aérienne affiche l'anneau rouge pointillé et la ligne « Cut off » dans l'infobulle.
 
 ### PER-03 — Carrière du pilote joueur — #58, #76, #83, #90
-- [ ] **New player pilot** dans la fenêtre d'escadron ajoute un pilote joueur, qu'on peut affecter à un vol. (#76)
+- [ ] **New player pilot** dans la fiche d'escadron ajoute un pilote joueur, qu'on peut affecter à un vol. (#76)
 - [ ] Abattez 2 avions ennemis : `state.json` contient 2 entrées `kill_attributions` avec votre unité comme initiateur, et le pilote a 2 victoires air. (#58)
 - [ ] Détruisez une unité au sol et un navire : ils sont crédités en victoires sol et navale. (#58)
-- [ ] Après la mission, la page **Career** montre +1 sortie, +1 sortie de combat, les victoires et une ligne d'historique. (#76, #83)
-- [ ] Après 2 missions, la page Career montre les totaux et les 2 missions. (#83)
-- [ ] Atteindre 5 victoires air donne un message « Ace » après le débriefing, et la décoration apparaît sur la page Career. (#83)
+- [ ] Après la mission, **Campaign → Pilot career** montre +1 sortie, +1 sortie de combat, les victoires et une ligne d'historique. (#76, #83)
+- [ ] Après 2 missions, l'écran de carrière montre les totaux et les 2 missions. (#83)
+- [ ] Atteindre 5 victoires air donne un message « Ace » après le débriefing, et la décoration apparaît sur l'écran de carrière. (#83)
 - [ ] Éjectez-vous (invulnérabilité coupée, CSAR activé) : +1 éjection et +1 abattu, et la ligne d'historique indique « Ejected ». (#90)
 - [ ] Sauvez ce pilote avec un CSAR joueur : il gagne +1 « Rescued by CSAR », et la sortie du sauveteur affiche Rescues = 1. (#90)
 
@@ -253,4 +272,4 @@ Sur TblisiGap, le camp rouge planifie déjà un vol logistique (Mi-8) à chaque 
 
 ## 7. Fin de campagne de test
 - [ ] Après 5 tours ou plus avec toutes les options activées : pas de pilote en double, pas d'inventaire ni de budget négatif, aucun avion bloqué en maintenance, et pas d'erreur dans `logs\retribution.log`.
-- [ ] (Optionnel) Le paquet PyInstaller (§0.5) refait les tests du §1.
+- [ ] Après tout cela, une sauvegarde de cette campagne se recharge, et un tour passe.
