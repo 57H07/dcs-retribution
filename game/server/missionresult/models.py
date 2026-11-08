@@ -6,7 +6,7 @@ from enum import Enum
 from pydantic import BaseModel
 
 from game.commands import MissionResultSnapshot, MissionResultStatus
-from game.debriefingreport import AfterActionReport, PilotLine, Tone
+from game.debriefingreport import AfterActionReport, PilotLine, SortieCard, Tone
 from game.theater import Player
 
 
@@ -150,6 +150,70 @@ class DamagedUnitLineJs(BaseModel):
         title = "DamagedUnitLine"
 
 
+class SortieAwardJs(BaseModel):
+    kind: str
+    name: str
+    abbreviation: str
+    reason: str
+
+    class Config:
+        title = "SortieAward"
+
+
+class SortieCardJs(BaseModel):
+    """How the mission went for one player pilot (#192)."""
+
+    pilot_id: str
+    pilot: str
+    squadron: str
+    aircraft: str
+    flight: str
+    task: str
+    target: str
+    package_result: str
+    package_tone: ToneJs
+    air_kills: int
+    ground_kills: int
+    naval_kills: int
+    fate: str
+    fate_tone: ToneJs
+    flight_time: str
+    #: Null until the results are applied.
+    sorties_logged: int | None
+    rescues: int | None
+    awards: list[SortieAwardJs] | None
+
+    class Config:
+        title = "SortieCard"
+
+    @staticmethod
+    def from_card(card: SortieCard) -> SortieCardJs:
+        return SortieCardJs(
+            pilot_id=card.pilot_id,
+            pilot=card.pilot,
+            squadron=card.squadron,
+            aircraft=card.aircraft,
+            flight=card.flight,
+            task=card.task,
+            target=card.target,
+            package_result=card.package_result,
+            package_tone=ToneJs.from_tone(card.package_tone),
+            air_kills=card.air_kills,
+            ground_kills=card.ground_kills,
+            naval_kills=card.naval_kills,
+            fate=card.fate,
+            fate_tone=ToneJs.from_tone(card.fate_tone),
+            flight_time=card.flight_time,
+            sorties_logged=card.sorties_logged,
+            rescues=card.rescues,
+            awards=(
+                None
+                if card.awards is None
+                else [SortieAwardJs(**dataclasses.asdict(a)) for a in card.awards]
+            ),
+        )
+
+
 class AfterActionReportJs(BaseModel):
     """The after-action report (`game.debriefingreport.AfterActionReport`)."""
 
@@ -173,6 +237,8 @@ class AfterActionReportJs(BaseModel):
     enemy_losses: list[LossLineJs]
     damaged_units: list[DamagedUnitLineJs]
     events: list[ReportEventJs]
+    #: One card per player pilot of the mission; empty without any.
+    your_sorties: list[SortieCardJs]
     #: True once the results were applied; the fields below are null before.
     applied: bool
     pilots_captured: list[PilotLineJs] | None
@@ -229,6 +295,7 @@ class AfterActionReportJs(BaseModel):
                 ReportEventJs(time=e.time, text=e.text, tone=ToneJs.from_tone(e.tone))
                 for e in report.events
             ],
+            your_sorties=[SortieCardJs.from_card(c) for c in report.your_sorties],
             applied=report.applied,
             pilots_captured=(
                 None

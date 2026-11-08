@@ -1,7 +1,8 @@
 // After-action report (WEB-05.2), after Qt's QDebriefingWindow and
 // mockups/Debrief.dc.html. The engine builds the whole report
 // (game/debriefingreport.py): this screen shows GET /game/mission/result/report
-// and sends "Accept results". Before acceptance the report covers what the
+// and sends "Accept results". Each player pilot gets a "Your sortie" card
+// at the top (#192). Before acceptance the report covers what the
 // mission decided; accepting applies the results exactly as the Qt path does,
 // and the report then adds what applying them decided (prisoners, pilots still
 // down, budget, the engine's log). "Continue" goes back to the command view.
@@ -9,6 +10,8 @@ import { commandErrorMessage } from "../api/commands";
 import {
   AfterActionReport,
   LossLine,
+  SortieAward,
+  SortieCard,
   useAcceptMissionResultMutation,
   useGetMissionReportQuery,
   useLoadMissionResultFileMutation,
@@ -111,6 +114,109 @@ export function Headline({ report }: { report: AfterActionReport }) {
         }
       />
     </div>
+  );
+}
+
+function Award({ award }: { award: SortieAward }) {
+  const what =
+    award.kind === "Rank"
+      ? `Promoted to ${award.name}`
+      : `Awarded ${award.name}`;
+  return (
+    <li className={styles.award}>
+      {award.abbreviation ? (
+        <span className={styles.badge}>{award.abbreviation}</span>
+      ) : null}
+      <span className={styles.packageTarget}>
+        <b>{what}</b>
+        {award.reason ? (
+          <span className={styles.muted}>{award.reason}</span>
+        ) : null}
+      </span>
+    </li>
+  );
+}
+
+/** How the mission went for one player pilot (#192). */
+function SortieCardView({ card }: { card: SortieCard }) {
+  const titleId = `sortie-${card.pilot_id}`;
+  const logged =
+    card.sorties_logged == null
+      ? `${card.flight_time} planned`
+      : `${card.sorties_logged} ${
+          card.sorties_logged === 1 ? "sortie" : "sorties"
+        } logged · ${card.flight_time}`;
+  return (
+    <article className={styles.sortie} aria-labelledby={titleId}>
+      <header className={styles.sortieHeader}>
+        <h3 id={titleId} className={styles.sortieTitle}>
+          {card.pilot}
+        </h3>
+        <Link
+          className={styles.careerLink}
+          to={`${PATHS.career}?pilot=${card.pilot_id}`}
+          aria-label={`Career of ${card.pilot}`}
+        >
+          Career
+        </Link>
+      </header>
+      <span className={styles.muted}>
+        {[card.flight, card.aircraft, card.squadron]
+          .filter(Boolean)
+          .join(" · ")}
+      </span>
+      {card.target ? (
+        <div className={styles.sortieRow}>
+          {card.task ? <TaskTag task={card.task} /> : null}
+          <span>{card.target}</span>
+          <span className={styles.result} data-tone={card.package_tone}>
+            {card.package_result}
+          </span>
+        </div>
+      ) : null}
+      <div className={styles.sortieRow}>
+        <span className={styles.result} data-tone={card.fate_tone}>
+          {card.fate}
+        </span>
+        <span className={styles.mono}>
+          {card.air_kills} air · {card.ground_kills} ground · {card.naval_kills}{" "}
+          naval
+        </span>
+      </div>
+      <span className={styles.muted}>
+        {logged}
+        {card.rescues ? ` · ${card.rescues} pilots rescued` : ""}
+      </span>
+      {card.awards == null ? (
+        <p className={styles.muted}>
+          Awards are decided when you accept the results.
+        </p>
+      ) : card.awards.length > 0 ? (
+        <ul className={styles.awards}>
+          {card.awards.map((award) => (
+            <Award key={`${award.kind}-${award.name}`} award={award} />
+          ))}
+        </ul>
+      ) : null}
+    </article>
+  );
+}
+
+function YourSortie({ report }: { report: AfterActionReport }) {
+  if (report.your_sorties.length === 0) {
+    return null;
+  }
+  return (
+    <section className={styles.panel} aria-labelledby="debrief-your-sortie">
+      <h2 id="debrief-your-sortie" className={styles.panelTitle}>
+        Your sortie
+      </h2>
+      <div className={styles.sorties}>
+        {report.your_sorties.map((card) => (
+          <SortieCardView key={card.pilot_id} card={card} />
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -389,6 +495,7 @@ export function DebriefScreen() {
             it is over.
           </p>
         )}
+        <YourSortie report={report} />
         <Headline report={report} />
         <div className={styles.columns}>
           <div className={styles.main}>

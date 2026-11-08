@@ -227,6 +227,76 @@
   list-style: none;
 }
 
+/* Your sortie (#192): one card per player pilot. */
+.sorties {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--ui-space-md);
+  padding: var(--ui-space-md) var(--ui-space-lg) var(--ui-space-lg);
+}
+
+.sortie {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-sm);
+  padding: 12px 14px;
+  border: 1px solid var(--ui-color-line);
+  background: var(--ui-color-bg-panel);
+}
+
+.sortieHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ui-space-md);
+}
+
+.sortieTitle {
+  margin: 0;
+  font-size: var(--ui-font-size-lg);
+  font-weight: var(--ui-font-weight-semibold);
+  color: var(--ui-color-text-strong);
+}
+
+.careerLink {
+  color: var(--ui-color-accent);
+  font-size: var(--ui-font-size-sm);
+}
+
+.sortieRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-md);
+}
+
+.awards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.award {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-md);
+}
+
+.badge {
+  flex: none;
+  min-width: 44px;
+  padding: 2px 6px;
+  border: 1px solid var(--ui-color-accent);
+  color: var(--ui-color-accent);
+  font-family: var(--ui-font-display);
+  font-weight: var(--ui-font-weight-bold);
+  text-align: center;
+  text-transform: uppercase;
+}
+
 .losses {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));

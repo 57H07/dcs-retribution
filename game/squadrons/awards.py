@@ -230,6 +230,24 @@ def rules_for(
     return best
 
 
+def abbreviation_of(
+    kind: AwardKind, name: str, rules: Optional[Iterable[AwardRules]] = None
+) -> str:
+    """The abbreviation the career rules give an award; "" when none does.
+
+    Awards only store their name, so the badge of the report reads it back from
+    the rules (#192).
+    """
+    for country_rules in default_rules() if rules is None else rules:
+        definitions = (
+            country_rules.ranks if kind is AwardKind.Rank else country_rules.decorations
+        )
+        for definition in definitions:
+            if definition.name == name and definition.abbreviation:
+                return definition.abbreviation
+    return ""
+
+
 def award_careers(
     air_wing: AirWing,
     turn: int,

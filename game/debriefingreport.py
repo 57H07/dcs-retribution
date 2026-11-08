@@ -10,26 +10,35 @@ package (the ATO is replaced by the next turn's, so this must happen first) and 
 mission events. `complete_report` adds what is only known once the results were
 applied and the turn passed: pilots taken prisoner, pilots still down, the budget of
 the next turn and the messages the engine logged meanwhile, with their time.
+
+Each player pilot of the mission gets a 'Your sortie' card (#192): built from the
+mission data first, then replaced by what the logbook committed (kills, fate,
+flight time) and the awards of the mission once the results are applied.
 """
 
 from __future__ import annotations
 
 import dataclasses
+import datetime
 import logging
 from collections import Counter
 from collections.abc import Callable, Iterable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, TYPE_CHECKING, TypeVar
 
+from game.squadrons.careerreport import format_duration
+from game.squadrons.pilot import KillCategory, PilotStatus
 from game.theater import Player
 from game.theater.theatergroundobject import TheaterGroundObject
 
 if TYPE_CHECKING:
     from game.ato.flight import Flight
     from game.ato.package import Package
-    from game.debriefing import Debriefing, SideLossCounts
+    from game.debriefing import Debriefing, RescuedPilot, SideLossCounts
     from game.infos.information import Information
+    from game.squadrons.awards import AwardRules
+    from game.squadrons.pilot import LogbookEntry, Pilot
 
 T = TypeVar("T")
 
@@ -91,6 +100,50 @@ class DamagedUnitLine:
 
 
 @dataclass(frozen=True)
+class SortieAward:
+    """A rank or decoration a player pilot received for the mission."""
+
+    #: "Rank" or "Decoration".
+    kind: str
+    name: str
+    #: Badge text from the career rules ("Capt"); "" when they give none.
+    abbreviation: str
+    #: Why it was awarded: the description of the award.
+    reason: str
+
+
+@dataclass(frozen=True)
+class SortieCard:
+    """How the mission went for one player pilot (#192)."""
+
+    #: `Pilot.id`: the card links to the pilot's career.
+    pilot_id: str
+    pilot: str
+    squadron: str
+    aircraft: str
+    #: Empty for a pilot rescued this mission who did not fly it.
+    flight: str
+    task: str
+    target: str
+    package_result: str
+    package_tone: Tone
+    air_kills: int
+    ground_kills: int
+    naval_kills: int
+    fate: str
+    fate_tone: Tone
+    #: Flight time added to the logbook (planned, before the results are applied).
+    #: As the career page shows it: "1:05".
+    flight_time: str
+    #: Sorties added to the logbook; None until the results are applied.
+    sorties_logged: int | None = None
+    #: Downed pilots this pilot rescued; None until the results are applied.
+    rescues: int | None = None
+    #: The awards of the mission; None until the results are applied.
+    awards: list[SortieAward] | None = None
+
+
+@dataclass(frozen=True)
 class AfterActionReport:
     turn: int
     date: str
@@ -116,6 +169,8 @@ class AfterActionReport:
     enemy_losses: list[LossLine]
     damaged_units: list[DamagedUnitLine]
     events: list[ReportEvent]
+    #: One card per player pilot of the mission; empty without any.
+    your_sorties: list[SortieCard] = field(default_factory=list)
     #: True once the results were applied: the fields below are then known.
     applied: bool = False
     pilots_captured: list[PilotLine] | None = None
@@ -349,6 +404,163 @@ def logged_events(messages: Iterable[Information]) -> list[ReportEvent]:
     return events
 
 
+# --- your sortie (#192) ---------------------------------------------------------
+
+
+def _flight_card(
+    debriefing: Debriefing, package: Package, flight: Flight, pilot: Pilot
+) -> SortieCard:
+    from game.sim.missionresultsprocessor import MissionResultsProcessor
+
+    kills: Counter[KillCategory] = Counter(
+        kill.category for kill in debriefing.pilot_kills if kill.pilot is pilot
+    )
+    lost = any(loss.pilot is pilot for loss in debriefing.air_losses.player)
+    if not lost:
+        fate, fate_tone = "Returned", Tone.GOOD
+    elif id(pilot) in debriefing.ejected_pilot_positions:
+        fate, fate_tone = "Ejected", Tone.MIXED
+    else:
+        fate, fate_tone = "Shot down", Tone.BAD
+    lost_in_package = sum(
+        1 for loss in debriefing.air_losses.player if loss.flight in package.flights
+    )
+    result, tone = _package_result(
+        debriefing, package, lost_in_package, sum(f.count for f in package.flights)
+    )
+    return SortieCard(
+        pilot_id=str(pilot.id),
+        pilot=pilot.name,
+        squadron=flight.squadron.name,
+        aircraft=str(flight.unit_type),
+        flight=_flight_name(flight),
+        task=flight.flight_type.value,
+        target=package.target.name,
+        package_result=result,
+        package_tone=tone,
+        air_kills=kills[KillCategory.Air],
+        ground_kills=kills[KillCategory.Ground],
+        naval_kills=kills[KillCategory.Naval],
+        fate=fate,
+        fate_tone=fate_tone,
+        flight_time=format_duration(
+            MissionResultsProcessor.planned_flight_time(flight)
+        ),
+    )
+
+
+def _rescued_card(pilot: Pilot, rescued: RescuedPilot) -> SortieCard:
+    return SortieCard(
+        pilot_id=str(pilot.id),
+        pilot=pilot.name,
+        squadron=rescued.squadron,
+        aircraft=rescued.aircraft,
+        flight="",
+        task="",
+        target="",
+        package_result="",
+        package_tone=Tone.NEUTRAL,
+        air_kills=0,
+        ground_kills=0,
+        naval_kills=0,
+        fate="Rescued by CSAR",
+        fate_tone=Tone.GOOD,
+        flight_time=format_duration(datetime.timedelta()),
+    )
+
+
+def sortie_cards(debriefing: Debriefing) -> list[SortieCard]:
+    """A card per player pilot who flew the mission or was rescued during it."""
+    cards: dict[str, SortieCard] = {}
+    for package in debriefing.game.blue.ato.packages:
+        for flight in package.flights:
+            for pilot in flight.roster.iter_pilots():
+                if pilot is None or not pilot.player or str(pilot.id) in cards:
+                    continue
+                cards[str(pilot.id)] = _flight_card(debriefing, package, flight, pilot)
+    for rescued in debriefing.rescued_pilots_for(Player.BLUE):
+        pilot = rescued.pilot
+        if pilot is None or not pilot.player or str(pilot.id) in cards:
+            continue
+        cards[str(pilot.id)] = _rescued_card(pilot, rescued)
+    return list(cards.values())
+
+
+def _committed_fate(
+    card: SortieCard, pilot: Pilot, entry: LogbookEntry | None
+) -> tuple[str, Tone]:
+    if pilot.status is PilotStatus.Dead or (entry is not None and entry.died):
+        return "Killed in action", Tone.BAD
+    if pilot.status is PilotStatus.PrisonerOfWar:
+        return "Taken prisoner", Tone.BAD
+    if pilot.status is PilotStatus.Downed:
+        return "Ejected, awaiting rescue", Tone.MIXED
+    if entry is None:
+        return card.fate, card.fate_tone
+    if entry.ejected:
+        return "Ejected and recovered", Tone.MIXED
+    return "Returned", Tone.GOOD
+
+
+def _committed_card(
+    card: SortieCard, pilot: Pilot, turn: int, rules: Iterable[AwardRules] | None
+) -> SortieCard:
+    from game.squadrons.awards import abbreviation_of
+
+    entries = [e for e in pilot.record.logbook if e.turn == turn]
+    entry = entries[-1] if entries else None
+    fate, fate_tone = _committed_fate(card, pilot, entry)
+    committed = dataclasses.replace(
+        card,
+        fate=fate,
+        fate_tone=fate_tone,
+        sorties_logged=len(entries),
+        rescues=0,
+        awards=[
+            SortieAward(
+                kind=award.kind.value,
+                name=award.name,
+                abbreviation=abbreviation_of(award.kind, award.name, rules),
+                reason=award.description,
+            )
+            for award in pilot.record.awards
+            if award.turn == turn
+        ],
+    )
+    if entry is None:
+        return committed
+    return dataclasses.replace(
+        committed,
+        air_kills=entry.air_kills,
+        ground_kills=entry.ground_kills,
+        naval_kills=entry.naval_kills,
+        flight_time=format_duration(entry.flight_time),
+        rescues=entry.rescues,
+    )
+
+
+def committed_sortie_cards(
+    cards: list[SortieCard],
+    debriefing: Debriefing,
+    turn: int,
+    rules: Iterable[AwardRules] | None = None,
+) -> list[SortieCard]:
+    """`cards` as the results committed them: the logbook and awards of `turn`."""
+    from game.squadrons.career import careers
+
+    if not cards:
+        return []
+    pilots = {str(c.pilot.id): c.pilot for c in careers(debriefing.game.blue.air_wing)}
+    return [
+        (
+            _committed_card(card, pilots[card.pilot_id], turn, rules)
+            if card.pilot_id in pilots
+            else card
+        )
+        for card in cards
+    ]
+
+
 # --- report ---------------------------------------------------------------------
 
 
@@ -390,6 +602,7 @@ def build_report(debriefing: Debriefing) -> AfterActionReport:
             for r in debriefing.damaged_unit_reports()
         ],
         events=mission_events(debriefing),
+        your_sorties=sortie_cards(debriefing),
     )
 
 
@@ -425,10 +638,12 @@ def complete_report(
     report: AfterActionReport,
     debriefing: Debriefing,
     messages: Iterable[Information],
+    rules: Iterable[AwardRules] | None = None,
 ) -> AfterActionReport:
     """`report` once its results were applied and the next turn began.
 
-    `messages` are the `Game.informations` entries logged meanwhile.
+    `messages` are the `Game.informations` entries logged meanwhile; `rules` the
+    career rules that name the badges of the awards (the game's by default).
     """
     from game.income import Income
 
@@ -449,4 +664,7 @@ def complete_report(
         budget_next_turn=round(game.blue.budget, 2),
         income_next_turn=round(Income(game, player=Player.BLUE).total, 2),
         events=report.events + logged_events(messages),
+        your_sorties=committed_sortie_cards(
+            report.your_sorties, debriefing, report.turn, rules
+        ),
     )
