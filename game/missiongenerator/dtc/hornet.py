@@ -74,13 +74,18 @@ def _frequency_names(flight: FlightData, mission_data: MissionData) -> dict[floa
     return names
 
 
+#: The FM bands of the ARC-210 (MHz), as the DTC editor tells them apart
+#: (`get_Modulation` of COMM/COMM_common.lua); every other band is AM.
+_FM_BANDS = ((30.0, 88.0), (156.0, 174.0))
+
+
+def _modulation(frequency: float) -> int:
+    """0 AM, 1 FM."""
+    return int(any(low <= frequency < high for low, high in _FM_BANDS))
+
+
 def _channel(frequency: float, name: str) -> dict[str, Any]:
-    # Below the VHF AM band, the ARC-210 presets of Retribution are FM.
-    return {
-        "frequency": frequency,
-        "modulation": 1 if frequency < 88.0 else 0,
-        "name": name,
-    }
+    return {"frequency": frequency, "modulation": _modulation(frequency), "name": name}
 
 
 def _comm(flight: FlightData, mission_data: MissionData) -> dict[str, Any]:
@@ -98,7 +103,7 @@ def _comm(flight: FlightData, mission_data: MissionData) -> dict[str, Any]:
                 frequency, names.get(round(frequency, 3), f"CH {number}")
             )
         table["Channel_G"] = _channel(243.0, "GUARD")
-        table["Channel_M"] = _channel(305.0, "MAN")
+        table["Channel_M"] = _channel(122.8, "MAN")
         table["Channel_C"] = _channel(30.0, "CUE")
         table["Channel_S"] = _channel(156.05, "MAR")
         comm[f"COMM{radio_id}"] = table
@@ -190,6 +195,25 @@ def _nav_settings(
     }
 
 
+def _no_offset_aimpoint(number: int) -> dict[str, Any]:
+    """The empty offset aimpoint the DTC editor gives each new steerpoint."""
+    return {
+        "idOA": f"OA{number}",
+        "idOA_Line": f"OA{number}Line",
+        "isOA": False,
+        "OA_Range": 0.0,
+        "OA_Bearing": 0.0,
+        "OA_X": 0.0,
+        "OA_Y": 0.0,
+        "OA_Alt": 0.0,
+        "OA_DeltaX": 0.0,
+        "OA_DeltaY": 0.0,
+        "OA_Bearing_Units": 1,  # degrees magnetic
+        "OA_Range_Units": 1,  # feet
+        "OA_Elevation_Units": 1,  # feet
+    }
+
+
 def _wypt(
     flight: FlightData, mission_data: MissionData, context: DtcContext
 ) -> dict[str, Any]:
@@ -215,6 +239,7 @@ def _wypt(
             "R1": on_route,
             "R2": False,
             "R3": False,
+            **_no_offset_aimpoint(number),
         }
         if on_route:
             point["R1_order"] = len(route) + 1

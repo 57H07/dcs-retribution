@@ -18,6 +18,13 @@ Sources: ED changelog 2.9.15.9408 and news of 2025-04-11; the third-party genera
 `MissionEditor/modules/me_managerDTC.lua` and `CoreMods/aircraft/<type>/DTC`. ED does not
 publish the schema.
 
+Checked in November 2026 against a DCS install and against missions saved by the mission
+editor: the unit `DTC` block and the file envelope match. The editors of each module, in
+`CoreMods/aircraft/<type>/DTC/`, are the reference for default values: the fixed Hornet
+presets (G 243 AM, M 122.8 AM, C 30 FM, S 156.05 FM), the FM bands of the ARC-210
+(30-88 and 156-174 MHz) and the empty offset aimpoint of each steerpoint
+(`WYPT/WYPT_NAV.lua`).
+
 ## File format
 
 - A cartridge is a JSON file `<name>.dtc`:
