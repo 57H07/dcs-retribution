@@ -9329,6 +9329,62 @@
         }
       }
     },
+    "/war-diary": {
+      "get": {
+        "summary": "Get War Diary",
+        "description": "One entry per accepted mission result, newest first; null without a campaign.",
+        "operationId": "get_war_diary",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/WarDiaryJs"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get War Diary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/war-diary/export": {
+      "post": {
+        "summary": "Export War Diary",
+        "description": "Asks where to save the whole diary as one HTML page, then writes it.",
+        "operationId": "export_war_diary",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileActionResultJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tools/import-layouts": {
       "post": {
         "summary": "Post Import Layouts",
@@ -17992,6 +18048,326 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "WarDiaryAwardJs": {
+        "properties": {
+          "pilot_id": {
+            "type": "string",
+            "title": "Pilot Id"
+          },
+          "pilot": {
+            "type": "string",
+            "title": "Pilot"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "abbreviation": {
+            "type": "string",
+            "title": "Abbreviation"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pilot_id",
+          "pilot",
+          "kind",
+          "name",
+          "abbreviation",
+          "reason"
+        ],
+        "title": "WarDiaryAward"
+      },
+      "WarDiaryBaseJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "taken": {
+            "type": "boolean",
+            "title": "Taken"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "taken"
+        ],
+        "title": "WarDiaryBase"
+      },
+      "WarDiaryEntryJs": {
+        "properties": {
+          "turn": {
+            "type": "integer",
+            "title": "Turn"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "weather": {
+            "type": "string",
+            "title": "Weather"
+          },
+          "verdict": {
+            "type": "string",
+            "title": "Verdict"
+          },
+          "verdict_tone": {
+            "$ref": "#/components/schemas/ToneJs"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "air_kills_friendly": {
+            "type": "integer",
+            "title": "Air Kills Friendly"
+          },
+          "air_kills_enemy": {
+            "type": "integer",
+            "title": "Air Kills Enemy"
+          },
+          "ground_kills_friendly": {
+            "type": "integer",
+            "title": "Ground Kills Friendly"
+          },
+          "ground_kills_enemy": {
+            "type": "integer",
+            "title": "Ground Kills Enemy"
+          },
+          "bases": {
+            "items": {
+              "$ref": "#/components/schemas/WarDiaryBaseJs"
+            },
+            "type": "array",
+            "title": "Bases"
+          },
+          "fronts": {
+            "items": {
+              "$ref": "#/components/schemas/WarDiaryFrontJs"
+            },
+            "type": "array",
+            "title": "Fronts"
+          },
+          "packages": {
+            "items": {
+              "$ref": "#/components/schemas/WarDiaryPackageJs"
+            },
+            "type": "array",
+            "title": "Packages"
+          },
+          "friendly_losses": {
+            "items": {
+              "$ref": "#/components/schemas/WarDiaryLossJs"
+            },
+            "type": "array",
+            "title": "Friendly Losses"
+          },
+          "enemy_losses": {
+            "items": {
+              "$ref": "#/components/schemas/WarDiaryLossJs"
+            },
+            "type": "array",
+            "title": "Enemy Losses"
+          },
+          "pilots": {
+            "items": {
+              "$ref": "#/components/schemas/WarDiaryPilotJs"
+            },
+            "type": "array",
+            "title": "Pilots"
+          },
+          "awards": {
+            "items": {
+              "$ref": "#/components/schemas/WarDiaryAwardJs"
+            },
+            "type": "array",
+            "title": "Awards"
+          },
+          "budget_next_turn": {
+            "title": "Budget Next Turn",
+            "type": "number"
+          },
+          "income_next_turn": {
+            "title": "Income Next Turn",
+            "type": "number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "turn",
+          "date",
+          "weather",
+          "verdict",
+          "verdict_tone",
+          "summary",
+          "air_kills_friendly",
+          "air_kills_enemy",
+          "ground_kills_friendly",
+          "ground_kills_enemy",
+          "bases",
+          "fronts",
+          "packages",
+          "friendly_losses",
+          "enemy_losses",
+          "pilots",
+          "awards"
+        ],
+        "title": "WarDiaryEntry"
+      },
+      "WarDiaryFrontJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "moved_km": {
+            "type": "number",
+            "title": "Moved Km"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "moved_km"
+        ],
+        "title": "WarDiaryFront"
+      },
+      "WarDiaryJs": {
+        "properties": {
+          "campaign": {
+            "type": "string",
+            "title": "Campaign"
+          },
+          "since_turn": {
+            "title": "Since Turn",
+            "type": "integer"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/WarDiaryEntryJs"
+            },
+            "type": "array",
+            "title": "Entries"
+          }
+        },
+        "type": "object",
+        "required": [
+          "campaign",
+          "entries"
+        ],
+        "title": "WarDiary"
+      },
+      "WarDiaryLossJs": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "count"
+        ],
+        "title": "WarDiaryLoss"
+      },
+      "WarDiaryPackageJs": {
+        "properties": {
+          "task": {
+            "type": "string",
+            "title": "Task"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "flights": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Flights"
+          },
+          "lost": {
+            "type": "integer",
+            "title": "Lost"
+          },
+          "aircraft": {
+            "type": "integer",
+            "title": "Aircraft"
+          },
+          "result": {
+            "type": "string",
+            "title": "Result"
+          },
+          "tone": {
+            "$ref": "#/components/schemas/ToneJs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task",
+          "target",
+          "flights",
+          "lost",
+          "aircraft",
+          "result",
+          "tone"
+        ],
+        "title": "WarDiaryPackage"
+      },
+      "WarDiaryPilotJs": {
+        "properties": {
+          "pilot_id": {
+            "title": "Pilot Id",
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "squadron": {
+            "type": "string",
+            "title": "Squadron"
+          },
+          "aircraft": {
+            "type": "string",
+            "title": "Aircraft"
+          },
+          "fate": {
+            "type": "string",
+            "title": "Fate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "squadron",
+          "aircraft",
+          "fate"
+        ],
+        "title": "WarDiaryPilot"
       },
       "WaypointAltitudeJs": {
         "properties": {

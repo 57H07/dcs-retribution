@@ -16,6 +16,7 @@ import { LoadScreen } from "../secondary/LoadScreen";
 import { NotesScreen } from "../secondary/NotesScreen";
 import { ProductionScreen } from "../production/ProductionScreen";
 import { TransfersScreen } from "../secondary/TransfersScreen";
+import { WarDiaryScreen } from "../secondary/WarDiaryScreen";
 import { SettingsScreen } from "../settings/SettingsScreen";
 import { TgoScreen } from "../tgos/TgoScreen";
 import { UnitInfoScreen } from "../tgos/UnitInfoScreen";
@@ -88,6 +89,7 @@ export const ROUTES: RouteObject[] = [
       { path: "load", element: <LoadScreen /> },
       { path: "info", element: <InfoPanelScreen /> },
       { path: "career", element: <CareerScreen /> },
+      { path: "diary", element: <WarDiaryScreen /> },
       { path: "logs", element: <LogsScreen /> },
       { path: "about", element: <AboutScreen /> },
       // Ground object and unit info sheets (WEB-08.3).

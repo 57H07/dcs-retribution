@@ -34,6 +34,7 @@ from . import (
     waypoints,
     iadsnetwork,
     journal,
+    wardiary,
     tools,
     transfers,
 )
@@ -74,6 +75,7 @@ app.include_router(iadsnetwork.router)
 app.include_router(applog.router)
 app.include_router(careers.router)
 app.include_router(journal.router)
+app.include_router(wardiary.router)
 app.include_router(tools.router)
 app.include_router(transfers.router)
 

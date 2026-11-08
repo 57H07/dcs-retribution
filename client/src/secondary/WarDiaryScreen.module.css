@@ -1,0 +1,61 @@
+/* War diary (#193): one card per turn, details on demand. */
+.entry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-sm);
+  padding: 14px 16px;
+  background: var(--ui-color-bg-card);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-md);
+}
+
+.entryHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-md);
+}
+
+.verdict {
+  flex: 1;
+  font-weight: var(--ui-font-weight-semibold);
+}
+
+.details {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--ui-space-md);
+  padding-top: var(--ui-space-sm);
+  border-top: 1px solid var(--ui-color-line);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-xs);
+}
+
+.groupTitle {
+  margin: 0;
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-sm);
+  font-weight: var(--ui-font-weight-semibold);
+  text-transform: uppercase;
+}
+
+.items {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.entry [data-tone="good"] {
+  color: var(--ui-color-success);
+}
+
+.entry [data-tone="bad"] {
+  color: var(--ui-color-danger);
+}
+
+.entry [data-tone="mixed"] {
+  color: var(--ui-color-accent);
+}

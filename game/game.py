@@ -56,6 +56,7 @@ if TYPE_CHECKING:
     from .navmesh import NavMesh
     from .sim import GameUpdateEvents
     from .squadrons import AirWing
+    from .wardiary import DiaryEntry
     from .threatzones import ThreatZones
 
 COMMISION_UNIT_VARIETY = 4
@@ -126,6 +127,11 @@ class Game:
         self.notes = ""
         self.ground_planners: dict[UUID, GroundPlanner] = {}
         self.informations: list[Information] = []
+        #: One entry per accepted mission result (#193).
+        self.war_diary: list[DiaryEntry] = []
+        #: The turn the diary of an older campaign begins at; None when it
+        #: covers the whole campaign.
+        self.war_diary_since_turn: int | None = None
         self.message("Game Start", "-" * 40)
         # Culling Zones are for areas around points of interest that contain things we may not wish to cull.
         self.__culling_zones: List[Point] = []
@@ -188,6 +194,10 @@ class Game:
         # it after the save file.
         if not hasattr(self, "campaign_id"):
             self.campaign_id = ""
+        # Postdates the war diary (#193): it begins with the next turn.
+        if not hasattr(self, "war_diary"):
+            self.war_diary = []
+            self.war_diary_since_turn = self.turn
         # Heal carcass lists bloated by old saves. Guarded like laser_code_registry
         # below: __destroyed_units postdates the oldest saves, so a pre-2020 save
         # arrives without it and must not AttributeError here.
