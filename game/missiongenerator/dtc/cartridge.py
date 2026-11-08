@@ -8,13 +8,26 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, tzinfo
 from typing import Any, Callable, TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from dcs import Point
+
     from game.missiongenerator.aircraft.flightdata import FlightData
     from game.missiongenerator.missiondata import MissionData
+    from game.theater.player import Player
+
+
+@dataclass(frozen=True)
+class DtcThreat:
+    """An air defense site, as a reference point of a cartridge."""
+
+    name: str
+    position: Point
+    #: The side that owns it: a flight sees the sites of the other side.
+    owner: Player
 
 
 @dataclass(frozen=True)
@@ -26,6 +39,10 @@ class DtcContext:
     #: Mission start, local time of the theater.
     start_time: datetime
     timezone: tzinfo
+    #: Each active front line, from end to end.
+    front_lines: tuple[tuple[Point, Point], ...] = field(default=())
+    #: The air defense sites of both sides that still have working air defense.
+    air_defenses: tuple[DtcThreat, ...] = field(default=())
 
 
 @dataclass(frozen=True)
@@ -52,9 +69,9 @@ CartridgeBuilder = Callable[
 
 
 def _builders() -> dict[str, CartridgeBuilder]:
-    from . import hornet
+    from . import hornet, tomcat
 
-    return {hornet.UNIT_TYPE: hornet.build}
+    return {hornet.UNIT_TYPE: hornet.build, tomcat.UNIT_TYPE: tomcat.build}
 
 
 def supports(flight: FlightData) -> bool:
