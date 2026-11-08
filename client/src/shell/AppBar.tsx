@@ -69,6 +69,7 @@ export function appMenus({
         { label: "Info panel", onSelect: () => navigate(PATHS.info) },
         { label: "Pilot career", onSelect: () => navigate(PATHS.career) },
         { label: "Last debriefing", onSelect: () => navigate(PATHS.debrief) },
+        { label: "War diary", onSelect: () => navigate(PATHS.diary) },
       ],
     },
     {

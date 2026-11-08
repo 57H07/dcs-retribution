@@ -29,6 +29,7 @@ from game.debriefingreport import (
     complete_report,
     minimal_report,
 )
+from game import wardiary
 from game.polldebriefingfilethread import STATE_FILE, STATE_FILE_ERRORS
 from game.profiling import logged_duration
 from game.sim.gameupdateevents import GameUpdateEvents
@@ -277,11 +278,24 @@ def accept_and_report(
         logging.exception("Could not build the after-action report")
         report = None
     logged_before = len(game.informations)
+    # What the turn change overwrites, for the war diary (#193).
+    before: wardiary.TurnSnapshot | None
+    try:
+        before = wardiary.snapshot(game)
+    except Exception:
+        wardiary.log_failure("read the turn before it passes")
+        before = None
     accept_results(game, sim, debriefing)
     if report is None:
         return minimal_report(debriefing)
     try:
-        return complete_report(report, debriefing, game.informations[logged_before:])
+        report = complete_report(report, debriefing, game.informations[logged_before:])
     except Exception:
         logging.exception("Could not complete the after-action report")
-        return dataclasses.replace(report, applied=True)
+        report = dataclasses.replace(report, applied=True)
+    if before is not None:
+        try:
+            wardiary.record_turn(game, report, debriefing, before)
+        except Exception:
+            wardiary.log_failure("record the turn")
+    return report

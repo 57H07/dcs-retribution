@@ -36,6 +36,8 @@ export const PATHS = {
   notes: "/notes",
   info: "/info",
   career: "/career",
+  // #193
+  diary: "/diary",
   logs: "/logs",
   about: "/about",
   // #190

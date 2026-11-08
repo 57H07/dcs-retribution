@@ -12,7 +12,6 @@ from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from dcs.weather import Weather as PydcsWeather
 from pydantic import BaseModel
 
 from game.commands import (
@@ -26,6 +25,7 @@ from game.sim.simspeedsetting import SimSpeedSetting
 from game.theater.controlpoint import motorpools_inside_capture_zone
 from game.theater.player import Player
 from game.utils import meters, mps
+from game.weather.description import describe_sky
 from .models import CampaignStateJs
 
 if TYPE_CHECKING:
@@ -96,31 +96,7 @@ class WeatherJs(BaseModel):
     def from_conditions(conditions: Conditions) -> WeatherJs:
         weather = conditions.weather
         clouds = weather.clouds
-        precipitation = "No rain"
-        if clouds is not None and clouds.preset is not None:
-            # "09 ##Two Layer Broken/Scattered \nMETAR:..." -> the name only.
-            cloud_text = clouds.preset.description.splitlines()[0].split("##")[-1]
-            if "Rain" in clouds.preset.name:
-                precipitation = "Rain"
-        else:
-            density = 0 if clouds is None else clouds.density
-            if not density:
-                cloud_text = "Clear"
-            elif density < 3:
-                cloud_text = "Partly Cloudy"
-            elif density < 5:
-                cloud_text = "Mostly Cloudy"
-            else:
-                cloud_text = "Totally Cloudy"
-            if clouds is not None:
-                if clouds.precipitation == PydcsWeather.Preceptions.Rain:
-                    precipitation = "Rain"
-                elif clouds.precipitation == PydcsWeather.Preceptions.Thunderstorm:
-                    precipitation = "Thunderstorm"
-        if weather.fog is None:
-            fog = "No fog"
-        else:
-            fog = f"Fog vis: {round(weather.fog.visibility.nautical_miles, 1)}nm"
+        sky = describe_sky(conditions)
 
         base_m = None if clouds is None else int(clouds.base)
         base_ft = None if base_m is None else int(meters(base_m).feet)
@@ -137,9 +113,9 @@ class WeatherJs(BaseModel):
             )
         ]
         return WeatherJs(
-            clouds=cloud_text.strip(),
-            precipitation=precipitation,
-            fog=fog,
+            clouds=sky.clouds,
+            precipitation=sky.precipitation,
+            fog=sky.fog,
             cloud_base_m=base_m,
             cloud_base_ft=base_ft,
             winds=winds,

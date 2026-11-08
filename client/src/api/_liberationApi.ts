@@ -1478,6 +1478,15 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: () => ({ url: `/informations` }),
     }),
+    getWarDiary: build.query<GetWarDiaryApiResponse, GetWarDiaryApiArg>({
+      query: () => ({ url: `/war-diary` }),
+    }),
+    exportWarDiary: build.mutation<
+      ExportWarDiaryApiResponse,
+      ExportWarDiaryApiArg
+    >({
+      query: () => ({ url: `/war-diary/export`, method: "POST" }),
+    }),
     importLayouts: build.mutation<
       ImportLayoutsApiResponse,
       ImportLayoutsApiArg
@@ -2517,6 +2526,12 @@ export type ListInformationsApiResponse = /** status 200 Successful Response */
   | InformationJs[]
   | null;
 export type ListInformationsApiArg = void;
+export type GetWarDiaryApiResponse =
+  /** status 200 Successful Response */ WarDiary | null;
+export type GetWarDiaryApiArg = void;
+export type ExportWarDiaryApiResponse =
+  /** status 200 Successful Response */ FileActionResult;
+export type ExportWarDiaryApiArg = void;
 export type ImportLayoutsApiResponse =
   /** status 200 Successful Response */ LayoutImportJs;
 export type ImportLayoutsApiArg = void;
@@ -4183,6 +4198,69 @@ export type InformationJs = {
   text: string;
   timestamp?: string;
 };
+export type WarDiaryBase = {
+  id: string;
+  name: string;
+  taken: boolean;
+};
+export type WarDiaryFront = {
+  name: string;
+  moved_km: number;
+};
+export type WarDiaryPackage = {
+  task: string;
+  target: string;
+  flights: string[];
+  lost: number;
+  aircraft: number;
+  result: string;
+  tone: ToneJs;
+};
+export type WarDiaryLoss = {
+  name: string;
+  count: number;
+};
+export type WarDiaryPilot = {
+  pilot_id?: string;
+  name: string;
+  squadron: string;
+  aircraft: string;
+  fate: string;
+};
+export type WarDiaryAward = {
+  pilot_id: string;
+  pilot: string;
+  kind: string;
+  name: string;
+  abbreviation: string;
+  reason: string;
+};
+export type WarDiaryEntry = {
+  turn: number;
+  date: string;
+  weather: string;
+  verdict: string;
+  verdict_tone: ToneJs;
+  summary: string;
+  air_kills_friendly: number;
+  air_kills_enemy: number;
+  ground_kills_friendly: number;
+  ground_kills_enemy: number;
+  bases: WarDiaryBase[];
+  fronts: WarDiaryFront[];
+  packages: WarDiaryPackage[];
+  friendly_losses: WarDiaryLoss[];
+  enemy_losses: WarDiaryLoss[];
+  pilots: WarDiaryPilot[];
+  awards: WarDiaryAward[];
+  budget_next_turn?: number;
+  income_next_turn?: number;
+};
+export type WarDiary = {
+  campaign: string;
+  since_turn?: number;
+  entries: WarDiaryEntry[];
+};
 export type LayoutImportJs = {
   count: number;
 };
@@ -4403,6 +4481,8 @@ export const {
   useGetNotesQuery,
   useSetNotesMutation,
   useListInformationsQuery,
+  useGetWarDiaryQuery,
+  useExportWarDiaryMutation,
   useImportLayoutsMutation,
   useGeneratePretenseCampaignMutation,
   useListTransfersQuery,
