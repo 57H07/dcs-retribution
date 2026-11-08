@@ -1,4 +1,8 @@
-import type { AfterActionReport, Debriefing } from "../api/liberationApi";
+import type {
+  AfterActionReport,
+  Debriefing,
+  SortieCard,
+} from "../api/liberationApi";
 import { recordFetch, renderShell, restoreFetch } from "../shell/testing";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -55,9 +59,37 @@ function report(overrides: Partial<AfterActionReport> = {}): AfterActionReport {
       { text: "Krasnodar captured", tone: "good" },
       { text: "Su-24M of Fencers lost · Lt. Moroz", tone: "bad" },
     ],
+    your_sorties: [],
     applied: false,
     ...overrides,
   };
+}
+
+const MOROZ_ID = "5f0b5a4e-0000-4000-8000-000000000001";
+
+function card(overrides: Partial<SortieCard> = {}): SortieCard {
+  return {
+    pilot_id: MOROZ_ID,
+    pilot: "Lt. Moroz",
+    squadron: "Fencers",
+    aircraft: "Su-24M",
+    flight: "Fencer 8",
+    task: "Strike",
+    target: "Ammo depot Krasnodar",
+    package_result: "Target 40%",
+    package_tone: "mixed",
+    air_kills: 1,
+    ground_kills: 3,
+    naval_kills: 0,
+    fate: "Ejected",
+    fate_tone: "mixed",
+    flight_time: "1:05",
+    ...overrides,
+  };
+}
+
+function yourSortie() {
+  return within(screen.getByRole("region", { name: "Your sortie" }));
 }
 
 const APPLIED = report({
@@ -71,6 +103,27 @@ const APPLIED = report({
     },
   ],
   pilots_still_down: 1,
+  your_sorties: [
+    card({
+      fate: "Ejected, awaiting rescue",
+      sorties_logged: 1,
+      rescues: 0,
+      awards: [
+        {
+          kind: "Rank",
+          name: "First Lieutenant",
+          abbreviation: "1st Lt",
+          reason: "",
+        },
+        {
+          kind: "Decoration",
+          name: "Purple Heart",
+          abbreviation: "",
+          reason: "Wounded in action.",
+        },
+      ],
+    }),
+  ],
   budget_next_turn: 1420,
   income_next_turn: 180,
   events: [
@@ -138,6 +191,46 @@ describe("DebriefScreen", () => {
     expect(
       screen.getByRole("button", { name: "Accept results" }),
     ).toBeEnabled();
+    // No player pilot flew: no card.
+    expect(
+      screen.queryByRole("region", { name: "Your sortie" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows a card per player pilot, linked to their career", async () => {
+    const kovalenko = card({
+      pilot_id: "5f0b5a4e-0000-4000-8000-000000000002",
+      pilot: "Capt. Kovalenko",
+      flight: "Viper 1",
+      air_kills: 0,
+      ground_kills: 0,
+      fate: "Returned",
+      fate_tone: "good",
+    });
+    recordFetch(204, undefined, {
+      [REPORT]: {
+        status: "pending",
+        can_accept: true,
+        report: report({ your_sorties: [card(), kovalenko] }),
+      },
+    });
+    renderShell("/debrief");
+
+    const moroz = await screen.findByRole("article", { name: "Lt. Moroz" });
+    expect(yourSortie().getAllByRole("article")).toHaveLength(2);
+    const first = within(moroz);
+    expect(first.getByText("Fencer 8 · Su-24M · Fencers")).toBeVisible();
+    expect(first.getByText("Ammo depot Krasnodar")).toBeVisible();
+    expect(first.getByText("Target 40%")).toHaveAttribute("data-tone", "mixed");
+    expect(first.getByText("Ejected")).toHaveAttribute("data-tone", "mixed");
+    expect(first.getByText("1 air · 3 ground · 0 naval")).toBeVisible();
+    expect(first.getByText(/1:05 planned/)).toBeVisible();
+    expect(
+      first.getByText("Awards are decided when you accept the results."),
+    ).toBeVisible();
+    expect(
+      first.getByRole("link", { name: "Career of Lt. Moroz" }),
+    ).toHaveAttribute("href", `/career?pilot=${MOROZ_ID}`);
   });
 
   it("cannot accept a mission still being played", async () => {
@@ -172,6 +265,15 @@ describe("DebriefScreen", () => {
     expect(headline("Budget next turn")).toHaveTextContent("+180M/turn income");
     expect(screen.getByText(/held at Maykop/)).toBeInTheDocument();
     expect(screen.getByText("21:05:09")).toBeInTheDocument();
+    const moroz = within(
+      yourSortie().getByRole("article", { name: "Lt. Moroz" }),
+    );
+    expect(moroz.getByText("Ejected, awaiting rescue")).toBeVisible();
+    expect(moroz.getByText(/1 sortie logged · 1:05/)).toBeVisible();
+    expect(moroz.getByText("1st Lt")).toBeVisible();
+    expect(moroz.getByText("Promoted to First Lieutenant")).toBeVisible();
+    expect(moroz.getByText("Awarded Purple Heart")).toBeVisible();
+    expect(moroz.getByText("Wounded in action.")).toBeVisible();
     expect(
       screen.queryByRole("button", { name: "Accept results" }),
     ).not.toBeInTheDocument();

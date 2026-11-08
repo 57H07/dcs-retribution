@@ -26,7 +26,7 @@ from game.commands import (
 )
 from game.commands import missionresult as missionresult_module
 from game.debriefing import SideLossCounts
-from game.debriefingreport import AfterActionReport, Tone
+from game.debriefingreport import AfterActionReport, SortieAward, SortieCard, Tone
 from game.game import TurnState
 from game.native import NativeContext
 from game.polldebriefingfilethread import PollDebriefingFileThread
@@ -518,6 +518,31 @@ def test_cancel_route_needs_a_campaign(
     assert body["detail"] == "No campaign is loaded."
 
 
+def _card(applied: bool) -> SortieCard:
+    return SortieCard(
+        pilot_id="5f0b5a4e-0000-4000-8000-000000000001",
+        pilot="Lt. Moroz",
+        squadron="VF-11",
+        aircraft="F/A-18C",
+        flight="Uzi 1",
+        task="Strike",
+        target="Ammo depot",
+        package_result="Target destroyed",
+        package_tone=Tone.GOOD,
+        air_kills=1,
+        ground_kills=0,
+        naval_kills=0,
+        fate="Returned",
+        fate_tone=Tone.GOOD,
+        flight_time="1:05",
+        sorties_logged=1 if applied else None,
+        rescues=0 if applied else None,
+        awards=(
+            [SortieAward("Rank", "First Lieutenant", "1st Lt", "")] if applied else None
+        ),
+    )
+
+
 def _report(summary: str, applied: bool = False) -> AfterActionReport:
     return AfterActionReport(
         turn=4,
@@ -540,6 +565,7 @@ def _report(summary: str, applied: bool = False) -> AfterActionReport:
         enemy_losses=[],
         damaged_units=[],
         events=[],
+        your_sorties=[_card(applied)],
         applied=applied,
         budget_next_turn=1420.0 if applied else None,
     )
@@ -619,6 +645,10 @@ def test_report_route(
     assert body["report"]["summary"] == "pending {'mission_ended': False}"
     assert body["report"]["applied"] is False
     assert body["report"]["budget_next_turn"] is None
+    [card] = body["report"]["your_sorties"]
+    assert card["pilot_id"] == "5f0b5a4e-0000-4000-8000-000000000001"
+    assert (card["fate"], card["fate_tone"]) == ("Returned", "good")
+    assert (card["awards"], card["sorties_logged"]) == (None, None)
 
     _write_state(state_path, {"mission_ended": True}, age=-5)
     _wait_until(lambda: waiter.snapshot().mission_ended)
@@ -634,6 +664,16 @@ def test_report_route(
     assert body["report"]["summary"] == "applied {'mission_ended': True}"
     assert body["report"]["applied"] is True
     assert body["report"]["budget_next_turn"] == 1420.0
+    [card] = body["report"]["your_sorties"]
+    assert card["sorties_logged"] == 1
+    assert card["awards"] == [
+        {
+            "kind": "Rank",
+            "name": "First Lieutenant",
+            "abbreviation": "1st Lt",
+            "reason": "",
+        }
+    ]
 
 
 def test_accept_frames_the_result_with_its_report(

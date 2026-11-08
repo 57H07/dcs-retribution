@@ -3437,6 +3437,32 @@ export type ReportEvent = {
   text: string;
   tone: ToneJs;
 };
+export type SortieAward = {
+  kind: string;
+  name: string;
+  abbreviation: string;
+  reason: string;
+};
+export type SortieCard = {
+  pilot_id: string;
+  pilot: string;
+  squadron: string;
+  aircraft: string;
+  flight: string;
+  task: string;
+  target: string;
+  package_result: string;
+  package_tone: ToneJs;
+  air_kills: number;
+  ground_kills: number;
+  naval_kills: number;
+  fate: string;
+  fate_tone: ToneJs;
+  flight_time: string;
+  sorties_logged?: number;
+  rescues?: number;
+  awards?: SortieAward[];
+};
 export type AfterActionReport = {
   turn: number;
   date: string;
@@ -3458,6 +3484,7 @@ export type AfterActionReport = {
   enemy_losses: LossLine[];
   damaged_units: DamagedUnitLine[];
   events: ReportEvent[];
+  your_sorties: SortieCard[];
   applied: boolean;
   pilots_captured?: PilotLine[];
   pilots_still_down?: number;

@@ -215,6 +215,8 @@ class RescuedPilot:
     aircraft: str
     squadron: str
     player: Player
+    #: The rescued pilot: their 'Your sortie' card links to their career (#192).
+    pilot: Optional[Pilot] = field(default=None, compare=False)
 
 
 @dataclass(frozen=True)
@@ -401,7 +403,7 @@ class Debriefing:
         self.inoperative_ground_units = self.apply_ground_damage(
             self.damaged_units, game.settings.persistent_damage_destroys_ground_units
         )
-        self.ejected_pilot_positions = self._ejected_pilot_positions()
+        self.ejected_pilot_positions: Dict[int, Point] = self._ejected_pilot_positions()
         #: Downed pilots recovered this mission, keyed by their DownedPilot id so
         #: repeated state.json polls (and the AI-flight fallback added later by
         #: MissionResultsProcessor) can't double-count the same rescue.
@@ -452,6 +454,7 @@ class Debriefing:
             aircraft=downed.aircraft_name,
             squadron=str(downed.squadron),
             player=downed.player,
+            pilot=downed.pilot,
         )
 
     def rescued_pilots_for(self, player: Player) -> list[RescuedPilot]:

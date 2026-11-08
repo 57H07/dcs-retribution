@@ -9,6 +9,7 @@ from typing import Any, cast
 import pytest
 
 from game import debriefingreport
+from game.ato.flighttype import FlightType
 from game.debriefing import (
     AirLosses,
     BaseCaptureEvent,
@@ -80,13 +81,26 @@ class _Type:
 
 
 def _flight(
-    squadron: _Squadron, unit_type: str, count: int, custom_name: str | None = None
+    squadron: _Squadron,
+    unit_type: str,
+    count: int,
+    custom_name: str | None = None,
+    pilots: tuple[Any, ...] = (),
+    task: FlightType = FlightType.STRIKE,
+    minutes: int = 0,
 ) -> Any:
+    takeoff = datetime.datetime(2022, 5, 17, 6, 10)
     return SimpleNamespace(
         squadron=squadron,
         unit_type=_Type(unit_type),
         count=count,
         custom_name=custom_name,
+        roster=SimpleNamespace(iter_pilots=lambda: iter(pilots)),
+        flight_type=task,
+        flight_plan=SimpleNamespace(
+            takeoff_time=lambda: takeoff,
+            landing_time=takeoff + datetime.timedelta(minutes=minutes),
+        ),
     )
 
 

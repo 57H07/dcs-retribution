@@ -371,7 +371,7 @@ class MissionResultsProcessor:
                 if flight.returned_to_squadron:
                     # Not spawned (e.g. runway out of service): nobody flew it.
                     continue
-                flight_time = self._planned_flight_time(flight)
+                flight_time = self.planned_flight_time(flight)
                 for idx, pilot in enumerate(flight.roster.iter_pilots()):
                     if pilot is None:
                         logging.error(
@@ -417,7 +417,7 @@ class MissionResultsProcessor:
         )
 
     @staticmethod
-    def _planned_flight_time(flight: Flight) -> timedelta:
+    def planned_flight_time(flight: Flight) -> timedelta:
         """Planned takeoff-to-landing time; zero if the plan cannot tell."""
         try:
             plan = flight.flight_plan

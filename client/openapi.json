@@ -9647,6 +9647,13 @@
             "type": "array",
             "title": "Events"
           },
+          "your_sorties": {
+            "items": {
+              "$ref": "#/components/schemas/SortieCardJs"
+            },
+            "type": "array",
+            "title": "Your Sorties"
+          },
           "applied": {
             "type": "boolean",
             "title": "Applied"
@@ -9693,6 +9700,7 @@
           "enemy_losses",
           "damaged_units",
           "events",
+          "your_sorties",
           "applied"
         ],
         "title": "AfterActionReport",
@@ -16314,6 +16322,131 @@
           "price"
         ],
         "title": "SlotOption"
+      },
+      "SortieAwardJs": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "abbreviation": {
+            "type": "string",
+            "title": "Abbreviation"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "name",
+          "abbreviation",
+          "reason"
+        ],
+        "title": "SortieAward"
+      },
+      "SortieCardJs": {
+        "properties": {
+          "pilot_id": {
+            "type": "string",
+            "title": "Pilot Id"
+          },
+          "pilot": {
+            "type": "string",
+            "title": "Pilot"
+          },
+          "squadron": {
+            "type": "string",
+            "title": "Squadron"
+          },
+          "aircraft": {
+            "type": "string",
+            "title": "Aircraft"
+          },
+          "flight": {
+            "type": "string",
+            "title": "Flight"
+          },
+          "task": {
+            "type": "string",
+            "title": "Task"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "package_result": {
+            "type": "string",
+            "title": "Package Result"
+          },
+          "package_tone": {
+            "$ref": "#/components/schemas/ToneJs"
+          },
+          "air_kills": {
+            "type": "integer",
+            "title": "Air Kills"
+          },
+          "ground_kills": {
+            "type": "integer",
+            "title": "Ground Kills"
+          },
+          "naval_kills": {
+            "type": "integer",
+            "title": "Naval Kills"
+          },
+          "fate": {
+            "type": "string",
+            "title": "Fate"
+          },
+          "fate_tone": {
+            "$ref": "#/components/schemas/ToneJs"
+          },
+          "flight_time": {
+            "type": "string",
+            "title": "Flight Time"
+          },
+          "sorties_logged": {
+            "title": "Sorties Logged",
+            "type": "integer"
+          },
+          "rescues": {
+            "title": "Rescues",
+            "type": "integer"
+          },
+          "awards": {
+            "title": "Awards",
+            "items": {
+              "$ref": "#/components/schemas/SortieAwardJs"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pilot_id",
+          "pilot",
+          "squadron",
+          "aircraft",
+          "flight",
+          "task",
+          "target",
+          "package_result",
+          "package_tone",
+          "air_kills",
+          "ground_kills",
+          "naval_kills",
+          "fate",
+          "fate_tone",
+          "flight_time"
+        ],
+        "title": "SortieCard",
+        "description": "How the mission went for one player pilot (#192)."
       },
       "SquadronChoiceJs": {
         "properties": {
