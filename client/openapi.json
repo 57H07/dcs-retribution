@@ -7729,6 +7729,67 @@
         }
       }
     },
+    "/packages/{package_id}/flights/{flight_id}/radios/cartridge/save": {
+      "post": {
+        "summary": "Post Save Cartridge",
+        "description": "Asks where to save the data cartridge of the last mission, then copies it.\n\nThe DCS DTC manager reads `Saved Games/DCS/DTC`, where the dialog opens.",
+        "operationId": "save_flight_cartridge",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileActionResultJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No data cartridge for this flight: it comes with the mission (Take off), for a player flight of an aircraft that takes one.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/preferences/": {
       "get": {
         "summary": "Get Preferences",
@@ -12144,6 +12205,10 @@
           "departure": {
             "type": "string",
             "title": "Departure"
+          },
+          "cartridge_file": {
+            "title": "Cartridge File",
+            "type": "string"
           }
         },
         "type": "object",

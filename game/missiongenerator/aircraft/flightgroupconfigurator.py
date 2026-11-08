@@ -170,6 +170,7 @@ class FlightGroupConfigurator:
             custom_name=self.flight.custom_name,
             laser_codes=laser_codes,
             cargo=transfer,
+            flight_id=self.flight.id,
         )
 
         self.register_escort_leash()

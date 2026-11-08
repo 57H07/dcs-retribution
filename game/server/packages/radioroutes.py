@@ -1,11 +1,14 @@
 """Radios & TACAN tab of a flight in the package editor (WEB-04.5)."""
 
+import shutil
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
-from game import Game
+from game import Game, persistency
 from game.ato import Flight
+from game.commands import CommandError
+from game.commands.mission import last_cartridge
 from game.commands.flightradios import (
     set_datalink_value,
     set_flight_frequency,
@@ -13,7 +16,8 @@ from game.commands.flightradios import (
     set_package_frequency,
 )
 from game.commands.packages import require_package
-from game.gamelock import locked
+from game.gamelock import game_lock, locked, locks_game_itself
+from game.native import FileOutcome, NativeBridge, one_dialog
 from game.server import EventStream
 from .radiomodels import (
     DatalinkValueJs,
@@ -25,6 +29,8 @@ from .radiomodels import (
 from .routes import _flight, _require_game
 from ..commanderrors import command_error_responses
 from ..dependencies import GameContext
+from ..native.models import FileActionResultJs
+from ..native.routes import require_bridge
 
 #: Included in the router of `routes.py`, which adds `/packages`.
 router: APIRouter = APIRouter(prefix="/{package_id}/flights/{flight_id}/radios")
@@ -134,3 +140,42 @@ def put_flight_datalink(
     with EventStream.event_context() as events:
         set_datalink_value(flight, member_index, body.identifier, body.value, events)
     return FlightRadiosJs.for_flight(game, flight)
+
+
+NO_CARTRIDGE = (
+    "No data cartridge for this flight: it comes with the mission (Take off), "
+    "for a player flight of an aircraft that takes one."
+)
+
+
+@router.post(
+    "/cartridge/save",
+    operation_id="save_flight_cartridge",
+    response_model=FileActionResultJs,
+    responses=command_error_responses(NO_CARTRIDGE),
+)
+@locks_game_itself
+def post_save_cartridge(
+    package_id: UUID,
+    flight_id: UUID,
+    bridge: NativeBridge = Depends(require_bridge),
+) -> FileActionResultJs:
+    """Asks where to save the data cartridge of the last mission, then copies it.
+
+    The DCS DTC manager reads `Saved Games/DCS/DTC`, where the dialog opens.
+    """
+    with game_lock():
+        game = _require_game(GameContext.get())
+        source = last_cartridge(_find(game, package_id, flight_id).id)
+    if source is None:
+        raise CommandError(NO_CARTRIDGE)
+    with one_dialog():
+        path = bridge.choose_save_file(
+            "Save the data cartridge",
+            str(persistency.base_path() / "DTC" / source.name),
+            "Data cartridge (*.dtc)",
+        )
+    if not path:
+        return FileActionResultJs(outcome=FileOutcome.CANCELLED, path=None)
+    shutil.copyfile(source, path)
+    return FileActionResultJs(outcome=FileOutcome.SAVED, path=path)

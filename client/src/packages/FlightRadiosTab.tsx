@@ -2,7 +2,8 @@
 // package, a tanker's TACAN, the datalink of each member, and what belongs to the
 // departure base (ICLS, Link 4), edited with the panel of the base screen. Changes
 // apply at once, each command answers the whole tab; the server enforces the limits and
-// says what is worth a warning.
+// says what is worth a warning. The data cartridge of the last mission (#191) is saved
+// from here, through the native save dialog.
 import { commandErrorMessage } from "../api/commands";
 import {
   DatalinkField,
@@ -12,6 +13,7 @@ import {
   RadioRange,
   useGetBaseActionsQuery,
   useGetFlightRadiosQuery,
+  useSaveFlightCartridgeMutation,
   useSetFlightDatalinkMutation,
   useSetFlightFrequencyMutation,
   useSetFlightTacanMutation,
@@ -89,6 +91,7 @@ export function FlightRadiosTab({ flightId }: { flightId: string }) {
         />
       )}
       <DepartureRadios cpId={data.departure_id} name={data.departure} />
+      <DataCartridge packageId={packageId} flightId={flightId} radios={data} />
     </div>
   );
 }
@@ -440,6 +443,43 @@ function DatalinkInput(props: {
         }
       }}
     />
+  );
+}
+
+/** The data cartridge of the flight in the last mission, saved where DCS reads it. */
+function DataCartridge({ packageId, flightId, radios }: FlightProps) {
+  const toast = useToast();
+  const report = useCommandReport();
+  const [save, { isLoading }] = useSaveFlightCartridgeMutation();
+  const onSave = async () => {
+    const result = await save({ packageId, flightId });
+    if (!report("Could not save the cartridge", result)) return;
+    if ("data" in result && result.data.outcome === "saved") {
+      toast({ title: "Cartridge saved", description: result.data.path ?? "" });
+    }
+  };
+  return (
+    <section className={styles.panel} aria-label="Data cartridge">
+      <h3 className={styles.title}>Data cartridge</h3>
+      {radios.cartridge_file == null ? (
+        <p className={styles.hint}>
+          The cartridge comes with the mission (Take off), for a player flight
+          of an aircraft that takes one (F/A-18C). It loads at spawn.
+        </p>
+      ) : (
+        <>
+          <p className={styles.hint}>
+            {radios.cartridge_file}, in the last mission: it loads at spawn.
+            Save a copy for the DTC manager of DCS.
+          </p>
+          <div className={styles.fields}>
+            <Button disabled={isLoading} onClick={onSave}>
+              Save the cartridge…
+            </Button>
+          </div>
+        </>
+      )}
+    </section>
   );
 }
 

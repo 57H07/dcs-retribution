@@ -8,6 +8,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from game.commands.baseradios import FREQUENCY_MHZ_RANGE
+from game.commands.mission import last_cartridge
 from game.commands.flightradios import (
     datalink_fields,
     datalink_of,
@@ -137,6 +138,8 @@ class FlightRadiosJs(BaseModel):
     #: Where ICLS and Link 4 are set: they belong to the carrier.
     departure_id: UUID
     departure: str
+    #: File of the data cartridge in the last mission, None without one (#191).
+    cartridge_file: str | None
 
     class Config:
         title = "FlightRadios"
@@ -146,6 +149,7 @@ class FlightRadiosJs(BaseModel):
         package = flight.package
         frequency = flight.frequency
         tacan = flight.tacan
+        cartridge = last_cartridge(flight.id)
         return FlightRadiosJs(
             frequency_mhz=None if frequency is None else frequency.mhz,
             modulation=None if frequency is None else frequency.modulation.name,
@@ -165,6 +169,7 @@ class FlightRadiosJs(BaseModel):
             datalink=FlightDatalinkJs.for_flight(flight),
             departure_id=flight.departure.id,
             departure=flight.departure.name,
+            cartridge_file=None if cartridge is None else cartridge.name,
         )
 
 
