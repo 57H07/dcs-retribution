@@ -11,10 +11,12 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 from typing import Protocol, TYPE_CHECKING
+from uuid import UUID
 
 from game import autosaves, persistency
 from game.ato.flightstate import Uninitialized
 from game.ato.traveltime import TotEstimator
+from game.missiongenerator import dtc
 from game.profiling import logged_duration
 from game.settings.settings import FastForwardStopCondition
 from .errors import CommandError
@@ -99,6 +101,13 @@ def describe_package(package: Package) -> str:
 
 def describe_flight(package: Package, flight: Flight) -> str:
     return f"{package.primary_task} {package.target}: {flight}"
+
+
+def last_cartridge(flight_id: UUID) -> Path | None:
+    """The data cartridge of the flight in the last mission written (#191)."""
+    return dtc.cartridge_file(
+        persistency.mission_path_for(MISSION_FILE_NAME), flight_id
+    )
 
 
 def generate_mission(game: Game, sim: MissionSim) -> Path:

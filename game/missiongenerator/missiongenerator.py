@@ -29,6 +29,7 @@ from game.radio.tacan import TacanRegistry
 from game.theater import Airfield
 from game.theater.bullseye import Bullseye
 from game.unitmap import UnitMap
+from . import dtc
 from .briefinggenerator import BriefingGenerator, MissionInfoGenerator
 from .cargoshipgenerator import CargoShipGenerator
 from .convoygenerator import ConvoyGenerator
@@ -141,8 +142,17 @@ class MissionGenerator:
 
         namegen.reset_numbers()
         self.generate_warehouses()
+        cartridges = dtc.prepare(
+            self.mission_data,
+            dtc.DtcContext(
+                terrain=self.game.theater.terrain.name,
+                start_time=self.game.conditions.start_time,
+                timezone=self.game.theater.timezone,
+            ),
+        )
         output.parent.mkdir(parents=True, exist_ok=True)
         self.mission.save(output)
+        dtc.write(cartridges, output, self.mission)
 
         return self.unit_map
 

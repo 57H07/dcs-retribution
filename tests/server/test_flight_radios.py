@@ -6,10 +6,13 @@ from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Iterator
+from zipfile import ZipFile
+
+from dcs import Mission
 
 import pytest
 
-from game import Game
+from game import Game, persistency
 from game.ato import Flight, FlightType, Package
 from game.commands import CommandError
 from game.commands.baseradios import BaseRadios, radio_warnings, set_base_radios
@@ -25,9 +28,13 @@ from game.commands.flightradios import (
     set_flight_tacan,
     set_package_frequency,
 )
+from game.commands.mission import MISSION_FILE_NAME
 from game.commands.packageflights import add_flight
 from game.commands.packages import create_package
 from game.commands.transfers import can_plan_transport_mission
+from game.missiongenerator import dtc
+from game.missiongenerator.dtc import DtcCartridge
+from game.native import NativeContext
 from game.radio.datalink import DataLinkKey
 from game.radio.radios import RadioFrequency
 from game.radio.tacan import TacanBand, TacanChannel
@@ -42,6 +49,7 @@ from tests.flightplans.referencegame import (
     generate_reference_game,
     repository_payloads_only,
 )
+from tests.server.test_native_routes import FakeBridge
 from tests.server.test_packages_routes import _request
 
 F16 = "F-16CM Fighting Falcon (Block 50)"
@@ -368,3 +376,77 @@ def test_transport_entry_leaves_with_the_first_flight(game: Game) -> None:
     package = create_package(game, base, _now(game))
     add_flight(game, package, FlightType.BARCAP, _squadron(game, F16), 1, _now(game))
     assert PackageDetailJs.for_package(game, package).transport_origin_id is None
+
+
+# --- data cartridge (#191) ------------------------------------------------------
+
+
+@pytest.fixture
+def missions(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """The Missions folder of DCS, where Take off writes the mission."""
+    monkeypatch.setattr(persistency, "mission_path_for", lambda name: tmp_path / name)
+    return tmp_path
+
+
+@pytest.fixture
+def bridge(monkeypatch: pytest.MonkeyPatch) -> FakeBridge:
+    fake = FakeBridge()
+    monkeypatch.setattr(NativeContext, "_bridge", fake)
+    return fake
+
+
+def _generated_cartridge(missions: Path, flight: Flight) -> DtcCartridge:
+    """What Take off leaves for a player Hornet flight."""
+    miz = missions / MISSION_FILE_NAME
+    with ZipFile(miz, "w"):
+        pass
+    cartridge = DtcCartridge("Retribution Enfield 1", "FA-18C_hornet", {"COMM": {}})
+    dtc.write([dtc.FlightCartridge(flight.id, cartridge, ())], miz, Mission())
+    return cartridge
+
+
+def test_a_flight_without_cartridge_has_none_to_save(
+    game: Game, missions: Path, bridge: FakeBridge
+) -> None:
+    flight = _flight(game)
+
+    status, body = _request("GET", _path(flight))
+    assert body["cartridge_file"] is None
+
+    status, body = _request("POST", _path(flight, "/cartridge/save"))
+    assert status == 409
+    assert body["detail"] == (
+        "No data cartridge for this flight: it comes with the mission (Take off), "
+        "for a player flight of an aircraft that takes one."
+    )
+    assert bridge.asked == []
+
+
+def test_the_cartridge_of_the_last_mission_is_saved_where_the_player_wants(
+    game: Game, missions: Path, bridge: FakeBridge, tmp_path: Path
+) -> None:
+    flight = _flight(game)
+    cartridge = _generated_cartridge(missions, flight)
+    target = tmp_path / "chosen" / "mine.dtc"
+    target.parent.mkdir()
+    bridge.answer = str(target)
+
+    status, body = _request("GET", _path(flight))
+    assert body["cartridge_file"] == "Retribution Enfield 1.dtc"
+
+    status, body = _request("POST", _path(flight, "/cartridge/save"))
+    assert (status, body) == (200, {"outcome": "saved", "path": str(target)})
+    assert target.read_text(encoding="utf-8") == cartridge.to_json()
+    [(kind, start)] = bridge.asked
+    assert kind == "save-file"
+    assert start == str(persistency.base_path() / "DTC" / "Retribution Enfield 1.dtc")
+
+
+def test_saving_the_cartridge_can_be_cancelled(
+    game: Game, missions: Path, bridge: FakeBridge
+) -> None:
+    flight = _flight(game)
+    _generated_cartridge(missions, flight)
+
+    status, body = _request("POST", _path(flight, "/cartridge/save"))
+    assert (status, body) == (200, {"outcome": "cancelled", "path": None})

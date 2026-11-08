@@ -98,6 +98,40 @@ function renderTab(
 }
 
 describe("flight radios tab", () => {
+  it("saves the data cartridge of the last mission (#191)", async () => {
+    const calls = renderTab(
+      { ...RADIOS, cartridge_file: "Retribution Enfield 1.dtc" },
+      null,
+      {
+        [`${RADIOS_PATH}/cartridge/save`]: {
+          body: { outcome: "saved", path: "C:/DTC/Retribution Enfield 1.dtc" },
+        },
+      },
+    );
+    const panel = await screen.findByRole("region", {
+      name: "Data cartridge",
+    });
+    expect(panel).toHaveTextContent("Retribution Enfield 1.dtc");
+    await userEvent.click(
+      within(panel).getByRole("button", { name: "Save the cartridge…" }),
+    );
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]).toMatchObject({
+      method: "POST",
+      path: `${RADIOS_PATH}/cartridge/save`,
+    });
+    expect(await screen.findByText("Cartridge saved")).toBeInTheDocument();
+  });
+
+  it("says when the flight has no data cartridge", async () => {
+    renderTab();
+    const panel = await screen.findByRole("region", {
+      name: "Data cartridge",
+    });
+    expect(panel).toHaveTextContent("comes with the mission");
+    expect(within(panel).queryByRole("button")).toBeNull();
+  });
+
   it("sets the flight frequency, with the modulations its radio has there", async () => {
     const calls = renderTab();
     const panel = await screen.findByRole("region", {

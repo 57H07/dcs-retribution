@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import Optional, TYPE_CHECKING
+from uuid import UUID
 
 from dcs.flyingunit import FlyingUnit
 
@@ -75,6 +76,9 @@ class FlightData:
 
     #: Ground units carried by a Transport flight, if any.
     cargo: Optional[TransferOrder] = None
+
+    #: Id of the planned `Flight`: finds its data cartridge again (#191).
+    flight_id: Optional[UUID] = None
 
     callsign: str = field(init=False)
 

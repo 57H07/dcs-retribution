@@ -1221,6 +1221,15 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.datalinkValueJs,
       }),
     }),
+    saveFlightCartridge: build.mutation<
+      SaveFlightCartridgeApiResponse,
+      SaveFlightCartridgeApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/radios/cartridge/save`,
+        method: "POST",
+      }),
+    }),
     getInstallPreferences: build.query<
       GetInstallPreferencesApiResponse,
       GetInstallPreferencesApiArg
@@ -2330,6 +2339,12 @@ export type SetFlightDatalinkApiArg = {
   flightId: string;
   memberIndex: number;
   datalinkValueJs: DatalinkValue;
+};
+export type SaveFlightCartridgeApiResponse =
+  /** status 200 Successful Response */ FileActionResult;
+export type SaveFlightCartridgeApiArg = {
+  packageId: string;
+  flightId: string;
 };
 export type GetInstallPreferencesApiResponse =
   /** status 200 Successful Response */ InstallPreferencesState;
@@ -3830,6 +3845,7 @@ export type FlightRadios = {
   datalink?: FlightDatalink;
   departure_id: string;
   departure: string;
+  cartridge_file?: string;
 };
 export type FlightFrequency = {
   mhz?: number | null;
@@ -4321,6 +4337,7 @@ export const {
   useSetPackageFrequencyMutation,
   useSetFlightTacanMutation,
   useSetFlightDatalinkMutation,
+  useSaveFlightCartridgeMutation,
   useGetInstallPreferencesQuery,
   useSetInstallPreferencesMutation,
   useGetPlayerModulesQuery,
