@@ -13,18 +13,19 @@ from zipfile import ZipFile
 import dcs
 import pytest
 from dcs import Mission, Point
-from dcs.planes import F_15ESE, FA_18C_hornet
+from dcs.planes import F_14BU, F_15ESE, FA_18C_hornet
 from dcs.terrain import Caucasus
 from dcs.unit import Skill
 
 from game.ato.flightwaypoint import FlightWaypoint
 from game.ato.flightwaypointtype import FlightWaypointType
 from game.missiongenerator import dtc
-from game.missiongenerator.dtc import DtcContext, build_cartridge
+from game.missiongenerator.dtc import DtcContext, DtcThreat, build_cartridge
 from game.missiongenerator.missiondata import MissionData
 from game.radio.radios import MHz
 from game.radio.tacan import TacanBand, TacanChannel
 from game.runways import RunwayData
+from game.theater.player import Player
 from game.utils import Heading, feet
 
 TERRAIN = Caucasus()
@@ -208,6 +209,91 @@ def test_the_cartridge_file_is_the_json_dcs_reads() -> None:
     assert payload["type"] == "FA-18C_hornet"
     assert payload["data"]["terrain"] == "Caucasus"
     assert payload["data"]["type"] == "FA-18C_hornet"
+
+
+# F-14BU: the route comes from the miz; the cartridge adds the front and the threats.
+
+
+def tomcat_flight() -> Any:
+    flight = hornet_flight(
+        aircraft_type=SimpleNamespace(dcs_unit_type=SimpleNamespace(id="F-14BU")),
+        friendly=Player.BLUE,
+    )
+    flight.package.target = SimpleNamespace(position=Point(40000, 0, TERRAIN))
+    return flight
+
+
+def threat(name: str, x: float, owner: Player = Player.RED) -> DtcThreat:
+    return DtcThreat(name=name, position=Point(x, 0, TERRAIN), owner=owner)
+
+
+def test_a_tomcat_cartridge_draws_the_front_and_the_enemy_air_defenses() -> None:
+    front = (Point(30000, -10000, TERRAIN), Point(30000, 10000, TERRAIN))
+    context = DtcContext(
+        terrain="Caucasus",
+        start_time=START,
+        timezone=timezone.utc,
+        front_lines=(front,),
+        air_defenses=(
+            threat("Far site", 90000),
+            threat("Our Patriot", 41000, owner=Player.BLUE),
+            threat("Near site", 45000),
+        ),
+    )
+
+    cartridge = build_cartridge(tomcat_flight(), MissionData(), context)
+
+    assert cartridge is not None
+    payload = json.loads(cartridge.to_json())
+    assert payload["type"] == "F-14BU"
+    data = payload["data"]
+    assert data["type"] == "F-14BU"
+    assert data["cartridge_name"] == "Retribution Enfield 1"
+    assert len(data["NAV"]) == 12
+    plan = data["NAV"][0]
+    # Plan 1 is the route of the mission editor: the miz already carries it.
+    assert plan["waypoints"] == []
+    assert plan["route_as_line"] is False
+    [line] = plan["lines"]
+    assert line["closed"] is False
+    assert [(p["x"], p["y"]) for p in line["points"]] == [
+        (30000, -10000),
+        (30000, 10000),
+    ]
+    lat_lon = front[0].latlng()
+    assert (line["points"][0]["lat"], line["points"][0]["lon"]) == (
+        lat_lon.lat,
+        lat_lon.lng,
+    )
+    # Hostile sites only, nearest to the target of the package first.
+    points = plan["additional_points"]
+    assert [(p["name"], p["x"]) for p in points] == [
+        ("THRT 1", 45000),
+        ("THRT 2", 90000),
+    ]
+    assert all(p["waypoints"] == [] for p in data["NAV"][1:])
+
+
+def test_a_tomcat_cartridge_keeps_to_the_limits_of_the_jet() -> None:
+    fronts = tuple(
+        (Point(1000.0 * n, 0, TERRAIN), Point(1000.0 * n, 500, TERRAIN))
+        for n in range(6)
+    )
+    sites = tuple(threat(f"Site {n}", 40000 + 100 * n) for n in range(30))
+    context = DtcContext(
+        terrain="Caucasus",
+        start_time=START,
+        timezone=timezone.utc,
+        front_lines=fronts,
+        air_defenses=sites,
+    )
+
+    cartridge = build_cartridge(tomcat_flight(), MissionData(), context)
+
+    assert cartridge is not None
+    plan = cartridge.data["NAV"][0]
+    assert len(plan["lines"]) == 4
+    assert len(plan["additional_points"]) == 20
 
 
 # Mission generation: the cartridges go into the .miz and next to it.

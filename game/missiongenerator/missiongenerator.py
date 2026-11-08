@@ -142,19 +142,32 @@ class MissionGenerator:
 
         namegen.reset_numbers()
         self.generate_warehouses()
-        cartridges = dtc.prepare(
-            self.mission_data,
-            dtc.DtcContext(
-                terrain=self.game.theater.terrain.name,
-                start_time=self.game.conditions.start_time,
-                timezone=self.game.theater.timezone,
-            ),
-        )
+        cartridges = dtc.prepare(self.mission_data, self._dtc_context())
         output.parent.mkdir(parents=True, exist_ok=True)
         self.mission.save(output)
         dtc.write(cartridges, output, self.mission)
 
         return self.unit_map
+
+    def _dtc_context(self) -> dtc.DtcContext:
+        """What the data cartridges need from the theater (#191)."""
+        theater = self.game.theater
+        front_lines = []
+        for front_line in theater.conflicts():
+            bounds = FrontLineConflictDescription.frontline_bounds(front_line, theater)
+            front_lines.append((bounds.left_position, bounds.right_position))
+        air_defenses = tuple(
+            dtc.DtcThreat(tgo.name, tgo.position, tgo.control_point.captured)
+            for tgo in theater.ground_objects
+            if not tgo.is_dead and tgo.has_aa
+        )
+        return dtc.DtcContext(
+            terrain=theater.terrain.name,
+            start_time=self.game.conditions.start_time,
+            timezone=theater.timezone,
+            front_lines=tuple(front_lines),
+            air_defenses=air_defenses,
+        )
 
     @staticmethod
     def _configure_react_to_threat_for_ew_jamming_packages(

@@ -10,7 +10,8 @@ against a `.dtc` exported from a current DCS build before adding a module.
 | F/A-18C | yes | 2.9.15.9408 | `COMM` (COMM1/COMM2, 20 named presets + G/M/C/S), `WYPT` (steerpoints, routes 1-3, TACAN/ICLS/ACLS pre-tune, FPAS home waypoint), `SA` (CAP points, corridor, FAOR/FLOT, MEZ threats), `TCN` (TACAN station list) |
 | F-16C | yes | 2.9.15.9408 | `MPD` (steerpoints, GEO lines, threat and destination points), `COMM` (UHF/VHF, no channel names), `CMDS`, ROE/IFF, `COLR` |
 | AH-64D | reported, not confirmed | later 2025 update | not researched |
-| F-15E, JF-17, F-14 | no | | keep the kneeboard and the miz waypoints (`M{n}.{i}`, PP, ST/IP) |
+| F-14BU | yes | in the install checked in November 2026 | `NAV` (12 flight plans of 50 points: waypoints, 4 lines, reference points; plan 1 is the mission route), `JDAM` (8 targets for each of STA 3-6), `CMDS`, `TIS` (datalink callsigns); no radios |
+| F-15E, JF-17, other F-14 | no | | keep the kneeboard and the miz waypoints (`M{n}.{i}`, PP, ST/IP) |
 
 Sources: ED changelog 2.9.15.9408 and news of 2025-04-11; the third-party generator
 `KaiserHomeLab/dcs-mission-maker` (`app/dtc.py`); the draft upstream PR
@@ -55,5 +56,12 @@ presets (G 243 AM, M 122.8 AM, C 30 FM, S 156.05 FM), the FM bands of the ARC-21
   embedded in the `.miz` and auto-loaded at spawn, and a copy is written next to the
   mission, in `retribution_nextturn_DTC\`. The Radios & TACAN tab of the flight saves that
   copy where the player wants (for example `Saved Games\DCS\DTC`).
+- **F-14BU:** flight plan 1 holds the route of the mission editor, so its waypoints stay
+  empty. The cartridge adds to it the front lines nearest the package target (at most 4,
+  each from end to end) and the 20 enemy air defense sites nearest it, as reference points
+  `THRT 1`..`THRT 20`. Elevations are left at 0 ft. `CMDS`, `JDAM` and `TIS` keep the
+  module's defaults. JDAM targets are left for later: the jet reads the launch zone
+  (`lar_*`) from the cartridge, and the DTC editor computes it from a lookup table of the
+  module that Retribution does not ship.
 - **Unsupported module or failure:** nothing is written and the mission is generated as
   before; the kneeboard stays the fallback.
