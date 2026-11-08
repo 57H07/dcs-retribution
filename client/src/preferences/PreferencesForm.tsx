@@ -223,6 +223,21 @@ export function PreferencesForm({
           />
         </Row>
       </Section>
+      <Section title="Autosaves">
+        <Row
+          label="Turns of autosaves kept"
+          help="Each campaign keeps an autosave at the start of each turn and before each take off, for this many turns (File → Load)."
+        >
+          <NumberField
+            label="Turns of autosaves kept"
+            hideLabel
+            value={draft.autosave_turns}
+            min={1}
+            max={50}
+            onValueChange={(value) => edit({ autosave_turns: value })}
+          />
+        </Row>
+      </Section>
       <Section title="Advanced (restart required)">
         <Row label="Server port" help="Port of the local game server.">
           <NumberField

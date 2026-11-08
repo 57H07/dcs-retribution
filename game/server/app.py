@@ -27,6 +27,7 @@ from . import (
     preferences,
     production,
     reports,
+    saves,
     supplyroutes,
     tgos,
     unitinfo,
@@ -63,6 +64,7 @@ app.include_router(packages.router)
 app.include_router(preferences.router)
 app.include_router(production.router)
 app.include_router(reports.router)
+app.include_router(saves.router)
 app.include_router(supplyroutes.router)
 app.include_router(tgos.router)
 app.include_router(unitinfo.router)

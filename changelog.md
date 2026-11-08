@@ -1,3 +1,11 @@
+# Unreleased
+
+## Features/Improvements
+* **[UX]** Rotating autosaves: each campaign keeps an autosave at the start of each turn and before each take off, for the last 5 turns (set it in **File → Preferences**). The new **File → Load…** screen lists them with the campaign's own saves, and **Restore the previous turn** goes back one turn, before its take off when there is one. Going back and playing on drops the autosaves of the abandoned turns. A loaded autosave keeps saving to the campaign's own file. Autosaves are written atomically: a failed one never replaces the previous one (#190).
+
+## Fixes
+* **[Engine]** A failed save no longer leaves the campaign in play without its landmap (#190).
+
 # Retribution v1.6.0
 
 ## Features/Improvements

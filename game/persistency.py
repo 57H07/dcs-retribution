@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import hashlib
 import logging
+import os
 import pickle
-import shutil
 from pathlib import Path
-from typing import Optional, TYPE_CHECKING, Any
+from typing import Any, BinaryIO, Callable, Optional, TYPE_CHECKING
 
 import dcs.terrain.falklands.airports
 
@@ -410,23 +411,25 @@ def server_port() -> int:
     return _server_port
 
 
-def _temporary_save_file() -> str:
-    return str(save_dir() / "tmpsave.retribution")
-
-
-def _autosave_path() -> str:
-    return str(save_dir() / "autosave.retribution")
-
-
 def mission_path_for(name: str) -> Path:
     return base_path() / "Missions" / name
 
 
-def load_game(path: str) -> Optional[Game]:
+def load_game(path: str, keep_savepath: bool = False) -> Optional[Game]:
+    """Unpickle a save; None when it is not one.
+
+    The game then saves to `path`, unless `keep_savepath`: an autosave keeps saving
+    where the player saved it, not over the autosave.
+    """
     with open(path, "rb") as f:
         try:
             save = MigrationUnpickler(f).load()
-            save.savepath = path
+            if not getattr(save, "campaign_id", ""):
+                # Saved before #190: an id of its own, the same at each load.
+                name = str(Path(path).resolve()).lower().encode("utf-8")
+                save.campaign_id = hashlib.sha1(name).hexdigest()
+            if not keep_savepath:
+                save.savepath = path
             return save
         except Exception:
             logging.exception("Invalid Save game")
@@ -436,15 +439,39 @@ def load_game(path: str) -> Optional[Game]:
 def save_game(game: Game) -> bool:
     with logged_duration("Saving game"):
         try:
-            with open(_temporary_save_file(), "wb") as f:
-                data = _unload_static_data(game)
-                pickle.dump(game, f)
-                _restore_static_data(game, data)
-            shutil.copy(_temporary_save_file(), game.savepath)
+            write_game(game, Path(game.savepath))
             return True
         except Exception:
             logging.exception("Could not save game")
             return False
+
+
+def write_game(game: Game, path: Path) -> None:
+    """Pickle `game` to `path` atomically: a failed write leaves `path` as it was.
+
+    Raises whatever the write raised; the game in memory is intact either way.
+    """
+    write_atomically(path, lambda f: _pickle_game(game, f))
+
+
+def write_atomically(path: Path, write: Callable[[BinaryIO], object]) -> None:
+    """Write `path` through a temporary file next to it, then replace it."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(path.name + ".tmp")
+    try:
+        with temporary.open("wb") as f:
+            write(f)
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def _pickle_game(game: Game, f: BinaryIO) -> None:
+    data = _unload_static_data(game)
+    try:
+        pickle.dump(game, f)
+    finally:
+        _restore_static_data(game, data)
 
 
 def _restore_static_data(game: Game, data: dict[str, Any]) -> None:
@@ -457,20 +484,3 @@ def _unload_static_data(game: Game) -> dict[str, Any]:
     return {
         "landmap": landmap,
     }
-
-
-def autosave(game: Game) -> bool:
-    """
-    Autosave to the autosave location
-    :param game: Game to save
-    :return: True if saved successfully
-    """
-    try:
-        with open(_autosave_path(), "wb") as f:
-            data = _unload_static_data(game)
-            pickle.dump(game, f)
-            _restore_static_data(game, data)
-        return True
-    except Exception:
-        logging.exception("Could not save game")
-        return False

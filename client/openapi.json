@@ -8027,6 +8027,84 @@
         }
       }
     },
+    "/saves/": {
+      "get": {
+        "summary": "List Saves",
+        "operationId": "list_saves",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavesJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/saves/{save_id}/load": {
+      "post": {
+        "summary": "Load",
+        "description": "Loads a listed save; unsaved progress of the running campaign is lost.",
+        "operationId": "load_save",
+        "parameters": [
+          {
+            "name": "save_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Save Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileActionResultJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No campaign is loaded, the save no longer exists or it is incompatible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/supply-routes/": {
       "get": {
         "summary": "List Supply Routes",
@@ -13270,6 +13348,12 @@
             "maximum": 65535.0,
             "minimum": 1.0,
             "title": "Server Port"
+          },
+          "autosave_turns": {
+            "type": "integer",
+            "maximum": 50.0,
+            "minimum": 1.0,
+            "title": "Autosave Turns"
           }
         },
         "type": "object",
@@ -13278,7 +13362,8 @@
           "dcs_install_dir",
           "prefer_liberation_payloads",
           "setup_preferences_on_every_start",
-          "server_port"
+          "server_port",
+          "autosave_turns"
         ],
         "title": "InstallPreferences"
       },
@@ -13343,6 +13428,12 @@
             "minimum": 1.0,
             "title": "Server Port"
           },
+          "autosave_turns": {
+            "type": "integer",
+            "maximum": 50.0,
+            "minimum": 1.0,
+            "title": "Autosave Turns"
+          },
           "allow_empty_install_dir": {
             "type": "boolean",
             "title": "Allow Empty Install Dir",
@@ -13355,7 +13446,8 @@
           "dcs_install_dir",
           "prefer_liberation_payloads",
           "setup_preferences_on_every_start",
-          "server_port"
+          "server_port",
+          "autosave_turns"
         ],
         "title": "InstallPreferencesUpdate"
       },
@@ -15755,6 +15847,52 @@
         ],
         "title": "SaveFaction"
       },
+      "SaveJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SaveKind"
+          },
+          "turn": {
+            "type": "integer",
+            "title": "Turn"
+          },
+          "game_date": {
+            "type": "string",
+            "title": "Game Date"
+          },
+          "saved_at": {
+            "type": "string",
+            "title": "Saved At"
+          },
+          "file_name": {
+            "type": "string",
+            "title": "File Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "turn",
+          "game_date",
+          "saved_at",
+          "file_name"
+        ],
+        "title": "Save"
+      },
+      "SaveKind": {
+        "type": "string",
+        "enum": [
+          "turn",
+          "takeoff",
+          "manual"
+        ],
+        "title": "SaveKind"
+      },
       "SavePayloadJs": {
         "properties": {
           "name": {
@@ -15767,6 +15905,27 @@
           "name"
         ],
         "title": "SavePayload"
+      },
+      "SavesJs": {
+        "properties": {
+          "saves": {
+            "items": {
+              "$ref": "#/components/schemas/SaveJs"
+            },
+            "type": "array",
+            "title": "Saves"
+          },
+          "previous_turn_id": {
+            "title": "Previous Turn Id",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "saves"
+        ],
+        "title": "Saves",
+        "description": "The saves of the campaign, newest first, and the one to go back a turn."
       },
       "SetDestinationJs": {
         "properties": {

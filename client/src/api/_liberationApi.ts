@@ -1283,6 +1283,15 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: () => ({ url: `/reports/finances` }),
     }),
+    listSaves: build.query<ListSavesApiResponse, ListSavesApiArg>({
+      query: () => ({ url: `/saves/` }),
+    }),
+    loadSave: build.mutation<LoadSaveApiResponse, LoadSaveApiArg>({
+      query: (queryArg) => ({
+        url: `/saves/${queryArg.saveId}/load`,
+        method: "POST",
+      }),
+    }),
     listSupplyRoutes: build.query<
       ListSupplyRoutesApiResponse,
       ListSupplyRoutesApiArg
@@ -2355,6 +2364,13 @@ export type GetStatsReportApiArg = void;
 export type GetFinancesReportApiResponse =
   /** status 200 Successful Response */ FinancesJs | null;
 export type GetFinancesReportApiArg = void;
+export type ListSavesApiResponse = /** status 200 Successful Response */ Saves;
+export type ListSavesApiArg = void;
+export type LoadSaveApiResponse =
+  /** status 200 Successful Response */ FileActionResult;
+export type LoadSaveApiArg = {
+  saveId: string;
+};
 export type ListSupplyRoutesApiResponse =
   /** status 200 Successful Response */ SupplyRoute[];
 export type ListSupplyRoutesApiArg = void;
@@ -3837,6 +3853,7 @@ export type InstallPreferences = {
   prefer_liberation_payloads: boolean;
   setup_preferences_on_every_start: boolean;
   server_port: number;
+  autosave_turns: number;
 };
 export type InstallPreferencesState = {
   preferences: InstallPreferences;
@@ -3851,6 +3868,7 @@ export type InstallPreferencesUpdate = {
   prefer_liberation_payloads: boolean;
   setup_preferences_on_every_start: boolean;
   server_port: number;
+  autosave_turns: number;
   allow_empty_install_dir?: boolean;
 };
 export type PlayerModule = {
@@ -3941,6 +3959,19 @@ export type CoalitionFinancesJs = {
 export type FinancesJs = {
   friendly: CoalitionFinancesJs;
   enemy: CoalitionFinancesJs;
+};
+export type SaveKind = "turn" | "takeoff" | "manual";
+export type Save = {
+  id: string;
+  kind: SaveKind;
+  turn: number;
+  game_date: string;
+  saved_at: string;
+  file_name: string;
+};
+export type Saves = {
+  saves: Save[];
+  previous_turn_id?: string;
 };
 export type TgoSummary = {
   id: string;
@@ -4299,6 +4330,8 @@ export const {
   useGetIntelReportQuery,
   useGetStatsReportQuery,
   useGetFinancesReportQuery,
+  useListSavesQuery,
+  useLoadSaveMutation,
   useListSupplyRoutesQuery,
   useListTgosQuery,
   useGetTgoByIdQuery,

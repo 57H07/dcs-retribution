@@ -114,7 +114,7 @@ def test_skip_turn_publishes_a_new_turn_event(monkeypatch: pytest.MonkeyPatch) -
     monkeypatch.setattr(game, "check_win_loss", lambda: TurnState.CONTINUE)
     monkeypatch.setattr(game, "finish_turn", lambda events, no_action: None)
     monkeypatch.setattr(game, "initialize_turn", lambda events: events.begin_new_turn())
-    monkeypatch.setattr("game.game.persistency.autosave", lambda g: None)
+    monkeypatch.setattr("game.game.autosaves.autosave", lambda g, kind: None)
     published: list[GameUpdateEvents] = []
     monkeypatch.setattr(EventStream, "put_nowait", published.append)
 

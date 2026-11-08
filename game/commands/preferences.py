@@ -14,6 +14,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 
 from game import liberation_install
+from game.autosaves import MAX_KEEP_TURNS
 from game.dcs.aircrafttype import AircraftType
 from .errors import CommandError
 
@@ -27,6 +28,8 @@ class InstallPreferences:
     prefer_liberation_payloads: bool
     setup_preferences_on_every_start: bool
     server_port: int
+    #: Turns of autosaves each campaign keeps (#190).
+    autosave_turns: int = liberation_install.DEFAULT_AUTOSAVE_TURNS
 
 
 def current_preferences() -> InstallPreferences:
@@ -38,6 +41,7 @@ def current_preferences() -> InstallPreferences:
             liberation_install.setup_preferences_on_every_start()
         ),
         server_port=liberation_install.server_port(),
+        autosave_turns=liberation_install.autosave_turns(),
     )
 
 
@@ -93,6 +97,8 @@ def validate(preferences: InstallPreferences, allow_empty_install_dir: bool) -> 
             problem = EMPTY_INSTALL_DIR
     if problem is None and not 1 <= preferences.server_port <= MAX_PORT:
         problem = f"The server port must be between 1 and {MAX_PORT}."
+    if problem is None and not 1 <= preferences.autosave_turns <= MAX_KEEP_TURNS:
+        problem = f"Keep between 1 and {MAX_KEEP_TURNS} turns of autosaves."
     if problem is not None:
         raise CommandError(problem)
 
@@ -115,6 +121,7 @@ def apply_preferences(
         preferences.setup_preferences_on_every_start,
         preferences.server_port,
     )
+    liberation_install.set_autosave_turns(preferences.autosave_turns)
     liberation_install.save_config()
     if not completes_first_start:
         return None

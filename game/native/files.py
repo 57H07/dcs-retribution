@@ -10,14 +10,16 @@ take it only to read the campaign before the dialog and to write it after.
 from __future__ import annotations
 
 import logging
+import os
 import threading
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 from typing import TYPE_CHECKING
 
-from game import persistency
+from game import autosaves, persistency
 from game.commands import CommandError
 from game.gamelock import game_lock
 
@@ -94,7 +96,14 @@ def save_game_as(bridge: NativeBridge, current_game: CurrentGame) -> FileActionR
                 "Another campaign was loaded while the dialog was open: "
                 "nothing was saved."
             )
+        if game.savepath and not _same_file(path, game.savepath):
+            # A copy: its autosaves must not rotate or drop the original's.
+            autosaves.fork(game)
         return _write(bridge, game, path)
+
+
+def _same_file(a: str, b: str) -> bool:
+    return os.path.normcase(os.path.abspath(a)) == os.path.normcase(os.path.abspath(b))
 
 
 def _write(bridge: NativeBridge, game: Game, path: str) -> FileActionResult:
@@ -103,6 +112,7 @@ def _write(bridge: NativeBridge, game: Game, path: str) -> FileActionResult:
     if not persistency.save_game(game):
         game.savepath = previous
         raise CommandError(f"Could not save the campaign to {path}.", status_code=500)
+    autosaves.record_manual_save(game, Path(path))
     bridge.game_saved(path)
     return FileActionResult(FileOutcome.SAVED, path)
 
@@ -121,8 +131,30 @@ def open_game(bridge: NativeBridge, current_game: CurrentGame) -> FileActionResu
     return FileActionResult(FileOutcome.OPENED, path)
 
 
-def load_save(path: str) -> Game:
-    """Read and migrate a save file; a `CommandError` tells why it cannot be."""
+def load_listed_save(
+    bridge: NativeBridge, current_game: CurrentGame, save_id: str
+) -> FileActionResult:
+    """Load a save of the Load screen (#190) and hand it to the shell.
+
+    A loaded autosave keeps saving where the player last saved the campaign.
+    """
+    with game_lock():
+        game = _require(current_game())
+        try:
+            entry = autosaves.find_save(game, save_id)
+        except KeyError:
+            raise CommandError("This save no longer exists.")
+    path = str(entry.path)
+    # The new campaign is not shared with any other thread yet: no lock needed.
+    loaded = load_save(path, keep_savepath=entry.kind.is_autosave)
+    bridge.game_loaded(loaded, loaded.savepath)
+    return FileActionResult(FileOutcome.OPENED, path)
+
+
+def load_save(path: str, keep_savepath: bool = False) -> Game:
+    """Read and migrate a save file; a `CommandError` tells why it cannot be.
+
+    `keep_savepath`: see `persistency.load_game`."""
     from game import Migrator
 
     incompatible = CommandError(
@@ -130,7 +162,7 @@ def load_save(path: str) -> Game:
         "Discord with the campaign that fails to load."
     )
     try:
-        game = persistency.load_game(path)
+        game = persistency.load_game(path, keep_savepath)
     except OSError:
         logging.exception("Could not read save file %s", path)
         raise CommandError(f"Could not read {path}.")
