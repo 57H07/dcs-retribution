@@ -38,6 +38,8 @@ export const PATHS = {
   career: "/career",
   logs: "/logs",
   about: "/about",
+  // #190
+  load: "/load",
   // WEB-08.3
   tgo: (id: string) => `/tgos/${id}`,
   /** Unit info sheet; names hold spaces and sometimes slashes. */

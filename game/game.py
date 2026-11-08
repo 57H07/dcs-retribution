@@ -8,7 +8,7 @@ from copy import deepcopy
 from datetime import date, datetime, time, timedelta
 from enum import Enum
 from typing import Any, List, Optional, TYPE_CHECKING, Union, cast
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from dcs.countries import (
     Switzerland,
@@ -27,7 +27,7 @@ from game.models.game_stats import GameStats
 from game.plugins import LuaPluginManager
 from game.squadrons.csarservice import CapturedPilot
 from game.utils import Distance
-from . import naming, persistency
+from . import autosaves, naming
 from .ato import Flight
 from .ato.flighttype import FlightType
 from .campaignloader import CampaignAirWingConfig
@@ -117,6 +117,8 @@ class Game:
         self.settings = settings
         self.theater = theater
         self.campaign_name = campaign_name
+        #: Names the folder of the campaign's autosaves (#190).
+        self.campaign_id = uuid4().hex
         self.turn = 0
         # NB: This is the *start* date. It is never updated.
         self.date = date(start_date.year, start_date.month, start_date.day)
@@ -182,6 +184,10 @@ class Game:
         # Postdates CSAR, and is per-turn scratch rather than campaign state.
         if not hasattr(self, "pilots_captured_this_turn"):
             self.pilots_captured_this_turn = []
+        # Postdates the rotating autosaves (#190): `persistency.load_game` names
+        # it after the save file.
+        if not hasattr(self, "campaign_id"):
+            self.campaign_id = ""
         # Heal carcass lists bloated by old saves. Guarded like laser_code_registry
         # below: __destroyed_units postdates the oldest saves, so a pre-2020 save
         # arrives without it and must not AttributeError here.
@@ -439,8 +445,7 @@ class Game:
 
         EventStream.put_nowait(events)
 
-        # Autosave progress
-        persistency.autosave(self)
+        autosaves.autosave(self, autosaves.SaveKind.TURN)
 
     def check_win_loss(self) -> TurnState:
         if not self.theater.player_points(state_check=True):

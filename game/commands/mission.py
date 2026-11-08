@@ -12,7 +12,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Protocol, TYPE_CHECKING
 
-from game import persistency
+from game import autosaves, persistency
 from game.ato.flightstate import Uninitialized
 from game.ato.traveltime import TotEstimator
 from game.profiling import logged_duration
@@ -104,8 +104,8 @@ def describe_flight(package: Package, flight: Flight) -> str:
 def generate_mission(game: Game, sim: MissionSim) -> Path:
     """Finish planning and write the mission for DCS ("Take off").
 
-    Fast forwards the simulation to first contact when the settings ask for it,
-    then writes the `.miz`. Returns its path. The front end then waits for the
+    Autosaves the planning, fast forwards the simulation to first contact when
+    the settings ask for it, then writes the `.miz`. Returns its path. The front end then waits for the
     mission result.
 
     Raises:
@@ -125,6 +125,9 @@ def generate_mission(game: Game, sim: MissionSim) -> Path:
             "Some flights are missing pilots: assign pilots or cancel those "
             f"missions ({flights})."
         )
+    # Before fast forwarding, which moves the flights: loading it gives back the
+    # planning as the player left it (#190).
+    autosaves.autosave(game, autosaves.SaveKind.TAKEOFF)
     if game.settings.fast_forward_stop_condition not in (
         FastForwardStopCondition.DISABLED,
         FastForwardStopCondition.MANUAL,

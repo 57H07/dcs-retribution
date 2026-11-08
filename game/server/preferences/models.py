@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
+from game.autosaves import MAX_KEEP_TURNS
 from game.commands.preferences import (
     MAX_PORT,
     InstallPreferences,
@@ -20,6 +21,7 @@ class InstallPreferencesJs(BaseModel):
     prefer_liberation_payloads: bool
     setup_preferences_on_every_start: bool
     server_port: int = Field(ge=1, le=MAX_PORT)
+    autosave_turns: int = Field(ge=1, le=MAX_KEEP_TURNS)
 
     class Config:
         title = "InstallPreferences"
@@ -34,6 +36,7 @@ class InstallPreferencesJs(BaseModel):
                 preferences.setup_preferences_on_every_start
             ),
             server_port=preferences.server_port,
+            autosave_turns=preferences.autosave_turns,
         )
 
     def to_preferences(self) -> InstallPreferences:
@@ -43,6 +46,7 @@ class InstallPreferencesJs(BaseModel):
             prefer_liberation_payloads=self.prefer_liberation_payloads,
             setup_preferences_on_every_start=self.setup_preferences_on_every_start,
             server_port=self.server_port,
+            autosave_turns=self.autosave_turns,
         )
 
 

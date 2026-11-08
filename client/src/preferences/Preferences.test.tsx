@@ -15,6 +15,7 @@ const SAVED: InstallPreferences = {
   prefer_liberation_payloads: false,
   setup_preferences_on_every_start: false,
   server_port: 16880,
+  autosave_turns: 5,
 };
 
 /**

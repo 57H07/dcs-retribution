@@ -63,6 +63,7 @@ def _body(saved_games: Path | str, install: Path | str, **extra: Any) -> dict[st
         "prefer_liberation_payloads": True,
         "setup_preferences_on_every_start": False,
         "server_port": 16881,
+        "autosave_turns": 5,
         **extra,
     }
 
@@ -362,3 +363,29 @@ def test_old_preferences_file_has_no_modules(modules: Path) -> None:
 def test_no_module_list_without_a_saved_games_folder(prefs: Path) -> None:
     liberation_install.init()
     assert _request("GET", "/preferences/modules") == (200, [])
+
+
+# --- autosaves (#190) -----------------------------------------------------------
+
+
+def test_autosave_turns_are_saved_and_read_back(
+    prefs: Path, saved_games: Path, dcs: Path
+) -> None:
+    liberation_install.init()
+    assert _get()["preferences"]["autosave_turns"] == 5
+
+    status, _ = _put(_body(saved_games, dcs, autosave_turns=12))
+
+    assert status == 200
+    assert json.loads(prefs.read_text())["autosave_turns"] == 12
+    liberation_install.init()
+    assert _get()["preferences"]["autosave_turns"] == 12
+
+
+@pytest.mark.parametrize("turns", [0, 51])
+def test_autosave_turns_stay_between_1_and_50(
+    prefs: Path, saved_games: Path, dcs: Path, turns: int
+) -> None:
+    liberation_install.init()
+    status, _ = _put(_body(saved_games, dcs, autosave_turns=turns))
+    assert status == 422

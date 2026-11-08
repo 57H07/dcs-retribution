@@ -47,6 +47,9 @@ __setup_preferences_on_every_start = False
 __server_port = DEFAULT_SERVER_PORT
 # DCS unit type ids of the modules the player declared owning.
 __owned_modules: list[str] = []
+# Turns of autosaves kept per campaign (#190).
+DEFAULT_AUTOSAVE_TURNS = 5
+__autosave_turns = DEFAULT_AUTOSAVE_TURNS
 # True from a startup that needs the first start setup until preferences are applied.
 __first_start_pending = False
 
@@ -78,6 +81,7 @@ def init() -> bool:
     global __setup_preferences_on_every_start
     global __server_port
     global __owned_modules
+    global __autosave_turns
     global __first_start_pending
     __last_save_file = ""
     __ignore_empty_install_directory = False
@@ -85,6 +89,7 @@ def init() -> bool:
     __setup_preferences_on_every_start = False
     __server_port = DEFAULT_SERVER_PORT
     __owned_modules = []
+    __autosave_turns = DEFAULT_AUTOSAVE_TURNS
     if PREFERENCES_PATH.exists():
         try:
             logging.debug("Loading Retribution preferences from %s", PREFERENCES_PATH)
@@ -104,6 +109,7 @@ def init() -> bool:
             )
             __server_port = pref_data.get("server_port", DEFAULT_SERVER_PORT)
             __owned_modules = list(pref_data.get("owned_modules", []))
+            __autosave_turns = _autosave_turns_from(pref_data.get("autosave_turns"))
             is_first_start = bool(__setup_preferences_on_every_start)
         except (KeyError, TypeError, AttributeError, json.JSONDecodeError):
             __dcs_saved_game_directory = ""
@@ -162,10 +168,31 @@ def save_config() -> None:
         "setup_preferences_on_every_start": __setup_preferences_on_every_start,
         "server_port": __server_port,
         "owned_modules": __owned_modules,
+        "autosave_turns": __autosave_turns,
     }
     PREFERENCES_PATH.parent.mkdir(exist_ok=True, parents=True)
     with PREFERENCES_PATH.open("w") as prefs:
         json.dump(pref_data, prefs, indent="  ")
+
+
+def _autosave_turns_from(value: Any) -> int:
+    """The saved value, back within 1 to 50 turns; the default when unreadable."""
+    if value is None:
+        return DEFAULT_AUTOSAVE_TURNS
+    try:
+        return min(max(int(value), 1), 50)
+    except (TypeError, ValueError):
+        return DEFAULT_AUTOSAVE_TURNS
+
+
+def autosave_turns() -> int:
+    """How many turns of autosaves each campaign keeps (#190)."""
+    return __autosave_turns
+
+
+def set_autosave_turns(turns: int) -> None:
+    global __autosave_turns
+    __autosave_turns = turns
 
 
 def owned_modules() -> list[str]:

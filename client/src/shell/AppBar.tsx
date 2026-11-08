@@ -37,6 +37,7 @@ export function appMenus({
       items: [
         { label: "New game", onSelect: () => navigate(PATHS.newGame) },
         { label: "Open…", onSelect: () => qt.openDialog("open-game") },
+        { label: "Load…", onSelect: () => navigate(PATHS.load) },
         "separator",
         {
           label: "Save",

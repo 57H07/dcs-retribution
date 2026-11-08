@@ -12,6 +12,7 @@ import { AboutScreen } from "../secondary/AboutScreen";
 import { CareerScreen } from "../secondary/CareerScreen";
 import { InfoPanelScreen } from "../secondary/InfoPanelScreen";
 import { LogsScreen } from "../secondary/LogsScreen";
+import { LoadScreen } from "../secondary/LoadScreen";
 import { NotesScreen } from "../secondary/NotesScreen";
 import { ProductionScreen } from "../production/ProductionScreen";
 import { TransfersScreen } from "../secondary/TransfersScreen";
@@ -84,6 +85,7 @@ export const ROUTES: RouteObject[] = [
       { path: "transfers", element: <TransfersScreen /> },
       { path: "production", element: <ProductionScreen /> },
       { path: "notes", element: <NotesScreen /> },
+      { path: "load", element: <LoadScreen /> },
       { path: "info", element: <InfoPanelScreen /> },
       { path: "career", element: <CareerScreen /> },
       { path: "logs", element: <LogsScreen /> },

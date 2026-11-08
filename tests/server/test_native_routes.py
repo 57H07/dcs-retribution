@@ -253,7 +253,7 @@ def test_open_loads_migrates_and_hands_the_game_to_the_shell(
     _set_game(monkeypatch, SimpleNamespace(savepath="C:/saves/a.retribution"))
     loaded = SimpleNamespace(savepath="C:/saves/old.liberation")
     migrated: list[tuple[Any, bool]] = []
-    monkeypatch.setattr(persistency, "load_game", lambda path: loaded)
+    monkeypatch.setattr(persistency, "load_game", lambda path, keep=False: loaded)
     monkeypatch.setattr(
         game, "Migrator", lambda g, is_liberation: migrated.append((g, is_liberation))
     )
@@ -282,7 +282,7 @@ def test_open_reports_an_incompatible_save(
 ) -> None:
     _set_game(monkeypatch, None)
     bridge.answer = "C:/saves/broken.retribution"
-    monkeypatch.setattr(persistency, "load_game", lambda path: None)
+    monkeypatch.setattr(persistency, "load_game", lambda path, keep=False: None)
     status, body = _post("/native/open")
     assert status == 409
     assert body["detail"].startswith("Incompatible save file")
@@ -290,7 +290,9 @@ def test_open_reports_an_incompatible_save(
     def fail(g: Any, is_liberation: bool) -> None:
         raise ValueError("unknown faction")
 
-    monkeypatch.setattr(persistency, "load_game", lambda path: SimpleNamespace())
+    monkeypatch.setattr(
+        persistency, "load_game", lambda path, keep=False: SimpleNamespace()
+    )
     monkeypatch.setattr(game, "Migrator", fail)
     status, body = _post("/native/open")
     assert status == 409
