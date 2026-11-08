@@ -111,6 +111,41 @@ def test_a_hornet_cartridge_carries_the_presets_of_the_mission_with_names() -> N
     }
 
 
+def test_the_fixed_positions_of_the_selector_are_those_of_the_module() -> None:
+    cartridge = build_cartridge(hornet_flight(), MissionData(), CONTEXT)
+
+    assert cartridge is not None
+    comm1 = cartridge.data["COMM"]["COMM1"]
+    # The values of the module's own DTC editor (COMM/COMM_common.lua).
+    assert comm1["Channel_G"] == {"frequency": 243.0, "modulation": 0, "name": "GUARD"}
+    assert comm1["Channel_M"] == {"frequency": 122.8, "modulation": 0, "name": "MAN"}
+    assert comm1["Channel_C"] == {"frequency": 30.0, "modulation": 1, "name": "CUE"}
+    assert comm1["Channel_S"] == {"frequency": 156.05, "modulation": 1, "name": "MAR"}
+
+
+def test_presets_are_fm_in_the_fm_bands_of_the_radio_only() -> None:
+    flight = hornet_flight()
+    channels = flight.client_units[0].radio[1]["channels"]
+    channels[4], channels[5], channels[6] = 40.5, 121.5, 160.0
+
+    cartridge = build_cartridge(flight, MissionData(), CONTEXT)
+
+    assert cartridge is not None
+    comm1 = cartridge.data["COMM"]["COMM1"]
+    assert [comm1[f"Channel_{n}"]["modulation"] for n in (4, 5, 6)] == [1, 0, 1]
+
+
+def test_each_steerpoint_has_the_empty_offset_aimpoint_of_the_editor() -> None:
+    cartridge = build_cartridge(hornet_flight(), MissionData(), CONTEXT)
+
+    assert cartridge is not None
+    point = cartridge.data["WYPT"]["NAV_PTS"][1]
+    assert point["idOA"] == "OA2"
+    assert point["idOA_Line"] == "OA2Line"
+    assert point["isOA"] is False
+    assert point["OA_Bearing_Units"] == 1
+
+
 def test_steerpoint_n_is_waypoint_n_of_the_kneeboard() -> None:
     cartridge = build_cartridge(hornet_flight(), MissionData(), CONTEXT)
 
