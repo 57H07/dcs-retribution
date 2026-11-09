@@ -47,6 +47,27 @@ export function searchSettings(
   return matches;
 }
 
+export interface SettingGroup {
+  /** `Page › Section`. */
+  title: string;
+  settings: Setting[];
+}
+
+/** The matches grouped by page and section, as they stand on the pages. */
+export function groupMatches(matches: SettingMatch[]): SettingGroup[] {
+  const groups: SettingGroup[] = [];
+  for (const match of matches) {
+    const title = `${match.page.name} › ${match.section}`;
+    const last = groups[groups.length - 1];
+    if (last?.title === title) {
+      last.settings.push(match.setting);
+    } else {
+      groups.push({ title, settings: [match.setting] });
+    }
+  }
+  return groups;
+}
+
 /** Values not yet sent to the engine, by setting key (the new game wizard). */
 export type SettingValues = Record<string, Setting["value"]>;
 

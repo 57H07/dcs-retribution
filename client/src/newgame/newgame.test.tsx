@@ -357,6 +357,63 @@ describe("new campaign wizard", () => {
     expect(within(settings).queryByText("Modified")).not.toBeInTheDocument();
   });
 
+  it("searches the campaign settings across pages (#207)", async () => {
+    const calls = recordFetch(
+      200,
+      { status: "generating", step_index: 0, step_count: 2 },
+      gets("idle"),
+    );
+    const user = userEvent.setup();
+    renderScreen();
+    await user.click(
+      await screen.findByRole("button", { name: "Next · Factions" }),
+    );
+    await user.click(
+      await screen.findByRole("button", { name: "Next · Campaign options" }),
+    );
+    const settings = await screen.findByRole("region", {
+      name: "Campaign settings",
+    });
+    const search = within(settings).getByRole("searchbox", {
+      name: "Search all settings",
+    });
+
+    await user.type(search, "zzz");
+    expect(
+      within(settings).getByText("No setting matches “zzz”."),
+    ).toBeInTheDocument();
+
+    await user.clear(search);
+    await user.type(search, "SUPER carrier");
+    const results = within(settings).getByRole("region", {
+      name: "Difficulty › General",
+    });
+    // Edited in place, from the results.
+    await user.click(
+      within(results).getByRole("switch", { name: "Use supercarrier" }),
+    );
+    expect(within(results).getByText("Modified")).toBeInTheDocument();
+
+    // Cleared: back to the page that was open, with the change kept.
+    await user.clear(search);
+    expect(
+      within(settings).getByRole("button", { name: /Difficulty/ }),
+    ).toHaveAttribute("aria-current", "page");
+    expect(
+      within(settings).getByRole("switch", { name: "Use supercarrier" }),
+    ).toBeChecked();
+
+    await user.click(screen.getByRole("button", { name: "Next · Generator" }));
+    await user.click(screen.getByRole("button", { name: "Next · Summary" }));
+    await user.click(
+      await screen.findByRole("button", { name: "Generate campaign" }),
+    );
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]).toMatchObject({
+      body: { settings: { supercarrier: true } },
+    });
+  });
+
   it("offers only matching campaigns", async () => {
     recordFetch(204, undefined, gets("idle"));
     const user = userEvent.setup();

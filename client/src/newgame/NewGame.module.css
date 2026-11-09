@@ -473,6 +473,24 @@
   gap: var(--ui-space-md);
 }
 
+.settingsSearch {
+  width: 100%;
+  max-width: 420px;
+  height: var(--ui-size-control);
+  margin-bottom: var(--ui-space-md);
+  padding: 0 10px;
+  background: var(--ui-color-bg-canvas);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-color-text-primary);
+  font: inherit;
+}
+
+.settingsSearch:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-shadow-focus);
+}
+
 .settingsColumns {
   display: flex;
   flex-wrap: wrap;

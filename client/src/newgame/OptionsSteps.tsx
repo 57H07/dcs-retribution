@@ -6,7 +6,12 @@ import type {
   Setting,
 } from "../api/liberationApi";
 import { SettingControl } from "../settings/SettingControl";
-import { isModified, modifiedCount } from "../settings/search";
+import {
+  groupMatches,
+  isModified,
+  modifiedCount,
+  searchSettings,
+} from "../settings/search";
 import { NumberField, Switch } from "../ui";
 import styles from "./NewGame.module.css";
 import { GENERATOR_FLAGS, SettingValue, WizardState } from "./wizardState";
@@ -98,8 +103,32 @@ export function OptionsStep({
   onChange,
 }: StepProps & { defaults: CampaignDefaults }) {
   const [pageId, setPageId] = useState<string>();
+  const [query, setQuery] = useState("");
   const pages = defaults.settings_pages;
   const page = pages.find((p) => p.id === pageId) ?? pages[0];
+  const searching = query.trim() !== "";
+  const settingRow = (setting: Setting) => (
+    <SettingRow
+      key={setting.key}
+      setting={setting}
+      value={state.settings[setting.key] ?? setting.value}
+      onChange={(value) =>
+        onChange({
+          ...state,
+          settings: { ...state.settings, [setting.key]: value },
+        })
+      }
+    />
+  );
+  let shown: { title: string; settings: Setting[] }[];
+  if (searching) {
+    shown = groupMatches(searchSettings(pages, query.trim()));
+  } else {
+    shown = (page?.sections ?? []).map((section) => ({
+      title: section.name,
+      settings: section.settings,
+    }));
+  }
   const invert = (inverted: boolean) =>
     // Qt too: the sides trade places, so the factions follow them.
     onChange({ ...state, inverted, blue: state.red, red: state.blue });
@@ -172,6 +201,14 @@ export function OptionsStep({
       </section>
       <section className={styles.group} aria-label="Campaign settings">
         <h2 className={styles.heading}>Campaign settings</h2>
+        <input
+          className={styles.settingsSearch}
+          type="search"
+          placeholder="Search all settings"
+          aria-label="Search all settings"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
         <div className={styles.settingsColumns}>
           <nav className={styles.pages} aria-label="Settings pages">
             {pages.map((p) => {
@@ -181,8 +218,13 @@ export function OptionsStep({
                   key={p.id}
                   type="button"
                   className={styles.pageButton}
-                  aria-current={p.id === page?.id ? "page" : undefined}
-                  onClick={() => setPageId(p.id)}
+                  aria-current={
+                    !searching && p.id === page?.id ? "page" : undefined
+                  }
+                  onClick={() => {
+                    setPageId(p.id);
+                    setQuery("");
+                  }}
                 >
                   <span>{p.name}</span>
                   {changed > 0 && (
@@ -198,22 +240,15 @@ export function OptionsStep({
             })}
           </nav>
           <div className={styles.settings}>
-            {page?.sections.map((section) => (
-              <section key={section.name} aria-label={section.name}>
-                <h3 className={styles.label}>{section.name}</h3>
-                {section.settings.map((setting) => (
-                  <SettingRow
-                    key={setting.key}
-                    setting={setting}
-                    value={state.settings[setting.key] ?? setting.value}
-                    onChange={(value) =>
-                      onChange({
-                        ...state,
-                        settings: { ...state.settings, [setting.key]: value },
-                      })
-                    }
-                  />
-                ))}
+            {searching && shown.length === 0 && (
+              <p className={styles.hint}>
+                No setting matches “{query.trim()}”.
+              </p>
+            )}
+            {shown.map((group) => (
+              <section key={group.title} aria-label={group.title}>
+                <h3 className={styles.label}>{group.title}</h3>
+                {group.settings.map(settingRow)}
               </section>
             ))}
           </div>
