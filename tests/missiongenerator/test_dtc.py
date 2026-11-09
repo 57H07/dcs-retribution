@@ -13,7 +13,7 @@ from zipfile import ZipFile
 import dcs
 import pytest
 from dcs import Mission, Point
-from dcs.planes import F_14BU, F_15ESE, FA_18C_hornet
+from dcs.planes import F_14BU, F_15ESE, F_16C_50, FA_18C_hornet
 from dcs.terrain import Caucasus
 from dcs.unit import Skill
 
@@ -223,8 +223,15 @@ def tomcat_flight() -> Any:
     return flight
 
 
-def threat(name: str, x: float, owner: Player = Player.RED) -> DtcThreat:
-    return DtcThreat(name=name, position=Point(x, 0, TERRAIN), owner=owner)
+def threat(
+    name: str, x: float, owner: Player = Player.RED, threat_range_m: float = 0.0
+) -> DtcThreat:
+    return DtcThreat(
+        name=name,
+        position=Point(x, 0, TERRAIN),
+        owner=owner,
+        threat_range_m=threat_range_m,
+    )
 
 
 def test_a_tomcat_cartridge_draws_the_front_and_the_enemy_air_defenses() -> None:
@@ -296,6 +303,98 @@ def test_a_tomcat_cartridge_keeps_to_the_limits_of_the_jet() -> None:
     assert len(plan["additional_points"]) == 20
 
 
+# F-16C: route and presets come from the miz; the cartridge adds the front and threats.
+
+
+def viper_flight() -> Any:
+    flight = tomcat_flight()
+    flight.aircraft_type = SimpleNamespace(dcs_unit_type=SimpleNamespace(id="F-16C_50"))
+    return flight
+
+
+def test_a_viper_cartridge_draws_the_front_and_the_enemy_air_defenses() -> None:
+    fronts = (
+        (Point(30000, -10000, TERRAIN), Point(30000, 10000, TERRAIN)),
+        (Point(90000, -10000, TERRAIN), Point(90000, 10000, TERRAIN)),
+    )
+    context = DtcContext(
+        terrain="Caucasus",
+        start_time=START,
+        timezone=timezone.utc,
+        front_lines=fronts,
+        air_defenses=(
+            threat("Far site", 90000, threat_range_m=25000.0),
+            threat("Our Patriot", 41000, owner=Player.BLUE),
+            threat("Near site", 45000, threat_range_m=50000.0),
+        ),
+    )
+
+    cartridge = build_cartridge(viper_flight(), MissionData(), context)
+
+    assert cartridge is not None
+    payload = json.loads(cartridge.to_json())
+    assert payload["type"] == "F-16C_50"
+    data = payload["data"]
+    assert (data["type"], data["terrain"]) == ("F-16C_50", "Caucasus")
+    mpd = data["MPD"]
+    # The miz already carries the route and the presets: the jet mirrors them.
+    assert mpd["mirror_NAV_PTS"] is True
+    assert mpd["mirror_DEST"] is True
+    assert data["COMM"] == {"mirror_COMM1": True, "mirror_COMM2": True}
+    assert mpd["mirror_GEO_LINES"] is False
+    assert mpd["mirror_THREAT_PTS"] is False
+    # Each front line, nearest the target first, on a line of its own.
+    lines = mpd["GEO_LINES"]
+    assert [(p["id"], p["x"], p["y"]) for p in lines] == [
+        ("GEO_LINES31", 30000, -10000),
+        ("GEO_LINES32", 30000, 10000),
+        ("GEO_LINES33", 90000, -10000),
+        ("GEO_LINES34", 90000, 10000),
+    ]
+    assert [[p[f"L{n}"] for n in (1, 2, 3, 4)] for p in lines] == [
+        [True, False, False, False],
+        [True, False, False, False],
+        [False, True, False, False],
+        [False, True, False, False],
+    ]
+    assert [p["number"] for p in lines] == [1, 2, 3, 4]
+    # Hostile sites only, nearest the target first, ringed at their reach.
+    threats = mpd["THREAT_PTS"]
+    assert [
+        (p["id"], p["number"], p["x"], p["text"], p["threatName"], p["radius"])
+        for p in threats
+    ] == [
+        ("THREAT_PTS56", 1, 45000, "T1", "Near site", 50000.0),
+        ("THREAT_PTS57", 2, 90000, "T2", "Far site", 25000.0),
+    ]
+    assert all(p["ring"] and p["def_num"] == 1 for p in threats)
+
+
+def test_a_viper_cartridge_keeps_to_the_limits_of_the_jet() -> None:
+    fronts = tuple(
+        (Point(1000.0 * n, 0, TERRAIN), Point(1000.0 * n, 500, TERRAIN))
+        for n in range(6)
+    )
+    sites = tuple(threat(f"Site {n}", 40000 + 100 * n) for n in range(30))
+    context = DtcContext(
+        terrain="Caucasus",
+        start_time=START,
+        timezone=timezone.utc,
+        front_lines=fronts,
+        air_defenses=sites,
+    )
+
+    cartridge = build_cartridge(viper_flight(), MissionData(), context)
+
+    assert cartridge is not None
+    mpd = cartridge.data["MPD"]
+    # 4 lines of the HSD; 15 threat points, 56 to 70.
+    assert len(mpd["GEO_LINES"]) == 8
+    assert len(mpd["THREAT_PTS"]) == 15
+    # A site of unknown reach gets the ring of the editor's custom threat.
+    assert {p["radius"] for p in mpd["THREAT_PTS"]} == {37040.0}
+
+
 # Mission generation: the cartridges go into the .miz and next to it.
 
 
@@ -352,6 +451,30 @@ def test_a_player_hornet_gets_its_cartridge_in_the_miz_and_next_to_it(
     assert "DTC" not in units[wingman.name]
     copy = dtc.cartridge_file(miz, flight.flight_id)
     assert copy == tmp_path / "retribution_nextturn_DTC" / "Retribution Enfield 1.dtc"
+    assert json.loads(copy.read_text(encoding="utf-8")) == embedded
+
+
+def test_a_player_viper_gets_its_cartridge_next_to_a_hornet(tmp_path: Path) -> None:
+    mission = Mission(Caucasus())
+    hornet = generated_flight(mission, FA_18C_hornet, "Enfield 1")
+    viper = generated_flight(mission, F_16C_50, "Uzi 1")
+    viper.friendly = Player.BLUE
+    viper.package.target = SimpleNamespace(position=Point(40000, 0, TERRAIN))
+    miz = tmp_path / "retribution_nextturn.miz"
+
+    cartridges = dtc.prepare(MissionData(flights=[hornet, viper]), CONTEXT)
+    mission.save(str(miz))
+    dtc.write(cartridges, miz, mission)
+
+    with ZipFile(miz) as archive:
+        embedded = json.loads(archive.read("DTC/Retribution Uzi 1.dtc"))
+        assert "DTC/Retribution Enfield 1.dtc" in archive.namelist()
+    assert embedded["type"] == "F-16C_50"
+    assert mission_units(miz)[viper.units[0].name]["DTC"]["Cartridges"] == {
+        1: {"name": "Retribution Uzi 1", "default": True}
+    }
+    copy = dtc.cartridge_file(miz, viper.flight_id)
+    assert copy is not None
     assert json.loads(copy.read_text(encoding="utf-8")) == embedded
 
 

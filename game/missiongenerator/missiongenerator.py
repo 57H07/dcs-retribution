@@ -157,7 +157,12 @@ class MissionGenerator:
             bounds = FrontLineConflictDescription.frontline_bounds(front_line, theater)
             front_lines.append((bounds.left_position, bounds.right_position))
         air_defenses = tuple(
-            dtc.DtcThreat(tgo.name, tgo.position, tgo.control_point.captured)
+            dtc.DtcThreat(
+                tgo.name,
+                tgo.position,
+                tgo.control_point.captured,
+                tgo.max_threat_range().meters,
+            )
             for tgo in theater.ground_objects
             if not tgo.is_dead and tgo.has_aa
         )

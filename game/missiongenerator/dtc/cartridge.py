@@ -10,7 +10,7 @@ import json
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, tzinfo
-from typing import Any, Callable, TYPE_CHECKING
+from typing import Any, Callable, Iterable, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from dcs import Point
@@ -28,6 +28,8 @@ class DtcThreat:
     position: Point
     #: The side that owns it: a flight sees the sites of the other side.
     owner: Player
+    #: How far it reaches, in metres; 0 when unknown.
+    threat_range_m: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -69,9 +71,13 @@ CartridgeBuilder = Callable[
 
 
 def _builders() -> dict[str, CartridgeBuilder]:
-    from . import hornet, tomcat
+    from . import hornet, tomcat, viper
 
-    return {hornet.UNIT_TYPE: hornet.build, tomcat.UNIT_TYPE: tomcat.build}
+    return {
+        hornet.UNIT_TYPE: hornet.build,
+        tomcat.UNIT_TYPE: tomcat.build,
+        viper.UNIT_TYPE: viper.build,
+    }
 
 
 def supports(flight: FlightData) -> bool:
@@ -83,6 +89,38 @@ def cartridge_name(flight: FlightData) -> str:
     """`Retribution <callsign>`, kept to the characters of a file name."""
     callsign = re.sub(r"[^A-Za-z0-9 _-]", "", flight.callsign).strip()
     return f"Retribution {callsign}".strip()
+
+
+def _nearest(
+    objective: Point, items: Iterable[Any], position: Callable[[Any], Point], limit: int
+) -> list[Any]:
+    return sorted(items, key=lambda i: objective.distance_to_point(position(i)))[:limit]
+
+
+def nearest_front_lines(
+    flight: FlightData, context: DtcContext, limit: int
+) -> list[tuple[Point, Point]]:
+    """The front lines nearest the package target, nearest first."""
+
+    def middle(line: tuple[Point, Point]) -> Point:
+        start, end = line
+        return start.midpoint(end)
+
+    return _nearest(flight.package.target.position, context.front_lines, middle, limit)
+
+
+def nearest_threats(
+    flight: FlightData, context: DtcContext, limit: int
+) -> list[DtcThreat]:
+    """The enemy air defense sites nearest the package target, nearest first."""
+    hostile = [
+        site
+        for site in context.air_defenses
+        if not site.owner.is_neutral and site.owner != flight.friendly
+    ]
+    return _nearest(
+        flight.package.target.position, hostile, lambda s: s.position, limit
+    )
 
 
 def build_cartridge(
