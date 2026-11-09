@@ -346,6 +346,11 @@ def base_path() -> Path:
     return _create_dir_if_needed(Path(_dcs_saved_game_folder))
 
 
+def retribution_dir() -> Path:
+    """Saved Games/DCS/Retribution: where the saves, settings... live."""
+    return _create_dir_if_needed(base_path() / "Retribution")
+
+
 def debug_dir() -> Path:
     return _create_dir_if_needed(base_path() / "Retribution" / "Debug")
 

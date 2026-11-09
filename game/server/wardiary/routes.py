@@ -54,7 +54,7 @@ def export_war_diary(
             raise CommandError(NO_CAMPAIGN)
         campaign = game.campaign_name or "Campaign"
         page = export_html(campaign, list(game.war_diary), game.war_diary_since_turn)
-        start = persistency.base_path() / _file_name(campaign)
+        start = persistency.retribution_dir() / _file_name(campaign)
     with one_dialog():
         path = bridge.choose_save_file(
             "Export the war diary", str(start), "Web page (*.html)"
