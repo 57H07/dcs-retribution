@@ -9,6 +9,7 @@ from uuid import uuid4
 
 import pytest
 
+from game.objectives import CampaignObjectives
 from game.models.game_stats import GameStats, GameTurnMetadata
 from game.server import GameContext
 from game.server.reports.models import (
@@ -120,6 +121,8 @@ def _game() -> Any:
         ),
         game_stats=stats,
         points=points,
+        turn=3,
+        objectives=CampaignObjectives(),
     )
 
 

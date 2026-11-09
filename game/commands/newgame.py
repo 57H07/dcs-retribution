@@ -29,7 +29,7 @@ from typing import Any, Iterable, Optional, TYPE_CHECKING
 
 from dcs.mapping import LatLng
 
-from game import persistency
+from game import objectives, persistency
 from .errors import CommandError
 
 if TYPE_CHECKING:
@@ -690,6 +690,8 @@ def generate_new_game(
     campaign = parameters.campaign
     progress(GENERATION_STEPS[0])
     theater = campaign.load_theater(parameters.advanced_iads)
+    # The generation renames some bases (carriers): objectives use the .miz names.
+    miz_names = {cp.id: cp.name for cp in theater.controlpoints}
     progress(GENERATION_STEPS[1])
     generator = GameGenerator(
         parameters.blue_faction,
@@ -715,7 +717,17 @@ def generate_new_game(
         parameters.mod_settings,
         campaign_name=campaign.name,
     )
-    return generator.generate()
+    game = generator.generate()
+    # #194: kept on the game, a save goes on without its campaign file. They are
+    # written for the blue side: an inverted campaign has none.
+    if parameters.inverted:
+        if campaign.data.get("objectives"):
+            logging.info("Inverted campaign: its objectives are ignored")
+    else:
+        game.objectives = objectives.load(
+            campaign.data.get("objectives"), game, miz_names
+        )
+    return game
 
 
 def finish_new_game(

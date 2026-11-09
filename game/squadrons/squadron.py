@@ -699,6 +699,16 @@ class Squadron:
             return self.untasked_aircraft
         return min(self.untasked_aircraft, self.number_of_available_pilots)
 
+    def room_for_aircraft(self) -> int:
+        """Aircraft the squadron can still take: its size and its parking."""
+        parking = self.location.unclaimed_parking(ParkingType().from_squadron(self))
+        size = self.max_size - self.owned_aircraft - self.pending_deliveries
+        return max(min(size, parking), 0)
+
+    def add_pilots(self, count: int) -> None:
+        """New pilots join the squadron now (#194 rewards)."""
+        self._recruit_pilots(count)
+
     @property
     def expected_size_next_turn(self) -> int:
         return self.owned_aircraft + self.pending_deliveries

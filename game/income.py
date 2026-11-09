@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from game.config import REWARDS
+from game.objectives import capped_income_bonus
 from game.theater.player import Player
 
 if TYPE_CHECKING:
@@ -23,7 +24,15 @@ class BuildingIncome:
 
 
 class Income:
-    def __init__(self, game: Game, player: Player) -> None:
+    def __init__(
+        self, game: Game, player: Player, paid_at_turn: Optional[int] = None
+    ) -> None:
+        """The income `player` gets at the end of a turn.
+
+        Args:
+            paid_at_turn: `Game.turn` when it is paid, which decides the objective
+                bonuses (#194); by default the next payment.
+        """
         if player.is_blue:
             self.multiplier = game.settings.player_income_multiplier
         else:
@@ -49,4 +58,11 @@ class Income:
 
         self.from_bases = sum(cp.income_per_turn for cp in self.control_points)
         self.total_buildings = sum(b.income for b in self.buildings)
-        self.total = (self.total_buildings + self.from_bases) * self.multiplier
+        #: Before the objective bonuses (#194), which are capped against it.
+        self.base: float = (self.total_buildings + self.from_bases) * self.multiplier
+        if paid_at_turn is None:
+            paid_at_turn = game.turn + 1
+        self.from_objectives = capped_income_bonus(
+            game, player, paid_at_turn, self.base
+        )
+        self.total = max(self.base + self.from_objectives, 0)

@@ -11,6 +11,8 @@ from types import SimpleNamespace
 from typing import Any, cast
 
 import pytest
+
+from game.objectives import CampaignObjectives
 from dcs.cloud_presets import CLOUD_PRESETS
 from dcs.weather import Weather as PydcsWeather, Wind
 
@@ -344,6 +346,7 @@ def _top_bar_game(turn: int = 4) -> Any:
     game.blue.budget = 1240.456
     game.red = SimpleNamespace(faction=SimpleNamespace(name="Russia 2020"))
     game.conditions = _conditions(None)
+    game.objectives = CampaignObjectives()
     units = SimpleNamespace
     game.game_stats = SimpleNamespace(
         data_per_turn=[

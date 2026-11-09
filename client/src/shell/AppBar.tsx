@@ -70,6 +70,7 @@ export function appMenus({
         { label: "Pilot career", onSelect: () => navigate(PATHS.career) },
         { label: "Last debriefing", onSelect: () => navigate(PATHS.debrief) },
         { label: "War diary", onSelect: () => navigate(PATHS.diary) },
+        { label: "Objectives", onSelect: () => navigate(PATHS.objectives) },
       ],
     },
     {
@@ -145,6 +146,7 @@ export function AppBar({ onNewPackage, onShowHelp }: AppBarProps) {
       <CampaignStatus
         onOpenFinances={() => navigate(PATHS.reportTab("finances"))}
         onOpenIntel={() => navigate(PATHS.reportTab("intel"))}
+        onOpenObjectives={() => navigate(PATHS.objectives)}
       />
       <nav className={styles.screens} aria-label="Campaign screens">
         <ProductionBadge />

@@ -163,7 +163,9 @@ class Coalition:
 
         CsarService(self.game).advance_turn_for(self)
         self.air_wing.end_turn()
-        self.budget += Income(self.game, self.player).total
+        # `Game.turn` already counts the turn that begins: objective bonuses (#194)
+        # are paid by it.
+        self.budget += Income(self.game, self.player, self.game.turn).total
 
         # Need to recompute before transfers and deliveries to account for captures.
         # This happens in in initialize_turn as well, because cheating doesn't advance a

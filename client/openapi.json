@@ -9329,6 +9329,33 @@
         }
       }
     },
+    "/objectives": {
+      "get": {
+        "summary": "Get Objectives",
+        "description": "The campaign's objectives and their state; null without a campaign.",
+        "operationId": "get_objectives",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/CampaignObjectivesJs"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Objectives"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/war-diary": {
       "get": {
         "summary": "Get War Diary",
@@ -10706,6 +10733,85 @@
         ],
         "title": "NewGameCampaign"
       },
+      "CampaignObjectiveJs": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "deadline": {
+            "title": "Deadline",
+            "type": "integer"
+          },
+          "turns_left": {
+            "title": "Turns Left",
+            "type": "integer"
+          },
+          "done": {
+            "title": "Done",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "reward": {
+            "type": "string",
+            "title": "Reward"
+          },
+          "granted": {
+            "type": "string",
+            "title": "Granted"
+          },
+          "resolved_turn": {
+            "title": "Resolved Turn",
+            "type": "integer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "kind",
+          "target",
+          "state",
+          "reward",
+          "granted"
+        ],
+        "title": "CampaignObjective"
+      },
+      "CampaignObjectivesJs": {
+        "properties": {
+          "turn": {
+            "type": "integer",
+            "title": "Turn"
+          },
+          "objectives": {
+            "items": {
+              "$ref": "#/components/schemas/CampaignObjectiveJs"
+            },
+            "type": "array",
+            "title": "Objectives"
+          }
+        },
+        "type": "object",
+        "required": [
+          "turn",
+          "objectives"
+        ],
+        "title": "CampaignObjectives"
+      },
       "CampaignPreviewJs": {
         "properties": {
           "south_west": {
@@ -10860,6 +10966,10 @@
             "type": "number",
             "title": "From Buildings"
           },
+          "from_objectives": {
+            "type": "number",
+            "title": "From Objectives"
+          },
           "total": {
             "type": "number",
             "title": "Total"
@@ -10885,6 +10995,7 @@
           "multiplier",
           "from_bases",
           "from_buildings",
+          "from_objectives",
           "total",
           "bases",
           "buildings"
@@ -14785,6 +14896,29 @@
         ],
         "title": "NotesJs"
       },
+      "ObjectivesSummaryJs": {
+        "properties": {
+          "met": {
+            "type": "integer",
+            "title": "Met"
+          },
+          "missed": {
+            "type": "integer",
+            "title": "Missed"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "met",
+          "missed",
+          "total"
+        ],
+        "title": "ObjectivesSummary"
+      },
       "OfflineBasemapImageJs": {
         "properties": {
           "south_west": {
@@ -17669,6 +17803,9 @@
             },
             "type": "array",
             "title": "Warnings"
+          },
+          "objectives": {
+            "$ref": "#/components/schemas/ObjectivesSummaryJs"
           }
         },
         "type": "object",

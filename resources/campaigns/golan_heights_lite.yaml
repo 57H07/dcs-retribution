@@ -200,3 +200,27 @@ squadrons:
       aircraft:
         - Su-17M4 Fitter-K
       size: 12
+# Optional goals that only grant rewards (#194): see docs/campaigns/objectives.md.
+objectives:
+  - capture: Golan North
+    by_turn: 8
+    reward:
+      budget: 300
+      income: 30
+  - title: Blind the Syrian air defences
+    destroy:
+      category: iads
+    by_turn: 12
+    reward:
+      enemy_income: 40
+      enemy_income_turns: 6
+  - destroy:
+      category: factory
+      at: Damascus
+    reward:
+      enemy_budget: 400
+  - title: Keep the Ramat David radar on the air
+    survive: Golan North-118
+    until_turn: 15
+    reward:
+      income: 20

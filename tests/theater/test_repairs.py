@@ -8,6 +8,7 @@ from dcs.mapping import Point
 from dcs.statics import Fortification
 from dcs.vehicles import AirDefence
 
+from game.objectives import CampaignObjectives
 from game.income import Income
 from game.point_with_heading import PointWithHeading
 from game.procurement import ProcurementAi
@@ -37,6 +38,9 @@ class FakeGame:
         self.destroyed_units: list[dict[str, Any]] = []
         self.control_points: list[OffMapSpawn] = []
         self.messages: list[str] = []
+        # The income reads the campaign objectives (#194).
+        self.turn = 1
+        self.objectives = CampaignObjectives()
         self.theater = SimpleNamespace(
             terrain=None,
             control_points_for=self.control_points_for,

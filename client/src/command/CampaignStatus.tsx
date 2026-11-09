@@ -16,6 +16,8 @@ export interface CampaignStatusProps {
   /** Opens the finances (budget) and the intel (force balance) screens. */
   onOpenFinances: () => void;
   onOpenIntel: () => void;
+  /** Opens the campaign objectives (#194), shown when the campaign has any. */
+  onOpenObjectives?: () => void;
 }
 
 export function useTopBar() {
@@ -35,6 +37,7 @@ function Loaded({
   bar,
   onOpenFinances,
   onOpenIntel,
+  onOpenObjectives,
 }: CampaignStatusProps & { bar: TopBar }) {
   const weather = weatherDetails(bar.weather);
   return (
@@ -122,6 +125,22 @@ function Loaded({
             <span className={styles.enemy}>{bar.ground.enemy}</span>
           </button>
         </Tooltip>
+        {bar.objectives != null && (
+          <button
+            type="button"
+            className={styles.box}
+            onClick={onOpenObjectives}
+            aria-label={
+              `Objectives: ${bar.objectives.met} met out of ${bar.objectives.total}` +
+              `, ${bar.objectives.missed} missed: open objectives`
+            }
+          >
+            <span className={styles.label}>Objectives</span>
+            <span className={styles.friendly}>{bar.objectives.met}</span>
+            <span className={styles.slash}>/</span>
+            <span>{bar.objectives.total}</span>
+          </button>
+        )}
       </div>
     </>
   );
