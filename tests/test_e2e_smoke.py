@@ -177,6 +177,8 @@ def test_a_stock_campaign_sets_its_objectives(session: NewGameGeneration) -> Non
     ]
     assert {o["state"] for o in answer["objectives"]} == {"In progress"}
     assert all(o["expected"] for o in answer["objectives"])
+    # Each one shows on the map: Golan North, its air defences, the plant, the radar.
+    assert [len(o["targets"]) > 0 for o in answer["objectives"]] == [True] * 4
     bar = _ok("GET", "/game/top-bar")
     summary = bar["objectives"]
     assert (summary["met"], summary["missed"], summary["total"]) == (0, 0, 4)

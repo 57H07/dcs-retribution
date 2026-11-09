@@ -26,6 +26,7 @@ import { Button, ListCard, TaskTag, useToast } from "../ui";
 import { AddFlightButton } from "./AddFlightForm";
 import { AutoCreateButton } from "./AutoCreateForm";
 import { FlightSections } from "./FlightSections";
+import { ObjectiveBadge } from "./ObjectiveBadge";
 import styles from "./PackageEditor.module.css";
 import { TransportEntry } from "./TransportEntry";
 import { KeyboardEvent, useEffect, useState } from "react";
@@ -133,6 +134,7 @@ function PackageHeader({ pkg }: { pkg: PackageDetail }) {
     <>
       <TaskTag task={pkg.task ?? pkg.description} />
       <h1 className={settings.title}>{pkg.target}</h1>
+      <ObjectiveBadge objectives={pkg.objectives} />
       {detail !== "" && <span className={styles.subtitle}>{detail}</span>}
       <span className={styles.spacer} />
       <TotField pkg={pkg} />

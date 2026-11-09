@@ -32,6 +32,7 @@ const PACKAGE: PackageDetail = {
   can_auto_create: false,
   closest_base: "Krymsk",
   closest_base_distance_nm: 64,
+  objectives: ["Blind the air defences"],
   flights: [
     {
       id: "f-1",
@@ -184,6 +185,9 @@ describe("package editor", () => {
       }),
     ).toBeInTheDocument();
     expect(screen.getByText("64 nm from Krymsk")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Objective: Blind the air defences"),
+    ).toHaveTextContent("Objective");
     expect(screen.getByLabelText("Time on target")).toHaveValue("07:12:30");
     const card = screen.getByRole("button", { name: /F\/A-18C/ });
     expect(card).toHaveTextContent("2 × F/A-18C · Player");

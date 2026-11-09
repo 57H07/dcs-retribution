@@ -16,6 +16,7 @@ const PACKAGE: PackageDetail = {
   task: "DEAD",
   description: "DEAD",
   target: "SA-11",
+  objectives: [],
   tot: "2022-05-17T07:12:30",
   auto_asap: false,
   tot_locked: false,

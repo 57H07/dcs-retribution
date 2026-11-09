@@ -25,7 +25,9 @@ from game.commands.packageflights import (
 from game.commands.packages import coalition_of
 from game.commands.preferences import is_player_module
 from game.commands.transfers import can_plan_transport_mission
+from game.objectives import aimed_at
 from game.theater.controlpoint import ControlPoint
+from game.theater.frontline import FrontLine
 from game.utils import meters
 
 if TYPE_CHECKING:
@@ -33,6 +35,7 @@ if TYPE_CHECKING:
     from game.ato import Flight, Package
     from game.dcs.aircrafttype import AircraftType
     from game.squadrons import AirWing, Squadron
+    from game.theater.missiontarget import MissionTarget
 
 
 class PackageFlightJs(BaseModel):
@@ -66,6 +69,24 @@ class PackageFlightJs(BaseModel):
         )
 
 
+def _objectives(game: Game, target: MissionTarget) -> list[str]:
+    """The titles of the objectives in progress about `target`.
+
+    A front line is about the bases on both of its sides.
+    """
+    ids = [getattr(target, "id", None)]
+    if isinstance(target, FrontLine):
+        ids += [target.blue_cp.id, target.red_cp.id]
+    titles: list[str] = []
+    for target_id in ids:
+        if target_id is None:
+            continue
+        for objective in aimed_at(game, target_id):
+            if objective.title not in titles:
+                titles.append(objective.title)
+    return titles
+
+
 class PackageJs(BaseModel):
     id: UUID
     blue: bool
@@ -81,12 +102,14 @@ class PackageJs(BaseModel):
     flights: list[PackageFlightJs]
     #: Pilots missing in all the flights: they block a take off.
     missing_pilots: int
+    #: The campaign objectives in progress about its target (#194).
+    objectives: list[str]
 
     class Config:
         title = "Package"
 
     @staticmethod
-    def for_package(package: Package, blue: bool) -> PackageJs:
+    def for_package(game: Game, package: Package, blue: bool) -> PackageJs:
         task = package.primary_task
         tot = package.time_over_target
         flights = [PackageFlightJs.for_flight(f) for f in package.flights]
@@ -101,13 +124,14 @@ class PackageJs(BaseModel):
             auto_asap=package.auto_asap,
             flights=flights,
             missing_pilots=sum(f.missing_pilots for f in flights),
+            objectives=_objectives(game, package.target),
         )
 
     @staticmethod
     def all_in_game(game: Game) -> list[PackageJs]:
         """The packages of both coalitions, friendly first, in ATO order."""
         return [
-            PackageJs.for_package(package, coalition.player.is_blue)
+            PackageJs.for_package(game, package, coalition.player.is_blue)
             for coalition in game.coalitions
             for package in coalition.ato.packages
         ]
@@ -189,6 +213,8 @@ class PackageDetailJs(BaseModel):
     closest_base_distance_nm: int | None
     #: An empty package on a player base can become a Transport mission from there.
     transport_origin_id: UUID | None
+    #: The campaign objectives in progress about its target (#194).
+    objectives: list[str]
     flights: list[PackageEditorFlightJs]
 
     class Config:
@@ -197,7 +223,7 @@ class PackageDetailJs(BaseModel):
     @staticmethod
     def for_package(game: Game, package: Package) -> PackageDetailJs:
         summary = PackageJs.for_package(
-            package, coalition_of(game, package).player.is_blue
+            game, package, coalition_of(game, package).player.is_blue
         )
         closest = min(
             (flight.departure for flight in package.flights),
@@ -211,6 +237,7 @@ class PackageDetailJs(BaseModel):
             description=summary.description,
             custom_name=summary.custom_name,
             target=summary.target,
+            objectives=summary.objectives,
             tot=summary.tot,
             auto_asap=summary.auto_asap,
             tot_locked=not package.all_flights_waiting_for_start(),

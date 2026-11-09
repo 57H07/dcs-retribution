@@ -303,6 +303,16 @@ export const LEGEND_SECTIONS: LegendSection[] = [
     ],
   },
   {
+    title: "Campaign objectives",
+    entries: [
+      {
+        label: "Objective target",
+        overlays: ["objectives"],
+        swatch: { kind: "ring", color: "objective", weight: 2 },
+      },
+    ],
+  },
+  {
     title: "Ongoing combats",
     entries: [
       {

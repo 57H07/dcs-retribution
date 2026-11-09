@@ -3326,6 +3326,12 @@ export type Sim = {
   time?: string;
 };
 export type CampaignStateJs = "continue" | "win" | "loss";
+export type ObjectiveTarget = {
+  id: string;
+  name: string;
+  position: LatLng;
+  remaining: boolean;
+};
 export type CampaignObjective = {
   title: string;
   kind: string;
@@ -3339,6 +3345,7 @@ export type CampaignObjective = {
   expected: string;
   granted: string;
   resolved_turn?: number;
+  targets: ObjectiveTarget[];
 };
 export type ObjectivesSummary = {
   met: number;
@@ -3702,6 +3709,7 @@ export type Package = {
   auto_asap: boolean;
   flights: PackageFlight[];
   missing_pilots: number;
+  objectives: string[];
 };
 export type PackageEditorFlight = {
   id: string;
@@ -3732,6 +3740,7 @@ export type PackageDetail = {
   closest_base?: string;
   closest_base_distance_nm?: number;
   transport_origin_id?: string;
+  objectives: string[];
   flights: PackageEditorFlight[];
 };
 export type PackageTargetKind =

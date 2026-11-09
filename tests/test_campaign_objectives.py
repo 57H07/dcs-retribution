@@ -38,6 +38,7 @@ class FakeControlPoint:
         self.ground_objects: list[Any] = []
         self.connected_points: list[FakeControlPoint] = []
         self.operational = True
+        self.position = None
         for tgo in ground_objects:
             tgo.control_point = self
             self.ground_objects.append(tgo)
@@ -79,6 +80,7 @@ def _tgo(
         is_dead=False,
         statics=[],
         control_point=None,
+        position=None,
     )
 
 
@@ -562,3 +564,46 @@ def test_an_objective_in_progress_tells_what_it_would_grant_today() -> None:
     assert objectives.expected_reward(_only(game), game) == (  # type: ignore[arg-type]
         "+200 budget, +5 income per turn"
     )
+
+
+# --- targets on the map and in the planner ------------------------------------------
+
+
+def test_an_objective_lists_its_targets_and_which_still_stand() -> None:
+    game, parts = _game(
+        [{"destroy": {"category": "iads"}}, {"capture": "Kutaisi"}],
+    )
+    iads, capture = game.objectives.objectives
+    parts["sam"].is_dead = True
+
+    assert [
+        (t.id, t.name, t.remaining) for t in objectives.targets(iads, game)  # type: ignore[arg-type]
+    ] == [
+        (parts["sam"].id, "Random SAM-Kutaisi", False),
+        (parts["ewr"].id, "Random EWR-Senaki", True),
+    ]
+    [base] = objectives.targets(capture, game)  # type: ignore[arg-type]
+    assert (base.id, base.name, base.remaining) == (
+        parts["kutaisi"].id,
+        "Kutaisi",
+        True,
+    )
+
+
+def test_the_objectives_in_progress_aimed_at_a_target() -> None:
+    game, parts = _game(
+        [
+            {"destroy": {"category": "iads"}, "title": "Blind them"},
+            {"capture": "Kutaisi"},
+            {"capture": "Senaki", "by_turn": 1},
+        ]
+    )
+    _end_turns(game)  # Senaki is missed
+
+    def titles(target: Any) -> list[str]:
+        return [o.title for o in objectives.aimed_at(game, target.id)]  # type: ignore[arg-type]
+
+    assert titles(parts["sam"]) == ["Blind them"]
+    assert titles(parts["kutaisi"]) == ["Capture Kutaisi"]
+    assert titles(parts["senaki"]) == []
+    assert titles(parts["depot"]) == []

@@ -10,8 +10,12 @@ The objectives are read once, when the campaign is generated, and kept in the
 save. Changing the YAML file does not change a campaign already started. An
 inverted campaign (the player on the red side) has no objectives.
 
-The player sees them in **Campaign → Objectives**, and in the top bar while
-the campaign has any. Each one met or missed is announced in the debriefing
+The player sees them in **Campaign → Objectives** (where **Show on map**
+centres the map on what is left of one), in the top bar while the campaign has
+any, and on the map: the **Objectives** layer rings each base or ground object
+still to take, destroy or keep. A package whose target is one of them, or a
+front line next to one of their bases, carries an **Objective** badge in the
+planner. Each one met or missed is announced in the debriefing
 and the info panel.
 
 ## Example

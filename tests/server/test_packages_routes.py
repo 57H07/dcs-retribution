@@ -16,6 +16,12 @@ import pytest
 from game.ato.airtaaskingorder import AirTaskingOrder
 from game.ato.flighttype import FlightType
 from game.ato.package import Package
+from game.objectives import (
+    CampaignObjective,
+    CampaignObjectives,
+    ObjectiveKind,
+    ObjectiveState,
+)
 from game.commands import CommandError
 from game.commands.packages import cancel_or_abort_package, delete_package
 from game.db import Database
@@ -85,6 +91,7 @@ class _Game:
             player=Player.RED, ato=AirTaskingOrder(), transfers=_Transfers()
         )
         self.unculled = 0
+        self.objectives = CampaignObjectives()
 
     @property
     def coalitions(self) -> list[Any]:
@@ -143,7 +150,7 @@ def test_package_dto_summarises_the_package() -> None:
         _Flight(FlightType.SEAD_ESCORT, missing_pilots=1),
     )
     package.custom_name = "Hammer"
-    js = PackageJs.for_package(package, blue=True)
+    js = PackageJs.for_package(_Game(), package, blue=True)  # type: ignore[arg-type]
     assert js.id == package.id
     assert js.blue
     assert js.task == "DEAD"
@@ -160,11 +167,41 @@ def test_package_dto_summarises_the_package() -> None:
 
 def test_empty_unscheduled_package_has_no_task_nor_tot() -> None:
     package = Package(SimpleNamespace(name="Krymsk"), Database())  # type: ignore[arg-type]
-    js = PackageJs.for_package(package, blue=False)
+    js = PackageJs.for_package(_Game(), package, blue=False)  # type: ignore[arg-type]
     assert js.task is None
     assert js.tot is None
     assert js.description == "No mission"
     assert js.flights == []
+
+
+def test_a_package_names_the_objectives_it_aims_at() -> None:
+    """#194: the planner badges a package against an objective's target."""
+    game = _Game()
+    sam = SimpleNamespace(name="SA-11 Krasnodar East", id=uuid4())
+    game.objectives.objectives = [
+        CampaignObjective(
+            "Blind them",
+            ObjectiveKind.DESTROY,
+            "IADS",
+            None,
+            ground_object_ids=[sam.id],
+        ),
+        CampaignObjective(
+            "Done already",
+            ObjectiveKind.DESTROY,
+            "IADS",
+            None,
+            ground_object_ids=[sam.id],
+            state=ObjectiveState.MET,
+        ),
+    ]
+    package = Package(sam, Database())  # type: ignore[arg-type]
+    elsewhere = _package()
+
+    assert PackageJs.for_package(game, package, blue=True).objectives == [  # type: ignore[arg-type]
+        "Blind them"
+    ]
+    assert PackageJs.for_package(game, elsewhere, blue=True).objectives == []  # type: ignore[arg-type]
 
 
 def test_all_packages_of_both_coalitions() -> None:

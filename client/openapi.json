@@ -10789,6 +10789,13 @@
           "resolved_turn": {
             "title": "Resolved Turn",
             "type": "integer"
+          },
+          "targets": {
+            "items": {
+              "$ref": "#/components/schemas/ObjectiveTargetJs"
+            },
+            "type": "array",
+            "title": "Targets"
           }
         },
         "type": "object",
@@ -10799,7 +10806,8 @@
           "state",
           "reward",
           "expected",
-          "granted"
+          "granted",
+          "targets"
         ],
         "title": "CampaignObjective"
       },
@@ -14931,6 +14939,35 @@
         ],
         "title": "ObjectiveLine"
       },
+      "ObjectiveTargetJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "position": {
+            "$ref": "#/components/schemas/LeafletPoint"
+          },
+          "remaining": {
+            "type": "boolean",
+            "title": "Remaining"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "position",
+          "remaining"
+        ],
+        "title": "ObjectiveTarget",
+        "description": "A base or ground object of an objective, for the map."
+      },
       "ObjectivesSummaryJs": {
         "properties": {
           "met": {
@@ -15052,6 +15089,13 @@
             "type": "string",
             "format": "uuid"
           },
+          "objectives": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Objectives"
+          },
           "flights": {
             "items": {
               "$ref": "#/components/schemas/PackageEditorFlightJs"
@@ -15069,6 +15113,7 @@
           "auto_asap",
           "tot_locked",
           "can_auto_create",
+          "objectives",
           "flights"
         ],
         "title": "PackageDetail",
@@ -15265,6 +15310,13 @@
           "missing_pilots": {
             "type": "integer",
             "title": "Missing Pilots"
+          },
+          "objectives": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Objectives"
           }
         },
         "type": "object",
@@ -15275,7 +15327,8 @@
           "target",
           "auto_asap",
           "flights",
-          "missing_pilots"
+          "missing_pilots",
+          "objectives"
         ],
         "title": "Package"
       },

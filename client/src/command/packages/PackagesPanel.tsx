@@ -14,6 +14,7 @@ import {
   selectSelectedPackageKey,
 } from "../../api/selectionSlice";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { ObjectiveBadge } from "../../packages/ObjectiveBadge";
 import { PATHS } from "../../shell/paths";
 import {
   Button,
@@ -178,6 +179,7 @@ function PackageCard({
         meta={tot && `TOT ${tot}`}
         subtitle={
           <>
+            <ObjectiveBadge objectives={pkg.objectives} />
             {pkg.flights.length === 0 && <span>No flight</span>}
             {pkg.flights.map((flight) => (
               <span key={flight.id}>{flightSummary(flight)}</span>

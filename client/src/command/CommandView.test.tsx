@@ -98,6 +98,7 @@ describe("top bar", () => {
       reward: "+300 budget",
       expected: "+300 budget",
       granted: "",
+      targets: [],
     };
     recordFetch(204, undefined, {
       [TOP_BAR]: topBar({

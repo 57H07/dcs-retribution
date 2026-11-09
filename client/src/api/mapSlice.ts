@@ -34,15 +34,17 @@ const mapSlice = createSlice({
   reducers: {
     setHoveredEmitter(
       state,
-      action: PayloadAction<
-        { id: string; source: EmitterHoverSource } | null
-      >
+      action: PayloadAction<{ id: string; source: EmitterHoverSource } | null>,
     ) {
       state.hoveredEmitterId = action.payload?.id ?? null;
       state.hoveredEmitterSource = action.payload?.source ?? null;
     },
     setHighlightEmitters(state, action: PayloadAction<boolean>) {
       state.highlightEmitters = action.payload;
+    },
+    /** Centres the map there, keeping the zoom ("Show on map"). */
+    centerMapOn(state, action: PayloadAction<LatLngLiteral>) {
+      state.center = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -59,7 +61,8 @@ const mapSlice = createSlice({
   },
 });
 
-export const { setHoveredEmitter, setHighlightEmitters } = mapSlice.actions;
+export const { setHoveredEmitter, setHighlightEmitters, centerMapOn } =
+  mapSlice.actions;
 
 export const selectMapCenter = (state: RootState) => state.map.center;
 export const selectHoveredEmitter = (state: RootState) =>

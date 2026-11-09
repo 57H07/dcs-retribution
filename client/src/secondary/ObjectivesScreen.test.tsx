@@ -5,7 +5,8 @@ import type {
 import { setupStore } from "../app/store";
 import { recordFetch, restoreFetch } from "../shell/testing";
 import { ObjectivesScreen } from "./ObjectivesScreen";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 
@@ -27,6 +28,7 @@ function objective(
     expected: "+500 budget",
     granted: "",
     resolved_turn: undefined,
+    targets: [],
     ...overrides,
   };
 }
@@ -34,14 +36,19 @@ function objective(
 function renderObjectives(data: CampaignObjectives | null) {
   recordFetch(204, undefined, { "/objectives": data });
   const router = createMemoryRouter(
-    [{ path: "/objectives", element: <ObjectivesScreen /> }],
+    [
+      { path: "/", element: null },
+      { path: "/objectives", element: <ObjectivesScreen /> },
+    ],
     { initialEntries: ["/objectives"] },
   );
+  const store = setupStore();
   render(
-    <Provider store={setupStore()}>
+    <Provider store={store}>
       <RouterProvider router={router} />
     </Provider>,
   );
+  return { router, store };
 }
 
 describe("objectives screen", () => {
@@ -123,6 +130,45 @@ describe("objectives screen", () => {
     expect(
       batumi.getByText("With your settings today: no reward"),
     ).toBeVisible();
+  });
+
+  it("centres the map on what is left of an objective", async () => {
+    const { router, store } = renderObjectives({
+      turn: 3,
+      objectives: [
+        objective({
+          targets: [
+            {
+              id: "sam",
+              name: "SA-6",
+              position: { lat: 33, lng: 36 },
+              remaining: false,
+            },
+            {
+              id: "ewr",
+              name: "EWR",
+              position: { lat: 33.2, lng: 35.8 },
+              remaining: true,
+            },
+          ],
+        }),
+        objective({ title: "Hold Batumi", state: "Missed" }),
+      ],
+    });
+
+    const iads = within(
+      await screen.findByRole("article", { name: "Destroy the enemy IADS" }),
+    );
+    expect(
+      within(screen.getByRole("article", { name: "Hold Batumi" })).queryByRole(
+        "button",
+        { name: "Show on map" },
+      ),
+    ).not.toBeInTheDocument();
+    await userEvent.click(iads.getByRole("button", { name: "Show on map" }));
+
+    expect(store.getState().map.center).toEqual({ lat: 33.2, lng: 35.8 });
+    await waitFor(() => expect(router.state.location.pathname).toBe("/"));
   });
 
   it("explains when the campaign has none", async () => {
