@@ -13,6 +13,7 @@ function defineOverlays<T extends Record<string, OverlayDefinition>>(o: T): T {
 
 export const OVERLAYS = defineOverlays({
   controlPoints: { name: "Control points", checked: true },
+  objectives: { name: "Objectives", checked: true },
   aircraft: { name: "Aircraft", checked: true },
   activeCombat: { name: "Active combat", checked: true },
   blueDownedPilots: { name: "Downed pilots (blue)", checked: true },

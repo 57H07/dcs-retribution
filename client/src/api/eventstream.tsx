@@ -174,6 +174,7 @@ export const handleStreamedEvents = (
         Tags.REPORTS,
         Tags.AIR_WING,
         Tags.PRODUCTION,
+        Tags.OBJECTIVES,
       ]),
     );
   }
@@ -187,6 +188,7 @@ export const handleStreamedEvents = (
         Tags.BASE,
         Tags.TGO,
         Tags.AIR_WING,
+        Tags.OBJECTIVES,
       ]),
     );
   }

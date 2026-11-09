@@ -49,6 +49,8 @@ export const LAYER_COLORS = {
   commitBoundary: PALETTE.yellow,
   // Ongoing combats (Combat.tsx).
   combat: PALETTE.red,
+
+  objective: PALETTE.yellow,
   // Movement orders of mobile control points (MovementPath.tsx).
   movementPath: PALETTE.green,
 };

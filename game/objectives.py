@@ -25,6 +25,8 @@ from game.theater.player import Player
 if TYPE_CHECKING:
     from game import Game
     from game.squadrons import Squadron
+    from dcs.mapping import Point
+
     from game.theater import ControlPoint, TheaterGroundObject
 
 #: The titles of the messages that announce a met or missed objective.
@@ -145,6 +147,17 @@ class CampaignObjectives:
             for b in self.income_bonuses
             if b.player is player and b.paid_at(turn)
         )
+
+
+@dataclass(frozen=True)
+class Target:
+    """A base or ground object an objective is about, to show on the map."""
+
+    id: UUID
+    name: str
+    position: Point
+    #: Still to destroy, capture or keep: not destroyed nor taken yet.
+    remaining: bool
 
 
 @dataclass(frozen=True)
@@ -486,6 +499,38 @@ def _still_standing(objective: CampaignObjective, game: Game) -> bool:
         not tgo.is_dead and tgo.control_point.captured.is_blue
         for tgo in _ground_objects(objective, game)
     )
+
+
+def targets(objective: CampaignObjective, game: Game) -> list[Target]:
+    """The bases or ground objects `objective` is about."""
+    if objective.control_point_id is not None:
+        cp = _find_control_point(game, objective.control_point_id)
+        if cp is None:
+            return []
+        remaining = objective.kind is not ObjectiveKind.CAPTURE or cp.captured.is_red
+        return [Target(cp.id, cp.name, cp.position, remaining)]
+    if objective.kind is ObjectiveKind.DESTROY:
+        left = {tgo.id for tgo in _remaining_targets(objective, game)}
+    else:
+        left = {
+            tgo.id
+            for tgo in _ground_objects(objective, game)
+            if not tgo.is_dead and tgo.control_point.captured.is_blue
+        }
+    return [
+        Target(tgo.id, tgo.name, tgo.position, tgo.id in left)
+        for tgo in _ground_objects(objective, game)
+    ]
+
+
+def aimed_at(game: Game, target_id: UUID) -> list[CampaignObjective]:
+    """The objectives in progress about the base or ground object `target_id`."""
+    return [
+        o
+        for o in game.objectives.objectives
+        if o.state is ObjectiveState.IN_PROGRESS
+        and (o.control_point_id == target_id or target_id in o.ground_object_ids)
+    ]
 
 
 def is_announcement(title: str) -> bool:

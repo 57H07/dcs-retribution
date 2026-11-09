@@ -21,6 +21,7 @@ export enum Tags {
   AIR_WING = "AirWing",
   AIR_WING_CONFIG = "AirWingConfig",
   NEW_GAME = "NewGame",
+  OBJECTIVES = "Objectives",
 }
 
 const LIST_ID = "LIST";
@@ -92,6 +93,8 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     setConfigFactionDoctrine: AIR_WING_CONFIG_COMMAND,
     // /game/ (WEB-01.1): the top bar refreshes after each turn action.
     getTopBar: { providesTags: [Tags.TOP_BAR] },
+    // Campaign objectives (#194): their states and targets follow the theater.
+    getObjectives: { providesTags: [Tags.OBJECTIVES] },
     passTurn: {
       invalidatesTags: [
         Tags.TOP_BAR,

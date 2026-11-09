@@ -6,10 +6,15 @@ import {
   CampaignObjectives,
   useGetObjectivesQuery,
 } from "../api/liberationApi";
+import { centerMapOn } from "../api/mapSlice";
+import { useAppDispatch } from "../app/hooks";
+import { PATHS } from "../shell/paths";
+import { Button } from "../ui";
 import objectiveStyles from "./ObjectivesScreen.module.css";
 import { objectiveProgress } from "./objectiveProgress";
 import { QueryBody, ScreenFrame } from "./ScreenFrame";
 import styles from "./Secondary.module.css";
+import { useNavigate } from "react-router-dom";
 
 const TONES: Record<string, string | undefined> = {
   Met: "good",
@@ -17,7 +22,19 @@ const TONES: Record<string, string | undefined> = {
 };
 
 function Objective({ objective }: { objective: CampaignObjective }) {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const details = objectiveProgress(objective);
+  const target =
+    objective.state === "In progress"
+      ? objective.targets.find((t) => t.remaining)
+      : undefined;
+  const showOnMap = () => {
+    if (target) {
+      dispatch(centerMapOn(target.position));
+      navigate(PATHS.command);
+    }
+  };
   return (
     <article className={objectiveStyles.objective} aria-label={objective.title}>
       <header className={objectiveStyles.header}>
@@ -32,6 +49,7 @@ function Objective({ objective }: { objective: CampaignObjective }) {
           {objective.resolved_turn != null &&
             ` on turn ${objective.resolved_turn}`}
         </span>
+        {target && <Button onClick={showOnMap}>Show on map</Button>}
       </header>
       {details && <span className={styles.cardDetail}>{details}</span>}
       {objective.state === "Met" ? (

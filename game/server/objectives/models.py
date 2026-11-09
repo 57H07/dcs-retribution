@@ -3,14 +3,29 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from pydantic import BaseModel
 
-from game.objectives import ObjectiveState, expected_reward, progress
+from game.objectives import ObjectiveState, expected_reward, progress, targets
+from game.server.leaflet import LeafletPoint
 
 if TYPE_CHECKING:
     from game import Game
     from game.objectives import CampaignObjective
+
+
+class ObjectiveTargetJs(BaseModel):
+    """A base or ground object of an objective, for the map."""
+
+    id: UUID
+    name: str
+    position: LeafletPoint
+    #: Still to destroy, capture or keep.
+    remaining: bool
+
+    class Config:
+        title = "ObjectiveTarget"
 
 
 class CampaignObjectiveJs(BaseModel):
@@ -35,6 +50,8 @@ class CampaignObjectiveJs(BaseModel):
     #: What the reward actually gave, once met.
     granted: str
     resolved_turn: int | None
+    #: The bases or ground objects it is about.
+    targets: list[ObjectiveTargetJs]
 
     class Config:
         title = "CampaignObjective"
@@ -59,6 +76,15 @@ class CampaignObjectiveJs(BaseModel):
             ),
             granted=objective.granted,
             resolved_turn=objective.resolved_turn,
+            targets=[
+                ObjectiveTargetJs(
+                    id=t.id,
+                    name=t.name,
+                    position=t.position.latlng(),
+                    remaining=t.remaining,
+                )
+                for t in targets(objective, game)
+            ],
         )
 
 

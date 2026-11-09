@@ -45,6 +45,7 @@ const DEAD: Package = {
     flight("f-escort", { task: "SEAD Escort", aircraft: "F/A-18C", count: 2 }),
   ],
   missing_pilots: 0,
+  objectives: ["Blind the air defences"],
 };
 
 const STRIKE: Package = {
@@ -63,6 +64,7 @@ const STRIKE: Package = {
     }),
   ],
   missing_pilots: 1,
+  objectives: [],
 };
 
 const ENEMY: Package = {
@@ -74,6 +76,7 @@ const ENEMY: Package = {
   auto_asap: true,
   flights: [flight("f-red", { task: "BARCAP", aircraft: "MiG-29S", count: 2 })],
   missing_pilots: 0,
+  objectives: [],
 };
 
 function renderPanel(onNewPackage?: () => void) {
@@ -118,6 +121,16 @@ describe("packages panel", () => {
     expect(dead).toHaveTextContent("2 × F/A-18C");
     expect(card(/Ammo depot/)).toHaveTextContent("Missing 1 pilot");
     expect(screen.queryByText("Maykop")).not.toBeInTheDocument();
+  });
+
+  it("badges a package against an objective's target", async () => {
+    renderPanel();
+    await screen.findByText("SA-11 Krasnodar East");
+    expect(card(/SA-11 Krasnodar East/)).toHaveTextContent("Objective");
+    expect(
+      await screen.findByLabelText("Objective: Blind the air defences"),
+    ).toHaveTextContent("Objective");
+    expect(screen.getAllByText("Objective")).toHaveLength(1);
   });
 
   it("switches to the enemy ATO", async () => {

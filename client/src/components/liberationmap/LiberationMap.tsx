@@ -6,6 +6,7 @@ import Basemaps from "../basemaps";
 import EmitterHighlightToggle from "../airdefenserangelayer/EmitterHighlightToggle";
 import CombatLayer from "../combatlayer";
 import ControlPointsLayer from "../controlpointslayer";
+import ObjectivesLayer from "../objectiveslayer/ObjectivesLayer";
 import CullingExclusionZones from "../cullingexclusionzones/CullingExclusionZones";
 import DownedPilotsLayer from "../downedpilotslayer";
 import FlightPlansLayer from "../flightplanslayer";
@@ -112,6 +113,9 @@ export default function LiberationMap({
                 <Basemaps />
                 <LayersControl.Overlay {...overlayProps("controlPoints")}>
                   <ControlPointsLayer />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay {...overlayProps("objectives")}>
+                  <ObjectivesLayer />
                 </LayersControl.Overlay>
                 <LayersControl.Overlay {...overlayProps("aircraft")}>
                   <AircraftLayer />
