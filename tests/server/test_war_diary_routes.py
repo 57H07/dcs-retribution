@@ -90,7 +90,10 @@ def test_the_diary_is_exported_where_the_player_wants(
     assert page.index("Krymsk taken") < page.index("Quiet day")
     [(kind, start)] = bridge.asked
     assert kind == "save-file"
-    assert start == str(persistency.base_path() / "War diary - Operation Dawn.html")
+    # Next to the saves, in the Retribution folder, not at the root of Saved Games.
+    assert start == str(
+        persistency.base_path() / "Retribution" / "War diary - Operation Dawn.html"
+    )
 
 
 def test_exporting_the_diary_can_be_cancelled(
