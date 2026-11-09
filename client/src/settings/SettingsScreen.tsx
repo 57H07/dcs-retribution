@@ -20,7 +20,7 @@ import {
 } from "../ui";
 import { SettingControl, SettingValue } from "./SettingControl";
 import styles from "./SettingsScreen.module.css";
-import { modifiedCount, searchSettings } from "./search";
+import { groupMatches, modifiedCount, searchSettings } from "./search";
 import { useEffect, useId, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -156,20 +156,9 @@ function SearchResults({
   if (matches.length === 0) {
     return <p className={styles.state}>No setting matches “{query}”.</p>;
   }
-  // Group consecutive matches by page and section, as on the pages.
-  const groups: { title: string; settings: Setting[] }[] = [];
-  for (const match of matches) {
-    const title = `${match.page.name} › ${match.section}`;
-    const last = groups[groups.length - 1];
-    if (last?.title === title) {
-      last.settings.push(match.setting);
-    } else {
-      groups.push({ title, settings: [match.setting] });
-    }
-  }
   return (
     <>
-      {groups.map((group) => (
+      {groupMatches(matches).map((group) => (
         <Section
           key={group.title}
           title={group.title}
