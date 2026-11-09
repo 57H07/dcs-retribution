@@ -320,6 +320,43 @@ describe("new campaign wizard", () => {
     });
   });
 
+  it("marks the campaign settings changed from their default", async () => {
+    recordFetch(204, undefined, gets("idle"));
+    const user = userEvent.setup();
+    renderScreen();
+    await user.click(
+      await screen.findByRole("button", { name: "Next · Factions" }),
+    );
+    await user.click(
+      await screen.findByRole("button", { name: "Next · Campaign options" }),
+    );
+    const settings = await screen.findByRole("region", {
+      name: "Campaign settings",
+    });
+    expect(within(settings).queryByText("Modified")).not.toBeInTheDocument();
+    expect(
+      within(settings).queryByLabelText(/modified/),
+    ).not.toBeInTheDocument();
+
+    await user.click(
+      within(settings).getByRole("switch", { name: "Use supercarrier" }),
+    );
+
+    expect(within(settings).getByText("Modified")).toHaveAttribute(
+      "title",
+      "Differs from the default",
+    );
+    expect(
+      within(settings).getByRole("button", { name: /Difficulty/ }),
+    ).toContainElement(within(settings).getByLabelText("1 modified"));
+
+    // Back to the default: no longer marked.
+    await user.click(
+      within(settings).getByRole("switch", { name: "Use supercarrier" }),
+    );
+    expect(within(settings).queryByText("Modified")).not.toBeInTheDocument();
+  });
+
   it("offers only matching campaigns", async () => {
     recordFetch(204, undefined, gets("idle"));
     const user = userEvent.setup();

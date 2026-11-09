@@ -351,6 +351,6 @@ describe("settings search helpers", () => {
   });
 
   it("counts the modified settings of a page", () => {
-    expect(pages.map(modifiedCount)).toEqual([1, 0, 0]);
+    expect(pages.map((page) => modifiedCount(page))).toEqual([1, 0, 0]);
   });
 });
