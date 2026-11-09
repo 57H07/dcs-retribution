@@ -11,6 +11,7 @@
 * **[UX]** Bulk delete: **Delete all** in the packages panel cancels every package of the player ATO at once (flights already under way abort; the enemy ATO is not touched), and **Remove all <aircraft> squadrons** in the air wing configuration removes every squadron of that aircraft on that side, e.g. the ones a mod added at campaign creation. Both ask for a confirmation (#206).
 
 ## Fixes
+* **[UX]** New game wizard: the campaign settings changed from their default carry the **Modified** marker, and each settings page counts them, as on the Settings screen.
 * **[Engine]** A failed save no longer leaves the campaign in play without its landmap (#190).
 
 # Retribution v1.6.0

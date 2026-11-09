@@ -487,6 +487,10 @@
 }
 
 .pageButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-sm);
   padding: var(--ui-space-sm) var(--ui-space-md);
   text-align: left;
   background: transparent;
@@ -501,6 +505,30 @@
   color: var(--ui-color-text-primary);
   background: var(--ui-color-bg-raised);
   border-color: var(--ui-color-accent);
+}
+
+/* As on the Settings screen: the page count and the Modified marker. */
+.pageCount {
+  min-width: 18px;
+  padding: 0 var(--ui-space-xs);
+  border-radius: var(--ui-radius-pill);
+  background: var(--ui-color-accent-soft);
+  color: var(--ui-color-accent);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-font-size-xs);
+  text-align: center;
+}
+
+.modified {
+  padding: var(--ui-space-xxs) var(--ui-space-sm);
+  border: 1px solid var(--ui-color-line-strong);
+  border-radius: var(--ui-radius-sm);
+  color: var(--ui-color-text-secondary);
+  font-family: var(--ui-font-display);
+  font-size: var(--ui-font-size-xs);
+  letter-spacing: var(--ui-letter-spacing-display);
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .settings {

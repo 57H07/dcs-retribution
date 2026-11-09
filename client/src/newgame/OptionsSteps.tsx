@@ -6,6 +6,7 @@ import type {
   Setting,
 } from "../api/liberationApi";
 import { SettingControl } from "../settings/SettingControl";
+import { isModified, modifiedCount } from "../settings/search";
 import { NumberField, Switch } from "../ui";
 import styles from "./NewGame.module.css";
 import { GENERATOR_FLAGS, SettingValue, WizardState } from "./wizardState";
@@ -20,10 +21,13 @@ export interface StepProps {
 function Row({
   label,
   help,
+  modified,
   children,
 }: {
   label: string;
   help?: string | null;
+  /** Shows the Modified marker of the Settings screen. */
+  modified?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -32,6 +36,11 @@ function Row({
         <span>{label}</span>
         {help != null && <span className={styles.hint}>{help}</span>}
       </div>
+      {modified && (
+        <span className={styles.modified} title="Differs from the default">
+          Modified
+        </span>
+      )}
       {children}
     </div>
   );
@@ -72,7 +81,11 @@ function SettingRow({
   onChange: (value: SettingValue) => void;
 }) {
   return (
-    <Row label={setting.label} help={setting.detail ?? setting.tooltip}>
+    <Row
+      label={setting.label}
+      help={setting.detail ?? setting.tooltip}
+      modified={isModified(setting, { [setting.key]: value })}
+    >
       <SettingControl setting={setting} value={value} onChange={onChange} />
     </Row>
   );
@@ -161,17 +174,28 @@ export function OptionsStep({
         <h2 className={styles.heading}>Campaign settings</h2>
         <div className={styles.settingsColumns}>
           <nav className={styles.pages} aria-label="Settings pages">
-            {pages.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                className={styles.pageButton}
-                aria-current={p.id === page?.id ? "page" : undefined}
-                onClick={() => setPageId(p.id)}
-              >
-                {p.name}
-              </button>
-            ))}
+            {pages.map((p) => {
+              const changed = modifiedCount(p, state.settings);
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={styles.pageButton}
+                  aria-current={p.id === page?.id ? "page" : undefined}
+                  onClick={() => setPageId(p.id)}
+                >
+                  <span>{p.name}</span>
+                  {changed > 0 && (
+                    <span
+                      className={styles.pageCount}
+                      aria-label={`${changed} modified`}
+                    >
+                      {changed}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </nav>
           <div className={styles.settings}>
             {page?.sections.map((section) => (

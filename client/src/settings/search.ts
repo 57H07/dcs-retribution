@@ -47,11 +47,27 @@ export function searchSettings(
   return matches;
 }
 
+/** Values not yet sent to the engine, by setting key (the new game wizard). */
+export type SettingValues = Record<string, Setting["value"]>;
+
+/**
+ * Whether the setting differs from its default: as the engine says, or, when
+ * `values` holds a value of its own, that value against the default.
+ */
+export function isModified(setting: Setting, values?: SettingValues): boolean {
+  const value = values?.[setting.key];
+  return value === undefined ? setting.modified : value !== setting.default;
+}
+
 /** Number of settings of a page that differ from their default. */
-export function modifiedCount(page: SettingsPage): number {
+export function modifiedCount(
+  page: SettingsPage,
+  values?: SettingValues,
+): number {
   return page.sections.reduce(
     (count, section) =>
-      count + section.settings.filter((setting) => setting.modified).length,
+      count +
+      section.settings.filter((setting) => isModified(setting, values)).length,
     0,
   );
 }
