@@ -43,7 +43,7 @@ presets (G 243 AM, M 122.8 AM, C 30 FM, S 156.05 FM), the FM bands of the ARC-21
 ## What Retribution does
 
 - **First module: F/A-18C.** Its schema is the richest and most regular, and its COMM
-  presets have names, which the miz cannot carry. The F-16C comes in the next PR.
+  presets have names, which the miz cannot carry.
 - **Partitions written:** `COMM` and `WYPT`. Frequencies and waypoints come from the same
   `FlightData` the mission uses: the unit's `Radio` presets and the flight's waypoints, so
   no value is computed twice. Steerpoint `n` is waypoint `n` of the kneeboard (the take-off
@@ -63,5 +63,15 @@ presets (G 243 AM, M 122.8 AM, C 30 FM, S 156.05 FM), the FM bands of the ARC-21
   module's defaults. JDAM targets are left for later: the jet reads the launch zone
   (`lar_*`) from the cartridge, and the DTC editor computes it from a lookup table of the
   module that Retribution does not ship.
+- **F-16C:** its cartridge cannot name a channel, and the miz already carries the route
+  and the presets, so `NAV_PTS`, `DEST`, `COMM1` and `COMM2` mirror the mission
+  (`mirror_* = true`). The cartridge adds, in `MPD`, the front lines nearest the package
+  target as `GEO_LINES` (at most 4, each on its own HSD line `L1`..`L4`, geo points 31 to
+  38) and the 15 enemy air defense sites nearest it as `THREAT_PTS` (points 56 to 70),
+  labelled `T1`..`T15`, each ringed at the reach Retribution computes for the site, or at
+  the 20 nm of the editor's custom threat when unknown. The DTC editor loads a partial
+  cartridge and fills every missing field with its default
+  (`setData` of `CoreMods/aircraft/F-16C/DTC/F-16C_50_DTC.lua`), so `CMDS`, `ROE`,
+  `ELINT` and `COLR` are left out and keep the module's defaults.
 - **Unsupported module or failure:** nothing is written and the mission is generated as
   before; the kneeboard stays the fallback.

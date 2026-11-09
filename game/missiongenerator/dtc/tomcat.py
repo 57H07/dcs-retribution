@@ -10,9 +10,14 @@ The limits are those of the module's DTC editor, `CoreMods/aircraft/F14/DTC`.
 
 from __future__ import annotations
 
-from typing import Any, Iterable, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
-from .cartridge import DtcCartridge, DtcContext
+from .cartridge import (
+    DtcCartridge,
+    DtcContext,
+    nearest_front_lines,
+    nearest_threats,
+)
 
 if TYPE_CHECKING:
     from dcs import Point
@@ -42,37 +47,15 @@ def _place(position: Point) -> dict[str, Any]:
     }
 
 
-def _nearest(
-    objective: Point, items: Iterable[Any], position: Any, limit: int
-) -> list[Any]:
-    return sorted(items, key=lambda i: objective.distance_to_point(position(i)))[:limit]
-
-
-def _objective(flight: FlightData) -> Point:
-    return flight.package.target.position
-
-
 def _lines(flight: FlightData, context: DtcContext) -> list[dict[str, Any]]:
-    def middle(line: tuple[Point, Point]) -> Point:
-        start, end = line
-        return start.midpoint(end)
-
-    fronts = _nearest(_objective(flight), context.front_lines, middle, MAX_LINES)
     return [
         {"points": [_place(start), _place(end)], "closed": False}
-        for start, end in fronts
+        for start, end in nearest_front_lines(flight, context, MAX_LINES)
     ]
 
 
 def _threats(flight: FlightData, context: DtcContext) -> list[dict[str, Any]]:
-    hostile = [
-        site
-        for site in context.air_defenses
-        if not site.owner.is_neutral and site.owner != flight.friendly
-    ]
-    sites = _nearest(
-        _objective(flight), hostile, lambda s: s.position, MAX_REFERENCE_POINTS
-    )
+    sites = nearest_threats(flight, context, MAX_REFERENCE_POINTS)
     return [
         {"name": f"THRT {number}", **_place(site.position)}
         for number, site in enumerate(sites, 1)
