@@ -203,6 +203,37 @@ describe("packages panel", () => {
     });
   });
 
+  it("deletes every friendly package once confirmed", async () => {
+    const { calls } = renderPanel();
+    await screen.findByText("SA-11 Krasnodar East");
+    await userEvent.click(screen.getByRole("button", { name: "Delete all" }));
+
+    const dialog = await screen.findByRole("dialog", {
+      name: "Delete all packages",
+    });
+    expect(dialog).toHaveTextContent(
+      "2 packages and 3 flights will be deleted.",
+    );
+    expect(dialog).toHaveTextContent("The enemy ATO is not touched.");
+    expect(calls).toHaveLength(0);
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "Delete 2 packages" }),
+    );
+
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]).toMatchObject({ method: "DELETE", path: "/packages/" });
+  });
+
+  it("offers no bulk delete on the enemy ATO", async () => {
+    renderPanel();
+    await userEvent.click(
+      await screen.findByRole("tab", { name: /Enemy ATO/ }),
+    );
+    expect(
+      screen.queryByRole("button", { name: "Delete all" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("edits a friendly package in the package editor", async () => {
     const { calls, router } = renderPanel();
     await userEvent.click(await screen.findByText("SA-11 Krasnodar East"));

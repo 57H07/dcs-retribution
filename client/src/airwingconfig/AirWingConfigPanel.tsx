@@ -14,6 +14,7 @@ import {
   useGetConfigFactionQuery,
   useGetConfigSquadronLiveriesQuery,
   useLoadAirWingFileMutation,
+  useRemoveConfigAircraftSquadronsMutation,
   useRemoveConfigSquadronMutation,
   useReplaceConfigSquadronMutation,
   useRerollConfigSquadronNicknameMutation,
@@ -206,10 +207,70 @@ function ReplaceWithPreset({
   );
 }
 
+/** Removes every squadron of the side flying this aircraft, once confirmed (#206). */
+function RemoveAircraftSquadrons({
+  target,
+  side,
+  squadron,
+  count,
+}: TargetProps & {
+  side: ConfigSide;
+  squadron: AirWingConfigSquadron;
+  count: number;
+}) {
+  const [open, setOpen] = useState(false);
+  const [removeAll] = useRemoveConfigAircraftSquadronsMutation();
+  const run = useCommand();
+  const squadrons = `${count} ${squadron.aircraft} squadron${count === 1 ? "" : "s"}`;
+  return (
+    <Modal
+      open={open}
+      onOpenChange={setOpen}
+      title={`Remove all ${squadron.aircraft} squadrons`}
+      description={`The ${squadrons} of the ${SIDE_NAMES[side]} air wing will be removed, as Remove squadron does each. The other aircraft keep theirs.`}
+      trigger={
+        <Button variant="danger">
+          Remove all {squadron.aircraft} squadrons
+        </Button>
+      }
+      footer={
+        <>
+          <ModalClose asChild>
+            <Button>Cancel</Button>
+          </ModalClose>
+          <Button
+            variant="danger"
+            onClick={async () => {
+              await run(
+                removeAll({
+                  target,
+                  side,
+                  configRemoveAircraftJs: { aircraft_id: squadron.aircraft_id },
+                }),
+                "Squadrons not removed",
+              );
+              setOpen(false);
+            }}
+          >
+            Remove {squadrons}
+          </Button>
+        </>
+      }
+    />
+  );
+}
+
 function SquadronEditor({
   target,
+  side,
   squadron,
-}: TargetProps & { squadron: AirWingConfigSquadron }) {
+  sameAircraft,
+}: TargetProps & {
+  side: ConfigSide;
+  squadron: AirWingConfigSquadron;
+  /** Squadrons of the side flying the same aircraft, this one included. */
+  sameAircraft: number;
+}) {
   const [update] = useUpdateConfigSquadronMutation();
   const [remove] = useRemoveConfigSquadronMutation();
   const [reroll] = useRerollConfigSquadronNicknameMutation();
@@ -338,6 +399,12 @@ function SquadronEditor({
         >
           Remove squadron
         </Button>
+        <RemoveAircraftSquadrons
+          target={target}
+          side={side}
+          squadron={squadron}
+          count={sameAircraft}
+        />
       </div>
     </article>
   );
@@ -546,7 +613,13 @@ function SideSquadrons({
             <SquadronEditor
               key={selected.id}
               target={target}
+              side={sideId}
               squadron={selected}
+              sameAircraft={
+                side.squadrons.filter(
+                  (s) => s.aircraft_id === selected.aircraft_id,
+                ).length
+              }
             />
           )}
         </div>

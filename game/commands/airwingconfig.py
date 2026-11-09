@@ -226,6 +226,31 @@ def add_squadron(
 
 
 def remove_squadron(game: Game, squadron: Squadron) -> None:
+    _drop_squadron(squadron)
+    _replan_if_under_way(game, squadron.coalition)
+
+
+def remove_squadrons_of(
+    game: Game, coalition: Coalition, aircraft: AircraftType
+) -> int:
+    """Removes every squadron of the coalition flying this aircraft (#206).
+
+    Each goes as with `remove_squadron`; the turn is replanned once. Returns how many
+    squadrons went.
+
+    Raises:
+        CommandError: the coalition has no squadron of this aircraft.
+    """
+    squadrons = list(coalition.air_wing.squadrons.get(aircraft, []))
+    if not squadrons:
+        raise CommandError(f"No squadron flies the {aircraft.display_name}.")
+    for squadron in squadrons:
+        _drop_squadron(squadron)
+    _replan_if_under_way(game, coalition)
+    return len(squadrons)
+
+
+def _drop_squadron(squadron: Squadron) -> None:
     coalition = squadron.coalition
     squadrons = coalition.air_wing.squadrons
     remaining = [s for s in squadrons[squadron.aircraft] if s is not squadron]
@@ -234,7 +259,6 @@ def remove_squadron(game: Game, squadron: Squadron) -> None:
     else:
         del squadrons[squadron.aircraft]
     coalition.air_wing.unclaim_squadron_def(squadron)
-    _replan_if_under_way(game, coalition)
 
 
 def replace_with_preset(game: Game, squadron: Squadron, preset: str) -> Squadron:

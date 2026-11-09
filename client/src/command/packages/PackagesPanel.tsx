@@ -6,6 +6,7 @@ import { selectFlight, selectSelectedFlightId } from "../../api/flightsSlice";
 import {
   Package,
   useDeletePackageMutation,
+  useDeletePlayerPackagesMutation,
   useListPackagesQuery,
 } from "../../api/liberationApi";
 import {
@@ -19,6 +20,8 @@ import { PATHS } from "../../shell/paths";
 import {
   Button,
   ListCard,
+  Modal,
+  ModalClose,
   TaskTag,
   Tabs,
   TabsContent,
@@ -121,6 +124,7 @@ export function PackagesPanel({ onNewPackage }: PackagesPanelProps) {
             + New
           </Button>
         )}
+        {side === "friendly" && <DeleteAllPackages packages={friendly} />}
       </div>
       <TabsContent value="friendly" className={styles.content}>
         {list(friendly, "No package planned yet.")}
@@ -129,6 +133,56 @@ export function PackagesPanel({ onNewPackage }: PackagesPanelProps) {
         {list(enemy, "The enemy has no package planned.")}
       </TabsContent>
     </Tabs>
+  );
+}
+
+function plural(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
+}
+
+/** Cancels every package of the player ATO at once, after a confirmation (#206). */
+function DeleteAllPackages({ packages }: { packages: Package[] }) {
+  const [open, setOpen] = useState(false);
+  const [deleteAll, { isLoading }] = useDeletePlayerPackagesMutation();
+  const toast = useToast();
+  const flights = packages.reduce((sum, p) => sum + p.flights.length, 0);
+  const confirm = async () => {
+    const result = await deleteAll();
+    setOpen(false);
+    if ("error" in result) {
+      toast({
+        title: "Could not delete the packages",
+        description: commandErrorMessage(result.error),
+        tone: "danger",
+      });
+    }
+  };
+  return (
+    <Modal
+      open={open}
+      onOpenChange={setOpen}
+      title="Delete all packages"
+      description={
+        `${plural(packages.length, "package")} and ${plural(flights, "flight")} ` +
+        "will be deleted. Flights already under way abort and return to base. " +
+        "The enemy ATO is not touched."
+      }
+      trigger={
+        <Button variant="danger" disabled={packages.length === 0}>
+          Delete all
+        </Button>
+      }
+      footer={
+        <>
+          <ModalClose asChild>
+            <Button>Cancel</Button>
+          </ModalClose>
+          <Button variant="danger" onClick={confirm} disabled={isLoading}>
+            Delete {plural(packages.length, "package")}
+          </Button>
+        </>
+      }
+    />
   );
 }
 

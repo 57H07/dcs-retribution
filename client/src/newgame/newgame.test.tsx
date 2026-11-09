@@ -509,6 +509,33 @@ describe("air wing configuration", () => {
     });
   });
 
+  it("removes every squadron of an aircraft once confirmed", async () => {
+    const calls = recordFetch(204, undefined, GETS);
+    const user = userEvent.setup();
+    renderPanel();
+    await user.click(
+      await screen.findByRole("button", {
+        name: "Remove all F-16C squadrons",
+      }),
+    );
+    const dialog = await screen.findByRole("dialog", {
+      name: "Remove all F-16C squadrons",
+    });
+    expect(dialog).toHaveTextContent(
+      "The 1 F-16C squadron of the Blue air wing will be removed",
+    );
+    expect(calls).toHaveLength(0);
+    await user.click(
+      within(dialog).getByRole("button", { name: "Remove 1 F-16C squadron" }),
+    );
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]).toMatchObject({
+      method: "POST",
+      path: "/air-wing-config/campaign/sides/blue/squadrons/remove-aircraft",
+      body: { aircraft_id: "F-16C" },
+    });
+  });
+
   it("adds a unit from the faction tab", async () => {
     const calls = recordFetch(204, undefined, GETS);
     const user = userEvent.setup();

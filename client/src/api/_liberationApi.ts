@@ -162,6 +162,16 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.configNewSquadronJs,
       }),
     }),
+    removeConfigAircraftSquadrons: build.mutation<
+      RemoveConfigAircraftSquadronsApiResponse,
+      RemoveConfigAircraftSquadronsApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/air-wing-config/${queryArg.target}/sides/${queryArg.side}/squadrons/remove-aircraft`,
+        method: "POST",
+        body: queryArg.configRemoveAircraftJs,
+      }),
+    }),
     saveAirWingFile: build.mutation<
       SaveAirWingFileApiResponse,
       SaveAirWingFileApiArg
@@ -980,6 +990,12 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.newPackageJs,
       }),
     }),
+    deletePlayerPackages: build.mutation<
+      DeletePlayerPackagesApiResponse,
+      DeletePlayerPackagesApiArg
+    >({
+      query: () => ({ url: `/packages/`, method: "DELETE" }),
+    }),
     getPackage: build.query<GetPackageApiResponse, GetPackageApiArg>({
       query: (queryArg) => ({ url: `/packages/${queryArg.packageId}` }),
     }),
@@ -1637,6 +1653,13 @@ export type AddConfigSquadronApiArg = {
   side: ConfigSide;
   configNewSquadronJs: AirWingConfigNewSquadron;
 };
+export type RemoveConfigAircraftSquadronsApiResponse =
+  /** status 204 Successful Response */ void;
+export type RemoveConfigAircraftSquadronsApiArg = {
+  target: ConfigTarget;
+  side: ConfigSide;
+  configRemoveAircraftJs: AirWingConfigRemoveAircraft;
+};
 export type SaveAirWingFileApiResponse =
   /** status 200 Successful Response */ AirWingFileResult;
 export type SaveAirWingFileApiArg = {
@@ -2185,6 +2208,9 @@ export type CreatePackageApiResponse =
 export type CreatePackageApiArg = {
   newPackageJs: NewPackage;
 };
+export type DeletePlayerPackagesApiResponse =
+  /** status 204 Successful Response */ void;
+export type DeletePlayerPackagesApiArg = void;
 export type GetPackageApiResponse =
   /** status 200 Successful Response */ PackageDetail;
 export type GetPackageApiArg = {
@@ -2764,6 +2790,9 @@ export type AirWingConfigNewSquadron = {
   base_id: string;
   primary_task: string;
   preset?: string | null;
+};
+export type AirWingConfigRemoveAircraft = {
+  aircraft_id: string;
 };
 export type AirWingFileResult = {
   path?: string;
@@ -4357,6 +4386,7 @@ export const {
   useRerollConfigSquadronNicknameMutation,
   useReplaceConfigSquadronMutation,
   useAddConfigSquadronMutation,
+  useRemoveConfigAircraftSquadronsMutation,
   useSaveAirWingFileMutation,
   useLoadAirWingFileMutation,
   useGetConfigFactionQuery,
@@ -4463,6 +4493,7 @@ export const {
   useBeginNewGameMutation,
   useListPackagesQuery,
   useCreatePackageMutation,
+  useDeletePlayerPackagesMutation,
   useGetPackageQuery,
   useDeletePackageMutation,
   useRenamePackageMutation,
