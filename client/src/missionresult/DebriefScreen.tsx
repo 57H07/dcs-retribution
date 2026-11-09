@@ -276,6 +276,30 @@ function EventLog({ report }: { report: AfterActionReport }) {
   );
 }
 
+/** The campaign objectives (#194) met or missed at the end of the turn. */
+function Objectives({ report }: { report: AfterActionReport }) {
+  const objectives = report.objectives ?? [];
+  if (objectives.length === 0) {
+    return null;
+  }
+  return (
+    <section className={styles.panel} aria-labelledby="debrief-objectives">
+      <h2 id="debrief-objectives" className={styles.panelTitle}>
+        Objectives
+      </h2>
+      <ul className={styles.pilots}>
+        {objectives.map((o) => (
+          <li key={o.title} data-tone={o.met ? "good" : "bad"}>
+            {o.met
+              ? `Met: ${o.title}${o.granted ? ` · ${o.granted}` : ""}`
+              : `Missed: ${o.title}`}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function Losses({ caption, lines }: { caption: string; lines: LossLine[] }) {
   const columns: TableColumn<LossLine>[] = [
     { key: "name", header: "Unit", cell: (line) => line.name },
@@ -497,6 +521,7 @@ export function DebriefScreen() {
         )}
         <YourSortie report={report} />
         <Headline report={report} />
+        <Objectives report={report} />
         <div className={styles.columns}>
           <div className={styles.main}>
             <Packages report={report} />

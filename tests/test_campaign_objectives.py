@@ -14,10 +14,40 @@ import pytest
 
 from game import objectives
 from game.objectives import ObjectiveKind, ObjectiveState
+from game.settings import Settings
 from game.theater.player import Player
 
 BLUE = Player.BLUE
 RED = Player.RED
+
+
+class FakeControlPoint:
+    def __init__(
+        self,
+        name: str,
+        owner: Player,
+        income: float,
+        fleet: bool,
+        ground_objects: Iterable[Any],
+    ) -> None:
+        self.id = uuid4()
+        self.name = name
+        self.captured = owner
+        self.income_per_turn = income
+        self.is_fleet = fleet
+        self.ground_objects: list[Any] = []
+        self.connected_points: list[FakeControlPoint] = []
+        self.operational = True
+        for tgo in ground_objects:
+            tgo.control_point = self
+            self.ground_objects.append(tgo)
+
+    def runway_is_operational(self) -> bool:
+        return self.operational
+
+    @property
+    def has_active_frontline(self) -> bool:
+        return any(c.captured is not self.captured for c in self.connected_points)
 
 
 def _cp(
@@ -27,20 +57,12 @@ def _cp(
     fleet: bool = False,
     ground_objects: Iterable[Any] = (),
 ) -> Any:
-    cp = SimpleNamespace(
-        id=uuid4(),
-        name=name,
-        captured=owner,
-        income_per_turn=income,
-        is_fleet=fleet,
-        ground_objects=[],
-        operational=True,
-    )
-    cp.runway_is_operational = lambda: cp.operational
-    for tgo in ground_objects:
-        tgo.control_point = cp
-        cp.ground_objects.append(tgo)
-    return cp
+    return FakeControlPoint(name, owner, income, fleet, ground_objects)
+
+
+def _connect(a: Any, b: Any) -> None:
+    a.connected_points.append(b)
+    b.connected_points.append(a)
 
 
 def _tgo(
@@ -102,9 +124,7 @@ class FakeGame:
     def __init__(self, cps: list[Any], squadrons: Iterable[FakeSquadron] = ()) -> None:
         self.turn = 1
         self.theater = FakeTheater(cps)
-        self.settings = SimpleNamespace(
-            player_income_multiplier=1.0, enemy_income_multiplier=1.0
-        )
+        self.settings = Settings()
         self.blue = FakeCoalition(BLUE, squadrons)
         self.red = FakeCoalition(RED)
         self.messages: list[tuple[str, str]] = []
@@ -118,22 +138,38 @@ class FakeGame:
 
 
 def _game(yaml: list[dict[str, Any]], **kwargs: Any) -> tuple[FakeGame, dict[str, Any]]:
-    """Batumi (blue, 100/turn), Kutaisi and Senaki (red, 100/turn each)."""
+    """Batumi (blue, 100/turn) faces Kutaisi and Senaki (red, 100/turn each).
+
+    Behind the front, without income: Kobuleti (blue) behind Batumi, Tbilisi
+    (red) behind Kutaisi.
+    """
     sam = _tgo("SAM-Kutaisi")
     ewr = _tgo("EWR-Senaki", category="ewr")
     depot = _tgo("Depot-Senaki", category="ammo", iads=False)
+    rear_sam = _tgo("SAM-Tbilisi")
+    factory = _tgo("Factory-Tbilisi", category="factory", iads=False)
     batumi = _cp("Batumi", BLUE)
     kutaisi = _cp("Kutaisi", ground_objects=[sam])
     senaki = _cp("Senaki", ground_objects=[ewr, depot])
+    kobuleti = _cp("Kobuleti", BLUE, income=0)
+    tbilisi = _cp("Tbilisi", income=0, ground_objects=[rear_sam, factory])
     carrier = _cp("CVN-74", BLUE, income=0, fleet=True)
-    game = FakeGame([batumi, kutaisi, senaki, carrier], **kwargs)
+    _connect(batumi, kutaisi)
+    _connect(batumi, senaki)
+    _connect(kobuleti, batumi)
+    _connect(kutaisi, tbilisi)
+    game = FakeGame([batumi, kutaisi, senaki, kobuleti, tbilisi, carrier], **kwargs)
     game.objectives = objectives.load(yaml, game)  # type: ignore[arg-type]
     parts = dict(
         batumi=batumi,
         kutaisi=kutaisi,
         senaki=senaki,
+        kobuleti=kobuleti,
+        tbilisi=tbilisi,
         carrier=carrier,
         sam=sam,
+        rear_sam=rear_sam,
+        factory=factory,
         ewr=ewr,
         depot=depot,
     )
@@ -183,7 +219,7 @@ def test_objectives_are_read_from_the_yaml_and_bad_ones_are_dropped() -> None:
 def test_an_objective_gets_a_title_when_the_campaign_gives_none() -> None:
     game, _ = _game([{"destroy": {"category": "iads"}}, {"capture": "Senaki"}])
     assert [o.title for o in game.objectives.objectives] == [
-        "Destroy the enemy IADS",
+        "Destroy the enemy IADS near the front",
         "Capture Senaki",
     ]
 
@@ -350,7 +386,7 @@ def test_reinforcements_go_to_the_named_squadron_within_its_room() -> None:
     )
     _end_turns(game)
     assert hornets.owned_aircraft == 6
-    assert hornets.pilots == objectives.REINFORCEMENTS_CAP
+    assert hornets.pilots == 4
     assert game.messages[0][1] == "Reward: 2 F/A-18C for VF-11, 4 pilots for VF-11"
 
 
@@ -405,3 +441,124 @@ def test_the_iads_are_the_land_sites_not_the_ships() -> None:
 
     [objective] = loaded.objectives
     assert len(objective.ground_object_ids) == 2
+
+
+# --- near the front -------------------------------------------------------------
+
+
+def test_objectives_behind_the_front_are_dropped() -> None:
+    game, _ = _game(
+        [
+            {"capture": "Tbilisi"},  # behind Kutaisi
+            {"hold": "Kobuleti", "until_turn": 3},  # behind Batumi
+            {"destroy": "Factory-Tbilisi"},
+            {"destroy": {"category": "factory", "at": "Tbilisi"}},
+            {"survive": "CVN-74", "until_turn": 3},  # a fleet sails to the fight
+            {"capture": "Kutaisi"},
+        ]
+    )
+    assert [o.title for o in game.objectives.objectives] == [
+        "Keep CVN-74 alive",
+        "Capture Kutaisi",
+    ]
+
+
+def test_a_category_counts_only_the_sites_near_the_front() -> None:
+    game, parts = _game([{"destroy": {"category": "aa"}}])
+    assert _only(game).ground_object_ids == [parts["sam"].id]
+
+
+# --- reward settings ------------------------------------------------------------
+
+
+def _met_hold(reward: dict[str, Any], **kwargs: Any) -> FakeGame:
+    game, _ = _game([{"hold": "Batumi", "until_turn": 1, "reward": reward}], **kwargs)
+    return game
+
+
+def test_rewards_can_be_turned_off() -> None:
+    game = _met_hold({"budget": 100, "income": 20})
+    game.settings.objective_rewards = False
+    _end_turns(game)
+    assert _only(game).state is ObjectiveState.MET
+    assert game.messages == [("Objective met: Hold Batumi", "")]
+    assert game.blue.budget == 1000
+    assert _income(game, BLUE, 2) == 100
+
+
+def test_turning_rewards_off_stops_the_bonuses_already_granted() -> None:
+    game = _met_hold({"income": 20, "enemy_income": 40})
+    _end_turns(game)
+    assert (_income(game, BLUE, 2), _income(game, RED, 2)) == (120, 160)
+    game.settings.objective_income_rewards = False
+    game.settings.objective_enemy_penalties = False
+    assert (_income(game, BLUE, 2), _income(game, RED, 2)) == (100, 200)
+
+
+def test_the_reward_scale_multiplies_what_the_campaign_promises() -> None:
+    game = _met_hold(
+        {"budget": 100, "aircraft": 4, "squadron": "VF-11"},
+        squadrons=[FakeSquadron("VF-11", room=8)],
+    )
+    game.settings.objective_reward_scale = 0.5
+    _end_turns(game)
+    assert game.blue.budget == 1050
+    assert game.messages[0][1] == "Reward: +50 budget, 2 F/A-18C for VF-11"
+
+
+def test_each_kind_of_reward_can_be_turned_off() -> None:
+    hornets = FakeSquadron("VF-11", room=8)
+    game = _met_hold(
+        {
+            "budget": 100,
+            "income": 20,
+            "aircraft": 2,
+            "pilots": 2,
+            "squadron": "VF-11",
+            "enemy_budget": 100,
+        },
+        squadrons=[hornets],
+    )
+    game.settings.objective_budget_rewards = False
+    game.settings.objective_reinforcement_rewards = False
+    game.settings.objective_enemy_penalties = False
+    _end_turns(game)
+    assert game.messages[0][1] == "Reward: +20 income per turn"
+    assert (game.blue.budget, game.red.budget) == (1000, 1000)
+    assert (hornets.owned_aircraft, hornets.pilots) == (4, 0)
+
+
+def test_the_caps_are_settings() -> None:
+    hornets = FakeSquadron("VF-11", room=8)
+    game = _met_hold(
+        {"budget": 1000, "income": 80, "pilots": 9, "squadron": "VF-11"},
+        squadrons=[hornets],
+    )
+    game.settings.objective_budget_cap_turns = 1.0
+    game.settings.objective_income_cap = 10
+    game.settings.objective_reinforcements_cap = 2
+    _end_turns(game)
+    assert game.messages[0][1] == (
+        "Reward: +100 budget, +10 income per turn, 2 pilots for VF-11"
+    )
+
+
+def test_the_total_income_cap_is_a_setting() -> None:
+    game, _ = _game(
+        [
+            {"hold": "Batumi", "until_turn": 1, "reward": {"income": 25}}
+            for _ in range(3)
+        ]
+    )
+    game.settings.objective_total_income_cap = 30
+    _end_turns(game)
+    assert _income(game, BLUE, 2) == 130
+
+
+def test_an_objective_in_progress_tells_what_it_would_grant_today() -> None:
+    game, _ = _game([{"capture": "Kutaisi", "reward": {"budget": 1000, "income": 10}}])
+    game.settings.objective_reward_scale = 0.5
+    # Batumi brings 100 a turn: 500 of budget is capped at 200.
+    assert objectives.expected_reward(_only(game), game) == (  # type: ignore[arg-type]
+        "+200 budget, +5 income per turn"
+    )

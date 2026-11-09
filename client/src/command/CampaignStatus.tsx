@@ -1,6 +1,7 @@
 // Campaign state in the top bar (WEB-01.1): what QFactionsInfos,
 // QConditionsWidget, QBudgetBox and QIntelBox showed in the Qt top panel.
 import { TopBar, useGetTopBarQuery } from "../api/liberationApi";
+import { objectiveProgress } from "../secondary/objectiveProgress";
 import { Tooltip } from "../ui";
 import styles from "./CampaignStatus.module.css";
 import {
@@ -126,20 +127,39 @@ function Loaded({
           </button>
         </Tooltip>
         {bar.objectives != null && (
-          <button
-            type="button"
-            className={styles.box}
-            onClick={onOpenObjectives}
-            aria-label={
-              `Objectives: ${bar.objectives.met} met out of ${bar.objectives.total}` +
-              `, ${bar.objectives.missed} missed: open objectives`
+          <Tooltip
+            content={
+              <span className={styles.lines}>
+                {bar.objectives.in_progress.length === 0 ? (
+                  <span>No objective in progress</span>
+                ) : (
+                  bar.objectives.in_progress.map((objective, index) => (
+                    <span key={index}>
+                      {[objective.title, objectiveProgress(objective)]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </span>
+                  ))
+                )}
+              </span>
             }
+            side="bottom"
           >
-            <span className={styles.label}>Objectives</span>
-            <span className={styles.friendly}>{bar.objectives.met}</span>
-            <span className={styles.slash}>/</span>
-            <span>{bar.objectives.total}</span>
-          </button>
+            <button
+              type="button"
+              className={styles.box}
+              onClick={onOpenObjectives}
+              aria-label={
+                `Objectives: ${bar.objectives.met} met out of ${bar.objectives.total}` +
+                `, ${bar.objectives.missed} missed: open objectives`
+              }
+            >
+              <span className={styles.label}>Objectives</span>
+              <span className={styles.friendly}>{bar.objectives.met}</span>
+              <span className={styles.slash}>/</span>
+              <span>{bar.objectives.total}</span>
+            </button>
+          </Tooltip>
         )}
       </div>
     </>

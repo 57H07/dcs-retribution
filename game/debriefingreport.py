@@ -27,6 +27,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, TYPE_CHECKING, TypeVar
 
+from game.objectives import ObjectiveState, is_announcement
 from game.squadrons.careerreport import format_duration
 from game.squadrons.pilot import KillCategory, PilotStatus
 from game.theater import Player
@@ -144,6 +145,16 @@ class SortieCard:
 
 
 @dataclass(frozen=True)
+class ObjectiveLine:
+    """A campaign objective (#194) met or missed at the end of the turn."""
+
+    title: str
+    met: bool
+    #: What the reward actually gave; empty when missed or without reward.
+    granted: str
+
+
+@dataclass(frozen=True)
 class AfterActionReport:
     turn: int
     date: str
@@ -177,6 +188,8 @@ class AfterActionReport:
     pilots_still_down: int | None = None
     budget_next_turn: float | None = None
     income_next_turn: float | None = None
+    #: The campaign objectives met or missed at the end of the turn.
+    objectives: list[ObjectiveLine] | None = None
 
 
 # --- casualty lists (formerly in qt_ui/windows/QDebriefingWindow.py) -----------
@@ -663,7 +676,14 @@ def complete_report(
         pilots_still_down=len(game.blue.downed_pilots),
         budget_next_turn=round(game.blue.budget, 2),
         income_next_turn=round(Income(game, player=Player.BLUE).total, 2),
-        events=report.events + logged_events(messages),
+        # The objectives have their own section.
+        events=report.events
+        + logged_events(m for m in messages if not is_announcement(m.title)),
+        objectives=[
+            ObjectiveLine(o.title, o.state is ObjectiveState.MET, o.granted)
+            for o in game.objectives.objectives
+            if o.resolved_turn == report.turn
+        ],
         your_sorties=committed_sortie_cards(
             report.your_sorties, debriefing, report.turn, rules
         ),

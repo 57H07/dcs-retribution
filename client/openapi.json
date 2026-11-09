@@ -9759,6 +9759,13 @@
           "income_next_turn": {
             "title": "Income Next Turn",
             "type": "number"
+          },
+          "objectives": {
+            "title": "Objectives",
+            "items": {
+              "$ref": "#/components/schemas/ObjectiveLineJs"
+            },
+            "type": "array"
           }
         },
         "type": "object",
@@ -10771,6 +10778,10 @@
             "type": "string",
             "title": "Reward"
           },
+          "expected": {
+            "type": "string",
+            "title": "Expected"
+          },
           "granted": {
             "type": "string",
             "title": "Granted"
@@ -10787,6 +10798,7 @@
           "target",
           "state",
           "reward",
+          "expected",
           "granted"
         ],
         "title": "CampaignObjective"
@@ -14896,6 +14908,29 @@
         ],
         "title": "NotesJs"
       },
+      "ObjectiveLineJs": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "met": {
+            "type": "boolean",
+            "title": "Met"
+          },
+          "granted": {
+            "type": "string",
+            "title": "Granted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "met",
+          "granted"
+        ],
+        "title": "ObjectiveLine"
+      },
       "ObjectivesSummaryJs": {
         "properties": {
           "met": {
@@ -14909,13 +14944,21 @@
           "total": {
             "type": "integer",
             "title": "Total"
+          },
+          "in_progress": {
+            "items": {
+              "$ref": "#/components/schemas/CampaignObjectiveJs"
+            },
+            "type": "array",
+            "title": "In Progress"
           }
         },
         "type": "object",
         "required": [
           "met",
           "missed",
-          "total"
+          "total",
+          "in_progress"
         ],
         "title": "ObjectivesSummary"
       },

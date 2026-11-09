@@ -1,9 +1,12 @@
 """Campaign objectives (#194): optional goals a campaign sets in its YAML.
 
 They never decide the end of the campaign, which stays "take every enemy base".
-A met objective grants its reward; a missed one costs nothing. Rewards are
-capped against the coalition's income so that a campaign cannot hand out too
-much: see the ``*_CAP`` constants and docs/campaigns/objectives.md.
+A met objective grants its reward; a missed one costs nothing. The player sets
+how much a reward is worth and caps it against the coalition's income, in the
+"Campaign Objectives" settings, so that a campaign cannot hand out too much.
+
+An objective targets the front: a base on the front line, or a site at one. The
+ones behind the front are dropped when the campaign is read.
 
 The objectives are read once, when the campaign is generated, and kept on the
 game: a save does not need its campaign file to go on.
@@ -24,14 +27,9 @@ if TYPE_CHECKING:
     from game.squadrons import Squadron
     from game.theater import ControlPoint, TheaterGroundObject
 
-#: An immediate budget is at most this many turns of the coalition's income.
-BUDGET_CAP_TURNS = 2.0
-#: An income bonus (or cut) is at most this share of the coalition's income...
-INCOME_CAP_SHARE = 0.25
-#: ...and all the bonuses (or cuts) paid in one turn at most this share.
-TOTAL_INCOME_CAP_SHARE = 0.5
-#: Aircraft and pilots given by one objective.
-REINFORCEMENTS_CAP = 4
+#: The titles of the messages that announce a met or missed objective.
+MET_PREFIX = "Objective met: "
+MISSED_PREFIX = "Objective missed: "
 
 #: The category of a destroy objective for every air defence site, radar and IADS
 #: node on land, besides the categories of the ground objects.
@@ -207,6 +205,7 @@ def _objective(
         cp = _control_point(game, value, miz_names)
         if cp.captured.is_blue:
             raise InvalidObjective(f"{cp.name} is already the player's")
+        _check_near_front(cp)
         objective = CampaignObjective(
             f"Capture {cp.name}",
             kind,
@@ -218,6 +217,7 @@ def _objective(
         cp = _control_point(game, value, miz_names)
         if not cp.captured.is_blue:
             raise InvalidObjective(f"{cp.name} is not the player's")
+        _check_near_front(cp)
         objective = CampaignObjective(
             f"Hold {cp.name}",
             kind,
@@ -260,6 +260,16 @@ def _control_point(
     raise InvalidObjective(f"no base named {name!r}")
 
 
+def _near_front(cp: ControlPoint) -> bool:
+    """On the front line: facing an enemy base. A fleet sails where the fight is."""
+    return cp.is_fleet or cp.has_active_frontline
+
+
+def _check_near_front(cp: ControlPoint) -> None:
+    if not _near_front(cp):
+        raise InvalidObjective(f"{cp.name} is behind the front")
+
+
 def _turn(entry: dict[str, Any], key: str, required: bool) -> Optional[int]:
     value = entry.get(key)
     if value is None:
@@ -278,28 +288,34 @@ def _destroy_targets(
         named = [
             tgo
             for tgo in game.theater.ground_objects
-            if tgo.original_name == value and tgo.control_point.captured.is_red
+            if tgo.original_name == value
+            and tgo.control_point.captured.is_red
+            and _near_front(tgo.control_point)
         ]
         if not named:
-            raise InvalidObjective(f"no enemy ground object named {value!r}")
+            raise InvalidObjective(f"no enemy ground object {value!r} near the front")
         return value, named
     if not isinstance(value, dict) or "category" not in value:
         raise InvalidObjective("destroy names a ground object or a category")
     category = str(value["category"]).lower()
     at = value.get("at")
     base = _control_point(game, at, miz_names) if at else None
+    if base is not None:
+        _check_near_front(base)
     bases = [base] if base else list(game.theater.controlpoints)
     targets = [
         tgo
         for cp in bases
-        if cp.captured.is_red
+        if cp.captured.is_red and _near_front(cp)
         for tgo in cp.ground_objects
         if _in_category(tgo, category)
     ]
     if not targets:
-        raise InvalidObjective(f"no enemy ground object of category {category!r}")
+        raise InvalidObjective(
+            f"no enemy ground object of category {category!r} near the front"
+        )
     what = "the enemy IADS" if category == IADS else f"the enemy {category} sites"
-    return (f"{what} at {base.name}" if base else what), targets
+    return (f"{what} at {base.name}" if base else f"{what} near the front"), targets
 
 
 def _in_category(tgo: TheaterGroundObject, category: str) -> bool:
@@ -316,6 +332,7 @@ def _survive(
     if (cp := _named(game, value, miz_names)) is not None:
         if not cp.captured.is_blue:
             raise InvalidObjective(f"{cp.name} is not the player's")
+        _check_near_front(cp)
         return CampaignObjective(
             f"Keep {cp.name} alive",
             ObjectiveKind.SURVIVE,
@@ -326,10 +343,14 @@ def _survive(
     named = [
         tgo
         for tgo in game.theater.ground_objects
-        if tgo.original_name == value and tgo.control_point.captured.is_blue
+        if tgo.original_name == value
+        and tgo.control_point.captured.is_blue
+        and _near_front(tgo.control_point)
     ]
     if not named:
-        raise InvalidObjective(f"no friendly base or ground object named {value!r}")
+        raise InvalidObjective(
+            f"no friendly base or ground object {value!r} near the front"
+        )
     return CampaignObjective(
         f"Keep {value} alive",
         ObjectiveKind.SURVIVE,
@@ -399,9 +420,9 @@ def end_of_turn(game: Game) -> None:
         if state is ObjectiveState.MET:
             objective.granted = _grant(objective, game)
             text = f"Reward: {objective.granted}" if objective.granted else ""
-            game.message(f"Objective met: {objective.title}", text)
+            game.message(f"{MET_PREFIX}{objective.title}", text)
         else:
-            game.message(f"Objective missed: {objective.title}", "")
+            game.message(f"{MISSED_PREFIX}{objective.title}", "")
 
 
 def _evaluate(objective: CampaignObjective, game: Game) -> ObjectiveState:
@@ -467,6 +488,11 @@ def _still_standing(objective: CampaignObjective, game: Game) -> bool:
     )
 
 
+def is_announcement(title: str) -> bool:
+    """A message of `end_of_turn` announcing a met or missed objective."""
+    return title.startswith((MET_PREFIX, MISSED_PREFIX))
+
+
 def progress(objective: CampaignObjective, game: Game) -> Progress:
     turns_left = None
     if objective.state is ObjectiveState.IN_PROGRESS and objective.deadline:
@@ -487,34 +513,125 @@ def base_income(game: Game, player: Player) -> float:
     return Income(game, player).base
 
 
-def _grant(objective: CampaignObjective, game: Game) -> str:
+@dataclass(frozen=True)
+class _Grant:
+    """What a reward gives under the player's settings and the caps."""
+
+    budget: float = 0
+    income: float = 0
+    income_turns: Optional[int] = None
+    aircraft: int = 0
+    pilots: int = 0
+    squadron: Optional[Squadron] = None
+    enemy_budget: float = 0
+    enemy_income: float = 0
+    enemy_income_turns: Optional[int] = None
+
+    def describe(self) -> str:
+        parts = []
+        if self.budget > 0:
+            parts.append(f"+{_money(self.budget)} budget")
+        if self.income > 0:
+            parts.append(f"+{_money(self.income)} income{_for(self.income_turns)}")
+        if self.squadron is not None and self.aircraft > 0:
+            parts.append(
+                f"{self.aircraft} {self.squadron.aircraft.display_name}"
+                f" for {self.squadron.name}"
+            )
+        if self.squadron is not None and self.pilots > 0:
+            parts.append(f"{self.pilots} pilots for {self.squadron.name}")
+        if self.enemy_budget > 0:
+            parts.append(f"-{_money(self.enemy_budget)} enemy budget")
+        if self.enemy_income > 0:
+            parts.append(
+                f"-{_money(self.enemy_income)} enemy income"
+                f"{_for(self.enemy_income_turns)}"
+            )
+        return ", ".join(parts)
+
+
+def _plan(objective: CampaignObjective, game: Game) -> _Grant:
+    """What `objective` would grant now, under the "Campaign Objectives" settings."""
+    settings = game.settings
     reward = objective.reward
-    granted = []
+    if not settings.objective_rewards:
+        return _Grant()
+    scale = settings.objective_reward_scale
+    budget_cap = settings.objective_budget_cap_turns
+    income_cap = settings.objective_income_cap / 100
     blue_income = base_income(game, Player.BLUE)
     red_income = base_income(game, Player.RED)
-    budget = min(reward.budget, BUDGET_CAP_TURNS * blue_income)
-    if budget > 0:
-        game.blue.adjust_budget(budget)
-        granted.append(f"+{_money(budget)} budget")
-    income = min(reward.income, INCOME_CAP_SHARE * blue_income)
-    if income > 0:
-        _add_income(game, Player.BLUE, income, reward.income_turns, objective)
-        granted.append(f"+{_money(income)} income{_for(reward.income_turns)}")
-    if reward.aircraft or reward.pilots:
-        granted.extend(_reinforce(game, reward))
-    cut = min(
-        reward.enemy_budget, BUDGET_CAP_TURNS * red_income, max(game.red.budget, 0)
-    )
-    if cut > 0:
-        game.red.adjust_budget(-cut)
-        granted.append(f"-{_money(cut)} enemy budget")
-    income_cut = min(reward.enemy_income, INCOME_CAP_SHARE * red_income)
-    if income_cut > 0:
-        _add_income(game, Player.RED, -income_cut, reward.enemy_income_turns, objective)
-        granted.append(
-            f"-{_money(income_cut)} enemy income{_for(reward.enemy_income_turns)}"
+
+    budget = income = enemy_budget = enemy_income = 0.0
+    if settings.objective_budget_rewards:
+        budget = min(reward.budget * scale, budget_cap * blue_income)
+    if settings.objective_income_rewards:
+        income = min(reward.income * scale, income_cap * blue_income)
+    squadron = None
+    aircraft = pilots = 0
+    if settings.objective_reinforcement_rewards and (reward.aircraft or reward.pilots):
+        squadron = _squadron(game.blue.air_wing.iter_squadrons(), reward.squadron)
+        if squadron is not None:
+            cap = settings.objective_reinforcements_cap
+            aircraft = min(
+                int(reward.aircraft * scale), cap, squadron.room_for_aircraft()
+            )
+            pilots = min(int(reward.pilots * scale), cap)
+    if settings.objective_enemy_penalties:
+        enemy_budget = min(
+            reward.enemy_budget * scale,
+            budget_cap * red_income,
+            max(game.red.budget, 0),
         )
-    return ", ".join(granted)
+        enemy_income = min(reward.enemy_income * scale, income_cap * red_income)
+    return _Grant(
+        budget=budget,
+        income=income,
+        income_turns=reward.income_turns,
+        aircraft=aircraft,
+        pilots=pilots,
+        squadron=squadron,
+        enemy_budget=enemy_budget,
+        enemy_income=enemy_income,
+        enemy_income_turns=reward.enemy_income_turns,
+    )
+
+
+def expected_reward(objective: CampaignObjective, game: Game) -> str:
+    """What `objective` would grant if met now, at today's income and settings."""
+    return _plan(objective, game).describe()
+
+
+def _grant(objective: CampaignObjective, game: Game) -> str:
+    reward = objective.reward
+    grant = _plan(objective, game)
+    if grant.budget > 0:
+        game.blue.adjust_budget(grant.budget)
+    if grant.income > 0:
+        _add_income(game, Player.BLUE, grant.income, grant.income_turns, objective)
+    if (
+        game.settings.objective_rewards
+        and game.settings.objective_reinforcement_rewards
+        and (reward.aircraft or reward.pilots)
+        and grant.squadron is None
+    ):
+        logging.warning(f"Objective reward: no squadron named {reward.squadron!r}")
+    if grant.squadron is not None:
+        if grant.aircraft > 0:
+            grant.squadron.owned_aircraft += grant.aircraft
+        if grant.pilots > 0:
+            grant.squadron.add_pilots(grant.pilots)
+    if grant.enemy_budget > 0:
+        game.red.adjust_budget(-grant.enemy_budget)
+    if grant.enemy_income > 0:
+        _add_income(
+            game,
+            Player.RED,
+            -grant.enemy_income,
+            grant.enemy_income_turns,
+            objective,
+        )
+    return grant.describe()
 
 
 def _add_income(
@@ -532,25 +649,6 @@ def _add_income(
     )
 
 
-def _reinforce(game: Game, reward: ObjectiveReward) -> list[str]:
-    squadron = _squadron(game.blue.air_wing.iter_squadrons(), reward.squadron)
-    if squadron is None:
-        logging.warning(f"Objective reward: no squadron named {reward.squadron!r}")
-        return []
-    granted = []
-    aircraft = min(reward.aircraft, REINFORCEMENTS_CAP, squadron.room_for_aircraft())
-    if aircraft > 0:
-        squadron.owned_aircraft += aircraft
-        granted.append(
-            f"{aircraft} {squadron.aircraft.display_name} for {squadron.name}"
-        )
-    pilots = min(reward.pilots, REINFORCEMENTS_CAP)
-    if pilots > 0:
-        squadron.add_pilots(pilots)
-        granted.append(f"{pilots} pilots for {squadron.name}")
-    return granted
-
-
 def _squadron(squadrons: Iterable[Squadron], name: Optional[str]) -> Optional[Squadron]:
     for squadron in squadrons:
         if squadron.name == name:
@@ -559,9 +657,21 @@ def _squadron(squadrons: Iterable[Squadron], name: Optional[str]) -> Optional[Sq
 
 
 def capped_income_bonus(game: Game, player: Player, turn: int, base: float) -> float:
-    """The objective income of `player` paid at `turn`, within the total cap."""
+    """The objective income of `player` paid at `turn`, within the total cap.
+
+    Nothing when the settings turned these rewards off since they were granted.
+    """
     bonus = game.objectives.income_bonus(player, turn)
-    cap = TOTAL_INCOME_CAP_SHARE * base
+    if not bonus:
+        return 0
+    settings = game.settings
+    if not settings.objective_rewards:
+        return 0
+    if player.is_blue and not settings.objective_income_rewards:
+        return 0
+    if not player.is_blue and not settings.objective_enemy_penalties:
+        return 0
+    cap = settings.objective_total_income_cap / 100 * base
     return max(-cap, min(bonus, cap))
 
 

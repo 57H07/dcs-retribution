@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from game.objectives import ObjectiveState, progress
+from game.objectives import ObjectiveState, expected_reward, progress
 
 if TYPE_CHECKING:
     from game import Game
@@ -27,8 +27,11 @@ class CampaignObjectiveJs(BaseModel):
     #: Destroy: targets destroyed out of the total.
     done: int | None
     total: int | None
-    #: What the campaign promises, before the caps.
+    #: What the campaign promises, before the settings and the caps.
     reward: str
+    #: In progress: what it would grant if met now, under the player's settings
+    #: and the caps at today's income. Empty otherwise.
+    expected: str
     #: What the reward actually gave, once met.
     granted: str
     resolved_turn: int | None
@@ -49,6 +52,11 @@ class CampaignObjectiveJs(BaseModel):
             done=state.done,
             total=state.total,
             reward=objective.reward.describe(),
+            expected=(
+                expected_reward(objective, game)
+                if objective.state is ObjectiveState.IN_PROGRESS
+                else ""
+            ),
             granted=objective.granted,
             resolved_turn=objective.resolved_turn,
         )
@@ -58,6 +66,8 @@ class ObjectivesSummaryJs(BaseModel):
     met: int
     missed: int
     total: int
+    #: The objectives in progress, the nearest deadline first.
+    in_progress: list[CampaignObjectiveJs]
 
     class Config:
         title = "ObjectivesSummary"
@@ -72,6 +82,14 @@ class ObjectivesSummaryJs(BaseModel):
             met=sum(o.state is ObjectiveState.MET for o in objectives),
             missed=sum(o.state is ObjectiveState.MISSED for o in objectives),
             total=len(objectives),
+            in_progress=sorted(
+                (
+                    CampaignObjectiveJs.from_objective(o, game)
+                    for o in objectives
+                    if o.state is ObjectiveState.IN_PROGRESS
+                ),
+                key=lambda o: (o.turns_left is None, o.turns_left or 0),
+            ),
         )
 
 

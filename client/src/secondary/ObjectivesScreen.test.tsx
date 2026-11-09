@@ -24,6 +24,7 @@ function objective(
     done: 2,
     total: 5,
     reward: "+500 budget",
+    expected: "+500 budget",
     granted: "",
     resolved_turn: undefined,
     ...overrides,
@@ -58,6 +59,7 @@ describe("objectives screen", () => {
           done: undefined,
           total: undefined,
           reward: "+500 budget, +80 income per turn",
+          expected: "",
           granted: "+400 budget, +50 income per turn",
           resolved_turn: 5,
         }),
@@ -80,6 +82,8 @@ describe("objectives screen", () => {
       iads.getByText("2 / 5 destroyed · by turn 10 · 3 turns left"),
     ).toBeVisible();
     expect(iads.getByText("Reward: +500 budget")).toBeVisible();
+    // The settings grant all of it: no need to say so.
+    expect(iads.queryByText(/With your settings/)).not.toBeInTheDocument();
 
     const kutaisi = within(
       screen.getByRole("article", { name: "Capture Kutaisi" }),
@@ -98,6 +102,27 @@ describe("objectives screen", () => {
       "bad",
     );
     expect(batumi.getByText("until turn 10")).toBeVisible();
+  });
+
+  it("tells what the player's settings would grant today", async () => {
+    renderObjectives({
+      turn: 3,
+      objectives: [
+        objective({ title: "Capture Kutaisi", expected: "+200 budget" }),
+        objective({ title: "Hold Batumi", expected: "" }),
+      ],
+    });
+
+    const kutaisi = within(
+      await screen.findByRole("article", { name: "Capture Kutaisi" }),
+    );
+    expect(
+      kutaisi.getByText("With your settings today: +200 budget"),
+    ).toBeVisible();
+    const batumi = within(screen.getByRole("article", { name: "Hold Batumi" }));
+    expect(
+      batumi.getByText("With your settings today: no reward"),
+    ).toBeVisible();
   });
 
   it("explains when the campaign has none", async () => {
