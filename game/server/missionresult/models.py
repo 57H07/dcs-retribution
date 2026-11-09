@@ -140,6 +140,15 @@ class ReportEventJs(BaseModel):
         title = "ReportEvent"
 
 
+class ObjectiveLineJs(BaseModel):
+    title: str
+    met: bool
+    granted: str
+
+    class Config:
+        title = "ObjectiveLine"
+
+
 class DamagedUnitLineJs(BaseModel):
     friendly: bool
     unit_type: str
@@ -245,6 +254,8 @@ class AfterActionReportJs(BaseModel):
     pilots_still_down: int | None
     budget_next_turn: float | None
     income_next_turn: float | None
+    #: The campaign objectives met or missed at the end of the turn (#194).
+    objectives: list[ObjectiveLineJs] | None
 
     class Config:
         title = "AfterActionReport"
@@ -305,6 +316,13 @@ class AfterActionReportJs(BaseModel):
             pilots_still_down=report.pilots_still_down,
             budget_next_turn=report.budget_next_turn,
             income_next_turn=report.income_next_turn,
+            objectives=(
+                None
+                if report.objectives is None
+                else [
+                    ObjectiveLineJs(**dataclasses.asdict(o)) for o in report.objectives
+                ]
+            ),
         )
 
 

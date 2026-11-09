@@ -207,20 +207,19 @@ objectives:
     reward:
       budget: 300
       income: 30
-  - title: Blind the Syrian air defences
+  - title: Blind the Syrian air defences on the Golan
     destroy:
       category: iads
-    by_turn: 12
+    by_turn: 6
     reward:
       enemy_income: 40
       enemy_income_turns: 6
-  - destroy:
-      category: factory
-      at: Damascus
+  - title: Shut down the Qiryat Plant
+    destroy: Qiryat Plant
     reward:
       enemy_budget: 400
-  - title: Keep the Ramat David radar on the air
-    survive: Golan North-118
+  - title: Keep the Golan South radar on the air
+    survive: Golan North-119
     until_turn: 15
     reward:
       income: 20

@@ -3326,10 +3326,25 @@ export type Sim = {
   time?: string;
 };
 export type CampaignStateJs = "continue" | "win" | "loss";
+export type CampaignObjective = {
+  title: string;
+  kind: string;
+  target: string;
+  state: string;
+  deadline?: number;
+  turns_left?: number;
+  done?: number;
+  total?: number;
+  reward: string;
+  expected: string;
+  granted: string;
+  resolved_turn?: number;
+};
 export type ObjectivesSummary = {
   met: number;
   missed: number;
   total: number;
+  in_progress: CampaignObjective[];
 };
 export type TopBar = {
   campaign_name?: string;
@@ -3490,6 +3505,11 @@ export type SortieCard = {
   rescues?: number;
   awards?: SortieAward[];
 };
+export type ObjectiveLine = {
+  title: string;
+  met: boolean;
+  granted: string;
+};
 export type AfterActionReport = {
   turn: number;
   date: string;
@@ -3517,6 +3537,7 @@ export type AfterActionReport = {
   pilots_still_down?: number;
   budget_next_turn?: number;
   income_next_turn?: number;
+  objectives?: ObjectiveLine[];
 };
 export type Debriefing = {
   status: DebriefingStatusJs;
@@ -4210,19 +4231,6 @@ export type InformationJs = {
   title: string;
   text: string;
   timestamp?: string;
-};
-export type CampaignObjective = {
-  title: string;
-  kind: string;
-  target: string;
-  state: string;
-  deadline?: number;
-  turns_left?: number;
-  done?: number;
-  total?: number;
-  reward: string;
-  granted: string;
-  resolved_turn?: number;
 };
 export type CampaignObjectives = {
   turn: number;

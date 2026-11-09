@@ -7,6 +7,7 @@ import {
   useGetObjectivesQuery,
 } from "../api/liberationApi";
 import objectiveStyles from "./ObjectivesScreen.module.css";
+import { objectiveProgress } from "./objectiveProgress";
 import { QueryBody, ScreenFrame } from "./ScreenFrame";
 import styles from "./Secondary.module.css";
 
@@ -15,28 +16,8 @@ const TONES: Record<string, string | undefined> = {
   Missed: "bad",
 };
 
-function plural(count: number, word: string): string {
-  return `${count} ${word}${count === 1 ? "" : "s"}`;
-}
-
-/** "2 / 5 destroyed · by turn 10 · 3 turns left" */
-function progress(objective: CampaignObjective): string {
-  const parts = [];
-  if (objective.total != null) {
-    parts.push(`${objective.done ?? 0} / ${objective.total} destroyed`);
-  }
-  if (objective.deadline != null) {
-    const until = ["hold", "survive"].includes(objective.kind) ? "until" : "by";
-    parts.push(`${until} turn ${objective.deadline}`);
-  }
-  if (objective.turns_left != null) {
-    parts.push(`${plural(objective.turns_left, "turn")} left`);
-  }
-  return parts.join(" · ");
-}
-
 function Objective({ objective }: { objective: CampaignObjective }) {
-  const details = progress(objective);
+  const details = objectiveProgress(objective);
   return (
     <article className={objectiveStyles.objective} aria-label={objective.title}>
       <header className={objectiveStyles.header}>
@@ -61,7 +42,18 @@ function Objective({ objective }: { objective: CampaignObjective }) {
         </span>
       ) : (
         objective.reward && (
-          <span className={styles.cardDetail}>Reward: {objective.reward}</span>
+          <>
+            <span className={styles.cardDetail}>
+              Reward: {objective.reward}
+            </span>
+            {objective.state === "In progress" &&
+              objective.expected !== objective.reward && (
+                // The settings scale and cap what the campaign promises.
+                <span className={styles.cardDetail}>
+                  With your settings today: {objective.expected || "no reward"}
+                </span>
+              )}
+          </>
         )
       )}
     </article>

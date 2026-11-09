@@ -7,7 +7,7 @@ import {
   weatherSummary,
 } from "./format";
 import { missionChecks, topBar } from "./testdata";
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 afterEach(restoreFetch);
@@ -86,6 +86,50 @@ describe("top bar", () => {
     expect(
       screen.getByLabelText(/Cloud base: 2400m \/ 7874ft/),
     ).toBeInTheDocument();
+  });
+
+  it("lists the objectives in progress over their box", async () => {
+    const inProgress = {
+      kind: "capture",
+      target: "Kutaisi",
+      state: "In progress",
+      deadline: 6,
+      turns_left: 3,
+      reward: "+300 budget",
+      expected: "+300 budget",
+      granted: "",
+    };
+    recordFetch(204, undefined, {
+      [TOP_BAR]: topBar({
+        objectives: {
+          met: 1,
+          missed: 0,
+          total: 3,
+          in_progress: [
+            { ...inProgress, title: "Capture Kutaisi" },
+            {
+              ...inProgress,
+              title: "Destroy the enemy IADS near the front",
+              kind: "destroy",
+              deadline: undefined,
+              turns_left: undefined,
+              done: 2,
+              total: 5,
+            },
+          ],
+        },
+      }),
+    });
+    renderShell();
+    const box = await screen.findByRole("button", { name: /open objectives/ });
+    act(() => box.focus());
+    const tooltip = await screen.findByRole("tooltip");
+    expect(tooltip).toHaveTextContent(
+      "Capture Kutaisi · by turn 6 · 3 turns left",
+    );
+    expect(tooltip).toHaveTextContent(
+      "Destroy the enemy IADS near the front · 2 / 5 destroyed",
+    );
   });
 
   it("opens the campaign screens", async () => {

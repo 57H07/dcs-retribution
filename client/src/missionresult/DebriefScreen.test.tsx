@@ -126,6 +126,10 @@ const APPLIED = report({
   ],
   budget_next_turn: 1420,
   income_next_turn: 180,
+  objectives: [
+    { title: "Capture Krymsk", met: true, granted: "+150 budget" },
+    { title: "Hold Anapa", met: false, granted: "" },
+  ],
   events: [
     ...report().events,
     { time: "21:05:09", text: "Lt. Moroz was captured", tone: "neutral" },
@@ -265,6 +269,16 @@ describe("DebriefScreen", () => {
     expect(headline("Budget next turn")).toHaveTextContent("+180M/turn income");
     expect(screen.getByText(/held at Maykop/)).toBeInTheDocument();
     expect(screen.getByText("21:05:09")).toBeInTheDocument();
+    const objectives = within(
+      inReport().getByRole("region", { name: "Objectives" }),
+    );
+    expect(
+      objectives.getByText("Met: Capture Krymsk · +150 budget"),
+    ).toHaveAttribute("data-tone", "good");
+    expect(objectives.getByText("Missed: Hold Anapa")).toHaveAttribute(
+      "data-tone",
+      "bad",
+    );
     const moroz = within(
       yourSortie().getByRole("article", { name: "Lt. Moroz" }),
     );

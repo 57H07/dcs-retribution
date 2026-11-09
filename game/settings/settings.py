@@ -72,6 +72,7 @@ ADVANCED_CAMPAIGN_MANAGEMENT_PAGE = "Advanced Campaign Management"
 GENERAL_SECTION = "General"
 PILOTS_AND_SQUADRONS_SECTION = "Pilots and Squadrons"
 HQ_AUTOMATION_SECTION = "HQ Automation"
+OBJECTIVES_SECTION = "Campaign Objectives"
 FLIGHT_PLANNER_AUTOMATION = "Flight Planner Automation"
 REPAIRS_SECTION = "Repairs"
 BUILDING_REPAIR_TUNING_SECTION = "Building Repairs"
@@ -674,6 +675,104 @@ class Settings:
         section=GENERAL_SECTION,
         default=False,
         detail=("If checked, Bandit's cloud presets will become available."),
+    )
+
+    # Campaign objectives (#194): what a met objective grants.
+    objective_rewards: bool = boolean_option(
+        "Objective rewards",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=OBJECTIVES_SECTION,
+        default=True,
+        detail=(
+            "A campaign can set optional objectives that grant a reward when met. "
+            "Off: the objectives stay as goals, without rewards, and the income "
+            "bonuses already granted stop."
+        ),
+    )
+    objective_reward_scale: float = bounded_float_option(
+        "Objective reward scale",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=OBJECTIVES_SECTION,
+        default=1.0,
+        min=0,
+        max=2,
+        divisor=10,
+        detail=(
+            "Multiplies what the campaign promises (budget, income, aircraft, "
+            "pilots, enemy cuts), before the caps below."
+        ),
+    )
+    objective_budget_rewards: bool = boolean_option(
+        "Objectives grant budget",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=OBJECTIVES_SECTION,
+        default=True,
+    )
+    objective_income_rewards: bool = boolean_option(
+        "Objectives grant income",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=OBJECTIVES_SECTION,
+        default=True,
+        detail="Off: the income bonuses already granted stop too.",
+    )
+    objective_reinforcement_rewards: bool = boolean_option(
+        "Objectives grant aircraft and pilots",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=OBJECTIVES_SECTION,
+        default=True,
+    )
+    objective_enemy_penalties: bool = boolean_option(
+        "Objectives cut the enemy budget and income",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=OBJECTIVES_SECTION,
+        default=True,
+        detail="Off: the enemy income cuts already granted stop too.",
+    )
+    objective_budget_cap_turns: float = bounded_float_option(
+        "Objective budget cap (turns of income)",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=OBJECTIVES_SECTION,
+        default=2.0,
+        min=0,
+        max=5,
+        divisor=10,
+        detail=(
+            "A budget reward, or an enemy budget cut, is at most this many turns "
+            "of the coalition's income."
+        ),
+    )
+    objective_income_cap: int = bounded_int_option(
+        "Objective income cap (% of income)",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=OBJECTIVES_SECTION,
+        default=25,
+        min=0,
+        max=100,
+        detail=(
+            "An income bonus, or an enemy income cut, is at most this share of "
+            "the coalition's income."
+        ),
+    )
+    objective_total_income_cap: int = bounded_int_option(
+        "Objective total income cap (% of income)",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=OBJECTIVES_SECTION,
+        default=50,
+        min=0,
+        max=100,
+        detail=(
+            "All the income bonuses (or enemy cuts) paid in one turn are at most "
+            "this share of the coalition's income."
+        ),
+    )
+    objective_reinforcements_cap: int = bounded_int_option(
+        "Objective reinforcements cap",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=OBJECTIVES_SECTION,
+        default=4,
+        min=0,
+        max=12,
+        detail="Aircraft, and pilots, that one objective can give.",
     )
 
     # Pilots and Squadrons

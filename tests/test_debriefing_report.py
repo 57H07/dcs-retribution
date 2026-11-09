@@ -20,6 +20,7 @@ from game.debriefing import (
 )
 from game.debriefingreport import (
     LossLine,
+    ObjectiveLine,
     PilotLine,
     ReportEvent,
     Tone,
@@ -29,6 +30,12 @@ from game.debriefingreport import (
     verdict,
 )
 from game.infos.information import Information
+from game.objectives import (
+    CampaignObjective,
+    CampaignObjectives,
+    ObjectiveKind,
+    ObjectiveState,
+)
 from game.squadrons.pilot import KillCategory
 from game.theater import ControlPoint, Player
 from game.theater.theatergroundobject import TheaterGroundObject
@@ -178,6 +185,7 @@ def _debriefing() -> tuple[Debriefing, dict[str, Any]]:
             budget=1420.456,
         ),
         pilots_captured_this_turn=[],
+        objectives=CampaignObjectives(),
     )
 
     debriefing = Debriefing.__new__(Debriefing)
@@ -296,3 +304,45 @@ def test_report_once_the_results_are_applied(monkeypatch: pytest.MonkeyPatch) ->
 def test_logged_events_without_title() -> None:
     message = Information("", "Repairs begun", turn=1)
     assert [e.text for e in logged_events([message])] == ["Repairs begun"]
+
+
+def test_the_objectives_resolved_this_turn_have_their_own_section(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """#194: met or missed, with what was granted, and not again in the log."""
+    import game.income
+
+    monkeypatch.setattr(
+        game.income, "Income", lambda game, player: SimpleNamespace(total=180.0)
+    )
+    debriefing, parts = _debriefing()
+    report = build_report(debriefing)
+    assert report.objectives is None
+
+    def objective(title: str, state: ObjectiveState, turn: int | None) -> Any:
+        return CampaignObjective(
+            title,
+            ObjectiveKind.CAPTURE,
+            "Krymsk",
+            None,
+            state=state,
+            resolved_turn=turn,
+            granted="+150 budget" if state is ObjectiveState.MET else "",
+        )
+
+    parts["game"].objectives.objectives = [
+        objective("Capture Krymsk", ObjectiveState.MET, 4),
+        objective("Capture Anapa", ObjectiveState.MISSED, 4),
+        objective("Capture Maykop", ObjectiveState.MET, 2),  # an earlier turn
+        objective("Capture Sochi", ObjectiveState.IN_PROGRESS, None),
+    ]
+    met = Information("Objective met: Capture Krymsk", "Reward: +150 budget", turn=4)
+    missed = Information("Objective missed: Capture Anapa", "", turn=4)
+
+    final = complete_report(report, debriefing, [met, missed])
+
+    assert final.objectives == [
+        ObjectiveLine("Capture Krymsk", True, "+150 budget"),
+        ObjectiveLine("Capture Anapa", False, ""),
+    ]
+    assert final.events == report.events

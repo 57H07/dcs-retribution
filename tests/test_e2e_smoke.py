@@ -171,13 +171,22 @@ def test_a_stock_campaign_sets_its_objectives(session: NewGameGeneration) -> Non
     answer = _ok("GET", "/objectives")
     assert [o["title"] for o in answer["objectives"]] == [
         "Capture Golan North",
-        "Blind the Syrian air defences",
-        "Destroy the enemy factory sites at Damascus",
-        "Keep the Ramat David radar on the air",
+        "Blind the Syrian air defences on the Golan",
+        "Shut down the Qiryat Plant",
+        "Keep the Golan South radar on the air",
     ]
     assert {o["state"] for o in answer["objectives"]} == {"In progress"}
+    assert all(o["expected"] for o in answer["objectives"])
     bar = _ok("GET", "/game/top-bar")
-    assert bar["objectives"] == {"met": 0, "missed": 0, "total": 4}
+    summary = bar["objectives"]
+    assert (summary["met"], summary["missed"], summary["total"]) == (0, 0, 4)
+    # The nearest deadline first; the plant has none.
+    assert [o["title"] for o in summary["in_progress"]] == [
+        "Blind the Syrian air defences on the Golan",
+        "Capture Golan North",
+        "Keep the Golan South radar on the air",
+        "Shut down the Qiryat Plant",
+    ]
 
     _ok("POST", "/game/turn/pass")
     answer = _ok("GET", "/objectives")
