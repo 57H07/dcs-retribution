@@ -27,7 +27,7 @@ from game.models.game_stats import GameStats
 from game.plugins import LuaPluginManager
 from game.squadrons.csarservice import CapturedPilot
 from game.utils import Distance
-from . import autosaves, naming
+from . import autosaves, naming, objectives
 from .ato import Flight
 from .ato.flighttype import FlightType
 from .campaignloader import CampaignAirWingConfig
@@ -132,6 +132,8 @@ class Game:
         #: The turn the diary of an older campaign begins at; None when it
         #: covers the whole campaign.
         self.war_diary_since_turn: int | None = None
+        #: The campaign's optional objectives (#194), read when it is generated.
+        self.objectives = objectives.CampaignObjectives()
         self.message("Game Start", "-" * 40)
         # Culling Zones are for areas around points of interest that contain things we may not wish to cull.
         self.__culling_zones: List[Point] = []
@@ -198,6 +200,9 @@ class Game:
         if not hasattr(self, "war_diary"):
             self.war_diary = []
             self.war_diary_since_turn = self.turn
+        # Postdates the campaign objectives (#194): an older campaign has none.
+        if not hasattr(self, "objectives"):
+            self.objectives = objectives.CampaignObjectives()
         # Heal carcass lists bloated by old saves. Guarded like laser_code_registry
         # below: __destroyed_units postdates the oldest saves, so a pre-2020 save
         # arrives without it and must not AttributeError here.
@@ -366,6 +371,8 @@ class Game:
         Args:
             skipped: True if the turn was skipped.
         """
+        # Before the income is paid: an objective's income bonus starts with it.
+        objectives.end_of_turn(self)
         self.message("End of turn #" + str(self.turn), "-" * 40)
         self.turn += 1
 

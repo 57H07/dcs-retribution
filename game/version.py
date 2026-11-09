@@ -190,4 +190,8 @@ VERSION = _build_version_string()
 #: Version 10.9
 #: * Support for motorpools which spawn reserve frontline units
 #:
-CAMPAIGN_FORMAT_VERSION = (10, 9)
+#: Version 10.10
+#: * Optional campaign objectives (`objectives:`) that grant capped rewards, see
+#:      docs/modding/campaign-objectives.md
+#:
+CAMPAIGN_FORMAT_VERSION = (10, 10)

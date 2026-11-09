@@ -131,6 +131,8 @@ class CoalitionFinancesJs(BaseModel):
     multiplier: float
     from_bases: float
     from_buildings: float
+    #: Bonuses (or, negative, cuts) of the campaign objectives (#194).
+    from_objectives: float
     total: float
     bases: list[BaseIncomeJs]
     buildings: list[BuildingIncomeJs]
@@ -147,6 +149,7 @@ class CoalitionFinancesJs(BaseModel):
             multiplier=income.multiplier,
             from_bases=income.from_bases,
             from_buildings=income.total_buildings,
+            from_objectives=income.from_objectives,
             total=income.total,
             bases=[
                 BaseIncomeJs(id=str(cp.id), name=cp.name, income=cp.income_per_turn)

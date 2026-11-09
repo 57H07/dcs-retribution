@@ -1478,6 +1478,9 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: () => ({ url: `/informations` }),
     }),
+    getObjectives: build.query<GetObjectivesApiResponse, GetObjectivesApiArg>({
+      query: () => ({ url: `/objectives` }),
+    }),
     getWarDiary: build.query<GetWarDiaryApiResponse, GetWarDiaryApiArg>({
       query: () => ({ url: `/war-diary` }),
     }),
@@ -2526,6 +2529,9 @@ export type ListInformationsApiResponse = /** status 200 Successful Response */
   | InformationJs[]
   | null;
 export type ListInformationsApiArg = void;
+export type GetObjectivesApiResponse =
+  /** status 200 Successful Response */ CampaignObjectives | null;
+export type GetObjectivesApiArg = void;
 export type GetWarDiaryApiResponse =
   /** status 200 Successful Response */ WarDiary | null;
 export type GetWarDiaryApiArg = void;
@@ -3320,6 +3326,11 @@ export type Sim = {
   time?: string;
 };
 export type CampaignStateJs = "continue" | "win" | "loss";
+export type ObjectivesSummary = {
+  met: number;
+  missed: number;
+  total: number;
+};
 export type TopBar = {
   campaign_name?: string;
   theater: string;
@@ -3340,6 +3351,7 @@ export type TopBar = {
   show_sim_speed_controls: boolean;
   campaign_state: CampaignStateJs;
   warnings: string[];
+  objectives?: ObjectivesSummary;
 };
 export type TimelinePackage = {
   id: string;
@@ -4010,6 +4022,7 @@ export type CoalitionFinancesJs = {
   multiplier: number;
   from_bases: number;
   from_buildings: number;
+  from_objectives: number;
   total: number;
   bases: BaseIncomeJs[];
   buildings: BuildingIncomeJs[];
@@ -4197,6 +4210,23 @@ export type InformationJs = {
   title: string;
   text: string;
   timestamp?: string;
+};
+export type CampaignObjective = {
+  title: string;
+  kind: string;
+  target: string;
+  state: string;
+  deadline?: number;
+  turns_left?: number;
+  done?: number;
+  total?: number;
+  reward: string;
+  granted: string;
+  resolved_turn?: number;
+};
+export type CampaignObjectives = {
+  turn: number;
+  objectives: CampaignObjective[];
 };
 export type WarDiaryBase = {
   id: string;
@@ -4481,6 +4511,7 @@ export const {
   useGetNotesQuery,
   useSetNotesMutation,
   useListInformationsQuery,
+  useGetObjectivesQuery,
   useGetWarDiaryQuery,
   useExportWarDiaryMutation,
   useImportLayoutsMutation,

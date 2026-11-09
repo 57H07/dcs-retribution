@@ -41,6 +41,7 @@ SCREENS = [
     "/transfers/",
     "/air-wing",
     "/reports/intel",
+    "/objectives",
 ]
 
 
@@ -108,7 +109,8 @@ def _new_campaign(generation: NewGameGeneration, campaign_id: str) -> Game:
             "campaign_id": campaign_id,
             "blue": {"name": campaign["recommended_blue_faction"]},
             "red": {"name": campaign["recommended_red_faction"]},
-            "start_date": campaign["start_date"],
+            # Not every campaign recommends a date.
+            "start_date": campaign["start_date"] or "2011-06-01",
             "player_budget": 2000,
             "enemy_budget": 2000,
             "seed": 2026,
@@ -160,3 +162,23 @@ def test_a_campaign_from_the_wizard_to_the_second_turn(
     assert reopened is not game
     assert reopened.turn == 1
     assert _ok("GET", "/game/top-bar")["turn"] == 1
+
+
+def test_a_stock_campaign_sets_its_objectives(session: NewGameGeneration) -> None:
+    """#194: the example campaign's objectives match its bases and sites."""
+    _new_campaign(session, "golan_heights_lite")
+
+    answer = _ok("GET", "/objectives")
+    assert [o["title"] for o in answer["objectives"]] == [
+        "Capture Golan North",
+        "Blind the Syrian air defences",
+        "Destroy the enemy factory sites at Damascus",
+        "Keep the Ramat David radar on the air",
+    ]
+    assert {o["state"] for o in answer["objectives"]} == {"In progress"}
+    bar = _ok("GET", "/game/top-bar")
+    assert bar["objectives"] == {"met": 0, "missed": 0, "total": 4}
+
+    _ok("POST", "/game/turn/pass")
+    answer = _ok("GET", "/objectives")
+    assert {o["state"] for o in answer["objectives"]} == {"In progress"}

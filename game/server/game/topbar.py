@@ -27,6 +27,7 @@ from game.theater.player import Player
 from game.utils import meters, mps
 from game.weather.description import describe_sky
 from .models import CampaignStateJs
+from ..objectives.models import ObjectivesSummaryJs
 
 if TYPE_CHECKING:
     from game import Game
@@ -203,6 +204,8 @@ class TopBarJs(BaseModel):
     campaign_state: CampaignStateJs
     #: Problems of the campaign to show the player once.
     warnings: list[str]
+    #: The campaign objectives met so far (#194); null when it has none.
+    objectives: ObjectivesSummaryJs | None
 
     class Config:
         title = "TopBar"
@@ -256,6 +259,7 @@ class TopBarJs(BaseModel):
             show_sim_speed_controls=show_sim_speed_controls,
             campaign_state=CampaignStateJs.from_turn_state(game.check_win_loss()),
             warnings=campaign_warnings(game),
+            objectives=ObjectivesSummaryJs.from_game(game),
         )
 
 

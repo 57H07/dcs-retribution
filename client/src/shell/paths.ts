@@ -38,6 +38,8 @@ export const PATHS = {
   career: "/career",
   // #193
   diary: "/diary",
+  // #194
+  objectives: "/objectives",
   logs: "/logs",
   about: "/about",
   // #190

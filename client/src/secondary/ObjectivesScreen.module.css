@@ -1,0 +1,33 @@
+/* Campaign objectives (#194): one card per objective, its state and reward. */
+.objective {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-xs);
+  padding: 14px 16px;
+  background: var(--ui-color-bg-card);
+  border: 1px solid var(--ui-color-line);
+  border-radius: var(--ui-radius-md);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-md);
+}
+
+.title {
+  flex: 1;
+}
+
+.state {
+  font-weight: var(--ui-font-weight-semibold);
+}
+
+.objective [data-tone="good"] {
+  color: var(--ui-color-success);
+}
+
+.objective [data-tone="bad"] {
+  color: var(--ui-color-danger);
+}

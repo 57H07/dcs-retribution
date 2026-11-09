@@ -213,6 +213,7 @@ describe("app bar", () => {
         "/info",
         "/career",
         "/diary",
+        "/objectives",
         "/logs",
         "/about",
       ]),

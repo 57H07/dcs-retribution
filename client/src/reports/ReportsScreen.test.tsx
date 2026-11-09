@@ -86,6 +86,7 @@ const FINANCES: FinancesJs = {
     multiplier: 1.5,
     from_bases: 25,
     from_buildings: 26,
+    from_objectives: 0,
     total: 76.5,
     bases: [
       { id: "cp-1", name: "Incirlik", income: 20 },
@@ -113,6 +114,7 @@ const FINANCES: FinancesJs = {
     multiplier: 1,
     from_bases: 10,
     from_buildings: 1,
+    from_objectives: 0,
     total: 11,
     bases: [{ id: "cp-3", name: "Hama", income: 10 }],
     buildings: [],

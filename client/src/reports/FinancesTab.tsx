@@ -82,7 +82,13 @@ function Finances({
         <StatCard
           title="Income per turn"
           value={formatMillions(finances.total)}
-          detail={`Income multiplier: ${finances.multiplier.toFixed(1)}`}
+          detail={
+            `Income multiplier: ${finances.multiplier.toFixed(1)}` +
+            (finances.from_objectives
+              ? ` · ${finances.from_objectives > 0 ? "+" : ""}` +
+                `${formatMillions(finances.from_objectives)} from objectives`
+              : "")
+          }
         />
         <StatCard
           title="From bases"
