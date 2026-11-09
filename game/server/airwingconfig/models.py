@@ -189,6 +189,15 @@ class SquadronConfigUpdateJs(BaseModel):
         title = "SquadronConfigUpdate"
 
 
+class ConfigRemoveAircraftJs(BaseModel):
+    """Every squadron of this aircraft goes (#206)."""
+
+    aircraft_id: str
+
+    class Config:
+        title = "AirWingConfigRemoveAircraft"
+
+
 class ConfigNewSquadronJs(BaseModel):
     aircraft_id: str
     base_id: UUID

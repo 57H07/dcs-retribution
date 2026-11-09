@@ -81,6 +81,7 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     getConfigSquadronLiveries: { providesTags: [Tags.AIR_WING_CONFIG] },
     updateConfigSquadron: AIR_WING_CONFIG_COMMAND,
     removeConfigSquadron: AIR_WING_CONFIG_COMMAND,
+    removeConfigAircraftSquadrons: AIR_WING_CONFIG_COMMAND,
     setConfigSquadronAutoAssign: AIR_WING_CONFIG_COMMAND,
     setConfigSquadronLivery: AIR_WING_CONFIG_COMMAND,
     rerollConfigSquadronNickname: AIR_WING_CONFIG_COMMAND,
@@ -256,6 +257,7 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     // /packages/ (WEB-01.2): also refetched on flight events (eventstream.tsx).
     listPackages: { providesTags: [Tags.PACKAGES] },
     deletePackage: { invalidatesTags: PACKAGE_COMMAND_TAGS },
+    deletePlayerPackages: { invalidatesTags: PACKAGE_COMMAND_TAGS },
     // Package editor (WEB-04.1).
     getPackage: { providesTags: [Tags.PACKAGES] },
     createPackage: { invalidatesTags: PACKAGE_COMMAND_TAGS },

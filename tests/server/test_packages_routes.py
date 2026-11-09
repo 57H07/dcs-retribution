@@ -23,7 +23,11 @@ from game.objectives import (
     ObjectiveState,
 )
 from game.commands import CommandError
-from game.commands.packages import cancel_or_abort_package, delete_package
+from game.commands.packages import (
+    cancel_or_abort_package,
+    delete_package,
+    delete_player_packages,
+)
 from game.db import Database
 from game.gamelock import _GAME_LOCK
 from game.server import GameContext
@@ -268,6 +272,44 @@ def test_delete_an_unknown_package_is_a_404() -> None:
     assert exc.value.status_code == 404
 
 
+def test_delete_all_clears_the_player_ato_only() -> None:
+    """#206: every player package in one go; the enemy plans are not the player's."""
+    game = _Game()
+    first, second = _Flight(), _Flight(FlightType.STRIKE)
+    _plan(game.blue, first)
+    _plan(game.blue, second)
+    enemy = _plan(game.red, _Flight())
+    events = GameUpdateEvents()
+
+    removed = delete_player_packages(game, events, NOW)  # type: ignore[arg-type]
+
+    assert removed == 2
+    assert game.blue.ato.packages == []
+    assert game.red.ato.packages == [enemy]
+    assert events.deleted_flights == {first.id, second.id}
+    # The threat zones are recomputed once, not once per package.
+    assert game.unculled == 1
+
+
+def test_delete_all_aborts_flights_under_way_as_one_delete_does() -> None:
+    game = _Game()
+    waiting = _Flight()
+    flying = _Flight(cancelable=False)
+    started = _plan(game.blue, waiting, flying)
+    airlift = _Flight(FlightType.TRANSPORT)
+    game.blue.transfers.airlifts[airlift.id] = "convoy"
+    _plan(game.blue, airlift)
+    events = GameUpdateEvents()
+
+    removed = delete_player_packages(game, events, NOW)  # type: ignore[arg-type]
+
+    assert removed == 1
+    assert game.blue.ato.packages == [started]
+    assert started.flights == [flying]
+    assert flying.aborted
+    assert game.blue.transfers.cancelled == ["convoy"]
+
+
 # --- HTTP side -----------------------------------------------------------------
 
 
@@ -368,6 +410,21 @@ def test_delete_route_keeps_the_asap_tot_current(game: _Game) -> None:
     package.set_tot_asap = asap.append  # type: ignore[method-assign,assignment]
     assert _request("DELETE", f"/packages/{package.id}") == (204, None)
     assert asap == [NOW]
+
+
+def test_delete_all_route_publishes_the_deleted_flights(
+    game: _Game, published: list[GameUpdateEvents]
+) -> None:
+    first, second = _Flight(), _Flight()
+    _plan(game.blue, first)
+    _plan(game.blue, second)
+    enemy = _plan(game.red, _Flight())
+
+    assert _request("DELETE", "/packages/") == (204, None)
+
+    assert game.blue.ato.packages == []
+    assert game.red.ato.packages == [enemy]
+    assert [events.deleted_flights for events in published] == [{first.id, second.id}]
 
 
 def test_delete_route_unknown_package(game: _Game) -> None:

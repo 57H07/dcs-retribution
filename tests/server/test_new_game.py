@@ -612,6 +612,44 @@ def test_draft_squadrons_can_be_added_and_removed(draft: Game) -> None:
     assert len(_blue_side()["squadrons"]) == count
 
 
+def test_all_squadrons_of_an_aircraft_can_be_removed_at_once(draft: Game) -> None:
+    """#206: e.g. every F-104 squadron a mod added, in one call."""
+    side = _blue_side()
+    option = side["aircraft_options"][0]
+    for _ in range(2):
+        status, body = _request(
+            "POST",
+            "/air-wing-config/draft/sides/blue/squadrons",
+            {
+                "aircraft_id": option["aircraft_id"],
+                "base_id": option["bases"][0]["id"],
+                "primary_task": option["primary_tasks"][0],
+            },
+        )
+        assert status == 204, body
+    side = _blue_side()
+    others = [s for s in side["squadrons"] if s["aircraft_id"] != option["aircraft_id"]]
+    red_before = sum(len(v) for v in draft.red.air_wing.squadrons.values())
+
+    path = "/air-wing-config/draft/sides/blue/squadrons/remove-aircraft"
+    status, body = _request("POST", path, {"aircraft_id": option["aircraft_id"]})
+
+    assert status == 204, body
+    after = _blue_side()
+    assert [s["id"] for s in after["squadrons"]] == [s["id"] for s in others]
+    removed = next(
+        o
+        for o in after["aircraft_options"]
+        if o["aircraft_id"] == option["aircraft_id"]
+    )
+    assert removed["squadron_count"] == 0
+    # The other side is not touched.
+    assert sum(len(v) for v in draft.red.air_wing.squadrons.values()) == red_before
+    # Nothing left of that aircraft, or an unknown one: refused, nothing changes.
+    assert _request("POST", path, {"aircraft_id": option["aircraft_id"]})[0] == 409
+    assert _request("POST", path, {"aircraft_id": "No such jet"})[0] == 409
+
+
 def test_draft_squadron_can_be_replaced_with_a_preset(draft: Game) -> None:
     squadron = next((s for s in _blue_side()["squadrons"] if s["presets"]), None)
     if squadron is None:
@@ -777,6 +815,24 @@ def test_campaign_changes_replan_the_turn(
 
     assert _request("DELETE", path)[0] == 204
     assert replans == [False]
+
+    # Removing every squadron of an aircraft replans once, not once per squadron.
+    replans.clear()
+    _, config = _request("GET", "/air-wing-config/campaign")
+    blue = next(side for side in config["sides"] if side["side"] == "blue")
+    aircraft_id = blue["squadrons"][0]["aircraft_id"]
+    status, body = _request(
+        "POST",
+        "/air-wing-config/campaign/sides/blue/squadrons/remove-aircraft",
+        {"aircraft_id": aircraft_id},
+    )
+    assert status == 204, body
+    assert replans == [False]
+    assert all(
+        flight.squadron.aircraft.variant_id != aircraft_id
+        for package in running_game.blue.ato.packages
+        for flight in package.flights
+    )
     assert all(
         flight.squadron.id != victim["id"]
         for package in running_game.blue.ato.packages

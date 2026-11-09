@@ -29,6 +29,7 @@ from game.commands.airwingconfig import (
     load_air_wing,
     move_to_base,
     remove_squadron,
+    remove_squadrons_of,
     rename_squadron,
     replace_with_preset,
     reroll_nickname,
@@ -53,6 +54,7 @@ from .models import (
     FactionJtacJs,
     FactionUnitJs,
     ConfigNewSquadronJs,
+    ConfigRemoveAircraftJs,
     ReplacePresetJs,
     SquadronConfigUpdateJs,
 )
@@ -287,6 +289,29 @@ def post_squadron(
         flight_type_named(body.primary_task),
         body.preset,
     )
+    _reload_sim(target)
+
+
+@router.post(
+    "/sides/{side}/squadrons/remove-aircraft",
+    operation_id="remove_config_aircraft_squadrons",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+    responses=_ERRORS,
+)
+@locked
+def post_remove_aircraft(
+    target: ConfigTarget,
+    side: ConfigSide,
+    body: ConfigRemoveAircraftJs,
+    game: Game = Depends(_game),
+) -> None:
+    """Removes every squadron of the side flying this aircraft (#206)."""
+    try:
+        aircraft = AircraftType.named(body.aircraft_id)
+    except KeyError:
+        raise CommandError(f"Unknown aircraft {body.aircraft_id}.")
+    remove_squadrons_of(game, _coalition(game, side), aircraft)
     _reload_sim(target)
 
 

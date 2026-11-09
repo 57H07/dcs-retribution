@@ -12,6 +12,7 @@ from game.commands.packages import (
     coalition_of,
     create_package,
     delete_package,
+    delete_player_packages,
     rename_package,
     require_package,
     set_package_tot,
@@ -317,6 +318,27 @@ def post_auto_create(
         for flight in planned.flights:
             events.new_flight(flight)
     return PackageDetailJs.for_package(game, planned)
+
+
+@router.delete(
+    "/",
+    operation_id="delete_player_packages",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+    responses=command_error_responses("No campaign is loaded."),
+)
+@locked
+def remove_player_packages(
+    game: Game | None = Depends(GameContext.get),
+) -> None:
+    """Cancels every package of the player ATO, as `delete_package` does each (#206).
+
+    Flights already under way abort instead; the enemy ATO is left alone.
+    """
+    game = _require_game(game)
+    now = GameContext.get_sim().current_time_in_sim_if_game_loaded
+    with EventStream.event_context() as events:
+        delete_player_packages(game, events, now)
 
 
 @router.delete(

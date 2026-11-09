@@ -88,6 +88,30 @@ def cancel_or_abort_package(
 
     Returns True when the package left the ATO.
     """
+    removed = _cancel_or_abort(game, package, events, now)
+    game.compute_unculled_zones(events)
+    return removed
+
+
+def delete_player_packages(
+    game: Game, events: GameUpdateEvents, now: datetime | None
+) -> int:
+    """`cancel_or_abort_package` for every package of the player ATO (#206).
+
+    The enemy ATO is left alone. Returns how many packages left the ATO; those
+    with flights under way stay, with only those flights.
+    """
+    removed = sum(
+        _cancel_or_abort(game, package, events, now)
+        for package in list(game.blue.ato.packages)
+    )
+    game.compute_unculled_zones(events)
+    return removed
+
+
+def _cancel_or_abort(
+    game: Game, package: Package, events: GameUpdateEvents, now: datetime | None
+) -> bool:
     coalition = coalition_of(game, package)
     if all(f.state.cancelable for f in package.flights):
         transfers = [
@@ -99,14 +123,12 @@ def cancel_or_abort_package(
         coalition.ato.remove_package(package)
         for transfer in transfers:
             coalition.transfers.cancel_transfer(transfer)
-        game.compute_unculled_zones(events)
         return True
 
     for flight in list(package.flights):
         cancel_or_abort_flight(coalition, package, flight, events)
     if package.auto_asap and now is not None and package.flights:
         package.set_tot_asap(now)
-    game.compute_unculled_zones(events)
     return False
 
 
