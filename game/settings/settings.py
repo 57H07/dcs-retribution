@@ -774,6 +774,25 @@ class Settings:
         max=12,
         detail="Aircraft, and pilots, that one objective can give.",
     )
+    generate_objectives: bool = boolean_option(
+        "Generate objectives along the front",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=OBJECTIVES_SECTION,
+        default=True,
+        detail=(
+            "For a campaign that sets no objectives: objectives on the front "
+            "line all through the campaign, replaced each turn as they are met, "
+            "missed or passed by the front."
+        ),
+    )
+    generated_objectives_count: int = bounded_int_option(
+        "Generated objectives at a time",
+        page=CAMPAIGN_MANAGEMENT_PAGE,
+        section=OBJECTIVES_SECTION,
+        default=3,
+        min=1,
+        max=6,
+    )
 
     # Pilots and Squadrons
     ai_pilot_levelling: bool = boolean_option(

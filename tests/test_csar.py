@@ -785,6 +785,7 @@ def test_finish_turn_increments_before_coalition_end_turn() -> None:
     game.blue.end_turn.side_effect = lambda: seen.append(game.turn)
     game.red.end_turn.side_effect = lambda: seen.append(game.turn)
     game.theater.controlpoints = []
+    game.objectives.generate = False  # no generated objectives (#210) on a mock
     with patch("game.theater.shipmovement.move_and_reparent_ships"):
         Game.finish_turn(game, MagicMock(), skipped=True)
     assert seen == [6, 6]

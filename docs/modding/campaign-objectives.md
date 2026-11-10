@@ -8,7 +8,8 @@ nothing.
 
 The objectives are read once, when the campaign is generated, and kept in the
 save. Changing the YAML file does not change a campaign already started. An
-inverted campaign (the player on the red side) has no objectives.
+inverted campaign (the player on the red side) ignores them, and gets
+[generated objectives](#generated-objectives) instead.
 
 The player sees them in **Campaign → Objectives** (where **Show on map**
 centres the map on what is left of one), in the top bar while the campaign has
@@ -117,7 +118,41 @@ set them in its `settings:` section too.
 | Objective income cap | 25 % | An income bonus, or cut, is at most this share of that side's income when the objective is met. |
 | Objective total income cap | 50 % | All the bonuses (or cuts) paid in one turn are at most this share. |
 | Objective reinforcements cap | 4 | Aircraft, and pilots, per objective. The aircraft must also fit in the squadron's size and its base's parking. |
+| Generate objectives along the front | on | See [Generated objectives](#generated-objectives). |
+| Generated objectives at a time | 3 | How many generated objectives are in progress at once (1 to 6). |
 
 The player is told what was actually granted. The Objectives screen shows,
 for each objective in progress, what the campaign promises and what it would
 grant today under these settings.
+
+## Generated objectives
+
+A campaign whose YAML has no `objectives:` key gets objectives generated along
+the front, all through the campaign (#210). They use the kinds above, with no
+new rule:
+
+| Kind | Target | Deadline | Reward |
+| --- | --- | --- | --- |
+| Capture | The enemy front-line base nearest the player's bases | 5 turns | +300 budget, +30 income for 5 turns |
+| Destroy (`iads`) | The land air defences of an enemy front-line base | 3 turns | -30 enemy income for 4 turns |
+| Destroy (strike) | The factory, depot, power plant... of an enemy front-line base | 4 turns | -300 enemy budget |
+| Hold | The player's front-line base nearest the enemy | 3 turns | +150 budget |
+
+The rewards then follow the player's settings and caps, like any other.
+
+- **At creation**, up to **Generated objectives at a time** are generated, one of
+  each kind before a second of any.
+- **At the end of each turn**, the generated objectives met or missed are
+  replaced, on the front as it is then: after a capture, the next base facing
+  the enemy becomes a target. Each new one is announced in the info panel.
+- **An objective the front has moved past** (a base now behind the line, or a
+  site whose base is no longer on the front) is closed as *Overtaken*: no
+  reward, no penalty, and it is replaced.
+- **A target just used** waits 3 turns before it can come back.
+- The choice is deterministic: the same theater gives the same objectives.
+
+A campaign author controls it in the YAML:
+
+- `objectives: []`: no objectives, and none generated.
+- `objectives:` with entries: only those, unless `generate_objectives: true`
+  adds generated ones to them.

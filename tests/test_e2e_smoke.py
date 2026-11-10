@@ -164,6 +164,26 @@ def test_a_campaign_from_the_wizard_to_the_second_turn(
     assert _ok("GET", "/game/top-bar")["turn"] == 1
 
 
+def test_a_campaign_without_objectives_gets_them_along_the_front(
+    session: NewGameGeneration,
+) -> None:
+    """#210: generated on the front, and topped up turn after turn."""
+    game = _new_campaign(session, "Caucasus_Multi_Georgia")
+
+    answer = _ok("GET", "/objectives")
+    titles = [o["title"] for o in answer["objectives"]]
+    assert len(titles) == game.settings.generated_objectives_count == 3
+    assert {o["state"] for o in answer["objectives"]} == {"In progress"}
+    assert all(o["targets"] and o["expected"] for o in answer["objectives"])
+    assert all(o.generated for o in game.objectives.objectives)
+    assert _ok("GET", "/game/top-bar")["objectives"]["total"] == 3
+
+    _ok("POST", "/game/turn/pass")
+    answer = _ok("GET", "/objectives")
+    in_progress = [o for o in answer["objectives"] if o["state"] == "In progress"]
+    assert len(in_progress) == 3
+
+
 def test_a_stock_campaign_sets_its_objectives(session: NewGameGeneration) -> None:
     """#194: the example campaign's objectives match its bases and sites."""
     _new_campaign(session, "golan_heights_lite")

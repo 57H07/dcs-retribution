@@ -6,7 +6,9 @@ how much a reward is worth and caps it against the coalition's income, in the
 "Campaign Objectives" settings, so that a campaign cannot hand out too much.
 
 An objective targets the front: a base on the front line, or a site at one. The
-ones behind the front are dropped when the campaign is read.
+ones behind the front are dropped when the campaign is read. A campaign that sets
+none gets objectives generated along the front all through the campaign
+(`game.objectivegen`, #210).
 
 The objectives are read once, when the campaign is generated, and kept on the
 game: a save does not need its campaign file to go on.
@@ -32,6 +34,7 @@ if TYPE_CHECKING:
 #: The titles of the messages that announce a met or missed objective.
 MET_PREFIX = "Objective met: "
 MISSED_PREFIX = "Objective missed: "
+OVERTAKEN_PREFIX = "Objective overtaken: "
 
 #: The category of a destroy objective for every air defence site, radar and IADS
 #: node on land, besides the categories of the ground objects.
@@ -49,6 +52,8 @@ class ObjectiveState(Enum):
     IN_PROGRESS = "In progress"
     MET = "Met"
     MISSED = "Missed"
+    #: A generated objective the front has moved past: no reward, no penalty.
+    OVERTAKEN = "Overtaken"
 
 
 @dataclass(frozen=True)
@@ -133,12 +138,26 @@ class CampaignObjective:
     resolved_turn: Optional[int] = None
     #: What the reward actually gave, after the caps.
     granted: str = ""
+    #: Generated along the front (#210), not read from the campaign.
+    generated: bool = False
+    #: Generated: the kind and target, to keep it from coming back too soon.
+    key: str = ""
 
 
 @dataclass
 class CampaignObjectives:
     objectives: list[CampaignObjective] = field(default_factory=list)
     income_bonuses: list[IncomeBonus] = field(default_factory=list)
+    #: Objectives are generated along the front each turn (#210).
+    generate: bool = False
+    #: The last turn each generated objective key was given or closed.
+    recent: dict[str, int] = field(default_factory=dict)
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        # Saves from before #210.
+        state.setdefault("generate", False)
+        state.setdefault("recent", {})
+        self.__dict__.update(state)
 
     def income_bonus(self, player: Player, turn: int) -> float:
         """The objective income paid to `player` at the end of `turn`, uncapped."""
@@ -430,12 +449,20 @@ def end_of_turn(game: Game) -> None:
             continue
         objective.state = state
         objective.resolved_turn = game.turn
+        if objective.key:
+            # A generated target waits a few turns before it comes back.
+            game.objectives.recent[objective.key] = game.turn
         if state is ObjectiveState.MET:
             objective.granted = _grant(objective, game)
             text = f"Reward: {objective.granted}" if objective.granted else ""
             game.message(f"{MET_PREFIX}{objective.title}", text)
         else:
             game.message(f"{MISSED_PREFIX}{objective.title}", "")
+    if game.objectives.generate and game.settings.generate_objectives:
+        from game import objectivegen
+
+        objectivegen.close_overtaken(game)
+        objectivegen.top_up(game)
 
 
 def _evaluate(objective: CampaignObjective, game: Game) -> ObjectiveState:

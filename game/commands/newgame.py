@@ -29,7 +29,7 @@ from typing import Any, Iterable, Optional, TYPE_CHECKING
 
 from dcs.mapping import LatLng
 
-from game import objectives, persistency
+from game import objectivegen, objectives, persistency
 from .errors import CommandError
 
 if TYPE_CHECKING:
@@ -720,13 +720,21 @@ def generate_new_game(
     game = generator.generate()
     # #194: kept on the game, a save goes on without its campaign file. They are
     # written for the blue side: an inverted campaign has none.
+    raw = campaign.data.get("objectives")
     if parameters.inverted:
-        if campaign.data.get("objectives"):
+        if raw:
             logging.info("Inverted campaign: its objectives are ignored")
+        raw = None
     else:
-        game.objectives = objectives.load(
-            campaign.data.get("objectives"), game, miz_names
-        )
+        game.objectives = objectives.load(raw, game, miz_names)
+    # #210: a campaign that says nothing of objectives gets them generated along
+    # the front; `objectives: []` means none, `generate_objectives: true` adds
+    # them to the campaign's own.
+    game.objectives.generate = raw is None or bool(
+        campaign.data.get("generate_objectives")
+    )
+    if game.objectives.generate and game.settings.generate_objectives:
+        objectivegen.top_up(game, announce=False)
     return game
 
 
