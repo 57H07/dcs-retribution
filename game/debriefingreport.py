@@ -683,6 +683,8 @@ def complete_report(
             ObjectiveLine(o.title, o.state is ObjectiveState.MET, o.granted)
             for o in game.objectives.objectives
             if o.resolved_turn == report.turn
+            # Overtaken (#210): neither met nor missed, said in the log.
+            and o.state in (ObjectiveState.MET, ObjectiveState.MISSED)
         ],
         your_sorties=committed_sortie_cards(
             report.your_sorties, debriefing, report.turn, rules
