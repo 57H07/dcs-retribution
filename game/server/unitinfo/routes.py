@@ -14,6 +14,7 @@ from game.dcs.shipunittype import ShipUnitType
 from game.dcs.unitbanners import existing_banner_for
 from game.dcs.unittype import UnitType
 from game.gamelock import locked
+from game.ground_forces.purpose import front_line_purpose
 
 UnitKind = Literal["aircraft", "ground", "ship"]
 
@@ -34,6 +35,10 @@ class UnitInfoJs(BaseModel):
     year_introduced: str
     #: What an aircraft can be tasked with; empty for other units.
     tasks: list[str]
+    #: The unit's class, e.g. "Tank", "SHORAD" (`UnitClass`).
+    unit_class: str
+    #: What a ground unit does in the ground war (#214); empty for other units.
+    purpose: str
     #: Plain text.
     description: str
 
@@ -57,6 +62,12 @@ class UnitInfoJs(BaseModel):
             role=str(unit_type.role),
             year_introduced=str(unit_type.year_introduced),
             tasks=tasks,
+            unit_class=unit_type.unit_class.value,
+            purpose=(
+                front_line_purpose(unit_type)
+                if isinstance(unit_type, GroundUnitType)
+                else ""
+            ),
             description=_HTML_LINK.sub("", str(unit_type.description)),
         )
 

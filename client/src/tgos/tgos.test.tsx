@@ -456,6 +456,8 @@ describe("unit info sheet", () => {
     role: "Multirole",
     year_introduced: "1991",
     tasks: ["CAP", "SEAD"],
+    unit_class: "Plane",
+    purpose: "",
     description: "A fighter.",
   };
 

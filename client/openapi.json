@@ -18324,6 +18324,14 @@
             "type": "array",
             "title": "Tasks"
           },
+          "unit_class": {
+            "type": "string",
+            "title": "Unit Class"
+          },
+          "purpose": {
+            "type": "string",
+            "title": "Purpose"
+          },
           "description": {
             "type": "string",
             "title": "Description"
@@ -18339,6 +18347,8 @@
           "role",
           "year_introduced",
           "tasks",
+          "unit_class",
+          "purpose",
           "description"
         ],
         "title": "UnitInfo"

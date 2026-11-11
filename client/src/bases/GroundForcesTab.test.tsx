@@ -3,6 +3,7 @@ import type {
   DepartingConvoy,
   GroundForces,
   TransferOptions,
+  UnitInfo,
 } from "../api/liberationApi";
 import { setupStore } from "../app/store";
 import { Answer, recordFetch, restoreFetch } from "../shell/testing";
@@ -82,11 +83,23 @@ const FORCES: GroundForces = {
   transferring: 3,
   deployable_limit: 12,
   reserve: 0,
-  front_lines: [
-    { enemy_id: "cp-9", enemy: "Maykop", stance: "DEFENSIVE" },
-  ],
+  front_lines: [{ enemy_id: "cp-9", enemy: "Maykop", stance: "DEFENSIVE" }],
   stance_options: ["DEFENSIVE", "AGGRESSIVE"],
   front_line_cheats: false,
+};
+
+const T72_INFO: UnitInfo = {
+  kind: "ground",
+  name: "t72",
+  display_name: "T-72",
+  manufacturer: "Uralvagonzavod",
+  country_of_origin: "USSR",
+  role: "Main Battle Tank",
+  year_introduced: "1973",
+  tasks: [],
+  unit_class: "Tank",
+  purpose: "Front line: main battle unit, fights in the first line.",
+  description: "A second generation main battle tank.",
 };
 
 const NO_ACTIONS: BaseActions = {
@@ -117,6 +130,7 @@ function renderBase(
       "/control-points/cp-1/actions": options.actions ?? NO_ACTIONS,
       "/control-points/cp-1/convoys": options.convoys ?? [],
       "/control-points/cp-1/transfer-options": options.transferOptions ?? null,
+      "/unit-info": T72_INFO,
     },
     options.answers ?? {},
   );
@@ -124,6 +138,7 @@ function renderBase(
     [
       { path: "/bases/:id/:tab", element: <BaseScreen /> },
       { path: "/packages/:id", element: <p>Package editor</p> },
+      { path: "/units/:kind/:name", element: <p>Unit sheet</p> },
     ],
     { initialEntries: [options.path ?? "/bases/cp-1/ground-forces"] },
   );
@@ -153,6 +168,26 @@ describe("ground unit orders", () => {
     expect(forces).toHaveTextContent("On their way here3");
     expect(forces).toHaveTextContent("Deployable at the front12");
     expect(forces).toHaveTextContent("FactoryNo");
+  });
+
+  it("tells what a unit is and does, and opens its sheet (#214)", async () => {
+    const user = userEvent.setup();
+    renderBase();
+    const unit = await screen.findByRole("link", { name: "T-72" });
+    await user.hover(unit);
+    const tip = await screen.findByRole("tooltip");
+    await waitFor(() => expect(tip).toHaveTextContent("Main Battle Tank"));
+    expect(tip).toHaveTextContent(
+      "Front line: main battle unit, fights in the first line.",
+    );
+    expect(tip).toHaveTextContent("A second generation main battle tank.");
+    expect(within(tip).getByRole("img", { name: "T-72" })).toHaveAttribute(
+      "src",
+      expect.stringContaining("unit-info/banner?kind=ground&name=t72"),
+    );
+
+    await user.click(unit);
+    expect(await screen.findByText("Unit sheet")).toBeInTheDocument();
   });
 
   it("stays within the limits the server sends for the row", async () => {
@@ -203,7 +238,9 @@ describe("ground unit orders", () => {
       },
     });
     await userEvent.click(await add("BMP-2"));
-    await userEvent.click(screen.getByRole("button", { name: "Confirm order" }));
+    await userEvent.click(
+      screen.getByRole("button", { name: "Confirm order" }),
+    );
     expect(await screen.findByText("You need a factory.")).toBeVisible();
     expect(screen.getByLabelText("Order for BMP-2")).toHaveTextContent("+1");
   });

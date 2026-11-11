@@ -4202,6 +4202,8 @@ export type UnitInfo = {
   role: string;
   year_introduced: string;
   tasks: string[];
+  unit_class: string;
+  purpose: string;
   description: string;
 };
 export type LogTailJs = {
