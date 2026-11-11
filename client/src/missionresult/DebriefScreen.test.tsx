@@ -237,6 +237,39 @@ describe("DebriefScreen", () => {
     ).toHaveAttribute("href", `/career?pilot=${MOROZ_ID}`);
   });
 
+  it("comes back from a pilot career with the results still to accept", async () => {
+    const calls = recordFetch(
+      204,
+      undefined,
+      {
+        [REPORT]: {
+          status: "pending",
+          can_accept: true,
+          report: report({ your_sorties: [card()] }),
+        },
+        "/careers/": [],
+      },
+      { [ACCEPT]: { body: { turn: 5, campaign_state: "continue" } } },
+    );
+    const { router } = renderShell("/debrief");
+
+    await userEvent.click(
+      await screen.findByRole("link", { name: "Career of Lt. Moroz" }),
+    );
+    expect(router.state.location.pathname).toBe("/career");
+    await userEvent.click(
+      await screen.findByRole("link", { name: "After-action report" }),
+    );
+
+    expect(router.state.location.pathname).toBe("/debrief");
+    const accept = await screen.findByRole("button", {
+      name: "Accept results",
+    });
+    expect(accept).toBeEnabled();
+    await userEvent.click(accept);
+    expect(calls).toMatchObject([{ method: "POST", path: ACCEPT }]);
+  });
+
   it("cannot accept a mission still being played", async () => {
     recordFetch(204, undefined, { [REPORT]: pending(false) });
     renderShell("/debrief");

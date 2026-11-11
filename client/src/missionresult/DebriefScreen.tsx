@@ -17,6 +17,7 @@ import {
   useLoadMissionResultFileMutation,
 } from "../api/liberationApi";
 import { formatIncome, formatMoney, formatTurn } from "../command/format";
+import { backTo } from "../secondary/ScreenFrame";
 import { PATHS } from "../shell/paths";
 import { Button, Table, TableColumn, TaskTag, useToast } from "../ui";
 import styles from "./DebriefScreen.module.css";
@@ -155,6 +156,8 @@ function SortieCardView({ card }: { card: SortieCard }) {
         <Link
           className={styles.careerLink}
           to={`${PATHS.career}?pilot=${card.pilot_id}`}
+          // Back from the career comes back here, results still to accept.
+          state={backTo(PATHS.debrief, "After-action report")}
           aria-label={`Career of ${card.pilot}`}
         >
           Career
