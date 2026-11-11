@@ -491,9 +491,22 @@
   box-shadow: var(--ui-shadow-focus);
 }
 
+/* The settings step fills the wizard: only the settings list scrolls, down to a
+   floor under which the whole step scrolls instead. */
+.fillForm {
+  flex: 1 1 0;
+  min-height: 480px;
+}
+
+.fillGroup {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
 .settingsColumns {
+  flex: 1;
+  min-height: 0;
   display: flex;
-  flex-wrap: wrap;
   gap: var(--ui-space-lg);
 }
 
@@ -551,15 +564,38 @@
 
 /* #213: scrolls inside the panel; the page list and the search stay put. */
 .settings {
-  flex: 1 1 480px;
+  flex: 1;
   min-width: 0;
-  max-height: max(320px, calc(100vh - 300px));
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding-right: var(--ui-space-sm);
   display: flex;
   flex-direction: column;
   gap: var(--ui-space-md);
+}
+
+/* Too narrow for two columns: the pages go above the list, and the step scrolls
+   as a whole around a list of a fixed height. */
+@media (max-width: 760px) {
+  .fillForm,
+  .fillGroup {
+    flex: none;
+    min-height: 0;
+  }
+
+  .settingsColumns {
+    flex-direction: column;
+  }
+
+  .pages {
+    flex: none;
+  }
+
+  .settings {
+    flex: none;
+    max-height: 60vh;
+  }
 }
 
 .settings:focus-visible {

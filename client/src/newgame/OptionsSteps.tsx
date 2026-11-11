@@ -133,7 +133,7 @@ export function OptionsStep({
     // Qt too: the sides trade places, so the factions follow them.
     onChange({ ...state, inverted, blue: state.red, red: state.blue });
   return (
-    <div className={styles.form}>
+    <div className={`${styles.form} ${styles.fillForm}`}>
       <section className={styles.group} aria-label="Date and map">
         <h2 className={styles.heading}>Date and map</h2>
         <Row label="Start date">
@@ -199,7 +199,10 @@ export function OptionsStep({
           onChange={(advancedIads) => onChange({ ...state, advancedIads })}
         />
       </section>
-      <section className={styles.group} aria-label="Campaign settings">
+      <section
+        className={`${styles.group} ${styles.fillGroup}`}
+        aria-label="Campaign settings"
+      >
         <h2 className={styles.heading}>Campaign settings</h2>
         <input
           className={styles.settingsSearch}
