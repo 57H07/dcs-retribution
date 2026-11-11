@@ -196,3 +196,10 @@
   align-items: center;
   gap: var(--ui-space-sm);
 }
+
+/* #215: the aircraft of a flight and its Player badge. */
+.flightLine {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-xs);
+}

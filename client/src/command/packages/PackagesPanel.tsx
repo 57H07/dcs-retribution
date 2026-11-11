@@ -16,6 +16,7 @@ import {
 } from "../../api/selectionSlice";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { ObjectiveBadge } from "../../packages/ObjectiveBadge";
+import { PlayerBadge } from "../../packages/PlayerBadge";
 import { PATHS } from "../../shell/paths";
 import {
   Button,
@@ -30,7 +31,7 @@ import {
   useToast,
 } from "../../ui";
 import {
-  flightSummary,
+  flightAircraft,
   formatTot,
   matchesFilter,
   missingPilotsLabel,
@@ -224,7 +225,12 @@ function PackageCard({
   };
 
   return (
-    <li ref={ref} className={styles.item} data-selected={selected || undefined}>
+    <li
+      ref={ref}
+      className={styles.item}
+      data-selected={selected || undefined}
+      data-player={pkg.flights.some((f) => f.clients > 0) || undefined}
+    >
       <ListCard
         selected={selected}
         onSelect={onSelect}
@@ -236,7 +242,10 @@ function PackageCard({
             <ObjectiveBadge objectives={pkg.objectives} />
             {pkg.flights.length === 0 && <span>No flight</span>}
             {pkg.flights.map((flight) => (
-              <span key={flight.id}>{flightSummary(flight)}</span>
+              <span key={flight.id} className={styles.flightLine}>
+                {flightAircraft(flight)}
+                <PlayerBadge flight={flight} />
+              </span>
             ))}
             {pkg.missing_pilots > 0 && (
               <span className={styles.warning}>
@@ -259,7 +268,10 @@ function PackageCard({
                     onClick={() => dispatch(selectFlight(flight.id))}
                   >
                     <span className={styles.flightTask}>{flight.task}</span>
-                    <span>{flightSummary(flight)}</span>
+                    <span className={styles.flightLine}>
+                      {flightAircraft(flight)}
+                      <PlayerBadge flight={flight} />
+                    </span>
                     <span className={styles.flightFrom}>
                       {flight.squadron} · {flight.departure}
                     </span>

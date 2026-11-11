@@ -1,0 +1,15 @@
+/* A flight with player slots (#215): filled, apart from the Objective badge. */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 6px;
+  border: 1px solid var(--ui-color-success);
+  border-radius: var(--ui-radius-md);
+  background: color-mix(in srgb, var(--ui-color-success) 22%, transparent);
+  color: var(--ui-color-text-primary);
+  font-size: 11px;
+  font-weight: var(--ui-font-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}

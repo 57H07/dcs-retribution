@@ -190,7 +190,8 @@ describe("package editor", () => {
     ).toHaveTextContent("Objective");
     expect(screen.getByLabelText("Time on target")).toHaveValue("07:12:30");
     const card = screen.getByRole("button", { name: /F\/A-18C/ });
-    expect(card).toHaveTextContent("2 × F/A-18C · Player");
+    expect(card).toHaveTextContent("2 × F/A-18C");
+    expect(within(card).getByRole("img", { name: "Player" })).toBeVisible();
     expect(card).toHaveTextContent("DEAD · Anapa");
     expect(card).toHaveTextContent("Start 06:28 · T/O 06:38");
     expect(screen.getByRole("button", { name: /F-15C/ })).toHaveTextContent(
