@@ -1,8 +1,12 @@
 import { TimelinePackage } from "../api/liberationApi";
 import {
+  MAX_EXTRAPOLATION_SECONDS,
   axisPercent,
   clockLabel,
   layoutBars,
+  liveOffset,
+  packageProgress,
+  playerLabel,
   simOffset,
   timeAxis,
 } from "./timeline";
@@ -21,6 +25,7 @@ function pkg(
     tot,
     landing,
     flight_ids: [id],
+    players: 0,
   };
 }
 
@@ -102,5 +107,49 @@ describe("simulation cursor", () => {
 
   it("maps onto the axis", () => {
     expect(axisPercent({ from: 0, to: 200, ticks: [] }, 50)).toBe(25);
+  });
+});
+
+describe("packageProgress", () => {
+  const p = pkg("a", 100, 400, 700);
+
+  it("follows the planned schedule", () => {
+    expect(packageProgress(p, 50)).toEqual({
+      phase: "Not started",
+      percent: 0,
+    });
+    expect(packageProgress(p, 250)).toEqual({ phase: "Inbound", percent: 25 });
+    expect(packageProgress(p, 400)).toEqual({ phase: "Egress", percent: 50 });
+    expect(packageProgress(p, 900)).toEqual({ phase: "Done", percent: 100 });
+  });
+
+  it("handles a package without duration", () => {
+    expect(packageProgress(pkg("b", 100, 100, 100), 100).percent).toBe(100);
+    expect(packageProgress(pkg("b", 100, 100, 100), 99).percent).toBe(0);
+  });
+});
+
+describe("liveOffset", () => {
+  it("runs the clock at 1x after a report", () => {
+    expect(liveOffset(600, 0, false)).toBe(600);
+    expect(liveOffset(600, 5000, false)).toBe(605);
+  });
+
+  it("stops extrapolating a stale report", () => {
+    expect(liveOffset(600, 120_000, false)).toBe(
+      600 + MAX_EXTRAPOLATION_SECONDS,
+    );
+  });
+
+  it("freezes once the mission is over", () => {
+    expect(liveOffset(600, 5000, true)).toBe(600);
+  });
+});
+
+describe("playerLabel", () => {
+  it("names the player slots of a package", () => {
+    expect(playerLabel({ ...pkg("a", 0, 1, 2), players: 0 })).toBeNull();
+    expect(playerLabel({ ...pkg("a", 0, 1, 2), players: 1 })).toBe("Player");
+    expect(playerLabel({ ...pkg("a", 0, 1, 2), players: 3 })).toBe("3 players");
   });
 });

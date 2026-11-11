@@ -14532,6 +14532,10 @@
             },
             "type": "array",
             "title": "Losses"
+          },
+          "mission_elapsed": {
+            "title": "Mission Elapsed",
+            "type": "number"
           }
         },
         "type": "object",
@@ -17894,6 +17898,10 @@
             },
             "type": "array",
             "title": "Flight Ids"
+          },
+          "players": {
+            "type": "integer",
+            "title": "Players"
           }
         },
         "type": "object",
@@ -17904,7 +17912,8 @@
           "startup",
           "tot",
           "landing",
-          "flight_ids"
+          "flight_ids",
+          "players"
         ],
         "title": "TimelinePackage"
       },

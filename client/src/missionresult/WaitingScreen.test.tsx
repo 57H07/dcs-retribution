@@ -146,6 +146,90 @@ describe("WaitingScreen", () => {
     expect(router.state.location.pathname).toBe("/waiting");
   });
 
+  it("shows the package timeline at the mission time of DCS", async () => {
+    recordFetch(204, undefined, {
+      [RESULT]: result({
+        status: "detected",
+        mission_elapsed: 30 * 60 + 15,
+        ...LOSSES,
+      }),
+      "/game/timeline": {
+        start_time: "08:00:00",
+        packages: [
+          {
+            id: "p1",
+            task: "Strike",
+            target: "Bridge",
+            startup: 10 * 60,
+            tot: 25 * 60,
+            landing: 50 * 60,
+            flight_ids: ["f1"],
+            players: 1,
+          },
+          {
+            id: "p2",
+            task: "BARCAP",
+            target: "Kutaisi",
+            startup: 60 * 60,
+            tot: 70 * 60,
+            landing: 90 * 60,
+            flight_ids: ["f2"],
+            players: 0,
+          },
+        ],
+      },
+    });
+    renderShell("/waiting");
+    const timeline = await screen.findByRole("region", {
+      name: "Package timeline",
+    });
+    expect(within(timeline).getByTestId("mission-clock")).toHaveTextContent(
+      /Mission time 08:30:1\d/,
+    );
+    expect(
+      within(timeline).getByRole("img", { name: /Mission time 08:30/ }),
+    ).toBeInTheDocument();
+    const [strike, barcap] = within(timeline).getAllByTitle(/TOT/);
+    expect(strike).toHaveAttribute("data-phase", "Egress");
+    expect(barcap).toHaveAttribute("data-phase", "Not started");
+    // The player's package stands out, on the timeline and above it.
+    expect(strike).toHaveAttribute("data-player", "true");
+    expect(strike).toHaveTextContent(/^Player/);
+    expect(barcap).not.toHaveAttribute("data-player");
+    const mine = within(timeline).getByRole("list", { name: "Your packages" });
+    const [line] = within(mine).getAllByRole("listitem");
+    expect(line).toHaveTextContent("PlayerStrike · BridgeTOT 08:25Egress");
+    expect(within(mine).getAllByRole("listitem")).toHaveLength(1);
+  });
+
+  it("waits for the DCS clock before placing the cursor", async () => {
+    recordFetch(204, undefined, {
+      [RESULT]: result({ status: "detected", ...LOSSES }),
+      "/game/timeline": {
+        start_time: "08:00:00",
+        packages: [
+          {
+            id: "p1",
+            task: "Strike",
+            target: "Bridge",
+            startup: 600,
+            tot: 1500,
+            landing: 3000,
+            flight_ids: ["f1"],
+            players: 0,
+          },
+        ],
+      },
+    });
+    renderShell("/waiting");
+    expect(await screen.findByTestId("mission-clock")).toHaveTextContent(
+      "Waiting for the DCS clock",
+    );
+    expect(
+      screen.queryByRole("img", { name: /Mission time/ }),
+    ).not.toBeInTheDocument();
+  });
+
   it("says when no mission is waiting", async () => {
     recordFetch(204, undefined, {
       [RESULT]: result({ status: "idle", miz_path: undefined }),

@@ -39,10 +39,15 @@ class _Plan:
 
 class _Flight:
     def __init__(
-        self, startup: float, tot: float, landing: float | None = None
+        self,
+        startup: float,
+        tot: float,
+        landing: float | None = None,
+        client_count: int = 0,
     ) -> None:
         self.id: UUID = uuid4()
         self.flight_plan = _Plan(startup, tot, landing)
+        self.client_count = client_count
 
 
 class _Package:
@@ -79,6 +84,14 @@ def test_package_spans_first_startup_to_last_landing() -> None:
     assert package.target == "Ammo depot"
     assert (package.startup, package.tot, package.landing) == (300, 2400, 4800)
     assert package.flight_ids == [str(lead.id), str(escort.id)]
+    assert package.players == 0
+
+
+def test_player_slots_of_all_flights_are_counted() -> None:
+    lead = _Flight(startup=10, tot=40, landing=70, client_count=2)
+    escort = _Flight(startup=5, tot=38, landing=80, client_count=1)
+    timeline = TimelineJs.for_game(_game(_Package(lead, escort, tot=40)))
+    assert timeline.packages[0].players == 3
 
 
 def test_plan_without_landing_ends_at_its_tot() -> None:
@@ -134,6 +147,7 @@ def test_route(monkeypatch: pytest.MonkeyPatch) -> None:
                 "tot": 2400,
                 "landing": 4200,
                 "flight_ids": [str(flight.id)],
+                "players": 0,
             }
         ],
     }

@@ -29,6 +29,9 @@ class TimelinePackageJs(BaseModel):
     tot: int
     landing: int
     flight_ids: list[str]
+    #: Player slots in the package's flights (`Flight.client_count`): the
+    #: player's own packages are highlighted.
+    players: int
 
     class Config:
         title = "TimelinePackage"
@@ -77,4 +80,5 @@ def _package(package: Package, start: datetime) -> TimelinePackageJs:
         tot=offset(package.time_over_target),
         landing=offset(max(_landing_time(f) for f in flights)),
         flight_ids=[str(f.id) for f in flights],
+        players=sum(f.client_count for f in flights),
     )

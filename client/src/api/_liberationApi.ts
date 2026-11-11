@@ -3412,6 +3412,7 @@ export type TimelinePackage = {
   tot: number;
   landing: number;
   flight_ids: string[];
+  players: number;
 };
 export type Timeline = {
   start_time: string;
@@ -3482,6 +3483,7 @@ export type MissionResult = {
   player_country?: string;
   enemy_country?: string;
   losses: LossRow[];
+  mission_elapsed?: number;
 };
 export type DebriefingStatusJs = "none" | "pending" | "accepted";
 export type ToneJs = "good" | "bad" | "mixed" | "neutral";

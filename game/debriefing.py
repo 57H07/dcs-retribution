@@ -284,6 +284,10 @@ class StateData:
     #: during the mission, keyed by unit name. Empty for state files written before
     #: damage collection existed.
     damaged_units: Dict[str, float] = field(default_factory=dict)
+    #: DCS world clock when state.json was written (`timer.getAbsTime()`): seconds
+    #: since midnight of the day the mission started. None for state files written
+    #: before the clock was exported.
+    mission_time: Optional[float] = None
 
     @classmethod
     def from_json(cls, data: Dict[str, Any], unit_map: UnitMap) -> StateData:
@@ -345,7 +349,16 @@ class StateData:
             damaged_units=cls._parse_damaged_units(
                 data.get("damaged_units", []), set(killed_units)
             ),
+            mission_time=cls._parse_mission_time(data.get("mission_time")),
         )
+
+    @staticmethod
+    def _parse_mission_time(value: Any) -> Optional[float]:
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            return None
+        if not math.isfinite(value) or value < 0:
+            return None
+        return float(value)
 
     @staticmethod
     def _parse_damaged_units(entries: Any, killed_units: set[str]) -> Dict[str, float]:
@@ -714,6 +727,19 @@ class Debriefing:
         for loss in losses:
             losses_by_type[loss.trigger_zone.name] += 1
         return losses_by_type
+
+    @property
+    def mission_elapsed(self) -> Optional[float]:
+        """Seconds of mission played when state.json was written, None if unknown.
+
+        Same origin as the package timeline: `game.conditions.start_time`, which is
+        also the start time of the generated mission.
+        """
+        if self.state_data.mission_time is None:
+            return None
+        start = self.game.conditions.start_time
+        start_of_day = start.hour * 3600 + start.minute * 60 + start.second
+        return max(0.0, self.state_data.mission_time - start_of_day)
 
     def loss_counts(self, player: Player) -> SideLossCounts:
         gl = self.ground_losses

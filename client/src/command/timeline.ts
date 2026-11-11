@@ -123,3 +123,72 @@ export function layoutBars(axis: Axis, packages: TimelinePackage[]): Bar[] {
     return { pkg, left, width, tot, lane };
   });
 }
+
+export type PackagePhase = "Not started" | "Inbound" | "Egress" | "Done";
+
+export interface PackageProgress {
+  phase: PackagePhase;
+  /** Share of the package span (first startup to last landing) elapsed, 0-100. */
+  percent: number;
+}
+
+/**
+ * How far the planned schedule of `pkg` is at `cursor` (seconds since the
+ * mission start): before startup, on the way to the TOT, after it, or landed.
+ * Planned times only: DCS does not report where the flights really are.
+ */
+export function packageProgress(
+  pkg: TimelinePackage,
+  cursor: number,
+): PackageProgress {
+  const end = Math.max(pkg.landing, pkg.startup);
+  const duration = end - pkg.startup;
+  const percent =
+    duration > 0
+      ? Math.min(100, Math.max(0, ((cursor - pkg.startup) / duration) * 100))
+      : cursor >= pkg.startup
+        ? 100
+        : 0;
+  let phase: PackagePhase;
+  if (cursor < pkg.startup) {
+    phase = "Not started";
+  } else if (cursor >= end) {
+    phase = "Done";
+  } else if (cursor < pkg.tot) {
+    phase = "Inbound";
+  } else {
+    phase = "Egress";
+  }
+  return { phase, percent };
+}
+
+/**
+ * DCS writes its clock every 15 s and the engine reads it every 2 s: between
+ * two reports, the clock is assumed to run at 1x for at most this long, so a
+ * paused or accelerated mission never drifts far from its last report.
+ */
+export const MAX_EXTRAPOLATION_SECONDS = 20;
+
+/**
+ * Mission time shown `sinceReportMs` after DCS reported `elapsed` seconds of
+ * mission; frozen once the mission is over.
+ */
+export function liveOffset(
+  elapsed: number,
+  sinceReportMs: number,
+  ended: boolean,
+): number {
+  if (ended) {
+    return elapsed;
+  }
+  const since = Math.max(0, sinceReportMs / 1000);
+  return elapsed + Math.min(since, MAX_EXTRAPOLATION_SECONDS);
+}
+
+/** "Player" / "N players" for a package with player slots (#215), else null. */
+export function playerLabel(pkg: TimelinePackage): string | null {
+  if (pkg.players <= 0) {
+    return null;
+  }
+  return pkg.players === 1 ? "Player" : `${pkg.players} players`;
+}

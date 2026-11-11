@@ -2,9 +2,13 @@
 // packages on the mission time axis, from first startup to last landing, with
 // their TOT and the simulation clock. Clicking a package selects it for the map
 // and the packages panel (selectionSlice).
+//
+// `TimelineChart` draws the strip; the waiting screen reuses it with the clock
+// of the mission being played in DCS (missionresult/LiveTimeline).
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { selectSelectedFlightId } from "../api/flightsSlice";
 import {
+  Timeline,
   useGetTimelineQuery,
   useGetTopBarQuery,
 } from "../api/liberationApi";
@@ -19,35 +23,39 @@ import {
   axisPercent,
   clockLabel,
   layoutBars,
+  packageProgress,
+  playerLabel,
   simOffset,
   timeAxis,
 } from "./timeline";
 
 const LANE_HEIGHT = 20;
 
-export function MissionTimeline() {
-  const dispatch = useAppDispatch();
-  const { data: timeline } = useGetTimelineQuery();
-  // The top bar query is polled every second while the sim runs (TurnActions).
-  const { data: bar } = useGetTopBarQuery();
-  const packageKey = useAppSelector(selectSelectedPackageKey);
-  const selectedFlight = useAppSelector(selectSelectedFlightId);
+export interface TimelineChartProps {
+  timeline: Timeline;
+  /** Seconds since the mission start of the clock cursor; null hides it. */
+  cursor: number | null;
+  /** Accessible name of the cursor. */
+  cursorLabel?: string;
+  /** Id of the highlighted package. */
+  selected?: string | null;
+  /** Clicking a bar; without it, bars are not interactive. */
+  onSelect?: (packageId: string, firstFlightId: string | undefined) => void;
+  /** Shades each bar up to the cursor: how far the package got. */
+  showProgress?: boolean;
+}
 
-  if (timeline == null || timeline.packages.length === 0) {
-    return <p className={styles.empty}>No package scheduled yet.</p>;
-  }
-
-  const simTime = bar?.sim.time;
-  const cursor =
-    simTime != null ? simOffset(timeline.start_time, simTime) : null;
+export function TimelineChart({
+  timeline,
+  cursor,
+  cursorLabel,
+  selected = null,
+  onSelect,
+  showProgress = false,
+}: TimelineChartProps) {
   const axis = timeAxis(timeline.start_time, timeline.packages, cursor);
   const bars = layoutBars(axis, timeline.packages);
   const lanes = Math.max(...bars.map((b) => b.lane)) + 1;
-  const selected = selectedPackageId(
-    packageKey,
-    selectedFlight,
-    timeline.packages,
-  );
 
   return (
     <div className={styles.timeline}>
@@ -79,33 +87,74 @@ export function MissionTimeline() {
           const label = [pkg.task, pkg.target, `TOT ${totLabel}`]
             .filter((part) => part !== "")
             .join(" · ");
-          return (
-            <button
-              key={pkg.id}
-              type="button"
-              className={styles.bar}
-              data-task-family={taskFamily(pkg.task)}
-              aria-pressed={selected === pkg.id}
-              title={`${label} (${clockLabel(
-                timeline.start_time,
-                pkg.startup,
-              )} - ${clockLabel(timeline.start_time, pkg.landing)})`}
-              style={{
-                left: `${left}%`,
-                width: `${width}%`,
-                top: `${4 + lane * LANE_HEIGHT}px`,
-                color: colors.fg,
-                background: colors.bg,
-                borderLeftColor: colors.fg,
-              }}
-              onClick={() => selectPackage(dispatch, pkg.id, pkg.flight_ids[0])}
-            >
+          const progress =
+            showProgress && cursor !== null
+              ? packageProgress(pkg, cursor)
+              : null;
+          const player = playerLabel(pkg);
+          const title = `${player === null ? "" : `${player} · `}${label} (${clockLabel(
+            timeline.start_time,
+            pkg.startup,
+          )} - ${clockLabel(timeline.start_time, pkg.landing)})${
+            progress === null ? "" : ` · ${progress.phase}`
+          }`;
+          const style = {
+            left: `${left}%`,
+            width: `${width}%`,
+            top: `${4 + lane * LANE_HEIGHT}px`,
+            color: colors.fg,
+            background: colors.bg,
+            borderLeftColor: colors.fg,
+          };
+          const content = (
+            <>
+              {progress !== null && (
+                <span
+                  className={styles.progress}
+                  data-testid="package-progress"
+                  style={{
+                    width: `${progress.percent}%`,
+                    background: colors.fg,
+                  }}
+                />
+              )}
+              {player !== null && (
+                <span className={styles.player}>{player}</span>
+              )}
               <span className={styles.label}>{label}</span>
               <span
                 className={styles.tot}
                 data-testid="tot-marker"
                 style={{ left: `${tot}%`, background: colors.fg }}
               />
+            </>
+          );
+          return onSelect === undefined ? (
+            <div
+              key={pkg.id}
+              className={styles.bar}
+              data-task-family={taskFamily(pkg.task)}
+              data-phase={progress?.phase}
+              data-player={player !== null || undefined}
+              title={title}
+              style={style}
+            >
+              {content}
+            </div>
+          ) : (
+            <button
+              key={pkg.id}
+              type="button"
+              className={styles.bar}
+              data-task-family={taskFamily(pkg.task)}
+              data-phase={progress?.phase}
+              data-player={player !== null || undefined}
+              aria-pressed={selected === pkg.id}
+              title={title}
+              style={style}
+              onClick={() => onSelect(pkg.id, pkg.flight_ids[0])}
+            >
+              {content}
             </button>
           );
         })}
@@ -113,11 +162,44 @@ export function MissionTimeline() {
           <span
             className={styles.cursor}
             role="img"
-            aria-label={`Simulation time ${simTime}`}
+            aria-label={cursorLabel ?? "Mission time"}
             style={{ left: `${axisPercent(axis, cursor)}%` }}
           />
         )}
       </div>
     </div>
+  );
+}
+
+export function MissionTimeline() {
+  const dispatch = useAppDispatch();
+  const { data: timeline } = useGetTimelineQuery();
+  // The top bar query is polled every second while the sim runs (TurnActions).
+  const { data: bar } = useGetTopBarQuery();
+  const packageKey = useAppSelector(selectSelectedPackageKey);
+  const selectedFlight = useAppSelector(selectSelectedFlightId);
+
+  if (timeline == null || timeline.packages.length === 0) {
+    return <p className={styles.empty}>No package scheduled yet.</p>;
+  }
+
+  const simTime = bar?.sim.time;
+  const cursor =
+    simTime != null ? simOffset(timeline.start_time, simTime) : null;
+
+  return (
+    <TimelineChart
+      timeline={timeline}
+      cursor={cursor}
+      cursorLabel={`Simulation time ${simTime}`}
+      selected={selectedPackageId(
+        packageKey,
+        selectedFlight,
+        timeline.packages,
+      )}
+      onSelect={(packageId, flightId) =>
+        selectPackage(dispatch, packageId, flightId)
+      }
+    />
   );
 }

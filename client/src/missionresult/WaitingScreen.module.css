@@ -163,3 +163,58 @@
     animation: none;
   }
 }
+
+.timelineHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ui-space-md);
+  padding: var(--ui-space-md) var(--ui-space-lg) 0;
+}
+
+.missionClock {
+  color: var(--ui-color-text-secondary);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-font-size-sm);
+}
+
+.timelineBody {
+  padding: var(--ui-space-sm) var(--ui-space-lg) var(--ui-space-lg);
+}
+
+/* The player's packages (#215), above the timeline. */
+.playerPackages {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-xs);
+  margin: 0;
+  padding: var(--ui-space-sm) var(--ui-space-lg) 0;
+  list-style: none;
+}
+
+.playerPackage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-sm);
+  padding: var(--ui-space-xs) var(--ui-space-sm);
+  border-radius: var(--ui-radius-md);
+  box-shadow: inset 3px 0 0 var(--ui-color-success);
+  background: color-mix(in srgb, var(--ui-color-success) 10%, transparent);
+}
+
+.playerChip {
+  padding: 0 6px;
+  border: 1px solid var(--ui-color-success);
+  border-radius: var(--ui-radius-md);
+  background: color-mix(in srgb, var(--ui-color-success) 22%, transparent);
+  font-size: 11px;
+  font-weight: var(--ui-font-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.playerPhase {
+  margin-left: auto;
+  font-weight: var(--ui-font-weight-semibold);
+}

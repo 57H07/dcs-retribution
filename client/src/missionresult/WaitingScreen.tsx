@@ -15,6 +15,7 @@ import {
 } from "../api/liberationApi";
 import { PATHS } from "../shell/paths";
 import { Button, Table, TableColumn, useToast } from "../ui";
+import { LiveTimeline } from "./LiveTimeline";
 import styles from "./WaitingScreen.module.css";
 import { useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -214,6 +215,10 @@ export function WaitingScreen() {
                 </span>
               </div>
             </div>
+            <LiveTimeline
+              elapsed={result.mission_elapsed}
+              ended={result.mission_ended}
+            />
             {result.losses.length > 0 && (
               <div className={styles.panel}>
                 <LossTable result={result} />

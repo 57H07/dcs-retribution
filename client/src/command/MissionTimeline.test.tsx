@@ -21,6 +21,7 @@ const TIMELINE: Timeline = {
       tot: 2400,
       landing: 4200,
       flight_ids: ["strike-lead", "strike-escort"],
+      players: 0,
     },
     {
       id: "pkg-cap",
@@ -30,6 +31,7 @@ const TIMELINE: Timeline = {
       tot: 1200,
       landing: 5400,
       flight_ids: ["cap-lead"],
+      players: 0,
     },
   ],
 };

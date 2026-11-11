@@ -26,6 +26,8 @@ mist = {
 }
 timer = { now = 0, scheduled = {} }
 function timer.getTime() return timer.now end
+-- The mission starts at 08:30:00.
+function timer.getAbsTime() return 30600 + timer.now end
 function timer.scheduleFunction(f, arg, t)
     timer.scheduled[#timer.scheduled + 1] = { f = f, arg = arg }
 end
@@ -129,3 +131,12 @@ def test_damaged_units_written_to_state_json(tmp_path: Path) -> None:
         {"tank": 0.4, "depot": 0.3, "viper": 0.7}
     )
     assert "sam" in state.killed_ground_units
+
+
+def test_mission_clock_written_to_state_json(tmp_path: Path) -> None:
+    data = _run_mission(tmp_path)
+    assert data["mission_time"] == 30600
+
+    unit_map = MagicMock()
+    unit_map.flight.return_value = None
+    assert StateData.from_json(data, unit_map).mission_time == 30600.0

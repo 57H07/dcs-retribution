@@ -118,6 +118,9 @@ function write_state()
         ["damaged_units"] = collect_damaged_units(),
         ["ejection_events"] = ejection_events,
         ["csar_rescued"] = csar_rescued,
+        -- World clock (seconds since midnight of the mission day): drives the
+        -- live package timeline of DCS Retribution.
+        ["mission_time"] = timer.getAbsTime(),
     }
     local ok, write_error = pcall(function()
         fp:write(json:encode(game_state))
@@ -211,8 +214,9 @@ write_state_error_handling = function()
         logger:error("Unable to find where to write DCS Retribution state")
     end
 
-    -- Only write if state has changed since last write
-    if dirty_state then
+    -- Write if state has changed since last write; while the mission runs, write
+    -- every tick anyway so that the mission clock reaches DCS Retribution.
+    if dirty_state or not mission_ended then
         if pcall(write_state) then
             dirty_state = false -- Reset dirty flag after successful write
             error_message_shown = false

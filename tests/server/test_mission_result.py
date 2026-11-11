@@ -54,6 +54,7 @@ def _debriefing(data: dict[str, Any]) -> Any:
         player_country="Ukraine",
         enemy_country="Russia",
         loss_counts=lambda player: _counts(2 if player.is_blue else 5),
+        mission_elapsed=data.get("mission_elapsed"),
         data=data,
     )
 
@@ -415,9 +416,10 @@ def test_status_route(
     assert body["status"] == "idle"
     assert body["miz_path"] is None
     assert body["losses"] == []
+    assert body["mission_elapsed"] is None
 
     waiter.start(sim, MIZ)
-    _write_state(state_path, {"mission_ended": True})
+    _write_state(state_path, {"mission_ended": True, "mission_elapsed": 754.5})
     _wait_until(lambda: waiter.snapshot().mission_ended)
     status, body = _request("GET", "/game/mission/result")
     assert body["status"] == "detected"
@@ -428,6 +430,7 @@ def test_status_route(
     assert (body["player_country"], body["enemy_country"]) == ("Ukraine", "Russia")
     assert body["losses"][0] == {"label": "Aircraft lost", "blue": 2, "red": 5}
     assert len(body["losses"]) == 11
+    assert body["mission_elapsed"] == 754.5
 
 
 def test_load_file_route_asks_without_holding_the_lock(

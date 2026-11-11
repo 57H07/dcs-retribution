@@ -105,3 +105,39 @@
   padding: var(--ui-space-lg);
   color: var(--ui-color-text-secondary);
 }
+
+.bar[data-phase="Done"] {
+  opacity: 0.6;
+}
+
+.progress {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+/* The player's packages (#215): green outline and chip, drawn above the others. */
+.bar[data-player] {
+  outline: 2px solid var(--ui-color-success);
+  outline-offset: 1px;
+  z-index: 1;
+}
+
+.player {
+  position: relative;
+  margin-right: var(--ui-space-xs);
+  padding: 0 4px;
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-color-success);
+  color: var(--ui-color-bg-canvas);
+  font-weight: var(--ui-font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.bar[data-player][aria-pressed="true"] {
+  outline-color: var(--ui-color-accent);
+}

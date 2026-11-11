@@ -48,6 +48,9 @@ class MissionResultJs(BaseModel):
     enemy_country: str | None
     #: Losses per side, empty until a state.json was read.
     losses: list[LossRowJs]
+    #: Seconds of mission played when DCS last wrote state.json, on the origin of
+    #: `GET /game/timeline`; null until DCS reports its clock.
+    mission_elapsed: float | None
 
     class Config:
         title = "MissionResult"
@@ -57,7 +60,9 @@ class MissionResultJs(BaseModel):
         debriefing = snapshot.debriefing
         losses: list[LossRowJs] = []
         player_country = enemy_country = None
+        mission_elapsed = None
         if debriefing is not None:
+            mission_elapsed = debriefing.mission_elapsed
             player_country = debriefing.player_country
             enemy_country = debriefing.enemy_country
             blue = debriefing.loss_counts(Player.BLUE)
@@ -85,6 +90,7 @@ class MissionResultJs(BaseModel):
             player_country=player_country,
             enemy_country=enemy_country,
             losses=losses,
+            mission_elapsed=mission_elapsed,
         )
 
 
