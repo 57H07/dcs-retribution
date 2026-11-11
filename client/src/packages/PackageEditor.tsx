@@ -16,7 +16,7 @@ import {
 import { selectPackage } from "../api/selectionSlice";
 import { useAppDispatch } from "../app/hooks";
 import {
-  flightSummary,
+  flightAircraft,
   formatTot,
   missingPilotsLabel,
 } from "../command/packages/packageFormat";
@@ -27,6 +27,7 @@ import { AddFlightButton } from "./AddFlightForm";
 import { AutoCreateButton } from "./AutoCreateForm";
 import { FlightSections } from "./FlightSections";
 import { ObjectiveBadge } from "./ObjectiveBadge";
+import { PlayerBadge } from "./PlayerBadge";
 import styles from "./PackageEditor.module.css";
 import { TransportEntry } from "./TransportEntry";
 import { KeyboardEvent, useEffect, useState } from "react";
@@ -253,7 +254,12 @@ function PackageBody({ pkg }: { pkg: PackageDetail }) {
                 <ListCard
                   selected={flight.id === selected?.id}
                   onSelect={() => setSelectedId(flight.id)}
-                  title={flightSummary(flight)}
+                  title={
+                    <span className={styles.flightLine}>
+                      {flightAircraft(flight)}
+                      <PlayerBadge flight={flight} />
+                    </span>
+                  }
                   subtitle={
                     <>
                       <span>

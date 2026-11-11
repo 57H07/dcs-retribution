@@ -5,7 +5,8 @@ import { setupStore } from "../../app/store";
 import { recordFetch, restoreFetch } from "../../shell/testing";
 import { ToastProvider } from "../../ui";
 import {
-  flightSummary,
+  flightAircraft,
+  playersLabel,
   formatTot,
   matchesFilter,
   missingPilotsLabel,
@@ -117,7 +118,12 @@ describe("packages panel", () => {
     const dead = card(/SA-11 Krasnodar East/);
     expect(dead).toHaveTextContent("DEAD");
     expect(dead).toHaveTextContent("TOT 07:12");
-    expect(dead).toHaveTextContent("4 × F-16CM · Player");
+    expect(dead).toHaveTextContent("4 × F-16CM");
+    // #215: the player's flights stand out, as a badge.
+    expect(within(dead).getByRole("img", { name: "Player" })).toBeVisible();
+    expect(
+      within(card(/Ammo depot/)).queryByRole("img", { name: /player/i }),
+    ).not.toBeInTheDocument();
     expect(dead).toHaveTextContent("2 × F/A-18C");
     expect(card(/Ammo depot/)).toHaveTextContent("Missing 1 pilot");
     expect(screen.queryByText("Maykop")).not.toBeInTheDocument();
@@ -254,9 +260,10 @@ describe("package formatting", () => {
   it("formats the TOT, the flights and the warnings", () => {
     expect(formatTot("2022-05-17T07:12:00")).toBe("07:12");
     expect(formatTot(undefined)).toBeUndefined();
-    expect(flightSummary(flight("f", { clients: 2 }))).toBe(
-      "4 × F-16CM · 2 players",
-    );
+    expect(flightAircraft(flight("f", { clients: 2 }))).toBe("4 × F-16CM");
+    expect(playersLabel(flight("f", { clients: 2 }))).toBe("2 players");
+    expect(playersLabel(flight("f", { clients: 1 }))).toBe("Player");
+    expect(playersLabel(flight("f", { clients: 0 }))).toBeUndefined();
     expect(missingPilotsLabel(1)).toBe("Missing 1 pilot");
     expect(missingPilotsLabel(3)).toBe("Missing 3 pilots");
   });

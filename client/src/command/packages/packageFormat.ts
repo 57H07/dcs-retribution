@@ -17,15 +17,17 @@ export function packageTitle(pkg: Package): string {
     : pkg.target;
 }
 
-/** "4 × F-16CM · Player": aircraft of a flight, and its player slots. */
-export function flightSummary(flight: PackageFlight): string {
-  const players =
-    flight.clients > 0
-      ? flight.clients === 1
-        ? " · Player"
-        : ` · ${flight.clients} players`
-      : "";
-  return `${flight.count} × ${flight.aircraft}${players}`;
+/** "4 × F-16CM": the aircraft of a flight. */
+export function flightAircraft(flight: PackageFlight): string {
+  return `${flight.count} × ${flight.aircraft}`;
+}
+
+/** "Player", "2 players", or undefined for an AI flight. */
+export function playersLabel(flight: PackageFlight): string | undefined {
+  if (flight.clients <= 0) {
+    return undefined;
+  }
+  return flight.clients === 1 ? "Player" : `${flight.clients} players`;
 }
 
 export function missingPilotsLabel(count: number): string {

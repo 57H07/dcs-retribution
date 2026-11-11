@@ -50,6 +50,18 @@
   gap: var(--ui-space-xs);
 }
 
+/* #215: a package with player flights, marked on its edge. */
+.item[data-player] {
+  box-shadow: inset 3px 0 0 var(--ui-color-success);
+  border-radius: var(--ui-radius-md);
+}
+
+.flightLine {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-xs);
+}
+
 .warning {
   color: var(--ui-color-accent-hover);
 }
