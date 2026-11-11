@@ -549,12 +549,22 @@
   white-space: nowrap;
 }
 
+/* #213: scrolls inside the panel; the page list and the search stay put. */
 .settings {
   flex: 1 1 480px;
   min-width: 0;
+  max-height: max(320px, calc(100vh - 300px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: var(--ui-space-sm);
   display: flex;
   flex-direction: column;
   gap: var(--ui-space-md);
+}
+
+.settings:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-shadow-focus);
 }
 
 .mods {

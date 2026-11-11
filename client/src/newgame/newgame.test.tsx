@@ -414,6 +414,50 @@ describe("new campaign wizard", () => {
     });
   });
 
+  it("scrolls the settings inside their panel, from the top of each page (#213)", async () => {
+    recordFetch(204, undefined, gets("idle"));
+    const user = userEvent.setup();
+    renderScreen();
+    await user.click(
+      await screen.findByRole("button", { name: "Next · Factions" }),
+    );
+    await user.click(
+      await screen.findByRole("button", { name: "Next · Campaign options" }),
+    );
+    const settings = await screen.findByRole("region", {
+      name: "Campaign settings",
+    });
+    const list = within(settings).getByRole("region", {
+      name: "Settings list",
+    });
+    // Its own scroll, keyboard reachable; the pages and the search stay out of it.
+    expect(list).toHaveAttribute("tabindex", "0");
+    expect(
+      within(list).queryByRole("searchbox", { name: "Search all settings" }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(list).queryByRole("navigation", { name: "Settings pages" }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(list).getByRole("switch", { name: "Use supercarrier" }),
+    ).toBeInTheDocument();
+
+    // A search, then back to the page: each starts from the top, a fresh list
+    // rather than the scrolled one.
+    const search = within(settings).getByRole("searchbox", {
+      name: "Search all settings",
+    });
+    await user.type(search, "carrier");
+    const results = within(settings).getByRole("region", {
+      name: "Settings list",
+    });
+    expect(results).not.toBe(list);
+    await user.clear(search);
+    expect(
+      within(settings).getByRole("region", { name: "Settings list" }),
+    ).not.toBe(results);
+  });
+
   it("offers only matching campaigns", async () => {
     recordFetch(204, undefined, gets("idle"));
     const user = userEvent.setup();

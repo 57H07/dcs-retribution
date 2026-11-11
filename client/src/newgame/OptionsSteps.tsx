@@ -239,7 +239,15 @@ export function OptionsStep({
               );
             })}
           </nav>
-          <div className={styles.settings}>
+          {/* #213: its own scroll, so the pages and the search stay in view; a
+              new page or search remounts it, back at the top. */}
+          <div
+            key={searching ? `search:${query.trim()}` : page?.id}
+            className={styles.settings}
+            role="region"
+            aria-label="Settings list"
+            tabIndex={0}
+          >
             {searching && shown.length === 0 && (
               <p className={styles.hint}>
                 No setting matches “{query.trim()}”.
