@@ -60,11 +60,17 @@ interface Row {
   aircraft?: string;
 }
 
+/** The largest flight the planner can fill with this aircraft of the task. */
+function maxCountOf(task: AutoCreateTask, aircraft?: string): number {
+  return task.aircraft.find((a) => a.id === aircraft)?.max_count ?? Infinity;
+}
+
 function rowOf(rows: Record<string, Row>, task: AutoCreateTask): Row {
+  const aircraft = task.aircraft[0]?.id;
   return (
     rows[task.task] ?? {
-      count: task.default_count,
-      aircraft: task.aircraft[0]?.id,
+      count: Math.min(task.default_count, maxCountOf(task, aircraft)),
+      aircraft,
     }
   );
 }
@@ -87,6 +93,14 @@ function AutoCreateFields({
   const setRow = (task: AutoCreateTask, change: Partial<Row>) =>
     setRows({ ...rows, [task.task]: { ...rowOf(rows, task), ...change } });
 
+  // Without aircraft the planner has nothing to plan the task with.
+  const unavailable = (task: AutoCreateTask) => task.aircraft.length === 0;
+  const selectAircraft = (task: AutoCreateTask, aircraft: string) =>
+    setRow(task, {
+      aircraft,
+      count: Math.min(rowOf(rows, task).count, maxCountOf(task, aircraft)),
+    });
+
   const flight = (task: AutoCreateTask): AutoCreateFlight => ({
     task: task.task,
     ...rowOf(rows, task),
@@ -94,7 +108,10 @@ function AutoCreateFields({
 
   const submit = async () => {
     const support = options.support.filter(
-      (task) => checked.includes(task.task) && !excluded(task.task),
+      (task) =>
+        checked.includes(task.task) &&
+        !excluded(task.task) &&
+        !unavailable(task),
     );
     const result = await autoCreate({
       packageId,
@@ -120,7 +137,10 @@ function AutoCreateFields({
         hideLabel
         value={rowOf(rows, task).count}
         min={options.min_count}
-        max={options.max_count}
+        max={Math.min(
+          options.max_count,
+          maxCountOf(task, rowOf(rows, task).aircraft),
+        )}
         disabled={disabled}
         onValueChange={(count) => setRow(task, { count })}
       />
@@ -128,13 +148,15 @@ function AutoCreateFields({
         className={settings.select}
         aria-label={`${task.task} aircraft type`}
         value={rowOf(rows, task).aircraft ?? ""}
-        disabled={disabled || task.aircraft.length === 0}
-        onChange={(event) => setRow(task, { aircraft: event.target.value })}
+        disabled={disabled || unavailable(task)}
+        onChange={(event) => selectAircraft(task, event.target.value)}
       >
-        {task.aircraft.length === 0 && <option value="">None available</option>}
+        {unavailable(task) && <option value="">None available</option>}
         {task.aircraft.map((aircraft) => (
           <option key={aircraft.id} value={aircraft.id}>
             {aircraft.name}
+            {aircraft.max_count < options.max_count &&
+              ` (${aircraft.max_count} at most)`}
           </option>
         ))}
       </select>
@@ -158,7 +180,7 @@ function AutoCreateFields({
         </select>
         {rowFields(primary, false)}
         {options.support.map((task) => {
-          const disabled = excluded(task.task);
+          const disabled = excluded(task.task) || unavailable(task);
           return (
             <div key={task.task} className={styles.autoRow}>
               <label className={styles.autoCheck}>
@@ -187,7 +209,7 @@ function AutoCreateFields({
         </ModalClose>
         <Button
           variant="primary"
-          disabled={createState.isLoading}
+          disabled={createState.isLoading || unavailable(primary)}
           onClick={submit}
         >
           Create

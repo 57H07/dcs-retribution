@@ -3821,6 +3821,7 @@ export type NewFlight = {
 export type AutoCreateAircraft = {
   id: string;
   name: string;
+  max_count: number;
 };
 export type AutoCreateTask = {
   task: string;

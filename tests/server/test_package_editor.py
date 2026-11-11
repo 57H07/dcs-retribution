@@ -18,12 +18,14 @@ from game.dcs.aircrafttype import AircraftType
 from game.ato import Flight, FlightType, Package
 from game.ato.flightplans.planningerror import PlanningError
 from game.ato.starttype import StartType
+from game.commander.missionproposals import ProposedFlight
 from game.commander.packagefulfiller import PackageFulfiller
 from game.commands import CommandError
 from game.commands.packageflights import (
     add_flight,
     auto_create_default_count,
     default_loadout,
+    plan_auto_package,
 )
 from game.commands.packages import create_package, set_package_tot
 from game.server import GameContext
@@ -459,6 +461,83 @@ def test_auto_create_options(game: Game) -> None:
     assert [s["task"] for s in body["support"]][:2] == ["TARCAP", "Escort"]
     assert sorted(body["excluded_with_cas"]) == ["Escort", "SEAD", "SEAD Escort"]
     assert (body["min_count"], body["max_count"]) == (1, 4)
+
+
+def _auto_create_counts(package: Package, task: str) -> dict[str, int]:
+    """The aircraft the form offers for a main task, with their largest flight."""
+    status, body = _request("GET", f"/packages/{package.id}/auto-create")
+    assert status == 200
+    offered = next(p for p in body["primary"] if p["task"] == task)
+    return {a["name"]: a["max_count"] for a in offered["aircraft"]}
+
+
+def test_auto_create_offers_what_the_planner_takes(game: Game) -> None:
+    package = _sam_package(game)
+    status, body = _request("GET", f"/packages/{package.id}/auto-create")
+    dead = next(p for p in body["primary"] if p["task"] == "DEAD")
+
+    # The F-4E can fly DEAD, but its squadron is kept off auto-planning for it.
+    assert _squadron(game, "F-4E Phantom II").capable_of(FlightType.DEAD)
+    assert F16 in [a["name"] for a in dead["aircraft"]]
+    assert "F-4E Phantom II" not in [a["name"] for a in dead["aircraft"]]
+    for aircraft in dead["aircraft"]:
+        planned = plan_auto_package(
+            game,
+            game.blue,
+            package.target,
+            [
+                ProposedFlight(
+                    FlightType.DEAD,
+                    aircraft["max_count"],
+                    preferred_type=AircraftType.named(aircraft["id"]),
+                )
+            ],
+            _now(game),
+        )
+        assert planned is not None, aircraft
+        for flight in list(planned.flights):
+            planned.remove_flight(flight)
+
+
+def test_auto_create_leaves_out_aircraft_on_order(
+    game: Game, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Ordered aircraft are delivered next turn: the planner cannot task them."""
+    package = _sam_package(game)
+    squadron = _squadron(game, F16)
+    monkeypatch.setattr(squadron, "pending_deliveries", 4)
+
+    # One aircraft on the ramp, four being built: flights of one only.
+    monkeypatch.setattr(squadron, "owned_aircraft", 1)
+    monkeypatch.setattr(squadron, "untasked_aircraft", 1)
+    assert _auto_create_counts(package, "DEAD")[F16] == 1
+    refused, body = _request(
+        "POST",
+        f"/packages/{package.id}/auto-create",
+        {
+            "flights": [
+                {"task": "DEAD", "count": 2, "aircraft": squadron.aircraft.variant_id}
+            ]
+        },
+    )
+    assert refused == 409
+    assert "insufficient aircraft" in body["detail"]
+
+    # Nothing delivered yet: the type is not offered at all.
+    monkeypatch.setattr(squadron, "owned_aircraft", 0)
+    monkeypatch.setattr(squadron, "untasked_aircraft", 0)
+    assert F16 not in _auto_create_counts(package, "DEAD")
+
+
+def test_auto_create_counts_the_pilots(
+    game: Game, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    package = _sam_package(game)
+    squadron = _squadron(game, F16)
+    monkeypatch.setattr(game.settings, "enable_squadron_pilot_limits", True)
+    monkeypatch.setattr(squadron, "available_pilots", squadron.available_pilots[:3])
+
+    assert _auto_create_counts(package, "DEAD")[F16] == 3
 
 
 def test_auto_create_keeps_the_package_id_and_place(

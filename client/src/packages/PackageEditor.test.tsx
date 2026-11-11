@@ -117,21 +117,29 @@ const AUTO_OPTIONS: AutoCreateOptions = {
     {
       task: "DEAD",
       default_count: 3,
-      aircraft: [{ id: "fa18", name: "F/A-18C" }],
+      aircraft: [
+        { id: "fa18", name: "F/A-18C", max_count: 4 },
+        { id: "f16", name: "F-16C", max_count: 1 },
+      ],
     },
     {
       task: "CAS",
       default_count: 2,
-      aircraft: [{ id: "a10", name: "A-10C" }],
+      aircraft: [{ id: "a10", name: "A-10C", max_count: 4 }],
     },
   ],
   support: [
     {
       task: "TARCAP",
       default_count: 2,
-      aircraft: [{ id: "f15", name: "F-15C" }],
+      aircraft: [{ id: "f15", name: "F-15C", max_count: 4 }],
     },
-    { task: "Escort", default_count: 2, aircraft: [] },
+    {
+      task: "Escort",
+      default_count: 2,
+      aircraft: [{ id: "f15", name: "F-15C", max_count: 1 }],
+    },
+    { task: "SEAD", default_count: 2, aircraft: [] },
   ],
   excluded_with_cas: ["Escort"],
   min_count: 1,
@@ -479,6 +487,34 @@ describe("auto-create form", () => {
     expect(calls[0].body).toEqual({
       flights: [{ task: "CAS", count: 2, aircraft: "a10" }],
     });
+  });
+
+  it("keeps a flight within what the chosen aircraft can fill", async () => {
+    const { calls } = renderEditor(EMPTY);
+    await open();
+    expect(screen.getByRole("option", { name: "F/A-18C" })).toBeInTheDocument();
+    await userEvent.selectOptions(
+      screen.getByLabelText("DEAD aircraft type"),
+      screen.getByRole("option", { name: "F-16C (1 at most)" }),
+    );
+    await userEvent.click(screen.getByLabelText("Escort"));
+    await userEvent.click(screen.getByRole("button", { name: "Create" }));
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0].body).toEqual({
+      flights: [
+        { task: "DEAD", count: 1, aircraft: "f16" },
+        { task: "Escort", count: 1, aircraft: "f15" },
+      ],
+    });
+  });
+
+  it("does not offer a flight no aircraft can fly", async () => {
+    renderEditor(EMPTY);
+    await open();
+    expect(screen.getByLabelText("SEAD")).toBeDisabled();
+    expect(screen.getByLabelText("SEAD aircraft type")).toHaveDisplayValue(
+      "None available",
+    );
   });
 
   it("explains why it failed and stays open", async () => {

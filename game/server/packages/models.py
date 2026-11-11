@@ -16,6 +16,7 @@ from game.commands.packageflights import (
     AUTO_CREATE_MAX_COUNT,
     AUTO_CREATE_MIN_COUNT,
     AUTO_CREATE_SUPPORT_TASKS,
+    auto_create_aircraft,
     auto_create_default_count,
     auto_create_primary_tasks,
     max_flight_size,
@@ -33,7 +34,6 @@ from game.utils import meters
 if TYPE_CHECKING:
     from game import Game
     from game.ato import Flight, Package
-    from game.dcs.aircrafttype import AircraftType
     from game.squadrons import AirWing, Squadron
     from game.theater.missiontarget import MissionTarget
 
@@ -364,6 +364,8 @@ class NewFlightJs(BaseModel):
 class AutoCreateAircraftJs(BaseModel):
     id: str
     name: str
+    #: The largest flight the auto-planner can fill with it this turn.
+    max_count: int
 
     class Config:
         title = "AutoCreateAircraft"
@@ -379,20 +381,20 @@ class AutoCreateTaskJs(BaseModel):
 
     @staticmethod
     def for_task(
-        air_wing: AirWing, task: FlightType, default_count: int
+        air_wing: AirWing, target: MissionTarget, task: FlightType, default_count: int
     ) -> AutoCreateTaskJs:
         return AutoCreateTaskJs(
             task=task.value,
             default_count=default_count,
             aircraft=[
-                _auto_create_aircraft(aircraft)
-                for aircraft in air_wing.best_available_aircrafts_for(task)
+                AutoCreateAircraftJs(
+                    id=aircraft.variant_id, name=str(aircraft), max_count=max_count
+                )
+                for aircraft, max_count in auto_create_aircraft(
+                    air_wing, target, task
+                ).items()
             ],
         )
-
-
-def _auto_create_aircraft(aircraft: AircraftType) -> AutoCreateAircraftJs:
-    return AutoCreateAircraftJs(id=aircraft.variant_id, name=str(aircraft))
 
 
 class AutoCreateOptionsJs(BaseModel):
@@ -415,11 +417,11 @@ class AutoCreateOptionsJs(BaseModel):
         count = auto_create_default_count(package.target)
         return AutoCreateOptionsJs(
             primary=[
-                AutoCreateTaskJs.for_task(air_wing, task, count)
+                AutoCreateTaskJs.for_task(air_wing, package.target, task, count)
                 for task in auto_create_primary_tasks(package.target, coalition.player)
             ],
             support=[
-                AutoCreateTaskJs.for_task(air_wing, task, default)
+                AutoCreateTaskJs.for_task(air_wing, package.target, task, default)
                 for task, default in AUTO_CREATE_SUPPORT_TASKS.items()
             ],
             excluded_with_cas=[

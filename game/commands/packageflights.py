@@ -289,6 +289,31 @@ def auto_create_default_count(target: MissionTarget) -> int:
     return max(AUTO_CREATE_MIN_COUNT, min(AUTO_CREATE_MAX_COUNT, targets // 2))
 
 
+def auto_create_aircraft(
+    air_wing: AirWing, target: MissionTarget, task: FlightType
+) -> dict[AircraftType, int]:
+    """The aircraft the auto-planner can task now, best first, each with the largest
+    flight one of its squadrons can fill.
+
+    It asks the question `PackageBuilder.plan_flight` asks: a type whose squadrons
+    are kept off auto-planning for this task, have no pilot left, or own nothing yet
+    (aircraft on order are delivered next turn) is not offered, and no flight is
+    offered larger than a squadron can fill.
+
+    An escort has to match the main flight, known only once it is planned: both
+    the escorts of a helicopter flight and those of a fixed wing flight are listed.
+    """
+    sizes: dict[AircraftType, int] = {}
+    for size in range(AUTO_CREATE_MIN_COUNT, AUTO_CREATE_MAX_COUNT + 1):
+        for heli in (False, True) if task in ESCORT_TASKS else (False,):
+            for squadron in air_wing.best_squadrons_for(
+                target, task, size, heli, this_turn=True, ignore_range=True
+            ):
+                # Sizes go up: the first pass sets the order, the last one the size.
+                sizes[squadron.aircraft] = size
+    return sizes
+
+
 def plan_auto_package(
     game: Game,
     coalition: Coalition,

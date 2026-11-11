@@ -18,6 +18,7 @@
 * **[UX]** After-action report: the event log gives the time of each event of the mission (kills, aircraft lost, bases taken or lost), on the clock of the mission, and lists them in the order they happened. The mission script now writes these times in `state.json` (`unit_death_times`, `base_capture_times`); a mission generated before this version keeps its undated log.
 
 ## Fixes
+* **[UX]** Package editor, **Auto-create**: the aircraft lists only offer what the auto-planner can task this turn (a squadron kept off auto-planning for the task, without a free pilot, or whose aircraft are still on order is left out), and the flight size stops at what one squadron can fill, instead of failing with "insufficient aircraft and/or pilots".
 * **[UI]** The page of the interface is titled "DCS Retribution" instead of "React Redux App".
 * **[UX]** New game wizard: the campaign settings changed from their default carry the **Modified** marker, and each settings page counts them, as on the Settings screen.
 * **[Engine]** A failed save no longer leaves the campaign in play without its landmap (#190).
