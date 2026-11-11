@@ -60,6 +60,9 @@ function UnitInfoBody({ info }: { info: UnitInfo }) {
         <Fact label="Country of origin" value={info.country_of_origin} />
         <Fact label="Role" value={info.role} />
         <Fact label="Variant introduction" value={info.year_introduced} />
+        {info.purpose !== "" && (
+          <Fact label="In the campaign" value={info.purpose} />
+        )}
         {info.tasks.length > 0 && (
           <Fact label="In-game tasks" value={info.tasks.join(", ")} />
         )}

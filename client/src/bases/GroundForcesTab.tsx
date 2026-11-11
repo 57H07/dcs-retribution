@@ -17,6 +17,7 @@ import {
 import settings from "../settings/SettingsScreen.module.css";
 import { Button, IconButton, Table, useToast } from "../ui";
 import styles from "./AirfieldTab.module.css";
+import { UnitTip } from "../tgos/UnitTip";
 import { money } from "./money";
 import { Refusal, refusalOf, signed } from "./orders";
 import { useState } from "react";
@@ -114,7 +115,13 @@ function GroundForcesBody(props: { base: Base; forces: GroundForces }) {
         <Table
           caption={`Ground units at ${base.summary.name}`}
           columns={[
-            { key: "unit", header: "Unit", cell: (r) => r.name },
+            {
+              key: "unit",
+              header: "Unit",
+              cell: (r) => (
+                <UnitTip kind="ground" name={r.unit_id} label={r.name} />
+              ),
+            },
             {
               key: "cost",
               header: "Unit cost",

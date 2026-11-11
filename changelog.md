@@ -12,6 +12,7 @@
 * **[UX]** New game wizard: a **Search all settings** field over the campaign settings, as on the Settings screen: every word must match the label, help, section or page, plugin options included; the results are edited in place, and clearing the search returns to the page that was open (#207).
 * **[UX]** New game wizard: the campaign settings scroll inside their panel, so the page list and the search stay in view; each page or search opens at the top (#213).
 * **[UX]** Packages view and package editor: flights with player slots carry a green **Player** (or **N players**) badge, and packages with a player flight are marked on their edge (#215).
+* **[UX]** Base ground forces: hovering or focusing a unit name shows its picture, role, what it does at the front (e.g. artillery 16–18 km behind the front) and its description; a click opens the unit sheet, which also says what the unit does in the campaign (#214).
 * **[Campaign]** Generated objectives: a campaign that sets no objectives gets them along the front, all through the campaign: a base to capture, the air defences or a strike target of a front-line base to destroy, a base to hold, with deadlines and modest rewards. Each turn, the ones met or missed are replaced on the front as it is then, and the ones the front has moved past are closed as *Overtaken*, without reward nor penalty. **Settings → Campaign Management → Campaign Objectives** turns it off and sets how many are in progress at once (3 by default); a campaign opts out with `objectives: []` (#210).
 
 ## Fixes

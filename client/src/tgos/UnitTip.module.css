@@ -1,0 +1,38 @@
+/* #214: the unit name in a buy table, and its tooltip. */
+.name {
+  color: inherit;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+
+.name:hover {
+  color: var(--ui-color-accent);
+}
+
+.tip {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-xs);
+}
+
+.banner {
+  width: 100%;
+  border-radius: var(--ui-radius-sm);
+}
+
+.purpose {
+  color: var(--ui-color-text-primary);
+}
+
+.description {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--ui-color-text-secondary);
+}
+
+.more {
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-font-size-xs);
+}
