@@ -137,7 +137,8 @@ class PackageResultJs(BaseModel):
 
 
 class ReportEventJs(BaseModel):
-    #: HH:MM:SS the engine logged it; null for events read from state.json.
+    #: HH:MM:SS: the DCS clock of a mission event (null when state.json does not
+    #: date it), the wall-clock time of an event the engine logged.
     time: str | None
     text: str
     tone: ToneJs

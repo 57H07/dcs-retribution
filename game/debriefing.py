@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from functools import cached_property
 from typing import (
     Any,
+    Callable,
     Dict,
     Iterator,
     List,
@@ -190,6 +191,9 @@ class DamagedUnitReport:
 class BaseCaptureEvent:
     control_point: ControlPoint
     captured_by_player: Player
+    #: DCS clock (seconds since midnight of the mission day) of the capture, None
+    #: if state.json does not say.
+    time: Optional[float] = None
 
 
 @dataclass(frozen=True)
@@ -251,6 +255,9 @@ class PilotKill:
     category: KillCategory
     #: DCS name of the unit that was killed.
     target: str
+    #: DCS clock (seconds since midnight of the mission day) when the target died,
+    #: None if state.json does not say.
+    time: Optional[float] = None
 
 
 @dataclass(frozen=True)
@@ -288,6 +295,12 @@ class StateData:
     #: since midnight of the day the mission started. None for state files written
     #: before the clock was exported.
     mission_time: Optional[float] = None
+    #: DCS clock (same origin as `mission_time`) at the first report of the death
+    #: of each killed unit, keyed by unit name. Empty for state files written
+    #: before events were timed.
+    death_times: Dict[str, float] = field(default_factory=dict)
+    #: DCS clock of the last occurrence of each `base_capture_events` entry.
+    capture_times: Dict[str, float] = field(default_factory=dict)
 
     @classmethod
     def from_json(cls, data: Dict[str, Any], unit_map: UnitMap) -> StateData:
@@ -350,6 +363,12 @@ class StateData:
                 data.get("damaged_units", []), set(killed_units)
             ),
             mission_time=cls._parse_mission_time(data.get("mission_time")),
+            death_times=cls._parse_event_times(
+                data.get("unit_death_times"), "name", keep=min
+            ),
+            capture_times=cls._parse_event_times(
+                data.get("base_capture_times"), "event", keep=max
+            ),
         )
 
     @staticmethod
@@ -359,6 +378,30 @@ class StateData:
         if not math.isfinite(value) or value < 0:
             return None
         return float(value)
+
+    @classmethod
+    def _parse_event_times(
+        cls, entries: Any, key: str, keep: Callable[[float, float], float]
+    ) -> Dict[str, float]:
+        """Parses a list of ``{<key>: <name>, "t": <DCS clock>}`` of state.json.
+
+        Malformed entries are skipped. `keep` picks the time of a name listed more
+        than once.
+        """
+        times: Dict[str, float] = {}
+        # An empty Lua table may be encoded as {} rather than [].
+        if not isinstance(entries, list):
+            return times
+        for entry in entries:
+            if not isinstance(entry, dict) or entry.get(key) is None:
+                continue
+            time = cls._parse_mission_time(entry.get("t"))
+            if time is None:
+                continue
+            # Map objects are reported with numeric names.
+            name = str(entry[key])
+            times[name] = keep(time, times[name]) if name in times else time
+        return times
 
     @staticmethod
     def _parse_damaged_units(entries: Any, killed_units: set[str]) -> Dict[str, float]:
@@ -784,11 +827,17 @@ class Debriefing:
     def dead_aircraft(self) -> AirLosses:
         player_losses = []
         enemy_losses = []
+        #: DCS clock of each air loss that state.json dates, keyed by the id() of
+        #: its FlyingUnit.
+        self.air_loss_times: Dict[int, float] = {}
         for unit_name in self.state_data.killed_aircraft:
             aircraft = self.unit_map.flight(unit_name)
             if aircraft is None:
                 logging.error(f"Could not find Flight matching {unit_name}")
                 continue
+            death_time = self.state_data.death_times.get(unit_name)
+            if death_time is not None:
+                self.air_loss_times[id(aircraft)] = death_time
             if aircraft.flight.departure.captured.is_blue:
                 player_losses.append(aircraft)
             else:
@@ -908,7 +957,13 @@ class Debriefing:
                 continue
             credited_targets.add(attribution.target)
             kills.append(
-                PilotKill(shooter.pilot, shooter.flight, category, attribution.target)
+                PilotKill(
+                    shooter.pilot,
+                    shooter.flight,
+                    category,
+                    attribution.target,
+                    self.state_data.death_times.get(attribution.target),
+                )
             )
         return kills
 
@@ -988,5 +1043,11 @@ class Debriefing:
                 # recaptured in the same mission. Nothing to do.
                 continue
 
-            captures.append(BaseCaptureEvent(control_point, captured_by_player))
+            captures.append(
+                BaseCaptureEvent(
+                    control_point,
+                    captured_by_player,
+                    self.state_data.capture_times.get(capture),
+                )
+            )
         return captures

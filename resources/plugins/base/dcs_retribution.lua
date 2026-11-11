@@ -15,6 +15,9 @@ damaged_units_life = {} -- unit/static name -> remaining life ratio, tracked via
 killed_unit_names = {} -- names reported by crash/dead/lost/kill events, excluded from damaged_units
 ejection_events = {} -- {unit=<aircraft unit name>, x=, z=} added via S_EVENT_EJECTION
 csar_rescued = {} -- UUID strings of downed pilots rescued by Ops.CSAR (see OpsCSAR.lua)
+-- Times are timer.getAbsTime(): seconds since midnight of the mission day.
+unit_death_times = {} -- {name=<unit name>, t=<time>}, at the first report of each killed unit
+base_capture_times = {} -- {event=<base_capture_events entry>, t=<time>}, added by the capture triggers
 mission_ended = false
 dirty_state = false -- Track if state has changed and needs writing
 
@@ -118,6 +121,8 @@ function write_state()
         ["damaged_units"] = collect_damaged_units(),
         ["ejection_events"] = ejection_events,
         ["csar_rescued"] = csar_rescued,
+        ["unit_death_times"] = unit_death_times,
+        ["base_capture_times"] = base_capture_times,
         -- World clock (seconds since midnight of the mission day): drives the
         -- live package timeline of DCS Retribution.
         ["mission_time"] = timer.getAbsTime(),
@@ -245,6 +250,10 @@ local function mark_killed(object)
     if object and object.getName then
         local ok, name = pcall(object.getName, object)
         if ok and name then
+            if not killed_unit_names[name] then
+                -- DCS reports a death through several events: the first one dates it.
+                unit_death_times[#unit_death_times + 1] = { ["name"] = name, ["t"] = timer.getAbsTime() }
+            end
             killed_unit_names[name] = true
         end
     end

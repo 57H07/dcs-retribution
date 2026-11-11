@@ -85,8 +85,9 @@ class PackageResult:
 
 @dataclass(frozen=True)
 class ReportEvent:
-    #: Wall-clock time the engine logged the event (HH:MM:SS); None for events
-    #: read from state.json, which carries no time.
+    #: HH:MM:SS. For an event of the mission, the DCS clock when it happened, or
+    #: None when state.json does not date it (missions generated before events
+    #: were timed). For an event the engine logged, the wall-clock time of the log.
     time: str | None
     text: str
     tone: Tone
@@ -357,18 +358,33 @@ def package_results(debriefing: Debriefing) -> list[PackageResult]:
 # --- events ---------------------------------------------------------------------
 
 
+def mission_clock(time: float | None) -> str | None:
+    """HH:MM:SS of a DCS clock, which counts the seconds since midnight of the day
+    the mission started (and so goes past 24 hours on the next day)."""
+    if time is None:
+        return None
+    seconds = int(time) % 86400
+    return f"{seconds // 3600:02}:{seconds // 60 % 60:02}:{seconds % 60:02}"
+
+
 def mission_events(debriefing: Debriefing) -> list[ReportEvent]:
-    """What happened in the mission, as state.json reports it (no times)."""
-    events = []
+    """What happened in the mission, as state.json reports it.
+
+    The events state.json dates come first, in the order they happened; the others
+    follow, grouped by kind.
+    """
+    timed: list[tuple[float | None, str, Tone]] = []
     for capture in debriefing.base_captures:
         if capture.captured_by_player.is_blue:
-            events.append(
-                ReportEvent(None, f"{capture.control_point.name} captured", Tone.GOOD)
+            timed.append(
+                (capture.time, f"{capture.control_point.name} captured", Tone.GOOD)
             )
         else:
-            events.append(
-                ReportEvent(
-                    None, f"{capture.control_point.name} lost to the enemy", Tone.BAD
+            timed.append(
+                (
+                    capture.time,
+                    f"{capture.control_point.name} lost to the enemy",
+                    Tone.BAD,
                 )
             )
     for kill in debriefing.pilot_kills:
@@ -376,28 +392,35 @@ def mission_events(debriefing: Debriefing) -> list[ReportEvent]:
             continue
         category = kill.category.value.lower()
         article = "an" if category[0] in "aeiou" else "a"
-        events.append(
-            ReportEvent(
-                None,
+        timed.append(
+            (
+                kill.time,
                 f"{kill.pilot.name} ({_flight_name(kill.flight)}) scored "
                 f"{article} {category} kill",
                 Tone.GOOD,
             )
         )
+    loss_times = debriefing.air_loss_times
     for loss in debriefing.air_losses.player:
         pilot = "" if loss.pilot is None else f" · {loss.pilot.name}"
-        events.append(
-            ReportEvent(
-                None,
+        timed.append(
+            (
+                loss_times.get(id(loss)),
                 f"{loss.flight.unit_type} of {loss.flight.squadron.name} lost{pilot}",
                 Tone.BAD,
             )
         )
     for loss in debriefing.air_losses.enemy:
-        events.append(
-            ReportEvent(None, f"Enemy {loss.flight.unit_type} shot down", Tone.GOOD)
+        timed.append(
+            (
+                loss_times.get(id(loss)),
+                f"Enemy {loss.flight.unit_type} shot down",
+                Tone.GOOD,
+            )
         )
-    return events
+    # Stable: undated events keep their order, after the dated ones.
+    timed.sort(key=lambda e: (e[0] is None, 0.0 if e[0] is None else e[0]))
+    return [ReportEvent(mission_clock(time), text, tone) for time, text, tone in timed]
 
 
 def _is_separator(text: str) -> bool:

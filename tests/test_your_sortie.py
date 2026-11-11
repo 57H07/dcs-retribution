@@ -35,7 +35,7 @@ DATE = datetime.datetime(2022, 5, 17, 6, 0)
 
 
 def _kill(pilot: Pilot, flight: Any, category: KillCategory) -> Any:
-    return SimpleNamespace(pilot=pilot, flight=flight, category=category)
+    return SimpleNamespace(pilot=pilot, flight=flight, category=category, time=None)
 
 
 def _entry(turn: int, **kwargs: Any) -> LogbookEntry:

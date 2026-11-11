@@ -200,8 +200,14 @@ def _debriefing() -> tuple[Debriefing, dict[str, Any]]:
         cast(Any, 2): RescuedPilot("Maj. Ivanov", "MiG-29A", "Red 1", Player.RED),
     }
     debriefing.pilot_kills = [
-        cast(Any, SimpleNamespace(pilot=pilot, flight=viper, category=KillCategory.Air))
+        cast(
+            Any,
+            SimpleNamespace(
+                pilot=pilot, flight=viper, category=KillCategory.Air, time=None
+            ),
+        )
     ]
+    debriefing.air_loss_times = {}
     debriefing.damaged_aircraft = []
     debriefing.damaged_ground_units = []
     return debriefing, {"game": game, "pilot": pilot}

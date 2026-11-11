@@ -15,8 +15,10 @@
 * **[UX]** Base ground forces: hovering or focusing a unit name shows its picture, role, what it does at the front (e.g. artillery 16–18 km behind the front) and its description; a click opens the unit sheet, which also says what the unit does in the campaign (#214).
 * **[UX]** Mission in progress: the waiting screen shows the friendly package timeline with the mission clock reported by DCS (`state.json` now carries it and is rewritten every 15 s while the mission runs), each package shaded up to where its planned schedule is (not started, inbound, egress, done). The player's packages stand out in green, on this timeline and on the one of the command view, and are summed up above it with their TOT and stage. Missions generated before this version show the timeline without the clock.
 * **[Campaign]** Generated objectives: a campaign that sets no objectives gets them along the front, all through the campaign: a base to capture, the air defences or a strike target of a front-line base to destroy, a base to hold, with deadlines and modest rewards. Each turn, the ones met or missed are replaced on the front as it is then, and the ones the front has moved past are closed as *Overtaken*, without reward nor penalty. **Settings → Campaign Management → Campaign Objectives** turns it off and sets how many are in progress at once (3 by default); a campaign opts out with `objectives: []` (#210).
+* **[UX]** After-action report: the event log gives the time of each event of the mission (kills, aircraft lost, bases taken or lost), on the clock of the mission, and lists them in the order they happened. The mission script now writes these times in `state.json` (`unit_death_times`, `base_capture_times`); a mission generated before this version keeps its undated log.
 
 ## Fixes
+* **[UI]** The page of the interface is titled "DCS Retribution" instead of "React Redux App".
 * **[UX]** New game wizard: the campaign settings changed from their default carry the **Modified** marker, and each settings page counts them, as on the Settings screen.
 * **[Engine]** A failed save no longer leaves the campaign in play without its landmap (#190).
 

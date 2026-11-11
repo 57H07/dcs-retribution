@@ -52,6 +52,20 @@ TRIGGER_RADIUS_ALL_MAP = 3000000
 TRIGGER_RADIUS_CLEAR_SCENERY = 1000
 
 
+def capture_event_script(event: str) -> str:
+    """Lua a capture trigger runs: reports the capture, and when, to state.json.
+
+    Appends to the globals `base_capture_events` and `base_capture_times` declared
+    by `dcs_retribution.lua`.
+    """
+    return (
+        f'base_capture_events[#base_capture_events + 1] = "{event}"\n'
+        f"base_capture_times[#base_capture_times + 1] = "
+        f'{{event = "{event}", t = timer.getAbsTime()}}\n'
+        "dirty_state = true"
+    )
+
+
 class Silence(Option):
     Key = 7
 
@@ -211,7 +225,7 @@ class TriggerGenerator:
             trigger.add_action(SetFlag(flag=flag))
 
         script_string = String(
-            f'base_capture_events[#base_capture_events + 1] = "{cp.id}||{capturing_coalition_int}||{cp.full_name}"\ndirty_state = true'
+            capture_event_script(f"{cp.id}||{capturing_coalition_int}||{cp.full_name}")
         )
         trigger.add_action(DoScript(script_string))
         return trigger
