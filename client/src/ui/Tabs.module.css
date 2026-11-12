@@ -1,4 +1,8 @@
 .list {
+  /* overflow-x makes its minimum height 0: in a column whose content is taller
+     than the screen (the base screen's ground forces), the list would shrink
+     to nothing and the tabs vanish. */
+  flex-shrink: 0;
   display: flex;
   border-bottom: 1px solid var(--ui-color-line);
   overflow-x: auto;

@@ -149,7 +149,7 @@ describe("map inspector", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Buy aircraft" }));
     await waitFor(() =>
-      expect(router.state.location.pathname).toBe(`/bases/${CP_ID}`),
+      expect(router.state.location.pathname).toBe(`/bases/${CP_ID}/airfield`),
     );
   });
 

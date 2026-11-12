@@ -107,6 +107,12 @@
   justify-content: flex-end;
 }
 
+/* Room for "Sell 12 aircraft · $240M": the actions are right-aligned, so a
+   label that grows would push the - and + away from the pointer. */
+.orderButton {
+  min-width: 17em;
+}
+
 .quantity {
   min-width: 28px;
   font-family: var(--ui-font-mono);

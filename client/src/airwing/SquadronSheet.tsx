@@ -83,6 +83,7 @@ function AircraftOrder({
       </span>
       <Button
         variant="primary"
+        className={styles.orderButton}
         disabled={busy || quantity === 0}
         onClick={confirm}
       >
@@ -182,7 +183,9 @@ function TransferModal({
             </li>
           ))}
           {data.destinations.length === 0 && (
-            <li className={styles.hint}>No other base can take this squadron.</li>
+            <li className={styles.hint}>
+              No other base can take this squadron.
+            </li>
           )}
         </ul>
       )}
@@ -397,7 +400,11 @@ export function SquadronSheet({ squadron }: { squadron: AirWingSquadron }) {
   return (
     <main className={styles.sheet} aria-label={squadron.name}>
       <header className={styles.sheetHeader}>
-        <MilSymbol sidc={squadron.sidc} size={44} label={squadron.primary_task} />
+        <MilSymbol
+          sidc={squadron.sidc}
+          size={44}
+          label={squadron.primary_task}
+        />
         <div className={styles.identity}>
           <h2 className={styles.sheetTitle}>{squadron.name}</h2>
           <span className={styles.hint}>

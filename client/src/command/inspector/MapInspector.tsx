@@ -208,7 +208,11 @@ function ControlPointInspector(props: { id: string; onClose: () => void }) {
       <div className={styles.actions}>
         {data.blue ? (
           <>
-            <Button disabled={!data.can_buy_aircraft} onClick={openBase}>
+            <Button
+              disabled={!data.can_buy_aircraft}
+              // A FOB lists its ground forces first: open its aircraft tab.
+              onClick={() => navigate(PATHS.baseTab(data.id, "airfield"))}
+            >
               Buy aircraft
             </Button>
             <Button
