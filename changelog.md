@@ -1,4 +1,4 @@
-# Unreleased
+# Retribution v1.8.0
 
 ## Features/Improvements
 * **[Mission Generation]** Reduced objective markers: **Settings > Mission Generator > Gameplay > Reduced objective markers** limits the F10 map markers of the mission (e.g. *DINGO [ENEMY]*) to the ground objects that matter for the turn: those within 30 nm of a front line (adjustable), the targets of your packages, the sites of the bases with an active front and the targets of the campaign objectives in progress. Off by default: every ground object stays marked.
