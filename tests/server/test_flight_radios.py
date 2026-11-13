@@ -43,6 +43,7 @@ from game.server.eventstream import EventStream
 from game.server.packages.models import PackageDetailJs
 from game.sim import GameUpdateEvents
 from game.squadrons import Squadron
+from game.squadrons.dtcsettings import DtcSettings
 from game.theater import ControlPoint, Fob, TheaterGroundObject
 from game.theater.theatergroundobject import SamGroundObject
 from tests.flightplans.referencegame import (
@@ -450,3 +451,108 @@ def test_saving_the_cartridge_can_be_cancelled(
 
     status, body = _request("POST", _path(flight, "/cartridge/save"))
     assert (status, body) == (200, {"outcome": "cancelled", "path": None})
+
+
+# --- cartridge settings (#221) ---------------------------------------------------
+
+
+@pytest.fixture
+def fresh_cartridges(game: Game, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The module-scoped game keeps what a test sets on its squadrons: undo it."""
+    for squadron in game.blue.air_wing.iter_squadrons():
+        monkeypatch.setattr(squadron, "dtc", DtcSettings())
+
+
+def test_an_aircraft_without_cartridge_has_no_settings(
+    game: Game, fresh_cartridges: None
+) -> None:
+    tanker = _tanker(game)
+    status, body = _request("GET", _path(tanker))
+    assert body["cartridge_settings"] is None
+
+    status, body = _request(
+        "PUT", _path(tanker, "/cartridge/settings"), {"auto_load": False}
+    )
+    assert status == 409
+    assert body["detail"] == "This aircraft takes no data cartridge."
+
+
+def test_the_tab_shows_the_cmds_of_the_module_until_changed(
+    game: Game, fresh_cartridges: None
+) -> None:
+    flight = _flight(game)
+    status, body = _request("GET", _path(flight))
+    settings = body["cartridge_settings"]
+    assert settings["auto_load"] is True
+    assert settings["threats"] is True
+    assert settings["cmds_modified"] is False
+    assert [p["id"] for p in settings["cmds_programs"]][:2] == ["MAN1", "MAN2"]
+    assert settings["cmds_programs"][0]["values"]["chaff_salvo_quantity"] == 10
+    assert {f["id"] for f in settings["cmds_fields"]} >= {"flare_burst_interval"}
+
+
+def test_cartridge_settings_are_kept_on_the_squadron(
+    game: Game, fresh_cartridges: None
+) -> None:
+    flight = _flight(game)
+    programs = {"MAN1": {"chaff_salvo_quantity": 4, "chaff_burst_quantity": 1}}
+    status, body = _request(
+        "PUT",
+        _path(flight, "/cartridge/settings"),
+        {"auto_load": False, "threats": False, "cmds": programs},
+    )
+    assert status == 200
+    settings = body["cartridge_settings"]
+    assert (settings["auto_load"], settings["threats"]) == (False, False)
+    assert settings["cmds_modified"] is True
+    assert flight.squadron.dtc == DtcSettings(
+        auto_load=False, threats=False, cmds={"MAN1": {"chaff_salvo_quantity": 4}}
+    )
+
+    # Another flight of the squadron, next turn too: the squadron keeps them.
+    other = _flight(game)
+    assert other.squadron is flight.squadron
+    status, body = _request("GET", _path(other))
+    assert body["cartridge_settings"]["auto_load"] is False
+
+    status, body = _request("DELETE", _path(flight, "/cartridge/settings"))
+    assert status == 200
+    assert flight.squadron.dtc == DtcSettings()
+
+
+def test_a_cmds_value_out_of_limits_is_refused(
+    game: Game, fresh_cartridges: None
+) -> None:
+    flight = _flight(game)
+    status, body = _request(
+        "PUT",
+        _path(flight, "/cartridge/settings"),
+        {"auto_load": False, "cmds": {"MAN1": {"chaff_salvo_quantity": 120}}},
+    )
+    assert status == 409
+    assert body["detail"] == "MAN 1: Chaff SQ must be from 0 to 99."
+    # Nothing changed, not even what was valid.
+    assert flight.squadron.dtc == DtcSettings()
+
+
+def test_settings_apply_to_every_squadron_of_the_aircraft(
+    game: Game, fresh_cartridges: None
+) -> None:
+    flight = _flight(game)
+    flight.squadron.dtc.auto_load = False
+    unit_type = flight.squadron.aircraft.dcs_unit_type.id
+    others = [
+        s
+        for s in game.blue.air_wing.iter_squadrons()
+        if s is not flight.squadron and s.aircraft.dcs_unit_type.id == unit_type
+    ]
+
+    status, body = _request(
+        "POST", _path(flight, "/cartridge/settings/apply-to-aircraft")
+    )
+
+    assert status == 200
+    assert body["cartridge_settings"]["same_aircraft_squadrons"] == len(others)
+    for squadron in others:
+        assert squadron.dtc == flight.squadron.dtc
+        assert squadron.dtc is not flight.squadron.dtc

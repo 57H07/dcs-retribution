@@ -8,6 +8,11 @@ from fastapi import APIRouter, Depends
 from game import Game, persistency
 from game.ato import Flight
 from game.commands import CommandError
+from game.commands.flightcartridge import (
+    apply_to_aircraft,
+    reset_cartridge_settings,
+    set_cartridge_settings,
+)
 from game.commands.mission import last_cartridge
 from game.commands.flightradios import (
     set_datalink_value,
@@ -20,6 +25,7 @@ from game.gamelock import game_lock, locked, locks_game_itself
 from game.native import FileOutcome, NativeBridge, one_dialog
 from game.server import EventStream
 from .radiomodels import (
+    CartridgeSettingsUpdateJs,
     DatalinkValueJs,
     FlightFrequencyJs,
     FlightRadiosJs,
@@ -139,6 +145,66 @@ def put_flight_datalink(
     flight = _find(game, package_id, flight_id)
     with EventStream.event_context() as events:
         set_datalink_value(flight, member_index, body.identifier, body.value, events)
+    return FlightRadiosJs.for_flight(game, flight)
+
+
+@router.put(
+    "/cartridge/settings",
+    operation_id="set_cartridge_settings",
+    response_model=FlightRadiosJs,
+    responses=command_error_responses(
+        "The aircraft takes no cartridge, or a CMDS value is out of limits."
+    ),
+)
+@locked
+def put_cartridge_settings(
+    package_id: UUID,
+    flight_id: UUID,
+    body: CartridgeSettingsUpdateJs,
+    game: Game | None = Depends(GameContext.get),
+) -> FlightRadiosJs:
+    """Sets the cartridge of every player flight of the flight's squadron (#221)."""
+    game = _require_game(game)
+    flight = _find(game, package_id, flight_id)
+    set_cartridge_settings(flight, body.auto_load, body.threats, body.cmds)
+    return FlightRadiosJs.for_flight(game, flight)
+
+
+@router.delete(
+    "/cartridge/settings",
+    operation_id="reset_cartridge_settings",
+    response_model=FlightRadiosJs,
+    responses=command_error_responses("The aircraft takes no cartridge."),
+)
+@locked
+def delete_cartridge_settings(
+    package_id: UUID,
+    flight_id: UUID,
+    game: Game | None = Depends(GameContext.get),
+) -> FlightRadiosJs:
+    """Back to the module's defaults, loaded at spawn."""
+    game = _require_game(game)
+    flight = _find(game, package_id, flight_id)
+    reset_cartridge_settings(flight)
+    return FlightRadiosJs.for_flight(game, flight)
+
+
+@router.post(
+    "/cartridge/settings/apply-to-aircraft",
+    operation_id="apply_cartridge_settings_to_aircraft",
+    response_model=FlightRadiosJs,
+    responses=command_error_responses("The aircraft takes no cartridge."),
+)
+@locked
+def post_apply_cartridge_settings(
+    package_id: UUID,
+    flight_id: UUID,
+    game: Game | None = Depends(GameContext.get),
+) -> FlightRadiosJs:
+    """Copies the settings to every squadron of the coalition with the same aircraft."""
+    game = _require_game(game)
+    flight = _find(game, package_id, flight_id)
+    apply_to_aircraft(flight)
     return FlightRadiosJs.for_flight(game, flight)
 
 

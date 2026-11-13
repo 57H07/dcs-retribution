@@ -1237,6 +1237,34 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.datalinkValueJs,
       }),
     }),
+    setCartridgeSettings: build.mutation<
+      SetCartridgeSettingsApiResponse,
+      SetCartridgeSettingsApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/radios/cartridge/settings`,
+        method: "PUT",
+        body: queryArg.cartridgeSettingsUpdateJs,
+      }),
+    }),
+    resetCartridgeSettings: build.mutation<
+      ResetCartridgeSettingsApiResponse,
+      ResetCartridgeSettingsApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/radios/cartridge/settings`,
+        method: "DELETE",
+      }),
+    }),
+    applyCartridgeSettingsToAircraft: build.mutation<
+      ApplyCartridgeSettingsToAircraftApiResponse,
+      ApplyCartridgeSettingsToAircraftApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/packages/${queryArg.packageId}/flights/${queryArg.flightId}/radios/cartridge/settings/apply-to-aircraft`,
+        method: "POST",
+      }),
+    }),
     saveFlightCartridge: build.mutation<
       SaveFlightCartridgeApiResponse,
       SaveFlightCartridgeApiArg
@@ -2377,6 +2405,25 @@ export type SetFlightDatalinkApiArg = {
   flightId: string;
   memberIndex: number;
   datalinkValueJs: DatalinkValue;
+};
+export type SetCartridgeSettingsApiResponse =
+  /** status 200 Successful Response */ FlightRadios;
+export type SetCartridgeSettingsApiArg = {
+  packageId: string;
+  flightId: string;
+  cartridgeSettingsUpdateJs: CartridgeSettingsUpdate;
+};
+export type ResetCartridgeSettingsApiResponse =
+  /** status 200 Successful Response */ FlightRadios;
+export type ResetCartridgeSettingsApiArg = {
+  packageId: string;
+  flightId: string;
+};
+export type ApplyCartridgeSettingsToAircraftApiResponse =
+  /** status 200 Successful Response */ FlightRadios;
+export type ApplyCartridgeSettingsToAircraftApiArg = {
+  packageId: string;
+  flightId: string;
 };
 export type SaveFlightCartridgeApiResponse =
   /** status 200 Successful Response */ FileActionResult;
@@ -3944,6 +3991,30 @@ export type FlightDatalink = {
   fields: DatalinkField[];
   members: DatalinkMember[];
 };
+export type CmdsField = {
+  id: string;
+  label: string;
+  minimum: number;
+  maximum: number;
+  step: number;
+};
+export type CmdsProgram = {
+  id: string;
+  label: string;
+  values: {
+    [key: string]: number;
+  };
+};
+export type CartridgeSettings = {
+  squadron: string;
+  aircraft: string;
+  auto_load: boolean;
+  threats?: boolean;
+  cmds_fields: CmdsField[];
+  cmds_programs: CmdsProgram[];
+  cmds_modified: boolean;
+  same_aircraft_squadrons: number;
+};
 export type FlightRadios = {
   frequency_mhz?: number;
   modulation?: string;
@@ -3962,6 +4033,7 @@ export type FlightRadios = {
   departure_id: string;
   departure: string;
   cartridge_file?: string;
+  cartridge_settings?: CartridgeSettings;
 };
 export type FlightFrequency = {
   mhz?: number | null;
@@ -3978,6 +4050,15 @@ export type FlightTacan = {
 export type DatalinkValue = {
   identifier: string;
   value: string;
+};
+export type CartridgeSettingsUpdate = {
+  auto_load?: boolean | null;
+  threats?: boolean | null;
+  cmds?: {
+    [key: string]: {
+      [key: string]: number;
+    };
+  } | null;
 };
 export type InstallPreferences = {
   saved_game_dir: string;
@@ -4525,6 +4606,9 @@ export const {
   useSetPackageFrequencyMutation,
   useSetFlightTacanMutation,
   useSetFlightDatalinkMutation,
+  useSetCartridgeSettingsMutation,
+  useResetCartridgeSettingsMutation,
+  useApplyCartridgeSettingsToAircraftMutation,
   useSaveFlightCartridgeMutation,
   useGetInstallPreferencesQuery,
   useSetInstallPreferencesMutation,

@@ -17,6 +17,7 @@ from game.ato import Flight, FlightType, Package
 from game.settings import AutoAtoBehavior, Settings
 from game.theater import ParkingType
 from game.theater.player import Player
+from .dtcsettings import DtcSettings
 from .pilot import Pilot, PilotStatus
 from .maintenance import MaintenanceBatch, expedited_repair_cost
 from .pilotnames import faker_for_country
@@ -102,6 +103,11 @@ class Squadron:
         init=False, hash=False, compare=False, default=False
     )
 
+    #: The data cartridge of its player flights (#221).
+    dtc: DtcSettings = field(
+        init=False, hash=False, compare=False, default_factory=DtcSettings
+    )
+
     def __setstate__(self, state: dict[str, Any]) -> None:
         if "id" not in state:
             state["id"] = uuid4()
@@ -118,6 +124,8 @@ class Squadron:
         if "csar_auto_assign_seeded" not in state:
             # Pre-CSAR save: let the migrator opt this squadron in once.
             state["csar_auto_assign_seeded"] = False
+        if "dtc" not in state:
+            state["dtc"] = DtcSettings()
         if "maintenance_batches" not in state:
             state["maintenance_batches"] = []
         if "new_maintenance_batches" not in state:

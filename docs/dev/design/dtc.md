@@ -9,7 +9,8 @@ against a `.dtc` exported from a current DCS build before adding a module.
 |---|---|---|---|
 | F/A-18C | yes | 2.9.15.9408 | `COMM` (COMM1/COMM2, 20 named presets + G/M/C/S), `WYPT` (steerpoints, routes 1-3, TACAN/ICLS/ACLS pre-tune, FPAS home waypoint), `SA` (CAP points, corridor, FAOR/FLOT, MEZ threats), `TCN` (TACAN station list) |
 | F-16C | yes | 2.9.15.9408 | `MPD` (steerpoints, GEO lines, threat and destination points), `COMM` (UHF/VHF, no channel names), `CMDS`, ROE/IFF, `COLR` |
-| AH-64D | reported, not confirmed | later 2025 update | not researched |
+| AH-64D | yes | in the install checked in November 2026 | `NAV` (2 mission files of waypoints/hazards, control measures, targets/threats, lines, areas, zones, routes, ADF), radios and presets, IDM, weapons, laser codes |
+| CH-47F, MiG-29 | yes | in the install checked in November 2026 | not researched |
 | F-14BU | yes | in the install checked in November 2026 | `NAV` (12 flight plans of 50 points: waypoints, 4 lines, reference points; plan 1 is the mission route), `JDAM` (8 targets for each of STA 3-6), `CMDS`, `TIS` (datalink callsigns); no radios |
 | F-15E, JF-17, other F-14 | no | | keep the kneeboard and the miz waypoints (`M{n}.{i}`, PP, ST/IP) |
 
@@ -75,3 +76,34 @@ presets (G 243 AM, M 122.8 AM, C 30 FM, S 156.05 FM), the FM bands of the ARC-21
   `ELINT` and `COLR` are left out and keep the module's defaults.
 - **Unsupported module or failure:** nothing is written and the mission is generated as
   before; the kneeboard stays the fallback.
+- **AH-64D:** the miz carries the route, so mission file 1 leaves out waypoints, hazards
+  and control measures (their `isEnabled` stays off: the helicopter keeps those of the
+  mission). The cartridge adds the front lines nearest the package target as FLOT lines
+  (at most 4, `type_num` 4 of `NAV/Lines.lua`) and the 20 enemy air defense sites nearest
+  it as target points `T01`..`T20`, typed `GU` (generic air defense unit), with the site
+  name as note (40 characters). Elevations are left at 0. Radios, IDM, weapons and laser
+  codes keep the module's defaults.
+
+## What the player sets (#221)
+
+The Radios & TACAN tab of a player flight sets what goes into the cartridges of its
+squadron. The settings live on the squadron (`Squadron.dtc`, `DtcSettings`), not on the
+flight: flights are planned anew each turn. A save without them reads as the module's
+defaults.
+
+- **Load at spawn:** the unit's `DTC` block carries `"AutoLoad": false` when it is off;
+  the pilot loads the cartridge from the DTC page.
+- **Front lines and enemy air defenses** (F-16C, F-14BU, AH-64D): off, the cartridge
+  leaves those partitions to the module.
+- **CMDS programs** (F/A-18C, F-16C, F-14BU): the 10 programs of the module, MAN 1-6,
+  AUTO 1-3 and BYPASS, start from the module's defaults (`CMDS_defs.lua` of each editor;
+  the F/A-18C and the F-14BU share them) and keep to the limits of its spin boxes
+  (`CMDS.lua`). Only the values that differ are kept; once one does, the cartridge
+  carries every program whole: `ALR67.CMDS.CMDSProgramSettings` (F/A-18C),
+  `MPD.CMDS.CMDSProgramSettings` (F-16C), `CMDS` (F-14BU). The bingo settings and the
+  threat tables are left out and keep the module's defaults. The quantities of the
+  `Other1` and `Other2` dispensers are not offered and stay at the module's values.
+- **Apply to every squadron of the aircraft** copies the settings to the other squadrons
+  of the coalition that fly the same DCS type.
+- **Not done yet:** the F-14BU JDAM targets (the launch zone `lar_*` comes from a lookup
+  table of the module that Retribution does not ship), the F-16C ROE/IFF and colours.

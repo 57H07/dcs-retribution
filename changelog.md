@@ -1,3 +1,10 @@
+# Unreleased
+
+## Features/Improvements
+* **[Mission Generation]** Reduced objective markers: **Settings > Mission Generator > Gameplay > Reduced objective markers** limits the F10 map markers of the mission (e.g. *DINGO [ENEMY]*) to the ground objects that matter for the turn: those within 30 nm of a front line (adjustable), the targets of your packages, the sites of the bases with an active front and the targets of the campaign objectives in progress. Off by default: every ground object stays marked.
+* **[Mission Generation]** Data cartridge settings: the Radios & TACAN tab of a player flight sets what goes into the cartridges of its squadron, kept from turn to turn: **Load at spawn** (off, the pilot loads it from the DTC page), the front lines and enemy air defenses (F-16C, F-14BU, AH-64D), and the CMDS programs of the F/A-18C, F-16C and F-14BU, starting from the module's own programs. **Apply to every <aircraft> squadron** copies them to the other squadrons of that aircraft; **Module defaults** goes back. The F-14BU JDAM targets are not set yet: they need the launch zone the DTC editor computes (#221).
+* **[Mission Generation]** Native data cartridge for the AH-64D: the front lines nearest the package target as FLOT lines and the 20 enemy air defense sites nearest it as target points, ringed on the TSD; the route and the other pages still come from the mission (#191).
+
 # Retribution v1.7.0
 
 ## Features/Improvements

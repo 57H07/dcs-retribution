@@ -1574,6 +1574,26 @@ class Settings:
         GAMEPLAY_SECTION,
         default=True,
     )
+    reduced_marks: bool = boolean_option(
+        "Reduced objective markers",
+        MISSION_GENERATOR_PAGE,
+        GAMEPLAY_SECTION,
+        default=False,
+        detail=(
+            "Only mark the ground objects that matter for the turn: near a front "
+            "line, targeted by a package of yours, at a base with an active front, "
+            "or the target of a campaign objective in progress."
+        ),
+    )
+    reduced_marks_range_nm: int = bounded_int_option(
+        "Reduced markers: distance from the front (nm)",
+        MISSION_GENERATOR_PAGE,
+        GAMEPLAY_SECTION,
+        default=30,
+        min=5,
+        max=150,
+        detail="With reduced objective markers, how far from a front line a ground object is still marked.",
+    )
     eplrs_enabled: bool = boolean_option(
         "Enable EPLRS",
         MISSION_GENERATOR_PAGE,

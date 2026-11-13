@@ -3,24 +3,30 @@
 // departure base (ICLS, Link 4), edited with the panel of the base screen. Changes
 // apply at once, each command answers the whole tab; the server enforces the limits and
 // says what is worth a warning. The data cartridge of the last mission (#191) is saved
-// from here, through the native save dialog.
+// from here, through the native save dialog, and what goes into the cartridges of the
+// flight's squadron is set here (#221): kept on the squadron, checked by the server.
 import { commandErrorMessage } from "../api/commands";
 import {
+  CartridgeSettings,
+  CmdsField,
   DatalinkField,
   DatalinkMember,
   FlightDatalink,
   FlightRadios,
   RadioRange,
+  useApplyCartridgeSettingsToAircraftMutation,
   useGetBaseActionsQuery,
+  useResetCartridgeSettingsMutation,
   useGetFlightRadiosQuery,
   useSaveFlightCartridgeMutation,
+  useSetCartridgeSettingsMutation,
   useSetFlightDatalinkMutation,
   useSetFlightFrequencyMutation,
   useSetFlightTacanMutation,
   useSetPackageFrequencyMutation,
 } from "../api/liberationApi";
 import { RadiosPanel } from "../bases/BaseActionsPanels";
-import { Button, useToast } from "../ui";
+import { Button, Switch, useToast } from "../ui";
 import styles from "./FlightRadiosTab.module.css";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -458,19 +464,20 @@ function DataCartridge({ packageId, flightId, radios }: FlightProps) {
       toast({ title: "Cartridge saved", description: result.data.path ?? "" });
     }
   };
+  const settings = radios.cartridge_settings;
   return (
     <section className={styles.panel} aria-label="Data cartridge">
       <h3 className={styles.title}>Data cartridge</h3>
       {radios.cartridge_file == null ? (
         <p className={styles.hint}>
           The cartridge comes with the mission (Take off), for a player flight
-          of an aircraft that takes one (F/A-18C). It loads at spawn.
+          of an aircraft that takes one (F/A-18C, F-16C, F-14B upgrade, AH-64D).
         </p>
       ) : (
         <>
           <p className={styles.hint}>
-            {radios.cartridge_file}, in the last mission: it loads at spawn.
-            Save a copy for the DTC manager of DCS.
+            {radios.cartridge_file}, in the last mission. Save a copy for the
+            DTC manager of DCS.
           </p>
           <div className={styles.fields}>
             <Button disabled={isLoading} onClick={onSave}>
@@ -479,7 +486,245 @@ function DataCartridge({ packageId, flightId, radios }: FlightProps) {
           </div>
         </>
       )}
+      {settings != null && (
+        <CartridgeSettingsPanel
+          packageId={packageId}
+          flightId={flightId}
+          settings={settings}
+        />
+      )}
     </section>
+  );
+}
+
+function isDefault(settings: CartridgeSettings): boolean {
+  return (
+    settings.auto_load && settings.threats !== false && !settings.cmds_modified
+  );
+}
+
+/** What goes into the cartridges of the squadron (#221). */
+function CartridgeSettingsPanel(props: {
+  packageId: string;
+  flightId: string;
+  settings: CartridgeSettings;
+}) {
+  const { packageId, flightId, settings } = props;
+  const toast = useToast();
+  const report = useCommandReport();
+  const [setSettings, { isLoading: setting }] =
+    useSetCartridgeSettingsMutation();
+  const [reset, { isLoading: resetting }] = useResetCartridgeSettingsMutation();
+  const [apply, { isLoading: applying }] =
+    useApplyCartridgeSettingsToAircraftMutation();
+  const busy = setting || resetting || applying;
+  const others = settings.same_aircraft_squadrons;
+
+  const send = async (update: { auto_load?: boolean; threats?: boolean }) =>
+    report(
+      "Could not set the cartridge",
+      await setSettings({
+        packageId,
+        flightId,
+        cartridgeSettingsUpdateJs: update,
+      }),
+    );
+
+  return (
+    <>
+      <p className={styles.hint}>
+        For every player flight of {settings.squadron}, this turn and the next.
+      </p>
+      <div className={styles.fields}>
+        <Switch
+          label="Load at spawn"
+          checked={settings.auto_load}
+          disabled={busy}
+          onCheckedChange={(checked) => send({ auto_load: checked })}
+        />
+        {settings.threats != null && (
+          <Switch
+            label="Front lines and enemy air defenses"
+            checked={settings.threats}
+            disabled={busy}
+            onCheckedChange={(checked) => send({ threats: checked })}
+          />
+        )}
+      </div>
+      {!settings.auto_load && (
+        <p className={styles.hint}>
+          The pilot loads the cartridge from the DTC page of the jet.
+        </p>
+      )}
+      {settings.cmds_fields.length > 0 && (
+        <CmdsPrograms
+          packageId={packageId}
+          flightId={flightId}
+          settings={settings}
+        />
+      )}
+      <div className={styles.fields}>
+        <Button
+          disabled={busy || others === 0}
+          onClick={async () => {
+            const result = await apply({ packageId, flightId });
+            if (report("Could not apply the cartridge", result)) {
+              toast({
+                title: "Cartridge applied",
+                description: `${others} other ${settings.aircraft} squadron${
+                  others === 1 ? "" : "s"
+                } now use these settings.`,
+              });
+            }
+          }}
+        >
+          Apply to every {settings.aircraft} squadron
+        </Button>
+        <Button
+          disabled={busy || isDefault(settings)}
+          onClick={async () =>
+            report(
+              "Could not reset the cartridge",
+              await reset({ packageId, flightId }),
+            )
+          }
+        >
+          Module defaults
+        </Button>
+      </div>
+    </>
+  );
+}
+
+type Drafts = Record<string, Record<string, string>>;
+
+function draftsOf(settings: CartridgeSettings): Drafts {
+  return Object.fromEntries(
+    settings.cmds_programs.map((program) => [
+      program.id,
+      Object.fromEntries(
+        Object.entries(program.values).map(([field, value]) => [
+          field,
+          `${value}`,
+        ]),
+      ),
+    ]),
+  );
+}
+
+/** The countermeasure programs, edited as a table and sent whole. */
+function CmdsPrograms(props: {
+  packageId: string;
+  flightId: string;
+  settings: CartridgeSettings;
+}) {
+  const { settings } = props;
+  const report = useCommandReport();
+  const [setSettings, { isLoading }] = useSetCartridgeSettingsMutation();
+  const currentKey = JSON.stringify(draftsOf(settings));
+  const [drafts, setDrafts] = useState<Drafts>(() => JSON.parse(currentKey));
+  useEffect(() => setDrafts(JSON.parse(currentKey)), [currentKey]);
+
+  const changed = JSON.stringify(drafts) !== currentKey;
+  const invalid = Object.values(drafts).some((fields) =>
+    Object.values(fields).some((v) => v.trim() === "" || isNaN(Number(v))),
+  );
+  const onSave = async () => {
+    const cmds = Object.fromEntries(
+      Object.entries(drafts).map(([program, fields]) => [
+        program,
+        Object.fromEntries(
+          Object.entries(fields).map(([field, v]) => [field, Number(v)]),
+        ),
+      ]),
+    );
+    const result = await setSettings({
+      packageId: props.packageId,
+      flightId: props.flightId,
+      cartridgeSettingsUpdateJs: { cmds },
+    });
+    report("Could not set the CMDS programs", result);
+  };
+  const edit = (program: string, field: string, value: string) =>
+    setDrafts((previous) => ({
+      ...previous,
+      [program]: { ...previous[program], [field]: value },
+    }));
+
+  return (
+    <div className={styles.cmds}>
+      <h4 className={styles.subtitle}>CMDS programs</h4>
+      <table className={styles.table}>
+        <thead>
+          <tr>
+            <th scope="col">Program</th>
+            {settings.cmds_fields.map((field) => (
+              <th key={field.id} scope="col">
+                {field.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {settings.cmds_programs.map((program) => (
+            <tr key={program.id}>
+              <th scope="row">{program.label}</th>
+              {settings.cmds_fields.map((field) => (
+                <td key={field.id}>
+                  <CmdsInput
+                    field={field}
+                    program={program.label}
+                    value={drafts[program.id]?.[field.id] ?? ""}
+                    onChange={(value) => edit(program.id, field.id, value)}
+                  />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className={styles.fields}>
+        <Button
+          variant="primary"
+          disabled={isLoading || !changed || invalid}
+          onClick={onSave}
+        >
+          Set the programs
+        </Button>
+        <Button
+          disabled={isLoading || !changed}
+          onClick={() => setDrafts(JSON.parse(currentKey))}
+        >
+          Undo
+        </Button>
+      </div>
+      <p className={styles.hint}>
+        Starts from the programs of the module. The bingo and threat tables keep
+        their defaults.
+      </p>
+    </div>
+  );
+}
+
+function CmdsInput(props: {
+  field: CmdsField;
+  program: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const { field } = props;
+  return (
+    <input
+      className={styles.cmdsInput}
+      aria-label={`${field.label} of ${props.program}`}
+      type="number"
+      inputMode="decimal"
+      min={field.minimum}
+      max={field.maximum}
+      step={field.step}
+      value={props.value}
+      onChange={(event) => props.onChange(event.target.value)}
+    />
   );
 }
 

@@ -23,7 +23,7 @@ from uuid import UUID
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from game import persistency
-from .cartridge import DtcCartridge, DtcContext, build_cartridge
+from .cartridge import DtcCartridge, DtcContext, build_cartridge, dtc_settings
 
 if TYPE_CHECKING:
     from dcs.flyingunit import FlyingUnit
@@ -65,8 +65,9 @@ def prepare(mission_data: MissionData, context: DtcContext) -> list[FlightCartri
         cartridge = _unique(cartridge, names)
         names.add(cartridge.name)
         units = tuple(flight.client_units)
+        auto_load = dtc_settings(flight).auto_load
         for unit in units:
-            _bind(unit, cartridge.name)
+            _bind(unit, cartridge.name, auto_load)
         built.append(FlightCartridge(flight.flight_id, cartridge, units))
     return built
 
@@ -153,10 +154,11 @@ def _unique(cartridge: DtcCartridge, taken: set[str]) -> DtcCartridge:
     return DtcCartridge(name=name, unit_type=cartridge.unit_type, data=data)
 
 
-def _bind(unit: FlyingUnit, name: str) -> None:
-    """Make the unit load the cartridge at spawn.
+def _bind(unit: FlyingUnit, name: str, auto_load: bool = True) -> None:
+    """Give the unit the cartridge, loaded at spawn with `auto_load`.
 
-    pydcs writes no `DTC` block, so the unit's own `dict()` gets it added.
+    Without it, the pilot loads it from the DTC page of the jet. pydcs writes no
+    `DTC` block, so the unit's own `dict()` gets it added.
     """
     unit_dict = unit.dict
 
@@ -164,7 +166,7 @@ def _bind(unit: FlyingUnit, name: str) -> None:
         d = unit_dict()
         d["DTC"] = {
             "Cartridges": {1: {"name": name, "default": True}},
-            "AutoLoad": True,
+            "AutoLoad": auto_load,
         }
         return d
 

@@ -25,6 +25,7 @@ from game.missiongenerator.missiondata import MissionData
 from game.radio.radios import MHz
 from game.radio.tacan import TacanBand, TacanChannel
 from game.runways import RunwayData
+from game.squadrons.dtcsettings import DtcSettings
 from game.theater.player import Player
 from game.utils import Heading, feet
 
@@ -67,6 +68,7 @@ def hornet_flight(**overrides: Any) -> Any:
             dcs_unit_type=SimpleNamespace(id="FA-18C_hornet")
         ),
         callsign="Enfield 1",
+        squadron=SimpleNamespace(dtc=DtcSettings()),
         client_units=[client],
         intra_flight_channel=MHz(251),
         package=SimpleNamespace(frequency=MHz(270)),
@@ -559,3 +561,152 @@ def test_a_carrier_recovery_pre_tunes_the_tacan_icls_and_acls_of_the_boat() -> N
     assert settings["TACAN"]["Channel"] == 74
     assert settings["ICLS"] == {"Channel": 11, "OnOff": True}
     assert settings["ACLS"] == {"Frequency": 336.0, "OnOff": True}
+
+
+# What the player sets for the cartridges of a squadron (#221).
+
+
+def test_a_cartridge_keeps_the_cmds_of_the_module_until_the_player_changes_them() -> (
+    None
+):
+    for flight in (hornet_flight(), tomcat_flight(), viper_flight()):
+        cartridge = build_cartridge(flight, MissionData(), CONTEXT)
+        assert cartridge is not None
+        data = cartridge.data
+        assert "ALR67" not in data and "CMDS" not in data
+        assert "CMDS" not in data.get("MPD", {})
+
+
+def test_a_hornet_cartridge_carries_the_cmds_programs_of_its_squadron() -> None:
+    flight = hornet_flight()
+    flight.squadron.dtc.cmds = {"MAN_1": {"chaff_quantity": 4, "flare_quantity": 3}}
+
+    cartridge = build_cartridge(flight, MissionData(), CONTEXT)
+
+    assert cartridge is not None
+    programs = cartridge.data["ALR67"]["CMDS"]["CMDSProgramSettings"]
+    assert programs["delay_between_programs"] == 0
+    assert programs["MAN_1"]["Chaff"] == {"Quantity": 4, "Repeat": 10, "Interval": 1.0}
+    assert programs["MAN_1"]["Flare"] == {"Quantity": 3}
+    # The other programs are written whole, with the module's values.
+    assert programs["BYP"]["Chaff"] == {"Quantity": 2, "Repeat": 1, "Interval": 1.0}
+    assert len(programs) == 11
+
+
+def test_a_tomcat_cartridge_carries_the_cmds_programs_of_its_squadron() -> None:
+    flight = tomcat_flight()
+    flight.squadron.dtc.cmds = {"AUTO_1": {"chaff_interval": 0.5}}
+
+    cartridge = build_cartridge(flight, MissionData(), CONTEXT)
+
+    assert cartridge is not None
+    assert cartridge.data["CMDS"]["AUTO_1"]["Chaff"]["Interval"] == 0.5
+    assert cartridge.data["CMDS"]["MAN_1"]["Chaff"]["Quantity"] == 1
+
+
+def test_a_viper_cartridge_carries_the_cmds_programs_of_its_squadron() -> None:
+    flight = viper_flight()
+    flight.squadron.dtc.cmds = {"MAN1": {"flare_salvo_quantity": 4}}
+
+    cartridge = build_cartridge(flight, MissionData(), CONTEXT)
+
+    assert cartridge is not None
+    programs = cartridge.data["MPD"]["CMDS"]["CMDSProgramSettings"]
+    assert programs["MAN1"]["Flare"]["SalvoQuantity"] == 4
+    assert programs["MAN1"]["Chaff"]["SalvoQuantity"] == 10
+    assert set(programs) == {p for p, _ in dtc.cmds.VIPER.programs}
+
+
+def test_without_threats_a_cartridge_leaves_the_displays_to_the_module() -> None:
+    front = (Point(30000, -10000, TERRAIN), Point(30000, 10000, TERRAIN))
+    context = DtcContext(
+        terrain="Caucasus",
+        start_time=START,
+        timezone=timezone.utc,
+        front_lines=(front,),
+        air_defenses=(threat("Near site", 45000),),
+    )
+    tomcat, viper = tomcat_flight(), viper_flight()
+    tomcat.squadron.dtc.threats = False
+    viper.squadron.dtc.threats = False
+
+    tomcat_cartridge = build_cartridge(tomcat, MissionData(), context)
+    viper_cartridge = build_cartridge(viper, MissionData(), context)
+
+    assert tomcat_cartridge is not None and viper_cartridge is not None
+    plan = tomcat_cartridge.data["NAV"][0]
+    assert plan["lines"] == [] and plan["additional_points"] == []
+    mpd = viper_cartridge.data["MPD"]
+    assert "GEO_LINES" not in mpd and "THREAT_PTS" not in mpd
+    assert mpd["mirror_NAV_PTS"] is True
+
+
+def test_without_auto_load_the_pilot_loads_the_cartridge(tmp_path: Path) -> None:
+    mission = Mission(Caucasus())
+    flight = generated_flight(mission, FA_18C_hornet, "Enfield 1")
+    flight.squadron.dtc.auto_load = False
+    miz = tmp_path / "retribution_nextturn.miz"
+
+    cartridges = dtc.prepare(MissionData(flights=[flight]), CONTEXT)
+    mission.save(str(miz))
+    dtc.write(cartridges, miz, mission)
+
+    player = flight.units[0]
+    assert mission_units(miz)[player.name]["DTC"]["AutoLoad"] is False
+
+
+def apache_flight() -> Any:
+    flight = tomcat_flight()
+    flight.aircraft_type = SimpleNamespace(
+        dcs_unit_type=SimpleNamespace(id="AH-64D_BLK_II")
+    )
+    return flight
+
+
+def test_an_apache_cartridge_draws_the_front_and_the_enemy_air_defenses() -> None:
+    front = (Point(30000, -10000, TERRAIN), Point(30000, 10000, TERRAIN))
+    context = DtcContext(
+        terrain="Caucasus",
+        start_time=START,
+        timezone=timezone.utc,
+        front_lines=(front,),
+        air_defenses=(
+            threat("Far site", 90000),
+            threat("Our Patriot", 41000, owner=Player.BLUE),
+            threat("SA-6 — Near site", 45000),
+        ),
+    )
+
+    cartridge = build_cartridge(apache_flight(), MissionData(), context)
+
+    assert cartridge is not None
+    assert cartridge.unit_type == "AH-64D_BLK_II"
+    nav = cartridge.data["NAV"]
+    assert nav["MissionFile"] == 1
+    mission = nav["Mission_1"]
+    # Waypoints and control measures stay those of the mission.
+    assert set(mission) == {"Lines", "Points"}
+    assert set(mission["Points"]) == {"TGT"}
+    [line] = mission["Lines"]
+    assert line["type_num"] == 4  # FLOT
+    assert line["vertices"] == [
+        {"x": 30000, "y": -10000},
+        {"x": 30000, "y": 10000},
+    ]
+    targets = mission["Points"]["TGT"]
+    assert targets["isEnabled"] is True
+    assert [(p["num"], p["text"], p["note"]) for p in targets["POINTS"]] == [
+        (1, "T01", "SA-6 Near site"),
+        (2, "T02", "Far site"),
+    ]
+    assert {p["id"] for p in targets["POINTS"]} == {2}
+
+
+def test_without_threats_an_apache_cartridge_keeps_the_mission_points() -> None:
+    flight = apache_flight()
+    flight.squadron.dtc.threats = False
+
+    cartridge = build_cartridge(flight, MissionData(), CONTEXT)
+
+    assert cartridge is not None
+    assert cartridge.data["NAV"]["Mission_1"] == {}

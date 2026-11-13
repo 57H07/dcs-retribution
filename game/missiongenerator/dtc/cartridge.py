@@ -16,6 +16,8 @@ if TYPE_CHECKING:
     from dcs import Point
 
     from game.missiongenerator.aircraft.flightdata import FlightData
+    from game.squadrons.dtcsettings import DtcSettings
+    from .cmds import CmdsSchema
     from game.missiongenerator.missiondata import MissionData
     from game.theater.player import Player
 
@@ -71,9 +73,10 @@ CartridgeBuilder = Callable[
 
 
 def _builders() -> dict[str, CartridgeBuilder]:
-    from . import hornet, tomcat, viper
+    from . import apache, hornet, tomcat, viper
 
     return {
+        apache.UNIT_TYPE: apache.build,
         hornet.UNIT_TYPE: hornet.build,
         tomcat.UNIT_TYPE: tomcat.build,
         viper.UNIT_TYPE: viper.build,
@@ -82,7 +85,35 @@ def _builders() -> dict[str, CartridgeBuilder]:
 
 def supports(flight: FlightData) -> bool:
     """Whether the module of `flight` takes a native cartridge."""
-    return flight.aircraft_type.dcs_unit_type.id in _builders()
+    return takes_cartridge(flight.aircraft_type.dcs_unit_type.id)
+
+
+def takes_cartridge(unit_type: str) -> bool:
+    """Whether the module of DCS type `unit_type` takes a native cartridge."""
+    return unit_type in _builders()
+
+
+def cmds_schema(unit_type: str) -> CmdsSchema | None:
+    """The CMDS programs the player may set in the cartridge of the module (#221)."""
+    from . import hornet, tomcat, viper
+
+    return {
+        hornet.UNIT_TYPE: hornet.CMDS,
+        tomcat.UNIT_TYPE: tomcat.CMDS,
+        viper.UNIT_TYPE: viper.CMDS,
+    }.get(unit_type)
+
+
+def shows_threats(unit_type: str) -> bool:
+    """Whether the cartridge of the module adds front lines and air defenses."""
+    from . import apache, tomcat, viper
+
+    return unit_type in (apache.UNIT_TYPE, tomcat.UNIT_TYPE, viper.UNIT_TYPE)
+
+
+def dtc_settings(flight: FlightData) -> DtcSettings:
+    """What the player set for the cartridges of the flight's squadron (#221)."""
+    return flight.squadron.dtc
 
 
 def cartridge_name(flight: FlightData) -> str:

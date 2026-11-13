@@ -12,7 +12,8 @@ from datetime import datetime, timezone
 from typing import Any, Optional, TYPE_CHECKING
 
 from game.ato.flightwaypointtype import FlightWaypointType
-from .cartridge import DtcCartridge, DtcContext
+from .cartridge import DtcCartridge, DtcContext, dtc_settings
+from .cmds import ALE47
 
 if TYPE_CHECKING:
     from game.ato.flightwaypoint import FlightWaypoint
@@ -22,6 +23,8 @@ if TYPE_CHECKING:
     from game.radio.tacan import TacanChannel
 
 UNIT_TYPE = "FA-18C_hornet"
+#: The countermeasure programs the player may set (#221).
+CMDS = ALE47
 
 #: The waypoint database of the jet holds 59 points.
 MAX_WAYPOINTS = 59
@@ -279,4 +282,11 @@ def build(
         "COMM": _comm(flight, mission_data),
         "WYPT": _wypt(flight, mission_data, context),
     }
+    changes = dtc_settings(flight).cmds
+    if changes:
+        # Left out, the jet keeps the module's programs and threat table.
+        programs = CMDS.program_settings(changes)
+        data["ALR67"] = {
+            "CMDS": {"CMDSProgramSettings": {"delay_between_programs": 0, **programs}}
+        }
     return DtcCartridge(name=name, unit_type=UNIT_TYPE, data=data)

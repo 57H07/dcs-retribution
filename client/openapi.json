@@ -7809,6 +7809,197 @@
         }
       }
     },
+    "/packages/{package_id}/flights/{flight_id}/radios/cartridge/settings": {
+      "put": {
+        "summary": "Put Cartridge Settings",
+        "description": "Sets the cartridge of every player flight of the flight's squadron (#221).",
+        "operationId": "set_cartridge_settings",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CartridgeSettingsUpdateJs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightRadiosJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The aircraft takes no cartridge, or a CMDS value is out of limits.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Cartridge Settings",
+        "description": "Back to the module's defaults, loaded at spawn.",
+        "operationId": "reset_cartridge_settings",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightRadiosJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The aircraft takes no cartridge.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/{package_id}/flights/{flight_id}/radios/cartridge/settings/apply-to-aircraft": {
+      "post": {
+        "summary": "Post Apply Cartridge Settings",
+        "description": "Copies the settings to every squadron of the coalition with the same aircraft.",
+        "operationId": "apply_cartridge_settings_to_aircraft",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightRadiosJs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The aircraft takes no cartridge.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandErrorJs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/packages/{package_id}/flights/{flight_id}/radios/cartridge/save": {
       "post": {
         "summary": "Post Save Cartridge",
@@ -11053,6 +11244,165 @@
         ],
         "title": "CareerTotalJs"
       },
+      "CartridgeSettingsJs": {
+        "properties": {
+          "squadron": {
+            "type": "string",
+            "title": "Squadron"
+          },
+          "aircraft": {
+            "type": "string",
+            "title": "Aircraft"
+          },
+          "auto_load": {
+            "type": "boolean",
+            "title": "Auto Load"
+          },
+          "threats": {
+            "title": "Threats",
+            "type": "boolean"
+          },
+          "cmds_fields": {
+            "items": {
+              "$ref": "#/components/schemas/CmdsFieldJs"
+            },
+            "type": "array",
+            "title": "Cmds Fields"
+          },
+          "cmds_programs": {
+            "items": {
+              "$ref": "#/components/schemas/CmdsProgramJs"
+            },
+            "type": "array",
+            "title": "Cmds Programs"
+          },
+          "cmds_modified": {
+            "type": "boolean",
+            "title": "Cmds Modified"
+          },
+          "same_aircraft_squadrons": {
+            "type": "integer",
+            "title": "Same Aircraft Squadrons"
+          }
+        },
+        "type": "object",
+        "required": [
+          "squadron",
+          "aircraft",
+          "auto_load",
+          "cmds_fields",
+          "cmds_programs",
+          "cmds_modified",
+          "same_aircraft_squadrons"
+        ],
+        "title": "CartridgeSettings",
+        "description": "What the player sets in the cartridges of the flight's squadron (#221)."
+      },
+      "CartridgeSettingsUpdateJs": {
+        "properties": {
+          "auto_load": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Load"
+          },
+          "threats": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Threats"
+          },
+          "cmds": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "additionalProperties": {
+                    "type": "number"
+                  },
+                  "type": "object"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cmds"
+          }
+        },
+        "type": "object",
+        "title": "CartridgeSettingsUpdate",
+        "description": "What changes; a field left to None stays as it is."
+      },
+      "CmdsFieldJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "minimum": {
+            "type": "number",
+            "title": "Minimum"
+          },
+          "maximum": {
+            "type": "number",
+            "title": "Maximum"
+          },
+          "step": {
+            "type": "number",
+            "title": "Step"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "minimum",
+          "maximum",
+          "step"
+        ],
+        "title": "CmdsField"
+      },
+      "CmdsProgramJs": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "values": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "values"
+        ],
+        "title": "CmdsProgram"
+      },
       "CoalitionFinancesJs": {
         "properties": {
           "budget": {
@@ -12503,6 +12853,9 @@
           "cartridge_file": {
             "title": "Cartridge File",
             "type": "string"
+          },
+          "cartridge_settings": {
+            "$ref": "#/components/schemas/CartridgeSettingsJs"
           }
         },
         "type": "object",

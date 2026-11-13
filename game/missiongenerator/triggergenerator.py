@@ -27,6 +27,7 @@ from dcs.translation import String
 from dcs.triggers import Event, TriggerCondition, TriggerOnce
 from dcs.unit import Skill
 
+from game.missiongenerator.marks import MarkFilter
 from game.theater import Airfield
 from game.theater.controlpoint import Fob, TRIGGER_RADIUS_CAPTURE
 
@@ -144,10 +145,13 @@ class TriggerGenerator:
             mark_trigger = TriggerOnce(Event.NoEvent, "Marks generator")
             mark_trigger.add_condition(TimeAfter(1))
             v = 10
+            marked = MarkFilter(self.game)
             for cp in self.game.theater.controlpoints:
                 seen = set()
                 for ground_object in cp.ground_objects:
                     if ground_object.obj_name in seen:
+                        continue
+                    if not marked.marks(ground_object):
                         continue
 
                     seen.add(ground_object.obj_name)

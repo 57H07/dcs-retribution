@@ -8,6 +8,12 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from game.commands.baseradios import FREQUENCY_MHZ_RANGE
+from game.commands.flightcartridge import (
+    flight_cmds_schema,
+    flight_shows_threats,
+    squadrons_flying_the_same,
+    takes_settings,
+)
 from game.commands.mission import last_cartridge
 from game.commands.flightradios import (
     datalink_fields,
@@ -113,6 +119,97 @@ class FlightDatalinkJs(BaseModel):
         )
 
 
+class CmdsFieldJs(BaseModel):
+    #: Key of the values of a program.
+    id: str
+    label: str
+    minimum: float
+    maximum: float
+    step: float
+
+    class Config:
+        title = "CmdsField"
+
+
+class CmdsProgramJs(BaseModel):
+    #: The program as the module names it, e.g. `MAN_1`.
+    id: str
+    label: str
+    #: Every field, the module's default where the player changed nothing.
+    values: dict[str, float]
+
+    class Config:
+        title = "CmdsProgram"
+
+
+class CartridgeSettingsJs(BaseModel):
+    """What the player sets in the cartridges of the flight's squadron (#221)."""
+
+    squadron: str
+    aircraft: str
+    #: Off, the pilot loads the cartridge from the DTC page.
+    auto_load: bool
+    #: Front lines and enemy air defenses; None when the cartridge adds none.
+    threats: bool | None
+    #: Empty when the aircraft has no CMDS programs to set.
+    cmds_fields: list[CmdsFieldJs]
+    cmds_programs: list[CmdsProgramJs]
+    #: Whether a program differs from the module's defaults.
+    cmds_modified: bool
+    #: The other squadrons of the coalition that fly the same aircraft.
+    same_aircraft_squadrons: int
+
+    class Config:
+        title = "CartridgeSettings"
+
+    @staticmethod
+    def for_flight(flight: Flight) -> CartridgeSettingsJs | None:
+        if not takes_settings(flight):
+            return None
+        settings = flight.squadron.dtc
+        schema = flight_cmds_schema(flight)
+        fields: list[CmdsFieldJs] = []
+        programs: list[CmdsProgramJs] = []
+        if schema is not None:
+            fields = [
+                CmdsFieldJs(
+                    id=f.id,
+                    label=f.label,
+                    minimum=f.minimum,
+                    maximum=f.maximum,
+                    step=f.step,
+                )
+                for f in schema.fields
+            ]
+            values = schema.values(settings.cmds)
+            programs = [
+                CmdsProgramJs(id=program, label=label, values=values[program])
+                for program, label in schema.programs
+            ]
+        return CartridgeSettingsJs(
+            squadron=str(flight.squadron),
+            aircraft=flight.unit_type.display_name,
+            auto_load=settings.auto_load,
+            threats=settings.threats if flight_shows_threats(flight) else None,
+            cmds_fields=fields,
+            cmds_programs=programs,
+            cmds_modified=bool(settings.cmds),
+            same_aircraft_squadrons=len(squadrons_flying_the_same(flight)),
+        )
+
+
+class CartridgeSettingsUpdateJs(BaseModel):
+    """What changes; a field left to None stays as it is."""
+
+    auto_load: bool | None = None
+    threats: bool | None = None
+    #: Every program as the tab shows it: `{program: {field: value}}`.
+    cmds: dict[str, dict[str, float]] | None = None
+
+    class Config:
+        title = "CartridgeSettingsUpdate"
+
+
 class FlightRadiosJs(BaseModel):
     """What the Radios & TACAN tab shows: each command answers it whole."""
 
@@ -140,6 +237,8 @@ class FlightRadiosJs(BaseModel):
     departure: str
     #: File of the data cartridge in the last mission, None without one (#191).
     cartridge_file: str | None
+    #: None when the aircraft takes no cartridge (#221).
+    cartridge_settings: CartridgeSettingsJs | None
 
     class Config:
         title = "FlightRadios"
@@ -170,6 +269,7 @@ class FlightRadiosJs(BaseModel):
             departure_id=flight.departure.id,
             departure=flight.departure.name,
             cartridge_file=None if cartridge is None else cartridge.name,
+            cartridge_settings=CartridgeSettingsJs.for_flight(flight),
         )
 
 

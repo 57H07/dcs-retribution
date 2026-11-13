@@ -316,6 +316,10 @@ export const liberationApi = _liberationApi.enhanceEndpoints({
     setPackageFrequency: { invalidatesTags: [Tags.PACKAGES, Tags.BASE] },
     setFlightTacan: { invalidatesTags: [Tags.PACKAGES, Tags.BASE] },
     setFlightDatalink: { invalidatesTags: [Tags.PACKAGES] },
+    // Cartridge settings of the flight's squadron (#221): each answers the tab.
+    setCartridgeSettings: { invalidatesTags: [Tags.PACKAGES] },
+    resetCartridgeSettings: { invalidatesTags: [Tags.PACKAGES] },
+    applyCartridgeSettingsToAircraft: { invalidatesTags: [Tags.PACKAGES] },
     // /debug/waypoint-geometries
     getDebugHoldZones: {
       providesTags: (result, error, arg) => [

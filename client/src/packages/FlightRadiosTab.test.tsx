@@ -1,5 +1,6 @@
 import type {
   BaseActions,
+  CartridgeSettings,
   FlightRadios,
   PackageDetail,
 } from "../api/liberationApi";
@@ -42,6 +43,37 @@ const RADIOS: FlightRadios = {
   },
   departure_id: "cp-1",
   departure: "Stennis",
+};
+
+const CARTRIDGE: CartridgeSettings = {
+  squadron: "VFA-25",
+  aircraft: "F/A-18C",
+  auto_load: true,
+  cmds_fields: [
+    {
+      id: "chaff_quantity",
+      label: "Chaff",
+      minimum: 0,
+      maximum: 99,
+      step: 1,
+    },
+    {
+      id: "flare_quantity",
+      label: "Flares",
+      minimum: 0,
+      maximum: 99,
+      step: 1,
+    },
+  ],
+  cmds_programs: [
+    {
+      id: "MAN_1",
+      label: "MAN 1",
+      values: { chaff_quantity: 1, flare_quantity: 1 },
+    },
+  ],
+  cmds_modified: false,
+  same_aircraft_squadrons: 2,
 };
 
 const ACTIONS = {
@@ -121,6 +153,74 @@ describe("flight radios tab", () => {
       path: `${RADIOS_PATH}/cartridge/save`,
     });
     expect(await screen.findByText("Cartridge saved")).toBeInTheDocument();
+  });
+
+  it("sets the cartridge of the squadron and its CMDS programs (#221)", async () => {
+    const settingsPath = `${RADIOS_PATH}/cartridge/settings`;
+    const calls = renderTab(
+      { ...RADIOS, cartridge_settings: CARTRIDGE },
+      null,
+      {
+        [settingsPath]: { body: RADIOS },
+        [`${settingsPath}/apply-to-aircraft`]: { body: RADIOS },
+      },
+    );
+    const panel = await screen.findByRole("region", {
+      name: "Data cartridge",
+    });
+    expect(panel).toHaveTextContent("For every player flight of VFA-25");
+    expect(
+      within(panel).getByRole("button", { name: "Module defaults" }),
+    ).toBeDisabled();
+
+    await userEvent.click(
+      within(panel).getByRole("switch", { name: "Load at spawn" }),
+    );
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]).toMatchObject({
+      method: "PUT",
+      path: settingsPath,
+      body: { auto_load: false },
+    });
+
+    const flares = within(panel).getByLabelText("Flares of MAN 1");
+    expect(flares).toHaveValue(1);
+    const setPrograms = within(panel).getByRole("button", {
+      name: "Set the programs",
+    });
+    expect(setPrograms).toBeDisabled();
+    await userEvent.clear(flares);
+    await userEvent.type(flares, "3");
+    await userEvent.click(setPrograms);
+    await waitFor(() => expect(calls).toHaveLength(2));
+    expect(calls[1]).toMatchObject({
+      method: "PUT",
+      path: settingsPath,
+      body: { cmds: { MAN_1: { chaff_quantity: 1, flare_quantity: 3 } } },
+    });
+
+    await userEvent.click(
+      within(panel).getByRole("button", {
+        name: "Apply to every F/A-18C squadron",
+      }),
+    );
+    await waitFor(() => expect(calls).toHaveLength(3));
+    expect(calls[2]).toMatchObject({
+      method: "POST",
+      path: `${settingsPath}/apply-to-aircraft`,
+    });
+  });
+
+  it("offers no threat switch for an aircraft whose cartridge adds none", async () => {
+    renderTab({ ...RADIOS, cartridge_settings: CARTRIDGE });
+    const panel = await screen.findByRole("region", {
+      name: "Data cartridge",
+    });
+    expect(
+      within(panel).queryByRole("switch", {
+        name: "Front lines and enemy air defenses",
+      }),
+    ).toBeNull();
   });
 
   it("says when the flight has no data cartridge", async () => {

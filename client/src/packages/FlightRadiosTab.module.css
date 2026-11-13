@@ -85,3 +85,27 @@
   font-weight: var(--ui-font-weight-semibold);
   color: var(--ui-color-text-secondary);
 }
+
+/* CMDS programs of the data cartridge (#221). */
+.cmds {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-x: auto;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--ui-color-text-secondary);
+  font-family: var(--ui-font-display);
+  font-size: var(--ui-font-size-sm);
+  font-weight: var(--ui-font-weight-semibold);
+  letter-spacing: var(--ui-letter-spacing-display);
+  text-transform: uppercase;
+}
+
+.cmdsInput {
+  composes: input;
+  width: 72px;
+  padding: 0 var(--ui-space-sm);
+}

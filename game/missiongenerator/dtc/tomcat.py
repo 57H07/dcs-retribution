@@ -15,9 +15,11 @@ from typing import Any, TYPE_CHECKING
 from .cartridge import (
     DtcCartridge,
     DtcContext,
+    dtc_settings,
     nearest_front_lines,
     nearest_threats,
 )
+from .cmds import ALE47
 
 if TYPE_CHECKING:
     from dcs import Point
@@ -26,6 +28,8 @@ if TYPE_CHECKING:
     from game.missiongenerator.missiondata import MissionData
 
 UNIT_TYPE = "F-14BU"
+#: The countermeasure programs the player may set (#221).
+CMDS = ALE47
 
 #: Flight plans of the jet; plan 1 is the mission route.
 PLANS = 12
@@ -75,9 +79,11 @@ def _plan() -> dict[str, Any]:
 def build(
     flight: FlightData, mission_data: MissionData, context: DtcContext, name: str
 ) -> DtcCartridge:
+    settings = dtc_settings(flight)
     plans = [_plan() for _ in range(PLANS)]
-    plans[0]["lines"] = _lines(flight, context)
-    plans[0]["additional_points"] = _threats(flight, context)
+    if settings.threats:
+        plans[0]["lines"] = _lines(flight, context)
+        plans[0]["additional_points"] = _threats(flight, context)
     data: dict[str, Any] = {
         "type": UNIT_TYPE,
         "name": name,
@@ -85,4 +91,9 @@ def build(
         "terrain": context.terrain,
         "NAV": plans,
     }
+    if settings.cmds:
+        data["CMDS"] = {
+            "delay_between_programs": 0,
+            **CMDS.program_settings(settings.cmds),
+        }
     return DtcCartridge(name=name, unit_type=UNIT_TYPE, data=data)

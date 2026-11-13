@@ -26,6 +26,7 @@ from dcs.triggers import Event, TriggerCondition, TriggerOnce
 from dcs.unit import Skill
 from shapely import MultiPolygon, Point as ShapelyPoint
 
+from game.missiongenerator.marks import MarkFilter
 from game.naming import ALPHA_MILITARY
 from game.pretense.pretenseflightgroupspawner import PretenseNameGenerator
 from game.theater import Airfield, Player
@@ -139,10 +140,13 @@ class PretenseTriggerGenerator:
             mark_trigger = TriggerOnce(Event.NoEvent, "Marks generator")
             mark_trigger.add_condition(TimeAfter(1))
             v = 10
+            marked = MarkFilter(self.game)
             for cp in self.game.theater.controlpoints:
                 seen = set()
                 for ground_object in cp.ground_objects:
                     if ground_object.obj_name in seen:
+                        continue
+                    if not marked.marks(ground_object):
                         continue
 
                     seen.add(ground_object.obj_name)

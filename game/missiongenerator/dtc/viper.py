@@ -17,15 +17,19 @@ from typing import Any, TYPE_CHECKING
 from .cartridge import (
     DtcCartridge,
     DtcContext,
+    dtc_settings,
     nearest_front_lines,
     nearest_threats,
 )
+from .cmds import VIPER
 
 if TYPE_CHECKING:
     from game.missiongenerator.aircraft.flightdata import FlightData
     from game.missiongenerator.missiondata import MissionData
 
 UNIT_TYPE = "F-16C_50"
+#: The countermeasure programs the player may set (#221).
+CMDS = VIPER
 
 #: The HSD draws 4 lines, L1 to L4, through geo points 31 to 55.
 MAX_LINES = 4
@@ -84,18 +88,21 @@ def _threat_points(flight: FlightData, context: DtcContext) -> list[dict[str, An
 def build(
     flight: FlightData, mission_data: MissionData, context: DtcContext, name: str
 ) -> DtcCartridge:
+    settings = dtc_settings(flight)
+    mpd: dict[str, Any] = {"mirror_NAV_PTS": True, "mirror_DEST": True}
+    if settings.threats:
+        mpd["mirror_GEO_LINES"] = False
+        mpd["mirror_THREAT_PTS"] = False
+        mpd["GEO_LINES"] = _geo_lines(flight, context)
+        mpd["THREAT_PTS"] = _threat_points(flight, context)
+    if settings.cmds:
+        # The bingo settings are left out: they keep the module's defaults.
+        mpd["CMDS"] = {"CMDSProgramSettings": CMDS.program_settings(settings.cmds)}
     data: dict[str, Any] = {
         "type": UNIT_TYPE,
         "name": name,
         "terrain": context.terrain,
-        "MPD": {
-            "mirror_NAV_PTS": True,
-            "mirror_DEST": True,
-            "mirror_GEO_LINES": False,
-            "mirror_THREAT_PTS": False,
-            "GEO_LINES": _geo_lines(flight, context),
-            "THREAT_PTS": _threat_points(flight, context),
-        },
+        "MPD": mpd,
         "COMM": {"mirror_COMM1": True, "mirror_COMM2": True},
     }
     return DtcCartridge(name=name, unit_type=UNIT_TYPE, data=data)
