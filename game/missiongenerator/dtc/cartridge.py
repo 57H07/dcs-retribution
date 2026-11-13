@@ -10,7 +10,7 @@ import json
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, tzinfo
-from typing import Any, Callable, Iterable, TYPE_CHECKING
+from typing import Any, Callable, Iterable, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from dcs import Point
@@ -34,6 +34,10 @@ class DtcThreat:
     threat_range_m: float = 0.0
 
 
+def _unknown_height(position: Point) -> Optional[float]:
+    return None
+
+
 @dataclass(frozen=True)
 class DtcContext:
     """What a cartridge needs from the mission besides the flight."""
@@ -47,6 +51,14 @@ class DtcContext:
     front_lines: tuple[tuple[Point, Point], ...] = field(default=())
     #: The air defense sites of both sides that still have working air defense.
     air_defenses: tuple[DtcThreat, ...] = field(default=())
+    #: Metres above sea level of a point of the map, None when unknown
+    #: (`game.theater.groundheight`).
+    ground_height: Callable[[Point], Optional[float]] = field(default=_unknown_height)
+
+    def elevation_m(self, position: Point) -> float:
+        """The ground height at `position`, 0 when unknown."""
+        height = self.ground_height(position)
+        return 0.0 if height is None else height
 
 
 @dataclass(frozen=True)
@@ -109,6 +121,13 @@ def shows_threats(unit_type: str) -> bool:
     from . import apache, tomcat, viper
 
     return unit_type in (apache.UNIT_TYPE, tomcat.UNIT_TYPE, viper.UNIT_TYPE)
+
+
+def sets_jdam_targets(unit_type: str) -> bool:
+    """Whether the cartridge of the module carries JDAM targets (#221)."""
+    from . import tomcat
+
+    return unit_type == tomcat.UNIT_TYPE
 
 
 def dtc_settings(flight: FlightData) -> DtcSettings:

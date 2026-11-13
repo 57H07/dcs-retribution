@@ -139,7 +139,7 @@ def _altitude(waypoint: FlightWaypoint) -> tuple[float, int]:
     return waypoint.alt.meters, 2 if waypoint.alt_type == "RADIO" else 1
 
 
-def _leg_speed_kmh(
+def leg_speed_kmh(
     previous: Optional[FlightWaypoint], waypoint: FlightWaypoint
 ) -> float:
     """Ground speed of the leg into `waypoint`, from the times of the flight plan."""
@@ -254,7 +254,7 @@ def _wypt(
                 "wypt_num": number,
                 "alt": altitude,
                 "altitudeType": altitude_type,
-                "speed": _leg_speed_kmh(previous, waypoint),
+                "speed": leg_speed_kmh(previous, waypoint),
                 "ETA": _seconds_of_day(context, waypoint.tot),
                 "FIX_Time": waypoint.tot is not None,
                 "TGT": is_target,

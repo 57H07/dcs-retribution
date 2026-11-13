@@ -70,8 +70,8 @@ def _threats(flight: FlightData, context: DtcContext) -> dict[str, Any]:
                 "note": _note(site.name),
                 "x": site.position.x,
                 "y": site.position.y,
-                # Elevation in metres; Retribution has no terrain heights.
-                "alt": 0,
+                # Elevation in metres, from the height map of the DCS map.
+                "alt": round(context.elevation_m(site.position)),
             }
             for number, site in enumerate(sites, 1)
         ],

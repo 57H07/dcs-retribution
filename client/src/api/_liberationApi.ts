@@ -4010,6 +4010,7 @@ export type CartridgeSettings = {
   aircraft: string;
   auto_load: boolean;
   threats?: boolean;
+  jdam_targets?: boolean;
   cmds_fields: CmdsField[];
   cmds_programs: CmdsProgram[];
   cmds_modified: boolean;
@@ -4054,6 +4055,7 @@ export type DatalinkValue = {
 export type CartridgeSettingsUpdate = {
   auto_load?: boolean | null;
   threats?: boolean | null;
+  jdam_targets?: boolean | null;
   cmds?: {
     [key: string]: {
       [key: string]: number;

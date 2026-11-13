@@ -13,6 +13,7 @@ from typing import Mapping, Optional, TYPE_CHECKING
 
 from game.missiongenerator.dtc.cartridge import (
     cmds_schema,
+    sets_jdam_targets,
     shows_threats,
     takes_cartridge,
 )
@@ -44,6 +45,10 @@ def flight_shows_threats(flight: Flight) -> bool:
     return shows_threats(unit_type_of(flight))
 
 
+def flight_sets_jdam_targets(flight: Flight) -> bool:
+    return sets_jdam_targets(unit_type_of(flight))
+
+
 def _settings(flight: Flight) -> DtcSettings:
     if not takes_settings(flight):
         raise CommandError(NO_CARTRIDGE)
@@ -55,6 +60,7 @@ def set_cartridge_settings(
     auto_load: Optional[bool] = None,
     threats: Optional[bool] = None,
     cmds: Optional[Mapping[str, Mapping[str, float]]] = None,
+    jdam_targets: Optional[bool] = None,
 ) -> None:
     """Changes what is given; `cmds` replaces every program the player changed.
 
@@ -75,6 +81,8 @@ def set_cartridge_settings(
         settings.auto_load = auto_load
     if threats is not None:
         settings.threats = threats
+    if jdam_targets is not None:
+        settings.jdam_targets = jdam_targets
     if cleaned is not None:
         settings.cmds = cleaned
 

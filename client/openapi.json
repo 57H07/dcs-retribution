@@ -11262,6 +11262,10 @@
             "title": "Threats",
             "type": "boolean"
           },
+          "jdam_targets": {
+            "title": "Jdam Targets",
+            "type": "boolean"
+          },
           "cmds_fields": {
             "items": {
               "$ref": "#/components/schemas/CmdsFieldJs"
@@ -11321,6 +11325,17 @@
               }
             ],
             "title": "Threats"
+          },
+          "jdam_targets": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jdam Targets"
           },
           "cmds": {
             "anyOf": [

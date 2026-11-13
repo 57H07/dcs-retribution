@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from game.commands.baseradios import FREQUENCY_MHZ_RANGE
 from game.commands.flightcartridge import (
     flight_cmds_schema,
+    flight_sets_jdam_targets,
     flight_shows_threats,
     squadrons_flying_the_same,
     takes_settings,
@@ -151,6 +152,8 @@ class CartridgeSettingsJs(BaseModel):
     auto_load: bool
     #: Front lines and enemy air defenses; None when the cartridge adds none.
     threats: bool | None
+    #: JDAM targets from the package target; None when the cartridge has none.
+    jdam_targets: bool | None
     #: Empty when the aircraft has no CMDS programs to set.
     cmds_fields: list[CmdsFieldJs]
     cmds_programs: list[CmdsProgramJs]
@@ -191,6 +194,9 @@ class CartridgeSettingsJs(BaseModel):
             aircraft=flight.unit_type.display_name,
             auto_load=settings.auto_load,
             threats=settings.threats if flight_shows_threats(flight) else None,
+            jdam_targets=(
+                settings.jdam_targets if flight_sets_jdam_targets(flight) else None
+            ),
             cmds_fields=fields,
             cmds_programs=programs,
             cmds_modified=bool(settings.cmds),
@@ -203,6 +209,7 @@ class CartridgeSettingsUpdateJs(BaseModel):
 
     auto_load: bool | None = None
     threats: bool | None = None
+    jdam_targets: bool | None = None
     #: Every program as the tab shows it: `{program: {field: value}}`.
     cmds: dict[str, dict[str, float]] | None = None
 

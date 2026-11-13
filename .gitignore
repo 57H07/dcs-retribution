@@ -28,3 +28,6 @@ env/
 
 # Claude Code session worktrees
 .claude/worktrees/
+
+# Height maps measured in DCS (#191): shipped in the release zip, too large for git.
+/resources/heightmaps/*.dem

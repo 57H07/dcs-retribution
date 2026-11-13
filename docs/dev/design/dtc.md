@@ -60,10 +60,26 @@ presets (G 243 AM, M 122.8 AM, C 30 FM, S 156.05 FM), the FM bands of the ARC-21
 - **F-14BU:** flight plan 1 holds the route of the mission editor, so its waypoints stay
   empty. The cartridge adds to it the front lines nearest the package target (at most 4,
   each from end to end) and the 20 enemy air defense sites nearest it, as reference points
-  `THRT 1`..`THRT 20`. Elevations are left at 0 ft. `CMDS`, `JDAM` and `TIS` keep the
-  module's defaults. JDAM targets are left for later: the jet reads the launch zone
-  (`lar_*`) from the cartridge, and the DTC editor computes it from a lookup table of the
-  module that Retribution does not ship.
+  `THRT 1`..`THRT 20`, with the ground height in feet (see *Elevations*). `TIS` keeps
+  the module's defaults; `CMDS` and `JDAM` are set as below (#221).
+- **F-14BU editor:** the editor is `F14/DTC/F-14BU_DTC.lua`. The `CMDS/` folder next to
+  it is a leftover of the ALE-47 the editor no longer reads: a cartridge saved by DCS has
+  `CMDS.CMDSProgramSettings.PROG_1..PROG_8` (burst and salvo of each dispenser, and a
+  priority), `CMDSBingoSettings`, `CMDSAutoPrograms` and `CMDSAutoOverrides`.
+- **F-14BU JDAM:** `JDAM.stations` holds STA 3 to 6 (pydcs pylons 4 to 7), 8 targets
+  each. A target carries its position (`x`, `y`, `lat`, `lon`), `elev` **in metres**
+  (unlike the navigation points), `attack_heading` (grid degrees, the direction the jet
+  flies), `drop_alt` (ft), `drop_spd` (kt), the launch acceptability region
+  (`lar_rmin_nmi`, `lar_rmax_nmi`, `lar_half_angle_deg`, and `lar_polygon`, its 11
+  points), the launch point (`launch_x`, `launch_y`, the centre of the region by
+  default) and `active`. The region comes from `JDAM_LAR_TABLE` of the editor, by drop
+  altitude and Mach, Mach from the ISA speed of sound; Retribution reproduces
+  `lookupJDAMLAR` and `calcLARPoints`, and gives the region and launch point of a
+  cartridge saved by the editor to the centimetre (`F14_Tuto_JDAM.miz`). Each station
+  that carries a GBU-31, -32 or -38 on the player's jet gets the aim points of the
+  package target (its standing units, at most 8, else its position), its own one first
+  (`TGT1`..`TGT8`), released from the leg into the first target waypoint: its grid
+  heading, its altitude and its ground speed from the times of the flight plan.
 - **F-16C:** its cartridge cannot name a channel, and the miz already carries the route
   and the presets, so `NAV_PTS`, `DEST`, `COMM1` and `COMM2` mirror the mission
   (`mirror_* = true`). The cartridge adds, in `MPD`, the front lines nearest the package
@@ -81,7 +97,7 @@ presets (G 243 AM, M 122.8 AM, C 30 FM, S 156.05 FM), the FM bands of the ARC-21
   mission). The cartridge adds the front lines nearest the package target as FLOT lines
   (at most 4, `type_num` 4 of `NAV/Lines.lua`) and the 20 enemy air defense sites nearest
   it as target points `T01`..`T20`, typed `GU` (generic air defense unit), with the site
-  name as note (40 characters). Elevations are left at 0. Radios, IDM, weapons and laser
+  name as note (40 characters), at the ground height in metres. Radios, IDM, weapons and laser
   codes keep the module's defaults.
 
 ## What the player sets (#221)
@@ -95,15 +111,42 @@ defaults.
   the pilot loads the cartridge from the DTC page.
 - **Front lines and enemy air defenses** (F-16C, F-14BU, AH-64D): off, the cartridge
   leaves those partitions to the module.
-- **CMDS programs** (F/A-18C, F-16C, F-14BU): the 10 programs of the module, MAN 1-6,
-  AUTO 1-3 and BYPASS, start from the module's defaults (`CMDS_defs.lua` of each editor;
-  the F/A-18C and the F-14BU share them) and keep to the limits of its spin boxes
-  (`CMDS.lua`). Only the values that differ are kept; once one does, the cartridge
-  carries every program whole: `ALR67.CMDS.CMDSProgramSettings` (F/A-18C),
-  `MPD.CMDS.CMDSProgramSettings` (F-16C), `CMDS` (F-14BU). The bingo settings and the
-  threat tables are left out and keep the module's defaults. The quantities of the
-  `Other1` and `Other2` dispensers are not offered and stay at the module's values.
+- **CMDS programs** (F/A-18C, F-16C, F-14BU): the programs of the module (MAN 1-6,
+  AUTO 1-3 and BYPASS on the F/A-18C and F-16C, programs 1 to 8 and their priority on
+  the F-14BU) start from the module's defaults (`CMDS_defs.lua`, or the `CMDS` table of
+  `F-14BU_DTC.lua`) and keep to the limits of its spin boxes. Only the values that
+  differ are kept, and values of programs a module no longer has are ignored; once one
+  differs, the cartridge carries every program whole:
+  `ALR67.CMDS.CMDSProgramSettings` (F/A-18C), `MPD.CMDS.CMDSProgramSettings` (F-16C),
+  `CMDS.CMDSProgramSettings` (F-14BU). The bingo settings and the threat tables are left
+  out and keep the module's defaults. The `Other1` and `Other2` dispensers are not
+  offered and stay at the module's values.
+- **JDAM targets** (F-14BU): off, the cartridge leaves `JDAM` to the module.
 - **Apply to every squadron of the aircraft** copies the settings to the other squadrons
   of the coalition that fly the same DCS type.
-- **Not done yet:** the F-14BU JDAM targets (the launch zone `lar_*` comes from a lookup
-  table of the module that Retribution does not ship), the F-16C ROE/IFF and colours.
+- **Not done yet:** the F-16C ROE/IFF and colours.
+
+## Elevations
+
+DCS terrains have no height data Retribution can read, and a public elevation model
+(SRTM, Copernicus) differs from the terrain of the sim: smoothed, flattened airfields,
+and roofs and trees in a surface model. So the heights are measured in DCS itself:
+`scripts/heightmaps/make_scan_missions.py` makes missions that walk a grid with
+`land.getHeight` and write it to `Saved Games` (Retribution open, so the mission can
+write files); `pack_heightmap.py` packs a scan into `resources/heightmaps/<terrain>.dem`,
+read by `game/theater/groundheight.py`.
+
+- Measured in November 2026, every 100 m: Caucasus, PersianGulf, Syria (1 to 1.5 min
+  each in DCS). On the 4 JDAM targets of `F14_Tuto_JDAM.miz`, the editor's `elev` and
+  `land.getHeight` agree (10.01 m), and the 100 m grid gives 9.88 to 10.0 m.
+- A 10 m scan of 20 x 20 km near Batumi, up to 1,224 m, sets the step: on land, a 100 m
+  grid is within 1.7 m of the exact height for 95% of points (4.3 m on slopes over
+  15 degrees), 50 m within 0.6 m, 200 m within 4.9 m. With a 65 degree impact, an
+  error of 1 m moves a JDAM about 0.5 m.
+- Packed in whole metres, as row-wise differences in xz blocks of 64 rows: 15 MB
+  (Caucasus), 8 MB (PersianGulf), 21 MB (Syria). A lookup decompresses only the blocks
+  under the point.
+- The files are too large for git: they are ignored and ship in the release zip (see
+  `resources/heightmaps/README.md`). Without the file of a map, the elevations stay 0.
+- Used for the F-14BU JDAM targets (metres) and reference points and lines (feet), and
+  the AH-64D target points (metres).

@@ -211,6 +211,31 @@ describe("flight radios tab", () => {
     });
   });
 
+  it("turns the F-14 JDAM targets off (#221)", async () => {
+    const settingsPath = `${RADIOS_PATH}/cartridge/settings`;
+    const calls = renderTab(
+      {
+        ...RADIOS,
+        cartridge_settings: { ...CARTRIDGE, threats: true, jdam_targets: true },
+      },
+      null,
+      { [settingsPath]: { body: RADIOS } },
+    );
+    const panel = await screen.findByRole("region", {
+      name: "Data cartridge",
+    });
+    expect(panel).toHaveTextContent("aim points of the package target");
+    await userEvent.click(
+      within(panel).getByRole("switch", { name: "JDAM targets" }),
+    );
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]).toMatchObject({
+      method: "PUT",
+      path: settingsPath,
+      body: { jdam_targets: false },
+    });
+  });
+
   it("offers no threat switch for an aircraft whose cartridge adds none", async () => {
     renderTab({ ...RADIOS, cartridge_settings: CARTRIDGE });
     const panel = await screen.findByRole("region", {

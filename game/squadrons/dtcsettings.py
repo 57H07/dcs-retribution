@@ -16,6 +16,8 @@ class DtcSettings:
     auto_load: bool = True
     #: Front lines and enemy air defenses on the displays (F-16C, F-14BU).
     threats: bool = True
+    #: The F-14BU JDAM targets, from the package target (#221).
+    jdam_targets: bool = True
     #: The CMDS programs changed from the module's defaults:
     #: `{program: {field: value}}`, see `game.missiongenerator.dtc.cmds`.
     cmds: dict[str, dict[str, float]] = field(default_factory=dict)
@@ -28,5 +30,6 @@ class DtcSettings:
         return DtcSettings(
             auto_load=self.auto_load,
             threats=self.threats,
+            jdam_targets=self.jdam_targets,
             cmds={program: dict(values) for program, values in self.cmds.items()},
         )

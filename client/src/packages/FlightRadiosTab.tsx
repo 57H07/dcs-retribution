@@ -499,7 +499,10 @@ function DataCartridge({ packageId, flightId, radios }: FlightProps) {
 
 function isDefault(settings: CartridgeSettings): boolean {
   return (
-    settings.auto_load && settings.threats !== false && !settings.cmds_modified
+    settings.auto_load &&
+    settings.threats !== false &&
+    settings.jdam_targets !== false &&
+    !settings.cmds_modified
   );
 }
 
@@ -520,7 +523,11 @@ function CartridgeSettingsPanel(props: {
   const busy = setting || resetting || applying;
   const others = settings.same_aircraft_squadrons;
 
-  const send = async (update: { auto_load?: boolean; threats?: boolean }) =>
+  const send = async (update: {
+    auto_load?: boolean;
+    threats?: boolean;
+    jdam_targets?: boolean;
+  }) =>
     report(
       "Could not set the cartridge",
       await setSettings({
@@ -550,7 +557,21 @@ function CartridgeSettingsPanel(props: {
             onCheckedChange={(checked) => send({ threats: checked })}
           />
         )}
+        {settings.jdam_targets != null && (
+          <Switch
+            label="JDAM targets"
+            checked={settings.jdam_targets}
+            disabled={busy}
+            onCheckedChange={(checked) => send({ jdam_targets: checked })}
+          />
+        )}
       </div>
+      {settings.jdam_targets && (
+        <p className={styles.hint}>
+          Each station with a JDAM gets the aim points of the package target,
+          with the release of the leg into it.
+        </p>
+      )}
       {!settings.auto_load && (
         <p className={styles.hint}>
           The pilot loads the cartridge from the DTC page of the jet.

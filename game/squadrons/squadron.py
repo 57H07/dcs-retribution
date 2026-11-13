@@ -126,6 +126,8 @@ class Squadron:
             state["csar_auto_assign_seeded"] = False
         if "dtc" not in state:
             state["dtc"] = DtcSettings()
+        elif "jdam_targets" not in state["dtc"].__dict__:
+            state["dtc"].jdam_targets = True
         if "maintenance_batches" not in state:
             state["maintenance_batches"] = []
         if "new_maintenance_batches" not in state:

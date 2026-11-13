@@ -25,7 +25,8 @@ class CmdsField:
     #: Identifier in `CmdsValues`, e.g. `chaff_quantity`.
     id: str
     label: str
-    #: Where the module stores it: `CMDSProgramSettings[program][group][key]`.
+    #: Where the module stores it: `CMDSProgramSettings[program][group][key]`,
+    #: or `[program][key]` when `group` is empty (the F-14 priority).
     group: str
     key: str
     minimum: float
@@ -59,7 +60,7 @@ class CmdsSchema:
     programs: tuple[tuple[str, str], ...]
     fields: tuple[CmdsField, ...]
     #: `CMDSProgramSettings` of the module's editor, every program whole.
-    defaults: Mapping[str, Mapping[str, Mapping[str, float]]]
+    defaults: Mapping[str, Mapping[str, Any]]
 
     def field(self, field_id: str) -> CmdsField:
         for f in self.fields:
@@ -68,10 +69,26 @@ class CmdsSchema:
         raise ValueError(f"No CMDS setting {field_id}.")
 
     def default(self, program: str, field: CmdsField) -> float:
-        return self.defaults[program][field.group][field.key]
+        settings = self.defaults[program]
+        value = settings[field.group][field.key] if field.group else settings[field.key]
+        return float(value)
+
+    def known(self, changes: CmdsValues) -> CmdsValues:
+        """`changes` without the programs and fields this schema does not have.
+
+        A save may hold the settings of an older schema of the module.
+        """
+        programs = dict(self.programs)
+        fields = {f.id for f in self.fields}
+        return {
+            program: {f: v for f, v in values.items() if f in fields}
+            for program, values in changes.items()
+            if program in programs
+        }
 
     def values(self, changes: CmdsValues) -> CmdsValues:
         """Every field of every program: the player's value, else the default."""
+        changes = self.known(changes)
         return {
             program: {
                 f.id: changes.get(program, {}).get(f.id, self.default(program, f))
@@ -103,15 +120,15 @@ class CmdsSchema:
     def program_settings(self, changes: CmdsValues) -> dict[str, Any]:
         """The module's `CMDSProgramSettings`, with the player's changes."""
         table: dict[str, Any] = copy.deepcopy(dict(self.defaults))
-        for program, fields in changes.items():
+        for program, fields in self.known(changes).items():
             for field_id, value in fields.items():
                 f = self.field(field_id)
-                table[program][f.group][f.key] = value
+                target = table[program][f.group] if f.group else table[program]
+                target[f.key] = value
         return table
 
 
-# F/A-18C and F-14BU: the ALE-47 of both editors, same programs and defaults
-# (`FA-18C/DTC/ALR67/CMDS_defs.lua`, `F14/DTC/CMDS/_defs.lua`).
+# F/A-18C: the ALE-47 (`FA-18C/DTC/ALR67/CMDS_defs.lua`).
 
 
 def _ale47(chaff: int, repeat: int, interval: float, flare: int) -> dict[str, Any]:
@@ -188,7 +205,9 @@ def _same(quantity: int, interval: float, salvos: int, every: float) -> dict[str
     )
 
 
-def _viper_fields(group: str, label: str) -> tuple[CmdsField, ...]:
+def _viper_fields(
+    group: str, label: str, burst_step: float = 0.001
+) -> tuple[CmdsField, ...]:
     prefix = group.lower()
     return (
         CmdsField(
@@ -201,7 +220,7 @@ def _viper_fields(group: str, label: str) -> tuple[CmdsField, ...]:
             "BurstInterval",
             0,
             10,
-            0.001,
+            burst_step,
         ),
         CmdsField(
             f"{prefix}_salvo_quantity", f"{label} SQ", group, "SalvoQuantity", 0, 99, 1
@@ -245,5 +264,50 @@ VIPER = CmdsSchema(
         "AUTO2": _viper(_burst(1, 0.02, 6, 1.0), dict(_NO_FLARE)),
         "AUTO3": _viper(_burst(1, 0.02, 8, 0.5), dict(_NO_FLARE)),
         "BYP": _same(1, 0.02, 1, 0.5),
+    },
+)
+
+
+# F-14BU: 8 programs of burst and salvo, with a priority; programs 7 and 8 are the
+# reactive dispenses of Jester and of the pilot. The editor is `F-14BU_DTC.lua`
+# (its `CMDS/` folder is a leftover the editor no longer reads).
+
+
+def _tomcat(
+    priority: int, chaff: dict[str, Any], flare: dict[str, Any]
+) -> dict[str, Any]:
+    nothing = _burst(0, 0.0, 0, 0.0)
+    return {
+        "Priority": priority,
+        "Chaff": chaff,
+        "Flare": flare,
+        "Other1": dict(nothing),
+        "Other2": dict(nothing),
+    }
+
+
+TOMCAT = CmdsSchema(
+    programs=(
+        ("PROG_1", "1"),
+        ("PROG_2", "2"),
+        ("PROG_3", "3"),
+        ("PROG_4", "4"),
+        ("PROG_5", "5"),
+        ("PROG_6", "6"),
+        ("PROG_7", "7 Jester"),
+        ("PROG_8", "8 Pilot"),
+    ),
+    fields=(CmdsField("priority", "Priority", "", "Priority", 0, 9, 1),)
+    + _viper_fields("Chaff", "Chaff", burst_step=0.01)
+    + _viper_fields("Flare", "Flare", burst_step=0.01),
+    defaults={
+        "PROG_1": _tomcat(2, _burst(2, 0.2, 8, 1.0), _burst(2, 0.5, 8, 1.0)),
+        "PROG_2": _tomcat(0, _burst(3, 0.25, 3, 2.0), _burst(1, 1.0, 1, 1.0)),
+        "PROG_3": _tomcat(0, _burst(1, 1.0, 1, 1.0), _burst(2, 0.5, 4, 3.0)),
+        "PROG_4": _tomcat(0, _burst(2, 0.25, 4, 3.0), _burst(1, 1.0, 4, 3.0)),
+        "PROG_5": _tomcat(1, _burst(4, 0.2, 4, 2.0), _burst(1, 1.0, 2, 2.0)),
+        "PROG_6": _tomcat(1, _burst(1, 1.0, 2, 2.0), _burst(2, 0.5, 6, 2.0)),
+        "PROG_7": _tomcat(0, _burst(1, 1.0, 1, 1.0), _burst(1, 1.0, 1, 1.0)),
+        "PROG_8": _tomcat(0, _burst(1, 1.0, 1, 1.0), _burst(1, 1.0, 1, 1.0)),
     },
 )

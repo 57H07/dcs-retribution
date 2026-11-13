@@ -15,6 +15,7 @@ from dcs.terrain import Airport
 from dcs.unit import Static
 from dcs.unitgroup import Group
 
+from game.theater import groundheight
 from game.atcdata import AtcData
 from game.dcs.beacons import Beacons
 from game.dcs.helpers import unit_type_from_name
@@ -166,12 +167,14 @@ class MissionGenerator:
             for tgo in theater.ground_objects
             if not tgo.is_dead and tgo.has_aa
         )
+        terrain = theater.terrain.name
         return dtc.DtcContext(
-            terrain=theater.terrain.name,
+            terrain=terrain,
             start_time=self.game.conditions.start_time,
             timezone=theater.timezone,
             front_lines=tuple(front_lines),
             air_defenses=air_defenses,
+            ground_height=lambda p: groundheight.ground_height(terrain, p.x, p.y),
         )
 
     @staticmethod

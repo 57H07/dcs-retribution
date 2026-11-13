@@ -595,13 +595,26 @@ def test_a_hornet_cartridge_carries_the_cmds_programs_of_its_squadron() -> None:
 
 def test_a_tomcat_cartridge_carries_the_cmds_programs_of_its_squadron() -> None:
     flight = tomcat_flight()
-    flight.squadron.dtc.cmds = {"AUTO_1": {"chaff_interval": 0.5}}
+    flight.squadron.dtc.cmds = {
+        "PROG_1": {"chaff_salvo_interval": 0.25, "priority": 3},
+        # The ALE-47 programs of an older version: ignored.
+        "AUTO_1": {"chaff_interval": 0.5},
+    }
 
     cartridge = build_cartridge(flight, MissionData(), CONTEXT)
 
     assert cartridge is not None
-    assert cartridge.data["CMDS"]["AUTO_1"]["Chaff"]["Interval"] == 0.5
-    assert cartridge.data["CMDS"]["MAN_1"]["Chaff"]["Quantity"] == 1
+    # The format of `F-14BU_DTC.lua`, as a cartridge saved by DCS has it.
+    programs = cartridge.data["CMDS"]["CMDSProgramSettings"]
+    assert set(programs) == {f"PROG_{n}" for n in range(1, 9)}
+    assert programs["PROG_1"]["Priority"] == 3
+    assert programs["PROG_1"]["Chaff"] == {
+        "BurstQuantity": 2,
+        "BurstInterval": 0.2,
+        "SalvoQuantity": 8,
+        "SalvoInterval": 0.25,
+    }
+    assert programs["PROG_5"]["Chaff"]["BurstQuantity"] == 4
 
 
 def test_a_viper_cartridge_carries_the_cmds_programs_of_its_squadron() -> None:
@@ -710,3 +723,93 @@ def test_without_threats_an_apache_cartridge_keeps_the_mission_points() -> None:
 
     assert cartridge is not None
     assert cartridge.data["NAV"]["Mission_1"] == {}
+
+
+# F-14BU JDAM targets (#221), checked against a cartridge saved by the DTC editor of
+# DCS (F14_Tuto_JDAM.miz): STA 4 target 1, launch point left at the region centre.
+SAVED_TARGET: dict[str, Any] = {
+    "x": -328733.16352422,
+    "y": 631364.85975003,
+    "attack_heading": 327.9,
+    "drop_alt": 20000,
+    "drop_spd": 450,
+    "lar_rmin_nmi": 1.5712031862492,
+    "lar_rmax_nmi": 7.2509806211745,
+    "lar_half_angle_deg": 44.983734395416,
+    "launch_x": -335653.59238992,
+    "launch_y": 635706.03659372,
+    "lar_polygon_0": (-329383.5971623, 634201.10191374),
+    "lar_polygon_10": (-331734.8642249, 644453.89695797),
+}
+
+
+def test_the_jdam_region_is_the_one_of_the_dtc_editor() -> None:
+    from game.missiongenerator.dtc import tomcat
+
+    saved = SAVED_TARGET
+    assert tomcat.lar(450, 20000) == pytest.approx(
+        (saved["lar_rmin_nmi"], saved["lar_rmax_nmi"], saved["lar_half_angle_deg"])
+    )
+    # 35,000 ft and 400 kt, STA 3 of the same cartridge.
+    assert tomcat.lar(400, 35000) == pytest.approx(
+        (2.2690993429096, 7.9636799383663, 45.0)
+    )
+    target = tomcat._target(
+        "TGT1", Point(saved["x"], saved["y"], TERRAIN), 10.0, 327.9, 450, 20000
+    )
+    assert target["launch_x"] == pytest.approx(saved["launch_x"], abs=0.01)
+    assert target["launch_y"] == pytest.approx(saved["launch_y"], abs=0.01)
+    polygon = target["lar_polygon"]
+    assert len(polygon) == 11
+    assert (polygon[0]["x"], polygon[0]["y"]) == pytest.approx(
+        saved["lar_polygon_0"], abs=0.01
+    )
+    assert (polygon[10]["x"], polygon[10]["y"]) == pytest.approx(
+        saved["lar_polygon_10"], abs=0.01
+    )
+    assert target["elev"] == 10.0 and target["active"] is True
+
+
+def jdam_tomcat(*pylons: int) -> Any:
+    flight = tomcat_flight()
+    flight.client_units[0].pylons = {
+        pylon: {"CLSID": "{BRU-32 GBU-38}"} for pylon in pylons
+    }
+    return flight
+
+
+def test_each_jdam_station_gets_the_aim_points_its_own_first() -> None:
+    flight = jdam_tomcat(4, 6)  # STA 3 and STA 5
+    context = DtcContext(
+        terrain="Caucasus",
+        start_time=START,
+        timezone=timezone.utc,
+        ground_height=lambda p: 42.0,
+    )
+
+    cartridge = build_cartridge(flight, MissionData(), context)
+
+    assert cartridge is not None
+    stations = cartridge.data["JDAM"]["stations"]
+    assert len(stations) == 4
+    assert all(len(s["targets"]) == 8 for s in stations)
+    sta3 = stations[0]["targets"][0]
+    assert sta3["active"] is True and sta3["name"] == "TGT1"
+    assert (sta3["x"], sta3["y"]) == (40000, 0)  # the package target
+    assert sta3["elev"] == 42.0
+    # The leg into the target: north, 30 km in 5 minutes, at 20,000 ft.
+    assert sta3["attack_heading"] == 0
+    assert sta3["drop_spd"] == 194
+    assert sta3["drop_alt"] == 20000
+    assert stations[2]["targets"][0]["active"] is True
+    assert stations[1]["targets"][0]["active"] is False
+    assert stations[3]["targets"][0]["active"] is False
+
+
+def test_no_jdam_targets_without_a_jdam_or_when_turned_off() -> None:
+    without = build_cartridge(jdam_tomcat(), MissionData(), CONTEXT)
+    assert without is not None and "JDAM" not in without.data
+    flight = jdam_tomcat(4)
+    flight.squadron.dtc.jdam_targets = False
+    turned_off = build_cartridge(flight, MissionData(), CONTEXT)
+    assert turned_off is not None and "JDAM" not in turned_off.data

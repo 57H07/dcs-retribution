@@ -166,7 +166,9 @@ def put_cartridge_settings(
     """Sets the cartridge of every player flight of the flight's squadron (#221)."""
     game = _require_game(game)
     flight = _find(game, package_id, flight_id)
-    set_cartridge_settings(flight, body.auto_load, body.threats, body.cmds)
+    set_cartridge_settings(
+        flight, body.auto_load, body.threats, body.cmds, body.jdam_targets
+    )
     return FlightRadiosJs.for_flight(game, flight)
 
 
