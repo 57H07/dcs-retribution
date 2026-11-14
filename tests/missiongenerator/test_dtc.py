@@ -806,6 +806,25 @@ def test_each_jdam_station_gets_the_aim_points_its_own_first() -> None:
     assert stations[3]["targets"][0]["active"] is False
 
 
+def test_a_faster_attack_leg_releases_at_450_kt() -> None:
+    flight = jdam_tomcat(4)
+    # 30 km in 2 minutes: 486 kt.
+    flight.waypoints[2].tot = START + timedelta(minutes=2)
+
+    cartridge = build_cartridge(flight, MissionData(), CONTEXT)
+
+    assert cartridge is not None
+    target = cartridge.data["JDAM"]["stations"][0]["targets"][0]
+    assert target["drop_spd"] == 450
+    assert target["lar_rmax_nmi"] == pytest.approx(tomcat_lar(450, 20000)[1])
+
+
+def tomcat_lar(speed_kt: float, alt_ft: float) -> tuple[float, float, float]:
+    from game.missiongenerator.dtc import tomcat
+
+    return tomcat.lar(speed_kt, alt_ft)
+
+
 def test_no_jdam_targets_without_a_jdam_or_when_turned_off() -> None:
     without = build_cartridge(jdam_tomcat(), MissionData(), CONTEXT)
     assert without is not None and "JDAM" not in without.data

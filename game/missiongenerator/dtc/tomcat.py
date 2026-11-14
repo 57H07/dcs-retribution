@@ -56,6 +56,10 @@ _JDAM_CLSIDS = ("GBU_31", "GBU-31", "GBU_32", "GBU-32", "GBU_38", "GBU-38")
 #: The editor's defaults: 20,000 ft, 450 kt, impact at 65 degrees.
 _DROP_ALT_FT = 20000
 _DROP_SPEED_KT = 450
+#: The fastest release the cartridge plans, ground speed: the attack leg of a
+#: supersonic jet is planned at Mach 0.85, about 490 kt at 22,000 ft, fast for a
+#: Tomcat loaded with JDAMs. A slower leg keeps its own speed.
+MAX_DROP_SPEED_KT = 450
 _IMPACT_ANGLE = 65
 _METERS_TO_FEET = 3.28084
 _NMI_TO_METERS = 1852.0
@@ -251,7 +255,8 @@ def _aim_points(flight: FlightData) -> list[Point]:
 def _release(flight: FlightData) -> Optional[tuple[float, int, int]]:
     """Attack heading (deg, grid), speed (kt) and altitude (ft) into the target.
 
-    From the leg into the first target waypoint of the flight plan; None without one.
+    From the leg into the first target waypoint of the flight plan, the speed capped
+    at `MAX_DROP_SPEED_KT`; None without a target waypoint.
     """
     previous: Optional[FlightWaypoint] = None
     for waypoint in flight.waypoints:
@@ -259,7 +264,8 @@ def _release(flight: FlightData) -> Optional[tuple[float, int, int]]:
             dx = waypoint.position.x - previous.position.x
             dy = waypoint.position.y - previous.position.y
             heading = math.degrees(math.atan2(dy, dx)) % 360
-            speed = round(leg_speed_kmh(previous, waypoint) / 1.852)
+            planned = round(leg_speed_kmh(previous, waypoint) / 1.852)
+            speed = min(planned, MAX_DROP_SPEED_KT)
             alt = round(previous.alt.feet) or _DROP_ALT_FT
             return heading, speed, alt
         if waypoint.waypoint_type not in (

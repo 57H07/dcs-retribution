@@ -79,7 +79,10 @@ presets (G 243 AM, M 122.8 AM, C 30 FM, S 156.05 FM), the FM bands of the ARC-21
   that carries a GBU-31, -32 or -38 on the player's jet gets the aim points of the
   package target (its standing units, at most 8, else its position), its own one first
   (`TGT1`..`TGT8`), released from the leg into the first target waypoint: its grid
-  heading, its altitude and its ground speed from the times of the flight plan.
+  heading, its altitude and its ground speed from the times of the flight plan, capped
+  at 450 kt (the editor's default): Retribution plans the attack leg of a supersonic jet
+  at Mach 0.85, about 490 kt at 22,000 ft. Heatblur's JDAM calculator takes a ground
+  speed too, and gives no typical release speed.
 - **F-16C:** its cartridge cannot name a channel, and the miz already carries the route
   and the presets, so `NAV_PTS`, `DEST`, `COMM1` and `COMM2` mirror the mission
   (`mirror_* = true`). The cartridge adds, in `MPD`, the front lines nearest the package

@@ -1,3 +1,8 @@
+# Unreleased
+
+## Features/Improvements
+* **[Mission Generation]** F-14BU JDAM targets: the release speed of the cartridge is that of the attack leg of the flight plan, capped at 450 kt, instead of the Mach 0.85 the plan uses for a supersonic jet (about 490 kt at 22,000 ft).
+
 # Retribution v1.8.0
 
 ## Features/Improvements
